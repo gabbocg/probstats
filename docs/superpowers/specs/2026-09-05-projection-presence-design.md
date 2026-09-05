@@ -38,7 +38,7 @@ The editor size is not what `seminars.scss` appears to set. The extension comput
 
 Two sim slides exceed 700px (`#clt-sim` 724, `#ci-sim` 725), so the orange `.try-this` box collides with the footer. Fragment gating was checked on `#clt-intuition` and works; it is not a bug to fix.
 
-The stage animations inline the same nine hex colours and two font strings across 18 files, and each file defines its own `el`, `build`, `mount`, `fragState` and `init`. Two of them (`binom`, `seller`) also run a `setTimeout` replay chain and define `stop(s)` to cancel it on remount.
+The stage animations inline the same nine hex colours and two font strings across 18 files, and each file defines its own `el`, `build`, `mount`, `fragState` and `init`. Two of them define `stop(s)` and call it on remount: `binom` to cancel a `setTimeout` replay chain, `seller` to pause the anime tweens it keeps in `s.anims`.
 
 Cell inventory: 17 `webr-r` cells (16 on `.sim-slide` slides plus the intro cell on `#s00-webr`, which carries no slide class). Eight cells sit on slides that also carry a `.lede-min`; one (`power-sim`) sits under a `.claim-pair`; four draw plots (`bins-sim`, `seller-sim`, `clt-sim`, `ci-sim`).
 
@@ -48,7 +48,7 @@ Cell inventory: 17 `webr-r` cells (16 on `.sim-slide` slides plus the intro cell
 
 | band | y range | rule |
 |---|---|---|
-| title | 0–80 | `h2` unchanged in size; `.stage-slide h2::after` margin-top drops from 0.55em to 0.4em |
+| title | 0–80 | `h2` unchanged in size; the accent bar's margin-top drops from 0.55em to 0.4em via `.reveal section.stage-slide > h2::after` (it must out-rank `theme.scss`'s `.reveal section > h2::after`) |
 | stage | 88–556 | `.stage-wrap` height 468px; canvas 1000×445 shown at `scale(1.05)` = 1050×467 |
 | takeaway | 572–690 | `.slide-footer` at 24px, colour `--ink`, `max-width: 980px`, at most two lines |
 
@@ -97,7 +97,7 @@ Monaco options that CSS cannot reach are set from a new `assets/js/sim-tune.html
 | `.sim-text` | 1.5fr / 1fr | 599px | 49 | 399px: 30 characters of 22px mono |
 | `.sim-plot` | 1.25fr / 1fr | 554px | 46 | 444px plot |
 
-**Limits, enforced by `check-render.sh` (§8.1) on the source cells, `#|` option lines excluded:**
+**Limits, enforced by `check-render.sh` (§8.1) on the source cells. `#|` option lines are excluded from every count, and cells carrying `#| context: setup` are excluded entirely (they are hidden, so no limit applies):**
 
 - max source line length: **48** characters in text cells, **44** in plot cells (so no line wraps and source lines equal visual lines);
 - line budget, derived from the vertical stack (title 80, kicker 44, card padding 26, toolbar 40, 27px per line, gap 16, `.try-this` two lines 91; plot cells also carry the printed value under the editor, about 62px; lede slides carry about 123px of `.lede-min`; the claim pair on `power-sim` carries about 170px):
@@ -168,7 +168,7 @@ The kit does not own animation: each file keeps its `anime.animate` calls and it
 
 Each of the 18 files keeps its data, geometry constants, `build` and its state-moving function (named `place` in most files, `render` in `bayes`, `cond`, `ciflip` and `seller`). The mechanical changes:
 
-1. Delete the local `REDUCE`, `NS`, `el`, `fragState`, `init`, `mount`, the `Reveal.on` block, and the fragment-id map (`ORDER`/`STATES` in most files; `FRAGS` in `zstd`, whose `STATES` is frame data and stays). Replace with one `StageKit.register({...})` call; `binom` and `seller` pass their existing `stop`.
+1. Delete the local `REDUCE`, `NS`, `el`, `fragState`, `init`, `mount`, the `Reveal.on` block, and the fragment-id map (`ORDER`/`STATES` in most files; `ORDER` and `FRAGS` in `zstd`, whose `STATES` is frame data and stays). Replace with one `StageKit.register({...})` call; `binom` and `seller` pass their existing `stop`.
 2. Replace every hex literal with the `StageKit.PAL` name from the table above and every font string with `StageKit.FONT`.
 3. Replace every `'font-size': N` by role: tick marks and axis numbers → `tick`; panel titles and small annotations → `label`; the state caption → `caption`; the headline number → `readout`. Or use `StageKit.txt`.
 4. Change `H` from 400 to 445 (bins from 430, mm from 380) and re-space the vertical constants (`BASE`, `AXIS_Y`, `FOOT_Y`, panel tops) so the drawing uses the new height rather than leaving a gap at the bottom.
@@ -215,7 +215,7 @@ If a cell cannot reach its budget without harming readability, the fallback is t
 
 ### 6.2 R plot text
 
-A hidden setup cell placed at the **end of the `#s00-webr` slide** (after the interactive intro cell, before the `.slide-footer`), so its stub lands on a slide that already exists:
+A hidden setup cell placed on the **`#s00-webr` slide, after the `.try-this` block and before the `.slide-footer`**, so its stub lands on a slide that already exists. Its one line is longer than 48 characters, which is why setup cells are exempt from the §4.3 limits:
 
 ````
 ```{webr-r}
@@ -247,7 +247,7 @@ That is a 662×533 canvas scaled down into the 444px plot column, so the bitmap 
 
 `assets/seminars.scss` (all overrides live here; `assets/theme.scss` is shared with the intro-r deck's history and is not edited):
 
-- `.stage-slide h2::after { margin-top: 0.4em }`.
+- `.reveal section.stage-slide > h2::after { margin-top: 0.4em }` (specificity 0,2,3, so it beats the base theme's 0,1,3 rule; a bare `.stage-slide h2::after` would silently lose).
 - `.stage-wrap-std`, `.stage-wrap-ci`, `.stage`, `.stage svg` (§5.2); the 18 id selectors and the three old wrap classes removed.
 - `.slide-footer` on `.stage-slide`: 24px, `--ink`, `max-width: 980px`.
 - `.slide-kicker`: 17px.
@@ -268,7 +268,7 @@ That is a 662×533 canvas scaled down into the 444px plot column, so the bitmap 
 - `StageKit.register` appears in the render (kit included) and `sim-tune` is present.
 - exactly 18 `class="stage"` divs.
 - `editor-font-scale: 1` present in `_quarto.yml`.
-- for every `webr-r` cell in `sections/*.qmd`, with `#|` lines excluded: line count within the budget for its slide shape (14 / 10 with `.lede-min` / 12 with `.sim-plot` / 8 for `power-sim`), and no line longer than 48 (44 in `.sim-plot` cells). An awk pass keyed on the `## ` heading, the same shape as the count used to write §6.1.
+- for every `webr-r` cell in `sections/*.qmd` except cells containing `#| context: setup`, with `#|` lines excluded: line count within the budget for its slide shape (14 / 10 with `.lede-min` / 12 with `.sim-plot` / 8 for `power-sim`), and no line longer than 48 (44 in `.sim-plot` cells). An awk pass keyed on the `## ` heading, the same shape as the count used to write §6.1.
 - the setup cell is present (`context: setup` in the sources).
 - all existing checks kept.
 
@@ -277,7 +277,7 @@ That is a 662×533 canvas scaled down into the 444px plot column, so the bitmap 
 A console snippet, run once in the browser after render, that reports:
 
 - every leaf slide whose `scrollHeight` exceeds 700px (measured with the slide forced visible), expected: none;
-- every `.stage` whose `.fragment` count differs from `StageKit.registry[id].frags.length`, expected: none;
+- every `.stage` whose containing slide has a `.fragment` count different from `StageKit.registry[id].frags.length` (the `.fi-frag` spans are siblings of `.stage-wrap`, not children of `.stage`; no slide carries a non-gating fragment), expected: none;
 - the computed font size of the smallest `<text>` in each stage SVG, expected: at least 18;
 - for every Monaco instance, `fontSize`, `lineHeight` and the number of view lines versus the model's line count (a difference means a line wrapped), expected: 20, 27, and equal.
 
