@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-05
 **Deck:** `bman10750-slides/` ("Statistics, Simulated", Quarto Reveal.js, 46 slides, nine seminars)
-**Status:** design approved in conversation; revised after spec review round 1
+**Status:** design approved in conversation; spec reviewer approved after three rounds; awaiting user review
 
 ## 1. Goal
 
@@ -187,7 +187,7 @@ The comment header of each file (the teaching-point paragraph) stays; it is the 
 
 ### 6.1 Cells to edit
 
-Twelve cells need editing to meet §4.3. "Rewrap" means breaking a line at a comma or operator; it never changes the expression. Line counts exclude `#|` option lines.
+Thirteen cells need editing to meet §4.3. "Rewrap" means breaking a line at a comma or operator; it never changes the expression. Line counts exclude `#|` option lines.
 
 | cell | lines | longest | shape | budget | action |
 |---|---|---|---|---|---|
@@ -257,7 +257,7 @@ That is a 662×533 canvas scaled down into the 444px plot column, so the bitmap 
 - `.sem-mark::before`: 4.4em, 18% alpha. `.reveal section.hero > p`: 1.3em. `.reveal section.hero .lede { color: var(--ink) }`.
 - `.qwebr-noninteractive-setup-area { display: none }`.
 
-`sections/*.qmd`: `class="stage"` on 18 stage divs; wrap classes renamed; the setup cell on `#s00-webr`; `#|` options on the four plot cells; the twelve cell edits in §6.1; the `power-sim` kicker; the `smooth-sim` lede.
+`sections/*.qmd`: `class="stage"` on 18 stage divs; wrap classes renamed; the setup cell on `#s00-webr`; `#|` options on the four plot cells; the thirteen cell edits in §6.1; the `power-sim` kicker; the `smooth-sim` lede.
 
 `scripts/check-render.sh` and new `scripts/probe-overflow.js` (§8).
 
