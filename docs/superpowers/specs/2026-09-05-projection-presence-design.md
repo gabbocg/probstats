@@ -235,9 +235,10 @@ The four plot cells also set:
 ```
 #| fig-width: 5.7
 #| fig-height: 4.3
+#| out-width: "100%"
 ```
 
-The extension creates the canvas at `fig-width × dpi` pixels with webR's fixed 12-point text (`qwebr-compute-engine.js`, `pointsize: 12`), and `dpi` stays at its default 72. So the canvas is 410×310px, the same size as the plot column, and is shown 1:1; the 12px base text becomes about 19px after the `cex = 1.6` multiplier in the hook. Raising `dpi` would shrink the text relative to the plot, so it is left alone.
+The extension creates the canvas at `fig-width × dpi` pixels with webR's fixed 12-point text (`qwebr-compute-engine.js`, `pointsize: 12`), and `dpi` stays at its default 72, so the bitmap is 410×310px. Its displayed width is whatever `out-width` says (the extension's default is 700px, which the card's `max-width: 100%` clamp would then squeeze into the column); `"100%"` makes the canvas fill the ~408px plot column explicitly, so the bitmap shows at about 1:1 and the 12px base text lands near 19px after the `cex = 1.6` multiplier in the hook. Raising `dpi` would shrink the text relative to the plot, so it is left alone.
 
 ## 7. Change list outside the animations
 
