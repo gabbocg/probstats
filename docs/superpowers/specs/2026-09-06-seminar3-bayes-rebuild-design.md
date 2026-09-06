@@ -3,7 +3,7 @@
 **Date:** 2026-09-06
 **Deck:** `bman10750-slides/` ("Statistics, Simulated"), section `sections/03-probability.qmd`
 **Depends on:** `2026-09-05-projection-presence-design.md` (the stage kit, the slide grid, the sim-cell limits). Implemented after that project.
-**Status:** design approved in conversation; revised after spec review round 1
+**Status:** design approved in conversation; review round 1 fixes verified by exact counts (round 2 reviewer was cut off by a rate limit); awaiting user review
 **Source lesson:** 3Blue1Brown, "Bayes theorem, the geometry of changing beliefs" (https://www.3blue1brown.com/lessons/bayes-theorem)
 
 ## 1. Goal
@@ -45,7 +45,7 @@ The current deck uses 200 people and 4/23 = 17%; those numbers disappear with th
 
 ## 4. The nine slides
 
-All ids below are the ones `check-render.sh` will look for. Fragment ids follow the deck convention (`<stage>-frag-<k>`, invisible `.fi-frag` spans, state k = k fragments visible) for the stages; the two claim-pair slides use ordinary visible `.fragment` classes on their cells.
+All ids below are the ones `check-render.sh` will look for. Fragment ids follow the deck convention (`<stage>-frag-<k>`, invisible `.fi-frag` spans, state k = k fragments visible) for the stages; the two claim-pair slides use ordinary visible `.fragment` classes on the `.claim-pair` container (and, on the hook, on the `.slide-footer`), never on individual cells.
 
 | # | id | class | stage / cell | fragments |
 |---|---|---|---|---|
@@ -124,7 +124,7 @@ P(L|D) =
    P(L)·P(D|L) + P(F)·P(D|F)
 ```
 
-The denominator is 25 characters, 450 units, plus 16-unit bar overhangs: 482 of the 600. The arithmetic line sits beneath in the `label` role: `0.0190 / (0.0190 + 0.0952) = 0.167 = 4/24` (42 characters, 504 units), assembled term by term.
+The denominator is 25 characters, 450 units, plus 16-unit bar overhangs: 482 of the 600. The arithmetic line sits beneath in the `label` role: `0.0190 / (0.0190 + 0.0952) = 0.167 = 4/24` (41 characters, 492 units), assembled term by term.
 
 | state | lights up in the formula | lights up on the square | note (label role, coloured to match) |
 |---|---|---|---|
