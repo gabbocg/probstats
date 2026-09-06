@@ -65,7 +65,7 @@ round(c(A = good(10, 10), B = good(48, 50),
 :::
 
 ::: {.try-this}
-A perfect 10/10 gives only a **0.43** chance the true rate beats 95%; 48/50 gives **0.47** and wins. Now change `good(10, 10)` to `good(100, 100)` — a perfect hundred — and watch it overtake everything. **It was never the percentage; it was how much the percentage was resting on.**
+10/10 gives only a **0.43** chance the true rate beats 95%; 48/50 gives **0.47** and wins. Try `good(100, 100)`: **it was never the percentage, but how much rested on it.**
 :::
 
 ## Hold $np$ fixed and push $n$ up {.stage-slide #pois-intuition}
@@ -205,5 +205,5 @@ round(c(sd_obs  = sd(xbar),
 :::
 
 ::: {.try-this}
-At `n <- 1` you see the raw population — violently skewed. By `n <- 30` it is close to symmetric, and `sd_obs` tracks $\sigma/\sqrt{n}$ throughout. The CLT is a claim about the **mean**, and it survives a parent this ugly.
+`n <- 1` is the raw population, violently skewed; by `n <- 30` it is nearly symmetric and `sd_obs` tracks $\sigma/\sqrt{n}$. **The CLT is a claim about the mean, and it survives a parent this ugly.**
 :::
