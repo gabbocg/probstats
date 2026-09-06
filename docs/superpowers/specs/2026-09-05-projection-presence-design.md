@@ -85,7 +85,7 @@ Nothing inside a figure is smaller than 18. Today 18 text nodes are at 12–14 a
 | Monaco editor (`.sim-card .qwebr-editor` font-size) | 13.32px, line height 20 | **20px**, line height **27** |
 | printed output (`.sim-card .qwebr-output-code-area` font-size) | 18px | **22px**, line height 1.25 |
 | `.try-this` | 21px | 23px |
-| `.lede-min` | 28px | unchanged |
+| `.lede-min` on sim slides | 28px | 26px, tighter margins (§7) |
 | `.claim-cell` | 21.6px | unchanged |
 
 Monaco options that CSS cannot reach are set from a new `assets/js/sim-tune.html`: it polls the extension's global `qwebrEditorInstances` four times a second, calls `updateOptions({ lineHeight: 27, lineNumbers: 'off', glyphMargin: false, folding: false, lineDecorationsWidth: 0, lineNumbersMinChars: 0 })` on each instance it has not tuned yet, and stops once every `.qwebr-editor` on the page has an instance or after 60 seconds. Word wrap stays on as a safety net; the line-length limits below mean it never triggers in practice. Line numbers are dropped because the gutter costs 50px of a code column and nothing in the deck refers to a line number.
@@ -95,12 +95,12 @@ Monaco options that CSS cannot reach are set from a new `assets/js/sim-tune.html
 | cell type | grid | code column | chars at 12px/char | output or plot column |
 |---|---|---|---|---|
 | `.sim-text` | 1.5fr / 1fr | 599px | 49 | 399px: 30 characters of 22px mono |
-| `.sim-plot` | 1.25fr / 1fr | 554px | 46 | 444px plot |
+| `.sim-plot` | 1.45fr / 1fr | 590px | 49 | 408px plot |
 
 **Limits, enforced by `check-render.sh` (§8.1) on the source cells. `#|` option lines are excluded from every count, and cells carrying `#| context: setup` are excluded entirely (they are hidden, so no limit applies):**
 
-- max source line length: **48** characters in text cells, **44** in plot cells (so no line wraps and source lines equal visual lines);
-- line budget, derived from the vertical stack (title 80, kicker 44, card padding 26, toolbar 40, 27px per line, gap 16, `.try-this` two lines 91; plot cells also carry the printed value under the editor, about 62px; lede slides carry about 123px of `.lede-min`; the claim pair on `power-sim` carries about 170px):
+- max source line length: **48** characters in every cell (so no line wraps and source lines equal visual lines);
+- line budget, derived from the vertical stack once the sim-slide chrome is tightened as listed in §7 (title 80, kicker 44, card margins 14, card padding 26, toolbar 40, 27px per line, `.try-this` 100 including its margin; plot cells also carry the printed value under the editor, about 59px; lede slides carry about 104px of `.lede-min` at 26px; the claim pair on `power-sim` carries about 161px):
 
 | slide shape | budget |
 |---|---|
@@ -194,15 +194,15 @@ Thirteen cells need editing to meet §4.3. "Rewrap" means breaking a line at a c
 | cell | lines | longest | shape | budget | action |
 |---|---|---|---|---|---|
 | `s00-webr` | 3 | 37 | text + lede | 10 | none |
-| `bins-sim` | 9 | 65 | plot | 12 | rewrap the two long `hist()` lines to 44 → about 11 |
+| `bins-sim` | 9 | 65 | plot | 12 | split the `brk <- seq(...)` line and the long `hist()` line at 48 → 11 |
 | `cheb-sim` | 11 | 49 | text + lede | 10 | drop the blank line; rewrap the one 49-char line → 10 |
 | `bayes-sim` | 9 | 56 | text | 14 | rewrap two lines → 11 |
 | `cond-sim` | 10 | 44 | text + lede | 10 | none |
-| `seller-sim` | 13 | 58 | plot | 12 | `rel` and `good` as compact one-line functions within 44; `plot()` over three lines; `round(c(...))` over two; drop blank lines → 12 |
+| `seller-sim` | 13 | 58 | plot | 12 | `L`/`rel` as two one-line functions; `plot()` over three lines without `las = 1`; the comment shortened; `round(c(...))` over two lines; blank lines dropped → 12 |
 | `memory-sim` | 8 | 54 | text + lede | 10 | rewrap two lines → 10 |
 | `pois-sim` | 10 | 46 | text + lede | 10 | none |
 | `clt-sim` | 15 | 42 | plot | 12 | drop the three blank lines → 12 |
-| `ci-sim` | 16 | 50 | plot | 12 | the largest edit: `mu`, `sigma`, `reps` on one line, `n`, `conf` (the knobs) on the next; drop the blank line; `plot(NA, ...)`, `abline()` and `segments()` rewrapped to 44; drop `las = 1` if still over → 12 |
+| `ci-sim` | 16 | 50 | plot | 12 | the largest edit: `mu`, `sigma`, `reps` on one line, `n`, `conf` (the knobs) on the next; drop the blank line; `plot(NA, ...)` over two lines without `las = 1`; `replicate()` and `segments()` tightened to 48 → 12 |
 | `ci-t-vs-z` | 15 | 63 | text | 14 | `coverage` as a single-expression function around `mean(replicate(...))`; `z_rule`/`t_rule` rewrapped; drop blank lines → about 10 |
 | `alpha-sim` | 10 | 50 | text + lede | 10 | rewrap the one 50-char line, drop one blank line → 10 |
 | `power-sim` | 8 | 49 | claim pair | 8 | move the 51-char `# H0 is FALSE ...` comment into the kicker ("Seminar 6 · the other error · H₀ false, true mean 105") → 7 |
@@ -222,23 +222,22 @@ A hidden setup cell placed on the **`#s00-webr` slide, after the `.try-this` blo
 ````
 ```{webr-r}
 #| context: setup
-setHook("before.plot.new", function() par(cex = 1.4, mar = c(4.2, 4.2, 2, 1)))
+setHook("before.plot.new", function() par(cex = 1.6, mar = c(3.6, 3.8, 1.6, 0.8), mgp = c(2.3, 0.8, 0)))
 ```
 ````
 
 The extension renders a setup cell as a visible "Loading webR…" stub until the hidden-cell pass has run; `seminars.scss` adds `.qwebr-noninteractive-setup-area { display: none }` so it never shows. The hook runs at every `plot.new()`, so `hist()` and `plot()` in the four plot cells inherit larger text with no visible line in the teaching code.
 
-**Fallback** if the hook does not fire inside webR's canvas device: one explicit `par(cex = 1.4)` line at the top of each of the four plot cells. That puts `seller-sim`, `clt-sim` and `ci-sim` at 13 lines against a budget of 12; the room is recovered by lowering the plot cells' Monaco line height from 27 to 25 in `sim-tune.html` (plot cells are identifiable by the `.sim-plot` ancestor). `bins-sim` stays within budget either way.
+**Fallback** if the hook does not fire inside webR's canvas device: one explicit `par(cex = 1.6)` line at the top of each of the four plot cells. That puts `seller-sim`, `clt-sim` and `ci-sim` at 13 lines against a budget of 12; the room is recovered by lowering the plot cells' Monaco line height from 27 to 25 in `sim-tune.html` (plot cells are identifiable by the `.sim-plot` ancestor). `bins-sim` stays within budget either way.
 
 The four plot cells also set:
 
 ```
-#| fig-width: 4.6
-#| fig-height: 3.7
-#| dpi: 144
+#| fig-width: 5.7
+#| fig-height: 4.3
 ```
 
-That is a 662×533 canvas scaled down into the 444px plot column, so the bitmap is crisp on a projector and the 12pt base text lands near 16px on the slide before the `cex` multiplier and near 22px after it. On-screen text size depends on figure inches and column width, not on `dpi`; `dpi` only removes the upscaling blur.
+The extension creates the canvas at `fig-width × dpi` pixels with webR's fixed 12-point text (`qwebr-compute-engine.js`, `pointsize: 12`), and `dpi` stays at its default 72. So the canvas is 410×310px, the same size as the plot column, and is shown 1:1; the 12px base text becomes about 19px after the `cex = 1.6` multiplier in the hook. Raising `dpi` would shrink the text relative to the plot, so it is left alone.
 
 ## 7. Change list outside the animations
 
@@ -254,7 +253,8 @@ That is a 662×533 canvas scaled down into the 444px plot column, so the bitmap 
 - `.slide-footer` on `.stage-slide`: 24px, `--ink`, `max-width: 980px`.
 - `.slide-kicker`: 17px.
 - `.sim-card .qwebr-editor { font-size: 20px }`; `.sim-card .qwebr-output-code-area { font-size: 22px }` and its `pre` at line height 1.25; the existing `0.95em` rule on the `pre` removed.
-- `.sim-card.sim-text .qwebr-console-area { grid-template-columns: 1.5fr 1fr }` (was 1.3fr 1fr); `.sim-plot` split unchanged at 1.25fr 1fr.
+- `.sim-card.sim-text .qwebr-console-area { grid-template-columns: 1.5fr 1fr }` (was 1.3fr 1fr); `.sim-card.sim-plot .qwebr-interactive-area { grid-template-columns: 1.45fr 1fr }` (was 1.25fr 1fr), so every cell gets a 48-character column.
+- Sim-slide chrome tightened so the budgets in §4.3 hold: `.reveal section.sim-slide > h2::after { margin-top: 0.4em }`; `.sim-slide .slide-kicker { margin: 0.2em 0 0.4em }`; `.sim-card { margin: 0.25em 0 0.15em }`; `.try-this { margin-top: 0.35em; padding-top: 8px; padding-bottom: 8px }`; `.sim-slide .lede-min { font-size: 26px; margin: 0.25em 0 0.4em }`; `.sim-card.sim-plot .qwebr-output-code-area { min-height: 0; margin-top: 6px }`.
 - `.try-this`: 23px.
 - `.sem-mark::before`: 4.4em, 18% alpha. `.reveal section.hero > p`: 1.3em. `.reveal section.hero .lede { color: var(--ink) }`.
 - `.qwebr-noninteractive-setup-area { display: none }`.
@@ -270,7 +270,7 @@ That is a 662×533 canvas scaled down into the 444px plot column, so the bitmap 
 - `StageKit.register` appears in the render (kit included) and `sim-tune` is present.
 - exactly 18 `class="stage"` divs (19 once project 2 splits the Steve stage in two; that project updates the number).
 - `editor-font-scale: 1` present in `_quarto.yml`.
-- for every `webr-r` cell in `sections/*.qmd` except cells containing `#| context: setup`, with `#|` lines excluded: line count within the budget for its slide shape (14 / 10 with `.lede-min` / 12 with `.sim-plot` / 8 for `power-sim`), and no line longer than 48 (44 in `.sim-plot` cells). An awk pass keyed on the `## ` heading, the same shape as the count used to write §6.1.
+- for every `webr-r` cell in `sections/*.qmd` except cells containing `#| context: setup`, with `#|` lines excluded: line count within the budget for its slide shape (14 / 10 with `.lede-min` / 12 with `.sim-plot` / 8 for `power-sim`), and no line longer than 48. An awk pass keyed on the `## ` heading, the same shape as the count used to write §6.1.
 - the setup cell is present (`context: setup` in the sources).
 - all existing checks kept.
 
