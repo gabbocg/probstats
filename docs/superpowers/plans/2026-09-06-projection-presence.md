@@ -1062,6 +1062,8 @@ In `sections/00-how-to-use.qmd`, between the closing `:::` of the `.try-this` bl
 ````markdown
 ```{webr-r}
 #| context: setup
+# Hidden: enlarges text and tightens margins on every plot in the deck (spec §6.2).
+# If this cell errors, the extension never re-enables the Run buttons, so keep it trivial.
 setHook("before.plot.new", function() par(cex = 1.6, mar = c(3.6, 3.8, 1.6, 0.8), mgp = c(2.3, 0.8, 0)))
 ```
 
@@ -1073,8 +1075,9 @@ In each of `bins-sim` (01), `seller-sim` and `clt-sim` (04), `ci-sim` (05), make
 ```
 #| fig-width: 5.7
 #| fig-height: 4.3
+#| out-width: "100%"
 ```
-The extension builds a 410×310px canvas (inches × 72 dpi, 12pt text), the same width as the plot column, so it is shown 1:1.
+The extension builds a 410×310px bitmap (inches × 72 dpi, 12pt text) and displays it at `out-width`; `"100%"` fills the ~408px plot column, so the bitmap shows at about 1:1. (Without it the extension's 700px default applies and only the card's `max-width: 100%` clamp keeps the plot in its column.)
 
 - [ ] **Step 3: Render, check, and verify the hook fires**
 
