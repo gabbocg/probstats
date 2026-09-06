@@ -112,8 +112,10 @@
 // ---- Full-width webR card ----
 // Same surface treatment as the base theme's .type-card, wider, and the
 // output pane is tall enough for a base-graphics plot.
+// Padding is tight on purpose: a 12-line plot cell with a two-line printed
+// result and a two-line prompt is the tallest sim slide and must fit 700px.
 .sim-card {
-  padding: 14px 18px 12px;
+  padding: 10px 18px 10px;
   background: var(--bg-elev);
   border: 1px solid var(--rule);
   border-top: 3px solid var(--accent-1);
@@ -152,6 +154,8 @@
   // the output box that is dead space.
   margin: 0;
   width: 100%;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 // --- .sim-plot: code on the left, the figure on the right ---
