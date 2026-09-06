@@ -8,7 +8,7 @@
 
 The deck is projected by the instructor in a seminar room. It keeps its current look (white ground, Roboto + JetBrains Mono, navy `#325D88` accent, animated SVG stages, live webR cells). What changes is scale and use of the slide: the intuition figures fill the slide instead of a narrow band, every label inside a figure is readable from the back row, code and output are sized for projection, and the two slides that overflow today stop overflowing.
 
-This is project 1 of 2. Project 2 (more intuition and simulation slides for the thin seminars 1, 2, 7 and 9) is out of scope here and will be authored against the system this spec defines.
+This is project 1 of 3. Project 2 rebuilds Seminar 3 on the 3Blue1Brown Bayes lesson (`2026-09-06-seminar3-bayes-rebuild-design.md`) and replaces two of the stages named here; project 3 (more intuition and simulation slides for the thin seminars 1, 2, 7 and 9) follows. Both are authored against the system this spec defines.
 
 ## 2. Non-goals
 
@@ -176,6 +176,8 @@ Each of the 18 files keeps its data, geometry constants, `build` and its state-m
 
 `ci` (470 → 330) is the exception: it is a re-layout, not a retune, and is planned as its own task.
 
+Two files are **excluded from the retune**: `bayes-anim.html` and `bayeq-anim.html` are replaced outright by the Seminar 3 rebuild (project 2). In this project they keep their old code, get `class="stage"` on their divs and the standard wrap so the shared CSS applies, and render their 1000×400 canvas inside the 468px wrap for the interim. So this project retunes 16 stages and re-lays out 1; the kit still ends up hosting 18.
+
 The comment header of each file (the teaching-point paragraph) stays; it is the documentation.
 
 ### 5.2 Markup and CSS
@@ -277,7 +279,7 @@ That is a 662×533 canvas scaled down into the 444px plot column, so the bitmap 
 A console snippet, run once in the browser after render, that reports:
 
 - every leaf slide whose `scrollHeight` exceeds 700px (measured with the slide forced visible), expected: none;
-- every `.stage` whose containing slide has a `.fragment` count different from `StageKit.registry[id].frags.length` (the `.fi-frag` spans are siblings of `.stage-wrap`, not children of `.stage`; no slide carries a non-gating fragment), expected: none;
+- every `.stage` whose containing slide has a `.fi-frag` count different from `StageKit.registry[id].frags.length` (the `.fi-frag` spans are siblings of `.stage-wrap`, not children of `.stage`; the count is of `.fi-frag` specifically, because project 2 adds ordinary visible fragments on two claim-pair slides), expected: none;
 - the computed font size of the smallest `<text>` in each stage SVG, expected: at least 18;
 - for every Monaco instance, `fontSize`, `lineHeight` and the number of view lines versus the model's line count (a difference means a line wrapped), expected: 20, 27, and equal.
 
