@@ -12,6 +12,10 @@ webr:
   packages: []
   show-startup-message: false
   autoload-packages: true
+  # The extension multiplies each cell's CSS font-size by this. The revealjs
+  # default is 0.5, which silently halved every size seminars.scss set.
+  cell-options:
+    editor-font-scale: 1
 
 format:
   revealjs:
@@ -36,6 +40,8 @@ format:
     include-in-header:
       - file: assets/head.html
     include-after-body:
+      # stage-kit must precede every *-anim.html: they read window.StageKit at load.
+      - file: assets/js/stage-kit.html
       - file: assets/animations.html
       - file: assets/js/bins-anim.html
       - file: assets/js/mm-anim.html
@@ -55,6 +61,7 @@ format:
       - file: assets/js/pair-anim.html
       - file: assets/js/ls-anim.html
       - file: assets/js/smooth-anim.html
+      - file: assets/js/sim-tune.html
     code-line-numbers: false
     code-copy: false
     highlight-style: assets/syntax.theme
