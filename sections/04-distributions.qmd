@@ -54,7 +54,7 @@ L   <- function(k, n) dbinom(k, n, s)
 rel <- function(k, n) L(k, n) / max(L(k, n))
 plot(s, rel(10, 10), type = "l", lwd = 2,
      col = "#325D88", xlab = "true rate s",
-     ylab = "relative likelihood")
+     ylab = "relative likelihood", las = 1)
 lines(s, rel(48, 50), lwd = 2, col = "#93C54B")
 lines(s, rel(186,200), lwd = 2, col = "#B94A48")
 # flat prior: s ~ Beta(k + 1, n - k + 1)
