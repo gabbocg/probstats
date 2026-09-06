@@ -1,1 +1,48 @@
-<script>/* sim-tune placeholder, replaced in Task 3 */</script>
+<script>
+/*
+  deck-sim-tune: Monaco editor options that CSS cannot reach.
+
+  quarto-webr creates one Monaco instance per cell and stores it in the
+  global sparse array `qwebrEditorInstances` (index = cell counter). Monaco
+  positions its lines from its own metrics, so line height has to be an
+  editor option, and the line-number gutter (about 50px at our font size)
+  can only be removed the same way. Nothing in the deck refers to a line
+  number.
+
+  The instances are created asynchronously after the AMD loader fetches
+  Monaco, so this polls four times a second until every .qwebr-editor on
+  the page has an instance, or for 60 seconds, whichever comes first.
+*/
+// keep the token "deck-sim-tune" above: scripts/check-render.sh greps for it
+(function () {
+  var LINE_HEIGHT = 27;        // 20px font × 1.35; spec §4.3
+  var PLOT_LINE_HEIGHT = 27;   // set to 25 only if the §6.2 par() fallback is needed
+  var started = Date.now();
+
+  function tune() {
+    var list = window.qwebrEditorInstances || [];
+    var want = document.querySelectorAll('.qwebr-editor').length;
+    var have = 0;
+    list.forEach(function (ed) {           // forEach skips the sparse holes
+      if (!ed || typeof ed.updateOptions !== 'function') return;
+      have++;
+      if (ed.__deckTuned) return;
+      var node = ed.getDomNode && ed.getDomNode();
+      var inPlot = !!(node && node.closest && node.closest('.sim-plot'));
+      ed.updateOptions({
+        lineHeight: inPlot ? PLOT_LINE_HEIGHT : LINE_HEIGHT,
+        lineNumbers: 'off',
+        glyphMargin: false,
+        folding: false,
+        lineDecorationsWidth: 0,
+        lineNumbersMinChars: 0
+      });
+      ed.__deckTuned = true;
+    });
+    if ((want === 0 || have < want) && Date.now() - started < 60000) {
+      setTimeout(tune, 250);
+    }
+  }
+  tune();
+})();
+</script>

@@ -61,6 +61,7 @@ format:
       - file: assets/js/pair-anim.html
       - file: assets/js/ls-anim.html
       - file: assets/js/smooth-anim.html
+      # sim-tune polls for Monaco instances rather than depending on load order; last only for readability.
       - file: assets/js/sim-tune.html
     code-line-numbers: false
     code-copy: false
