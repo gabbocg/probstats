@@ -12,8 +12,8 @@ The formula $\bar x \pm z\,\sigma/\sqrt n$ looks like it was handed down. It was
 
 ## The move that builds the interval {.stage-slide #ciflip-intuition}
 
-::: {.stage-wrap .stage-wrap-400}
-<div id="ciflip-stage"></div>
+::: {.stage-wrap .stage-wrap-std}
+<div id="ciflip-stage" class="stage"></div>
 :::
 
 []{.fragment .fi-frag id="ciflip-frag-1"}
@@ -26,8 +26,8 @@ Nothing new is constructed at the flip â€” the bracket is the *same width*, slid
 
 ## Four parts, one interval {.stage-slide #cieq-formula}
 
-::: {.stage-wrap .stage-wrap-400}
-<div id="cieq-stage"></div>
+::: {.stage-wrap .stage-wrap-std}
+<div id="cieq-stage" class="stage"></div>
 :::
 
 []{.fragment .fi-frag id="cieq-frag-1"}
@@ -42,7 +42,7 @@ Only $\bar x$ came from your sample. $z$ you chose, $\sigma$ and $n$ you knew â€
 ## What is actually random here? {.stage-slide #ci-intuition}
 
 ::: {.stage-wrap .stage-wrap-ci}
-<div id="ci-stage"></div>
+<div id="ci-stage" class="stage"></div>
 :::
 
 :::: {.claim-pair}

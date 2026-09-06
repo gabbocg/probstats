@@ -12,8 +12,8 @@ The worksheet presents these as four separate recipes with four separate tables.
 
 ## Where the binomial comes from {.stage-slide #binom-intuition}
 
-::: {.stage-wrap .stage-wrap-400}
-<div id="binom-stage"></div>
+::: {.stage-wrap .stage-wrap-std}
+<div id="binom-stage" class="stage"></div>
 :::
 
 []{.fragment .fi-frag id="binom-frag-1"}
@@ -26,8 +26,8 @@ The binomial coefficient is not decoration. Because the count discards *which* t
 
 ## Which seller do you trust? {.stage-slide #seller-intuition}
 
-::: {.stage-wrap .stage-wrap-400}
-<div id="seller-stage"></div>
+::: {.stage-wrap .stage-wrap-std}
+<div id="seller-stage" class="stage"></div>
 :::
 
 []{.fragment .fi-frag id="seller-frag-1"}
@@ -68,8 +68,8 @@ A perfect 10/10 gives only a **0.43** chance the true rate beats 95%; 48/50 give
 
 ## Hold $np$ fixed and push $n$ up {.stage-slide #pois-intuition}
 
-::: {.stage-wrap .stage-wrap-400}
-<div id="pois-stage"></div>
+::: {.stage-wrap .stage-wrap-std}
+<div id="pois-stage" class="stage"></div>
 :::
 
 []{.fragment .fi-frag id="pois-frag-1"}
@@ -82,8 +82,8 @@ Watch what is lost: at $n = 1000$ you can no longer recover $n$ or $p$ from the 
 
 ## The same events, a different question {.stage-slide #expo-intuition}
 
-::: {.stage-wrap .stage-wrap-400}
-<div id="expo-stage"></div>
+::: {.stage-wrap .stage-wrap-std}
+<div id="expo-stage" class="stage"></div>
 :::
 
 []{.fragment .fi-frag id="expo-frag-1"}
@@ -123,8 +123,8 @@ Both land on 0.607. A brand-new machine and a 10-year-old one have the *same* ch
 
 ## Why the normal turns up at all {.stage-slide #clt-intuition}
 
-::: {.stage-wrap .stage-wrap-400}
-<div id="clt-stage"></div>
+::: {.stage-wrap .stage-wrap-std}
+<div id="clt-stage" class="stage"></div>
 :::
 
 []{.fragment .fi-frag id="clt-frag-1"}
@@ -137,8 +137,8 @@ The population on the left never changes and never becomes normal. It is the **m
 
 ## One table for every normal {.stage-slide #zstd-intuition}
 
-::: {.stage-wrap .stage-wrap-400}
-<div id="zstd-stage"></div>
+::: {.stage-wrap .stage-wrap-std}
+<div id="zstd-stage" class="stage"></div>
 :::
 
 []{.fragment .fi-frag id="zstd-frag-1"}

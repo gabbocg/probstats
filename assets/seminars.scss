@@ -1,56 +1,52 @@
 /*-- scss:rules --*/
 
 // Layer on top of assets/theme.scss. Only what the seminar deck adds:
-// animation stages, the "turn this knob" prompt, and webR cards sized to
-// run full-width on a slide instead of inside a two-up type-card.
+// animation stages, the "turn this knob" prompt, webR cards sized to run
+// full-width on a projected slide, and the hero/sim chrome overrides.
+// Every override for this deck lives here; theme.scss is shared history
+// with the intro-r deck and is not edited.
+
+// ---- Slide grid (spec §4) ----
+// Title band 0–80: pull the accent bar up. Must out-rank theme.scss's
+// `.reveal section > h2::after` (0,1,3), hence the full selector.
+.reveal section.stage-slide > h2::after,
+.reveal section.sim-slide > h2::after { margin-top: 0.4em; }
 
 // ---- Animation stages ----
-// Both SVGs are authored in a fixed pixel space and scaled down via CSS
-// transform, the same technique the intro-r deck uses for its demo stages.
+// Every stage is authored in a fixed 1000-wide pixel space (445 tall by
+// default, 330 for the coverage stage) and shown at 105% so it spans the
+// full 1050px slide width. Heights are on the wrapper so the absolute
+// fragments and the takeaway line flow correctly.
 .reveal section.stage-slide {
   display: block !important;
   text-align: left !important;
   overflow: hidden;
 }
-
 .stage-wrap {
   position: relative;
-  margin: 0.2em auto 0;
+  margin: 8px auto 0;
   overflow: visible;
 }
-.stage-wrap-ci   { height: 357px; }   // 470 * 0.76 — leaves room for .claim-pair
-.stage-wrap-bins { height: 387px; }   // 430 * 0.90
-.stage-wrap-mm   { height: 342px; }   // 380 * 0.90
-.stage-wrap-400  { height: 360px; }   // 400 * 0.90 — the seminar 3-9 stages
+.stage-wrap-std { height: 468px; }   // 445 * 1.05
+.stage-wrap-ci  { height: 347px; }   // 330 * 1.05 — leaves room for .claim-pair
 
-#ci-stage, #bins-stage, #mm-stage, #cond-stage, #pois-stage,
-#pval-stage, #pair-stage, #ls-stage, #smooth-stage,
-#binom-stage, #expo-stage, #clt-stage, #zstd-stage, #bayes-stage,
-#bayeq-stage, #ciflip-stage, #cieq-stage, #seller-stage {
+.stage {
   position: relative;
   margin: 0 auto;
   display: block;
   width: 1000px;
   transform-origin: top center;
+  transform: scale(1.05);
 }
-#ci-stage   { height: 470px; transform: scale(0.76); }
-#bins-stage { height: 430px; transform: scale(0.90); }
-#mm-stage   { height: 380px; transform: scale(0.90); }
-#cond-stage, #pois-stage, #pval-stage,
-#pair-stage, #ls-stage, #smooth-stage,
-#binom-stage, #expo-stage, #clt-stage, #zstd-stage,
-#bayes-stage, #bayeq-stage, #ciflip-stage, #cieq-stage,
-#seller-stage {
-  height: 400px;
-  transform: scale(0.90);
-}
+.stage svg { display: block; }
 
-#ci-stage svg, #bins-stage svg, #mm-stage svg, #cond-stage svg,
-#pois-stage svg, #pval-stage svg, #pair-stage svg, #ls-stage svg,
-#smooth-stage svg, #binom-stage svg, #expo-stage svg,
-#clt-stage svg, #zstd-stage svg, #bayes-stage svg,
-#bayeq-stage svg, #ciflip-stage svg, #cieq-stage svg,
-#seller-stage svg { display: block; }
+// Takeaway line under a stage: ink, 24px, two lines max.
+.reveal section.stage-slide .slide-footer {
+  font-size: 24px;
+  color: var(--ink);
+  max-width: 980px;
+  margin-top: 0.45em;
+}
 
 // Invisible fragments used purely to gate animation steps.
 .fi-frag {
@@ -63,13 +59,13 @@
 // Orange (accent-3) rather than navy: navy is the deck's voice, orange is
 // the student's turn to act. One per interactive slide, never more.
 .try-this {
-  margin: 0.5em 0 0.2em;
-  padding: 10px 16px 10px 46px;
+  margin: 0.35em 0 0.2em;
+  padding: 8px 16px 8px 46px;
   background: rgba(244, 124, 60, 0.07);
   border: 1px solid rgba(244, 124, 60, 0.22);
   border-left: 4px solid var(--accent-3);
   border-radius: 0 6px 6px 0;
-  font-size: 0.58em;
+  font-size: 23px;
   line-height: 1.55;
   color: var(--ink);
   position: relative;
@@ -101,14 +97,21 @@
   font-weight: 600;
 }
 
-// ---- Full-width webR card ----
-// The base theme's .type-card is built for a two-up grid; a simulation
-// needs the whole slide. Same surface treatment, wider, and the output
-// pane is tall enough for a base-graphics plot.
+// ---- Sim slides: chrome sized for the room (spec §4.3, §7) ----
 .reveal section.sim-slide {
   display: block !important;
   text-align: left !important;
 }
+.slide-kicker { font-size: 17px; }
+.reveal section.sim-slide .slide-kicker { margin: 0.2em 0 0.4em; }
+.reveal section.sim-slide .lede-min {
+  font-size: 26px;
+  margin: 0.25em 0 0.4em;
+}
+
+// ---- Full-width webR card ----
+// Same surface treatment as the base theme's .type-card, wider, and the
+// output pane is tall enough for a base-graphics plot.
 .sim-card {
   padding: 14px 18px 12px;
   background: var(--bg-elev);
@@ -116,7 +119,7 @@
   border-top: 3px solid var(--accent-1);
   border-radius: 8px;
   box-shadow: 0 1px 2px rgba(20, 28, 45, 0.03);
-  margin: 0.4em 0 0.2em;
+  margin: 0.25em 0 0.15em;
   min-width: 0;
 }
 // qwebr's real DOM (verified in the browser, not assumed):
@@ -126,7 +129,13 @@
 //     .qwebr-output-graph-area     <- SIBLING of the console, not a child
 // So a plot has to be split off at the interactive-area level; text output
 // is split off one level deeper. Hence two variants below.
-.sim-card .qwebr-editor { font-size: 0.74em; }
+//
+// Font sizes: the extension reads the computed font-size of the editor div
+// and of the output div and multiplies by editor-font-scale (1, set in
+// _quarto.yml), so these px values ARE the Monaco font size and the printed
+// output size. Line height for Monaco is set in assets/js/sim-tune.html.
+.sim-card .qwebr-editor { font-size: 20px; }
+.sim-card .qwebr-output-code-area { font-size: 22px; }
 
 .sim-card .qwebr-output-code-area,
 .sim-card .qwebr-output-graph-area {
@@ -138,14 +147,15 @@
 }
 .sim-card .qwebr-output-code-area pre,
 .sim-card pre.qwebr-output-code {
-  line-height: 1.15;
-  font-size: 0.95em;
+  line-height: 1.25;
 }
 
 // --- .sim-plot: code on the left, the figure on the right ---
+// 1.45fr/1fr on the 998px inner grid gives a 590px code column: 49
+// characters of 20px mono, so the 48-character source limit never wraps.
 .sim-card.sim-plot .qwebr-interactive-area {
   display: grid;
-  grid-template-columns: 1.25fr 1fr;
+  grid-template-columns: 1.45fr 1fr;
   grid-template-areas:
     "toolbar toolbar"
     "console graph";
@@ -162,17 +172,22 @@
   height: auto;
 }
 // The console column carries the editor with the printed value beneath it.
-.sim-card.sim-plot .qwebr-output-code-area { margin-top: 8px; }
+.sim-card.sim-plot .qwebr-output-code-area { margin-top: 6px; min-height: 0; }
 
 // --- .sim-text: code on the left, printed output on the right ---
+// 1.5fr/1fr: 599px of code (49 chars), 399px of output (30 chars at 22px).
 .sim-card.sim-text .qwebr-console-area {
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
+  grid-template-columns: 1.5fr 1fr;
   gap: 16px;
   align-items: start;
 }
 .sim-card.sim-text .qwebr-console-area > * { min-width: 0; }
 .sim-card.sim-text .qwebr-output-graph-area { display: none; }
+
+// The hidden setup cell (plot text hook, spec §6.2) renders a "Loading
+// webR…" stub until the extension's hidden-cell pass runs. Never show it.
+.qwebr-noninteractive-setup-area { display: none; }
 
 // ---- Seminar marker on hero slides ----
 // Mono numeral + rule, so the deck reads as an ordered sequence of nine.
@@ -186,10 +201,10 @@
 .sem-mark::before {
   content: attr(data-sem);
   font-family: "JetBrains Mono", monospace;
-  font-size: 2.6em;
+  font-size: 4.4em;
   font-weight: 700;
   line-height: 1;
-  color: rgba(50, 93, 136, 0.22);
+  color: rgba(50, 93, 136, 0.18);
 }
 .sem-mark p {
   margin: 0;
@@ -198,6 +213,9 @@
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
+// Hero weight (spec §4.4): tagline up one step, lede in ink.
+.reveal section.hero > p { font-size: 1.3em; }
+.reveal section.hero .lede { color: var(--ink); }
 
 // ---- Stepped formula, annotated back to the picture ----
 // Each row is `expression | plain-English note`, so the algebra is read as a

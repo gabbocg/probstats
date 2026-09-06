@@ -12,8 +12,8 @@ The worksheet asks which display suits which data. The harder question is what h
 
 ## The same 30 numbers, three ways {.stage-slide #bins-intuition}
 
-::: {.stage-wrap .stage-wrap-bins}
-<div id="bins-stage"></div>
+::: {.stage-wrap .stage-wrap-std}
+<div id="bins-stage" class="stage"></div>
 :::
 
 []{.fragment .fi-frag id="bins-frag-w1"}

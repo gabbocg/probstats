@@ -12,8 +12,8 @@ The formulas on the worksheet fall out of one instruction: draw a square on ever
 
 ## The squares in least squares {.stage-slide #ls-intuition}
 
-::: {.stage-wrap .stage-wrap-400}
-<div id="ls-stage"></div>
+::: {.stage-wrap .stage-wrap-std}
+<div id="ls-stage" class="stage"></div>
 :::
 
 []{.fragment .fi-frag id="ls-frag-1"}

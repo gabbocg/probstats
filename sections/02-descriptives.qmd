@@ -12,8 +12,8 @@ The worksheet asks for the mean, the median, the mode and the standard deviation
 
 ## Watch the mean chase one point {.stage-slide #mm-intuition}
 
-::: {.stage-wrap .stage-wrap-mm}
-<div id="mm-stage"></div>
+::: {.stage-wrap .stage-wrap-std}
+<div id="mm-stage" class="stage"></div>
 :::
 
 []{.fragment .fi-frag id="mm-frag-1"}
