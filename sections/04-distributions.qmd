@@ -48,6 +48,7 @@ Seminar 4 · likelihood, and a decision
 ```{webr-r}
 #| fig-width: 5.7
 #| fig-height: 4.3
+#| out-width: "100%"
 s <- seq(0.5, 1, length.out = 401)
 rel <- function(k, n) { L <- dbinom(k, n, s); L / max(L) }
 
@@ -189,6 +190,7 @@ Seminar 4 · the CLT, stress-tested
 ```{webr-r}
 #| fig-width: 5.7
 #| fig-height: 4.3
+#| out-width: "100%"
 n <- 5          # <-- draws per average
 reps <- 4000
 

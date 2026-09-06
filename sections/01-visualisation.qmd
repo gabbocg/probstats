@@ -33,6 +33,7 @@ Seminar 1 · binning
 ```{webr-r}
 #| fig-width: 5.7
 #| fig-height: 4.3
+#| out-width: "100%"
 set.seed(7)
 x <- round(rgamma(120, 2.2, 0.45) + 4, 1)
 

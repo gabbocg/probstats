@@ -75,6 +75,7 @@ Seminar 5 · coverage
 ```{webr-r}
 #| fig-width: 5.7
 #| fig-height: 4.3
+#| out-width: "100%"
 mu <- 100; sigma <- 15   # the truth
 n <- 25; conf <- 0.95    # <-- your knobs
 reps <- 100

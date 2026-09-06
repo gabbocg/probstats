@@ -34,6 +34,8 @@ Press **Run** four or five times without changing a thing. The mean moves every 
 
 ```{webr-r}
 #| context: setup
+# Hidden: enlarges text and tightens margins on every plot in the deck (spec §6.2).
+# If this cell errors, the extension never re-enables the Run buttons, so keep it trivial.
 setHook("before.plot.new", function() par(cex = 1.6, mar = c(3.6, 3.8, 1.6, 0.8), mgp = c(2.3, 0.8, 0)))
 ```
 
