@@ -268,7 +268,7 @@ That is a 662×533 canvas scaled down into the 444px plot column, so the bitmap 
 ### 8.1 `scripts/check-render.sh` additions
 
 - `StageKit.register` appears in the render (kit included) and `sim-tune` is present.
-- exactly 18 `class="stage"` divs.
+- exactly 18 `class="stage"` divs (19 once project 2 splits the Steve stage in two; that project updates the number).
 - `editor-font-scale: 1` present in `_quarto.yml`.
 - for every `webr-r` cell in `sections/*.qmd` except cells containing `#| context: setup`, with `#|` lines excluded: line count within the budget for its slide shape (14 / 10 with `.lede-min` / 12 with `.sim-plot` / 8 for `power-sim`), and no line longer than 48 (44 in `.sim-plot` cells). An awk pass keyed on the `## ` heading, the same shape as the count used to write §6.1.
 - the setup cell is present (`context: setup` in the sources).
