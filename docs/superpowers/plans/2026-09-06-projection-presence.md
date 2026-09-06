@@ -925,35 +925,50 @@ Task 3 already wrote the header line as `deck-sim-tune: Monaco editor options th
 
 ```js
 // probe-overflow.js — paste into the browser console on the rendered deck.
-// deckProbe.all()  : every leaf slide over 700px, every stage whose gating
-//                    fragment count disagrees with StageKit.registry, every
-//                    takeaway line running to three lines, and Monaco sizes.
-// deckProbe.here() : the CURRENT slide only — smallest <text> in its stage
-//                    (must be >= 18 canvas units) and, for a sim slide, the
-//                    editor's wrapped-line count (must be 0).
-// Stages are built on slide entry, so walk the deck and call here() on each.
+// deckProbe.all()  : every stage-or-hero slide over 700px (sim slides are
+//                    skipped and listed), every stage whose gating fragment
+//                    count disagrees with StageKit.registry, every takeaway
+//                    running to three lines, and Monaco sizes.
+// deckProbe.here() : the CURRENT slide only — its height vs 700, smallest
+//                    <text> in its stage (must be >= 18 canvas units) and,
+//                    for a sim slide, the editor's wrapped-line count (0).
+// Sim slides only measure correctly while shown, so walk the deck and call
+// here() on each.
 window.deckProbe = (function () {
   function leaves() {
     return Array.prototype.filter.call(
       document.querySelectorAll('.reveal .slides section'),
       function (s) { return !s.querySelector('section'); });
   }
+  // Reveal keeps vertical stacks beyond `viewDistance` at display:none, so a
+  // leaf forced visible inside a hidden stack still measures 0: force the
+  // stack too, and restore both afterwards.
   function forced(s, fn) {
-    var d = s.style.display, v = s.style.visibility;
-    s.style.display = 'block'; s.style.visibility = 'hidden';
-    var r = fn(); s.style.display = d; s.style.visibility = v; return r;
+    var p = s.parentElement;
+    var els = (p && p.classList.contains('stack')) ? [s, p] : [s];
+    var saved = els.map(function (el) { return [el, el.style.display, el.style.visibility]; });
+    els.forEach(function (el) { el.style.display = 'block'; el.style.visibility = 'hidden'; });
+    try { return fn(); }
+    finally { saved.forEach(function (x) { x[0].style.display = x[1]; x[0].style.visibility = x[2]; }); }
   }
   function all() {
-    var H = Reveal.getConfig().height, out = { tall: [], frags: [], footers: [], editors: [] };
+    var H = Reveal.getConfig().height, out = { tall: [], frags: [], footers: [], editors: [], skipped: [] };
     leaves().forEach(function (s) {
-      forced(s, function () {
-        if (s.scrollHeight > H) out.tall.push(s.id + ' ' + s.scrollHeight + 'px');
-        Array.prototype.forEach.call(s.querySelectorAll('.slide-footer'), function (f) {
-          var lh = parseFloat(getComputedStyle(f).lineHeight) || 36;
-          var lines = Math.round(f.offsetHeight / lh);
-          if (lines > 2) out.footers.push(s.id + ' footer ' + lines + ' lines');
+      // Monaco lays out to its container width, which is 0 while the slide
+      // is hidden, so a forced sim slide reports a nonsense height: measure
+      // those with here() when the slide is shown.
+      if (s.querySelector('.qwebr-editor')) {
+        out.skipped.push(s.id);
+      } else {
+        forced(s, function () {
+          if (s.scrollHeight > H) out.tall.push(s.id + ' ' + s.scrollHeight + 'px');
+          Array.prototype.forEach.call(s.querySelectorAll('.slide-footer'), function (f) {
+            var lh = parseFloat(getComputedStyle(f).lineHeight) || 36;
+            var lines = Math.round(f.offsetHeight / lh);
+            if (lines > 2) out.footers.push(s.id + ' footer ' + lines + ' lines');
+          });
         });
-      });
+      }
       var st = s.querySelector('.stage');
       if (st) {
         var reg = window.StageKit && StageKit.registry[st.id];
@@ -972,6 +987,7 @@ window.deckProbe = (function () {
   }
   function here() {
     var s = Reveal.getCurrentSlide(), r = { slide: s.id };
+    r.height = s.scrollHeight; r.over = s.scrollHeight > Reveal.getConfig().height;
     var svg = s.querySelector('.stage svg');
     if (svg) {
       var sizes = Array.prototype.map.call(svg.querySelectorAll('text'), function (t) {
@@ -1010,6 +1026,19 @@ git commit -m "test(deck): cell budgets, kit presence and browser overflow probe
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
 ```
+
+---
+
+### Task 5b: Hero slides fit 700px
+
+**Files:**
+- Modify: `assets/seminars.scss` (hero block only)
+
+The probe (Task 5) showed that the hero changes of Task 4 (numeral 4.4em, tagline 1.3em) push eight of the ten hero slides to 708–773px; `.hero` is a centred flex column, so the excess clips top and bottom. Fix by tightening vertical space, not by undoing §4.4.
+
+- [ ] **Step 1:** In the hero block of `assets/seminars.scss`, add `line-height: 0.8` to `.sem-mark::before` (digits have no descenders, so the 158px glyph box shrinks to about 126px without shrinking the glyph) and add `.reveal section.hero .lede { margin-top: 0.4em; }` (theme.scss sets 0.7em). Render; paste the probe; `Reveal.slide(h, 0)` onto each hero in turn (`Reveal.getHorizontalSlides()` gives the order: index 1 is `s00-how-to-use`, 2 `s01-visualisation`, …, 10 `s09-forecasting`) and record `deckProbe.here().height`.
+- [ ] **Step 2:** If any hero still exceeds 700, apply in order until all fit: `.sem-mark { margin-bottom: 0 }`; `.reveal section.hero > p { margin: 0.3em 0 0.05em; max-width: 88% }`; then `.sem-mark::before { font-size: 4em }`. Record which steps were needed and the final ten heights (all must be ≤ 700). Screenshot `#/s09-forecasting` (the tallest) and `#/s01-visualisation` to confirm nothing is clipped and the numeral still reads as ghosted.
+- [ ] **Step 3:** `bash scripts/check-render.sh | tail -1` still reports the expected `Checks FAILED.` (budgets and setup cell are later tasks). Commit only `assets/seminars.scss`: `fix(deck): hero slides fit 700px after the numeral/tagline enlargement`.
 
 ---
 
