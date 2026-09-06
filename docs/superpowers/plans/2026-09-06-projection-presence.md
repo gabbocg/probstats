@@ -577,8 +577,10 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
 // ---- Full-width webR card ----
 // Same surface treatment as the base theme's .type-card, wider, and the
 // output pane is tall enough for a base-graphics plot.
+// Padding is tight on purpose: a 12-line plot cell with a two-line printed
+// result and a two-line prompt is the tallest sim slide and must fit 700px.
 .sim-card {
-  padding: 14px 18px 12px;
+  padding: 10px 18px 10px;
   background: var(--bg-elev);
   border: 1px solid var(--rule);
   border-top: 3px solid var(--accent-1);
@@ -613,6 +615,12 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
 .sim-card .qwebr-output-code-area pre,
 .sim-card pre.qwebr-output-code {
   line-height: 1.25;
+  // theme.scss gives every .reveal pre a block margin and 90% width; inside
+  // the output box that is dead space.
+  margin: 0;
+  width: 100%;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 // --- .sim-plot: code on the left, the figure on the right ---
@@ -661,15 +669,25 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
   display: flex;
   align-items: baseline;
   gap: 14px;
-  margin: 0 0 0.1em;
+  // Bottom margin dropped to 0 (Task 5b step a): the enlarged hero (numeral
+  // 4.4em, tagline 1.3em) still ran 26-30px over 700 after the line-height
+  // and lede fixes, so this squeezes the remaining slack above the h1.
+  margin: 0 0 0;
   color: var(--accent-1);
 }
 .sem-mark::before {
   content: attr(data-sem);
   font-family: "JetBrains Mono", monospace;
-  font-size: 4.4em;
+  // Trimmed from 4.4em (Task 5b step c): three heroes (long tagline/lede
+  // pairs) still ran 13px over 700 after the lede, .sem-mark and tagline
+  // tightening above; still visibly larger than pre-§4.4 (was smaller
+  // still), and still dominates the small uppercase label beside it.
+  font-size: 4em;
   font-weight: 700;
-  line-height: 1;
+  // Digits have no descenders, so the line box (158px at 4.4em) is mostly
+  // dead space below the glyph; 0.8 tightens that box to ~126px without
+  // shrinking the glyph itself, buying back ~32px of hero height.
+  line-height: 0.8;
   color: rgba(50, 93, 136, 0.18);
 }
 .sem-mark p {
@@ -680,8 +698,17 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
   text-transform: uppercase;
 }
 // Hero weight (spec §4.4): tagline up one step, lede in ink.
-.reveal section.hero > p { font-size: 1.3em; }
-.reveal section.hero .lede { color: var(--ink); }
+// margin and max-width tightened/widened (Task 5b step b): theme.scss's
+// 0.45em/0.1em margins and 78% max-width wrapped the enlarged 1.3em
+// tagline onto an extra line on four heroes; wider (88%) wraps fewer
+// lines and the tighter margins recover more vertical space.
+.reveal section.hero > p { font-size: 1.3em; margin: 0.3em 0 0.05em; max-width: 88%; }
+// theme.scss sets margin-top: 0.7em here; tightened to 0.4em to help the
+// enlarged hero (numeral 4.4em, tagline 1.3em) fit inside 700px (Task 5b).
+// After steps (a)-(c) below, three heroes with the longest tagline+lede
+// pairs (s02, s03, s07) still measured 702px — 0.3em closes that last 2px
+// without touching any §4.4-mandated size or color.
+.reveal section.hero .lede { color: var(--ink); margin-top: 0.3em; }
 
 // ---- Stepped formula, annotated back to the picture ----
 // Each row is `expression | plain-English note`, so the algebra is read as a
@@ -745,6 +772,7 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
 .claim-wrong .claim-tag { background: rgba(185, 74, 72, 0.14); color: #8A3937; }
 .claim-right .claim-tag { background: rgba(147, 197, 75, 0.18); color: #4E6B33; }
 ```
+Note: this block is the file as it stands after Tasks 5b and 8 (hero fit, plot-cell 1.5fr column, output `pre` margin/padding, card padding), which amended the original Task 4 content; the Task 4 commit itself carried the earlier values.
 
 - [ ] **Step 2: Add `class="stage"` to the 18 stage divs and rename the wrap classes**
 
