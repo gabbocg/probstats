@@ -830,7 +830,7 @@ for s in bins mm bayes bayeq ciflip cieq cond binom seller pois expo clt zstd ci
   need "id=\"$s-stage\"" "stage #$s-stage"
 done
 # Every stage div must carry the shared class (seminars.scss sizes .stage).
-STAGE_DIVS=$( { grep -oE '<div id="[a-z]+-stage" class="stage">' "$OUT" || true; } | wc -l | tr -d ' ')
+STAGE_DIVS=$( { grep -oE '<div id="[a-z0-9]+-stage" class="stage">' "$OUT" || true; } | wc -l | tr -d ' ')
 if [[ "$STAGE_DIVS" -eq 18 ]]; then echo "OK:   18 .stage divs"; else echo "FAIL: $STAGE_DIVS .stage divs (want 18)"; fail=1; fi
 need "window.StageKit = " "StageKit included"
 need "deck-sim-tune" "sim-tune included"
