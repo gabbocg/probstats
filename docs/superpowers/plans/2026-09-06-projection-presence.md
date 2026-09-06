@@ -917,9 +917,9 @@ echo "────────────────────────�
 [[ "$fail" -eq 0 ]] && echo "All checks passed." || { echo "Checks FAILED."; exit 1; }
 ```
 
-- [ ] **Step 2: Add the marker the check greps for to `assets/js/sim-tune.html`**
+- [ ] **Step 2: Confirm the marker the check greps for is present in `assets/js/sim-tune.html`**
 
-Change the first line of the comment block from `deck-sim-tune — Monaco editor options that CSS cannot reach.` to exactly `deck-sim-tune: Monaco editor options that CSS cannot reach.` (the string `deck-sim-tune` must appear in the render; it already does, this step is only to make sure nobody rewords it away — leave a note `// keep the token "deck-sim-tune": check-render.sh greps for it` on the line below the comment block).
+Task 3 already wrote the header line as `deck-sim-tune: Monaco editor options that CSS cannot reach.` and the note `// keep the token "deck-sim-tune" above: scripts/check-render.sh greps for it` (done early so this task needs no edit there). Just confirm: `grep -c deck-sim-tune assets/js/sim-tune.html` prints 2. Do not edit the file.
 
 - [ ] **Step 3: Create `scripts/probe-overflow.js`**
 
@@ -1004,7 +1004,7 @@ Expected: everything OK except `FAIL: plot-text setup cell missing` and budget F
 
 ```bash
 cd "/Users/gabbocg/Dropbox (Personal)/Documentos/Brainstorming/quantviz"
-git add bman10750-slides/scripts/check-render.sh bman10750-slides/scripts/probe-overflow.js bman10750-slides/assets/js/sim-tune.html
+git add bman10750-slides/scripts/check-render.sh bman10750-slides/scripts/probe-overflow.js
 git commit -m "test(deck): cell budgets, kit presence and browser overflow probe
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
