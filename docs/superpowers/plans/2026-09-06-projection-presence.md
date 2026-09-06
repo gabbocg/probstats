@@ -826,12 +826,15 @@ for id in s00-how-to-use s00-webr \
 done
 
 echo "── animation stages ───────────────────────────────"
-for s in bins mm bayes bayeq ciflip cieq cond binom seller pois expo clt zstd ci pval pair ls smooth; do
+STAGES="bins mm bayes bayeq ciflip cieq cond binom seller pois expo clt zstd ci pval pair ls smooth"
+for s in $STAGES; do
   need "id=\"$s-stage\"" "stage #$s-stage"
 done
 # Every stage div must carry the shared class (seminars.scss sizes .stage).
+# The expected count is derived from STAGES so adding a stage is one edit.
+WANT_STAGES=$(wc -w <<< "$STAGES" | tr -d ' ')
 STAGE_DIVS=$( { grep -oE '<div id="[a-z0-9]+-stage" class="stage">' "$OUT" || true; } | wc -l | tr -d ' ')
-if [[ "$STAGE_DIVS" -eq 18 ]]; then echo "OK:   18 .stage divs"; else echo "FAIL: $STAGE_DIVS .stage divs (want 18)"; fail=1; fi
+if [[ "$STAGE_DIVS" -eq "$WANT_STAGES" ]]; then echo "OK:   $WANT_STAGES .stage divs"; else echo "FAIL: $STAGE_DIVS .stage divs (want $WANT_STAGES)"; fail=1; fi
 need "window.StageKit = " "StageKit included"
 need "deck-sim-tune" "sim-tune included"
 
@@ -869,10 +872,10 @@ fi
 # Count qwebr-insertion-location-N: the filter emits exactly one per chunk.
 # (Do NOT count .qwebr-console-area — that DOM is built at runtime by JS and
 # its static occurrences have nothing to do with how many cells exist.)
-want=$(grep -ho '```{webr-r}' sections/*.qmd | wc -l | tr -d ' ')
+want=$( { grep -ho '```{webr-r}' sections/*.qmd || true; } | wc -l | tr -d ' ')
 # Require at least one digit: the extension's own JS carries a bare
 # "qwebr-insertion-location-" template string that would otherwise be counted.
-got=$(grep -o 'qwebr-insertion-location-[0-9][0-9]*' "$OUT" | sort -u | wc -l | tr -d ' ')
+got=$( { grep -o 'qwebr-insertion-location-[0-9][0-9]*' "$OUT" || true; } | sort -u | wc -l | tr -d ' ')
 if [[ "$got" -eq "$want" ]]; then
   echo "OK:   $got webR cells (matches $want in sections/)"
 else
@@ -908,6 +911,7 @@ budget_out=$(awk '
     printf "%s %-11s lines %2d/%-2d longest %2d/48\n", status, id, n, budget, mx
     next }
   inchunk && /^#\|/ { if ($0 ~ /context: *setup/) setup=1; next }
+  # BSD awk length() counts bytes: a non-ASCII character in a cell line counts as 2+. Cells are ASCII today; keep them so.
   inchunk { n++; if (length($0) > mx) mx = length($0) }
   END { exit bad ? 1 : 0 }
 ' sections/*.qmd) || fail=1
@@ -993,11 +997,14 @@ window.deckProbe = (function () {
       var sizes = Array.prototype.map.call(svg.querySelectorAll('text'), function (t) {
         return parseFloat(t.getAttribute('font-size') || getComputedStyle(t).fontSize);
       });
-      r.textNodes = sizes.length; r.minFont = Math.min.apply(null, sizes); r.maxFont = Math.max.apply(null, sizes);
+      r.textNodes = sizes.length;
+      r.minFont = sizes.length ? Math.min.apply(null, sizes) : null;
+      r.maxFont = sizes.length ? Math.max.apply(null, sizes) : null;
     }
     var ed = (window.qwebrEditorInstances || []).filter(function (e) {
       return e && e.getDomNode && s.contains(e.getDomNode()); })[0];
     if (ed) {
+      // _getViewModel is a private Monaco API; fine for a console diagnostic, not a contract.
       var vm = ed._getViewModel && ed._getViewModel();
       r.modelLines = ed.getModel().getLineCount();
       r.wrappedLines = vm ? vm.getLineCount() - r.modelLines : 'unknown';
