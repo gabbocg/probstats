@@ -616,11 +616,12 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
 }
 
 // --- .sim-plot: code on the left, the figure on the right ---
-// 1.45fr/1fr on the 998px inner grid gives a 590px code column: 49
-// characters of 20px mono, so the 48-character source limit never wraps.
+// 1.5fr/1fr, the same split as text cells: 599px of code. Monaco's padding
+// eats about 10px, so 590px (1.45fr) wrapped 48-character lines; 599 fits.
+// The plot column is 399px; the 410px bitmap is shown at 100% of it.
 .sim-card.sim-plot .qwebr-interactive-area {
   display: grid;
-  grid-template-columns: 1.45fr 1fr;
+  grid-template-columns: 1.5fr 1fr;
   grid-template-areas:
     "toolbar toolbar"
     "console graph";
@@ -1077,7 +1078,7 @@ In each of `bins-sim` (01), `seller-sim` and `clt-sim` (04), `ci-sim` (05), make
 #| fig-height: 4.3
 #| out-width: "100%"
 ```
-The extension builds a 410×310px bitmap (inches × 72 dpi, 12pt text) and displays it at `out-width`; `"100%"` fills the ~408px plot column, so the bitmap shows at about 1:1. (Without it the extension's 700px default applies and only the card's `max-width: 100%` clamp keeps the plot in its column.)
+The extension builds a 410×310px bitmap (inches × 72 dpi, 12pt text) and displays it at `out-width`; `"100%"` fills the 399px plot column, so the bitmap shows at about 1:1. (Without it the extension's 700px default applies and only the card's `max-width: 100%` clamp keeps the plot in its column.)
 
 - [ ] **Step 3: Render, check, and verify the hook fires**
 

@@ -95,7 +95,7 @@ Monaco options that CSS cannot reach are set from a new `assets/js/sim-tune.html
 | cell type | grid | code column | chars at 12px/char | output or plot column |
 |---|---|---|---|---|
 | `.sim-text` | 1.5fr / 1fr | 599px | 49 | 399px: 30 characters of 22px mono |
-| `.sim-plot` | 1.45fr / 1fr | 590px | 49 | 408px plot |
+| `.sim-plot` | 1.5fr / 1fr | 599px | 48 | 399px plot |
 
 **Limits, enforced by `check-render.sh` (§8.1) on the source cells. `#|` option lines are excluded from every count, and cells carrying `#| context: setup` are excluded entirely (they are hidden, so no limit applies):**
 
@@ -238,7 +238,7 @@ The four plot cells also set:
 #| out-width: "100%"
 ```
 
-The extension creates the canvas at `fig-width × dpi` pixels with webR's fixed 12-point text (`qwebr-compute-engine.js`, `pointsize: 12`), and `dpi` stays at its default 72, so the bitmap is 410×310px. Its displayed width is whatever `out-width` says (the extension's default is 700px, which the card's `max-width: 100%` clamp would then squeeze into the column); `"100%"` makes the canvas fill the ~408px plot column explicitly, so the bitmap shows at about 1:1 and the 12px base text lands near 19px after the `cex = 1.6` multiplier in the hook. Raising `dpi` would shrink the text relative to the plot, so it is left alone.
+The extension creates the canvas at `fig-width × dpi` pixels with webR's fixed 12-point text (`qwebr-compute-engine.js`, `pointsize: 12`), and `dpi` stays at its default 72, so the bitmap is 410×310px. Its displayed width is whatever `out-width` says (the extension's default is 700px, which the card's `max-width: 100%` clamp would then squeeze into the column); `"100%"` makes the canvas fill the 399px plot column explicitly, so the bitmap shows at about 1:1 and the 12px base text lands near 19px after the `cex = 1.6` multiplier in the hook. Raising `dpi` would shrink the text relative to the plot, so it is left alone.
 
 ## 7. Change list outside the animations
 
@@ -254,7 +254,7 @@ The extension creates the canvas at `fig-width × dpi` pixels with webR's fixed 
 - `.slide-footer` on `.stage-slide`: 24px, `--ink`, `max-width: 980px`.
 - `.slide-kicker`: 17px.
 - `.sim-card .qwebr-editor { font-size: 20px }`; `.sim-card .qwebr-output-code-area { font-size: 22px }` and its `pre` at line height 1.25; the existing `0.95em` rule on the `pre` removed.
-- `.sim-card.sim-text .qwebr-console-area { grid-template-columns: 1.5fr 1fr }` (was 1.3fr 1fr); `.sim-card.sim-plot .qwebr-interactive-area { grid-template-columns: 1.45fr 1fr }` (was 1.25fr 1fr), so every cell gets a 48-character column.
+- `.sim-card.sim-text .qwebr-console-area { grid-template-columns: 1.5fr 1fr }` (was 1.3fr 1fr); `.sim-card.sim-plot .qwebr-interactive-area { grid-template-columns: 1.5fr 1fr }` (was 1.25fr 1fr), the same split as text cells: Monaco's internal padding eats about 10px, so a 590px column (1.45fr) wrapped 48-character lines while 599px fits them.
 - Sim-slide chrome tightened so the budgets in §4.3 hold: `.reveal section.sim-slide > h2::after { margin-top: 0.4em }`; `.sim-slide .slide-kicker { margin: 0.2em 0 0.4em }`; `.sim-card { margin: 0.25em 0 0.15em }`; `.try-this { margin-top: 0.35em; padding-top: 8px; padding-bottom: 8px }`; `.sim-slide .lede-min { font-size: 26px; margin: 0.25em 0 0.4em }`; `.sim-card.sim-plot .qwebr-output-code-area { min-height: 0; margin-top: 6px }`.
 - `.try-this`: 23px.
 - `.sem-mark::before`: 4.4em, 18% alpha. `.reveal section.hero > p`: 1.3em. `.reveal section.hero .lede { color: var(--ink) }`.
