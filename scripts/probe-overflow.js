@@ -67,11 +67,14 @@ window.deckProbe = (function () {
       var sizes = Array.prototype.map.call(svg.querySelectorAll('text'), function (t) {
         return parseFloat(t.getAttribute('font-size') || getComputedStyle(t).fontSize);
       });
-      r.textNodes = sizes.length; r.minFont = Math.min.apply(null, sizes); r.maxFont = Math.max.apply(null, sizes);
+      r.textNodes = sizes.length;
+      r.minFont = sizes.length ? Math.min.apply(null, sizes) : null;
+      r.maxFont = sizes.length ? Math.max.apply(null, sizes) : null;
     }
     var ed = (window.qwebrEditorInstances || []).filter(function (e) {
       return e && e.getDomNode && s.contains(e.getDomNode()); })[0];
     if (ed) {
+      // _getViewModel is a private Monaco API; fine for a console diagnostic, not a contract.
       var vm = ed._getViewModel && ed._getViewModel();
       r.modelLines = ed.getModel().getLineCount();
       r.wrappedLines = vm ? vm.getLineCount() - r.modelLines : 'unknown';
