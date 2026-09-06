@@ -198,11 +198,11 @@ Thirteen cells need editing to meet §4.3. "Rewrap" means breaking a line at a c
 | `cheb-sim` | 11 | 49 | text + lede | 10 | drop the blank line; rewrap the one 49-char line → 10 |
 | `bayes-sim` | 9 | 56 | text | 14 | rewrap two lines → 11 |
 | `cond-sim` | 10 | 44 | text + lede | 10 | none |
-| `seller-sim` | 13 | 58 | plot | 12 | `L`/`rel` as two one-line functions; `plot()` over three lines without `las = 1`; the comment shortened; `round(c(...))` over two lines; blank lines dropped → 12 |
+| `seller-sim` | 13 | 58 | plot | 12 | `L`/`rel` as two one-line functions; `plot()` over three lines (keeping `las = 1`); the comment shortened; `round(c(...))` over two lines; blank lines dropped → 12 |
 | `memory-sim` | 8 | 54 | text + lede | 10 | rewrap two lines → 10 |
 | `pois-sim` | 10 | 46 | text + lede | 10 | none |
 | `clt-sim` | 15 | 42 | plot | 12 | drop the three blank lines → 12 |
-| `ci-sim` | 16 | 50 | plot | 12 | the largest edit: `mu`, `sigma`, `reps` on one line, `n`, `conf` (the knobs) on the next; drop the blank line; `plot(NA, ...)` over two lines without `las = 1`; `replicate()` and `segments()` tightened to 48 → 12 |
+| `ci-sim` | 16 | 50 | plot | 12 | the largest edit: `mu`, `sigma`, `reps` on one line, `n`, `conf` (the knobs) on the next; drop the blank line; `plot(NA, ...)` over two lines (keeping `las = 1`); `replicate()` and `segments()` tightened to 48 → 12 |
 | `ci-t-vs-z` | 15 | 63 | text | 14 | `coverage` as a single-expression function around `mean(replicate(...))`; `z_rule`/`t_rule` rewrapped; drop blank lines → about 10 |
 | `alpha-sim` | 10 | 50 | text + lede | 10 | rewrap the one 50-char line, drop one blank line → 10 |
 | `power-sim` | 8 | 49 | claim pair | 8 | move the 51-char `# H0 is FALSE ...` comment into the kicker ("Seminar 6 · the other error · H₀ false, true mean 105") → 7 |

@@ -1158,7 +1158,7 @@ L   <- function(k, n) dbinom(k, n, s)
 rel <- function(k, n) L(k, n) / max(L(k, n))
 plot(s, rel(10, 10), type = "l", lwd = 2,
      col = "#325D88", xlab = "true rate s",
-     ylab = "relative likelihood")
+     ylab = "relative likelihood", las = 1)
 lines(s, rel(48, 50), lwd = 2, col = "#93C54B")
 lines(s, rel(186,200), lwd = 2, col = "#B94A48")
 # flat prior: s ~ Beta(k + 1, n - k + 1)
@@ -1231,7 +1231,7 @@ half <- qnorm(1 - (1 - conf)/2) * se
 xbar <- replicate(reps, mean(rnorm(n,mu,sigma)))
 hit  <- abs(xbar - mu) <= half
 plot(NA, ylim=c(1,reps), xlim=mu+c(-4,4)*se,
-     xlab = "interval", ylab = "sample")
+     xlab = "interval", ylab = "sample", las=1)
 abline(v = mu, lty = 2, lwd=2, col = "#325D88")
 segments(xbar-half, 1:reps, xbar+half, 1:reps,
         col = ifelse(hit, "#9FB6CC", "#B94A48"))
