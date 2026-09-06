@@ -998,7 +998,7 @@ window.deckProbe = (function () {
 chmod +x scripts/check-render.sh
 quarto render 2>&1 | tail -1 && bash scripts/check-render.sh
 ```
-Expected: everything OK except `FAIL: plot-text setup cell missing` and budget FAILs for the ten cells that are over budget or over 48 characters today (bins, cheb, bayes, seller, memory, ci, ci-t-vs-z, alpha, pair, ovb; `clt` and `smooth` are over on lines, `cond`, `pois`, `ols`, `power` and the intro cell pass). Overall `Checks FAILED.` This is the expected red state; Tasks 6–8 turn it green. In the browser, paste the probe on any slide and run `deckProbe.all()`: `frags` lists every stage as "not registered" (until retuned) and `tall` lists the overflowing sim slides.
+Expected: everything OK except `FAIL: plot-text setup cell missing` and budget FAILs for exactly the thirteen cells Tasks 7–8 rewrite (bins, cheb, bayes, seller, memory, clt, ci, ci-t-vs-z, alpha, power, pair, ovb, smooth: each is over its line budget, over 48 characters, or both); `cond`, `pois`, `ols` and the intro cell pass. Overall `Checks FAILED.` This is the expected red state; Tasks 6–8 turn it green. In the browser, paste the probe on any slide and run `deckProbe.all()`: `frags` lists every stage as "not registered" (until retuned) and `tall` lists the overflowing sim slides.
 
 - [ ] **Step 5: Commit**
 
