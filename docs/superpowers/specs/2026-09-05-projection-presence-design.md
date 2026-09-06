@@ -58,7 +58,7 @@ Three stages keep a different canvas because their slides differ:
 |---|---|---|---|---|
 | `bins` | 1000×430 | 1000×445 | 468 | retuned to the standard height |
 | `mm` | 1000×380 | 1000×445 | 468 | retuned to the standard height |
-| `ci` | 1000×470 | 1000×330 | 347 | the `.claim-pair` sits beneath it; this is a re-layout (20 interval rows at a 17-unit step must fit 330 with 18-unit labels), planned as its own task |
+| `ci` | 1000×470 | 1000×330 | 347 | the `.claim-pair` sits beneath it; this is a re-layout (today's 20 rows at a 17-unit step would reach y = 385; the rows move to a 12-unit step, y 62–290, with the axis at 300 and 18-unit labels at 324), planned as its own task |
 
 Any `.slide-footer` text that would run to three lines at 24px/980px is shortened during implementation without changing its claim.
 

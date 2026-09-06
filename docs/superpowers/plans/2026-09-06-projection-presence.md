@@ -219,7 +219,7 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
 
   Contract for a stage file:
     StageKit.register({
-      stage: 'clt-stage',                       // id of the <div class="stage">
+      stage: 'clt-stage',                       // id of the stage div
       frags: ['clt-frag-1', 'clt-frag-2'],      // in order; state k = k visible
       build: function (stageEl) { ... return handle; },   // draws state 0
       place: function (handle, state, instant) { ... },   // moves to `state`
@@ -830,7 +830,7 @@ for s in bins mm bayes bayeq ciflip cieq cond binom seller pois expo clt zstd ci
   need "id=\"$s-stage\"" "stage #$s-stage"
 done
 # Every stage div must carry the shared class (seminars.scss sizes .stage).
-STAGE_DIVS=$( { grep -o 'class="stage"' "$OUT" || true; } | wc -l | tr -d ' ')
+STAGE_DIVS=$( { grep -oE '<div id="[a-z]+-stage" class="stage">' "$OUT" || true; } | wc -l | tr -d ' ')
 if [[ "$STAGE_DIVS" -eq 18 ]]; then echo "OK:   18 .stage divs"; else echo "FAIL: $STAGE_DIVS .stage divs (want 18)"; fail=1; fi
 need "window.StageKit = " "StageKit included"
 need "deck-sim-tune" "sim-tune included"
@@ -998,7 +998,7 @@ window.deckProbe = (function () {
 chmod +x scripts/check-render.sh
 quarto render 2>&1 | tail -1 && bash scripts/check-render.sh
 ```
-Expected: everything OK except `FAIL: plot-text setup cell missing` and budget FAILs for the ten over-budget cells (cheb, cond? no; see spec §6.1: bins, cheb, seller, memory, clt, ci, ci-t-vs-z, alpha, ovb, smooth may fail on lines or length). Overall `Checks FAILED.` This is the expected red state; Tasks 6–8 turn it green. In the browser, paste the probe on any slide and run `deckProbe.all()`: `frags` lists every stage as "not registered" (until retuned) and `tall` lists the overflowing sim slides.
+Expected: everything OK except `FAIL: plot-text setup cell missing` and budget FAILs for the ten cells that are over budget or over 48 characters today (bins, cheb, bayes, seller, memory, ci, ci-t-vs-z, alpha, pair, ovb; `clt` and `smooth` are over on lines, `cond`, `pois`, `ols`, `power` and the intro cell pass). Overall `Checks FAILED.` This is the expected red state; Tasks 6–8 turn it green. In the browser, paste the probe on any slide and run `deckProbe.all()`: `frags` lists every stage as "not registered" (until retuned) and `tall` lists the overflowing sim slides.
 
 - [ ] **Step 5: Commit**
 
