@@ -36,11 +36,11 @@ Seminar 1 · binning
 #| out-width: "100%"
 set.seed(7)
 x <- round(rgamma(120, 2.2, 0.45) + 4, 1)
-
 bw <- 1   # <-- bin width
-
-brk <- seq(floor(min(x)), ceiling(max(x)) + bw, bw)
-hist(x, breaks = brk, col = "#CBD9E6", border = "white", las = 1,
+brk <- seq(floor(min(x)),
+           ceiling(max(x)) + bw, bw)
+hist(x, breaks = brk, col = "#CBD9E6",
+     border = "white", las = 1,
      main = paste("bin width =", bw),
      xlab = "R&D spend (% of revenue)")
 ```

@@ -37,14 +37,12 @@ Chebyshev promises at least $1 - 1/k^2$ of any distribution lies within $k$ stan
 ```{webr-r}
 k <- 2        # <-- how many SDs
 n <- 20000
-
-# a wildly skewed population, nothing like normal
+# a wildly skewed population, far from normal
 x  <- rexp(n, rate = 1)^2
 mu <- mean(x); s <- sd(x)
 
 actual <- mean(abs(x - mu) <= k * s)
 bound  <- 1 - 1/k^2
-
 round(c(actual = actual, chebyshev = bound), 3)
 ```
 :::

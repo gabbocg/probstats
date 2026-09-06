@@ -48,11 +48,11 @@ Seminar 3 · the base rate does the work
 
 ::: {.sim-card .sim-text}
 ```{webr-r}
-prior <- 0.05   # <-- P(librarian) in the population
+prior <- 0.05   # <-- P(librarian)
 n <- 300000
 
 lib  <- runif(n) < prior
-# the description fits 40% of librarians, 10% of farmers
+# fits 40% of librarians, 10% of farmers
 fits <- runif(n) < ifelse(lib, 0.40, 0.10)
 
 round(c(prior     = prior,
