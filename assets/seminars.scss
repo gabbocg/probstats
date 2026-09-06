@@ -148,6 +148,10 @@
 .sim-card .qwebr-output-code-area pre,
 .sim-card pre.qwebr-output-code {
   line-height: 1.25;
+  // theme.scss gives every .reveal pre a block margin and 90% width; inside
+  // the output box that is dead space.
+  margin: 0;
+  width: 100%;
 }
 
 // --- .sim-plot: code on the left, the figure on the right ---
