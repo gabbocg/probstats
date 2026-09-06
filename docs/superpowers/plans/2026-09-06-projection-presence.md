@@ -182,9 +182,9 @@ printf '<script>/* sim-tune placeholder, replaced in Task 3 */</script>\n' > ass
 
 ```bash
 quarto render 2>&1 | tail -2 && bash scripts/check-render.sh | tail -1
-grep -c 'editor-font-scale' _site/index.html
+grep -c '"editor-font-scale":"1"' _site/index.html
 ```
-Expected: `Output created: _site/index.html`, `All checks passed.`, and a count of at least 1 (the option is serialised into each cell's JSON).
+Expected: `Output created: _site/index.html`, `All checks passed.`, and a count of 17 (the merged option is serialised into every cell's JSON as the string `"1"`; a bare `editor-font-scale` grep would also match the default `"0.5"` and prove nothing).
 
 - [ ] **Step 4: Commit**
 
@@ -750,7 +750,7 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
 ```bash
 cd "/Users/gabbocg/Dropbox (Personal)/Documentos/Brainstorming/quantviz/bman10750-slides"
 sed -i '' -E 's/<div id="([a-z]+)-stage"><\/div>/<div id="\1-stage" class="stage"><\/div>/' sections/*.qmd
-sed -i '' -E 's/\.stage-wrap-(400|bins|mm)\b/.stage-wrap-std/' sections/*.qmd
+sed -i '' -E 's/\.stage-wrap-(400|bins|mm)/.stage-wrap-std/' sections/*.qmd   # no \b: BSD sed ignores it
 grep -c 'class="stage"' sections/*.qmd | awk -F: '{s+=$2} END {print "stage divs:", s}'
 grep -ho 'stage-wrap-[a-z0-9]*' sections/*.qmd | sort | uniq -c
 ```
@@ -830,7 +830,7 @@ for s in bins mm bayes bayeq ciflip cieq cond binom seller pois expo clt zstd ci
   need "id=\"$s-stage\"" "stage #$s-stage"
 done
 # Every stage div must carry the shared class (seminars.scss sizes .stage).
-STAGE_DIVS=$(grep -o 'class="stage"' "$OUT" | wc -l | tr -d ' ')
+STAGE_DIVS=$( { grep -o 'class="stage"' "$OUT" || true; } | wc -l | tr -d ' ')
 if [[ "$STAGE_DIVS" -eq 18 ]]; then echo "OK:   18 .stage divs"; else echo "FAIL: $STAGE_DIVS .stage divs (want 18)"; fail=1; fi
 need "window.StageKit = " "StageKit included"
 need "deck-sim-tune" "sim-tune included"
@@ -966,7 +966,7 @@ window.deckProbe = (function () {
       if (!ed || !ed.getOption) return;
       var O = monaco.editor.EditorOption;
       var fs = ed.getOption(O.fontSize), lh = ed.getOption(O.lineHeight);
-      if (fs !== 20 || (lh !== 27 && lh !== 25)) out.editors.push(ed.__qwebrEditorId + ' font ' + fs + ' line ' + lh);
+      if (fs !== 20 || (lh !== 27 && lh !== 25)) out.editors.push('cell ' + ed.__qwebrCounter + ' font ' + fs + ' line ' + lh);
     });
     return out;
   }
@@ -1128,7 +1128,7 @@ round(c(A = good(10, 10), B = good(48, 50),
         C = good(186, 200)), 4)
 ```
 
-- [ ] **Step 5: `memory-sim` (lede, budget 10)** — output names shortened so the printed header fits 30 characters.
+- [ ] **Step 5: `memory-sim` (lede, budget 10)** — output names shortened so the printed header fits 30 characters (today's header is 34 wide). This is a deliberate deviation from spec §6.1's "prints exactly what it prints today": the values are unchanged, only the two names. Say so in the commit message.
 
 ```r
 x <- rexp(500000, rate = 0.1)  # mean life 10y
@@ -1243,7 +1243,7 @@ mean(replicate(4000, {
 Kicker on that slide becomes:
 ```markdown
 ::: {.slide-kicker}
-Seminar 6 · the other error · H₀ is false here: the true mean is 105
+Seminar 6 · the other error · H₀ false, true mean 105
 :::
 ```
 
@@ -1301,7 +1301,7 @@ This series **trends upward**, which breaks the no-trend assumption smoothing re
 ```bash
 quarto render 2>&1 | tail -1 && bash scripts/check-render.sh | tail -14
 ```
-Expected: every budget line `OK:` and `All checks passed.` In the browser run `ci-sim` (100 intervals, about 5 red), `ci-t-vs-z` (used_z about 0.87, used_t about 0.95 at n = 5), `power-sim` (about 0.16), `pair-sim` (matrix: independent t about -1.6, p about 0.11; paired t about -7.6, p about 0), `ovb-sim` (truth 0.3, full about 0.3, omitted clearly off), `smooth-sim` (four `a … MSE … MAE …` lines, each under 30 characters). Run `deckProbe.all()` (paste `scripts/probe-overflow.js` first): `tall` must be empty.
+Expected: every budget line `OK:` and `All checks passed.` In the browser run `ci-sim` (100 intervals, about 5 red), `ci-t-vs-z` (used_z about 0.87, used_t about 0.95 at n = 5), `power-sim` (about 0.16), `pair-sim` (matrix: independent t = -1.282, p = 0.2103; paired t = -11.000, p = 0.0000; the data is fixed so these are exact), `ovb-sim` (truth 0.3, full about 0.3, omitted clearly off), `smooth-sim` (four `a … MSE … MAE …` lines, each under 30 characters). Run `deckProbe.all()` (paste `scripts/probe-overflow.js` first): `tall` must be empty.
 
 - [ ] **Step 9: Commit**
 
@@ -1460,6 +1460,8 @@ K.register({ stage: '<name>-stage', frags: [ ...the ids in order... ], build: bu
 ```
 Every use of `REDUCE` becomes `K.REDUCE`; every `el(` becomes `K.el(`; `typeof window.anime === 'undefined' || !window.anime.animate` becomes `!K.animeReady()`. `build` must start with `var svg = K.canvas(stage, W, H);` instead of clearing the stage and creating the svg by hand.
 
+Note: the kit calls `place(handle, state, true)` on mount for **every** state, including 0, whereas six files today only snap when the state is non-zero (`bins`, `mm`, `clt`, `cond`, `expo`, `smooth`). Their state-0 snap is idempotent with `build` (every `place` must handle 0 anyway, because hiding the first fragment reaches it), so this is harmless. Do not add a guard.
+
 **R2. Colours and fonts.** Replace every hex literal with the `K.PAL` name from this table and every font string with `K.FONT.mono` / `K.FONT.sans`. Files that define local colour variables keep the variable names and point them at the kit (`var NAVY = K.PAL.navy;`), so the drawing code's diff stays small.
 
 | hex | name | hex | name |
@@ -1508,7 +1510,7 @@ Per-file notes follow. Line numbers are as of the baseline commit.
 
 **Files:** `assets/js/cieq-anim.html` (283 lines)
 
-- [ ] **Step 1:** R1–R3. Fonts: 17 (caption), 19 (notes → label), 24 (the formula → readout). Colour variables INK/SOFT/RULE/NAVY/OLIVE/ORANGE/BRICK → kit. Place: `place(s, st, instant)`.
+- [ ] **Step 1:** R1–R3. Fonts: 17 (caption), 19 (notes → label), 24 (an opacity-0 text at line 188 → label), plus a `'font-size': FS` reference with `FS = 30` for the formula grid (already the readout size; route it through `K.TYPE.readout`). Colour variables INK/SOFT/RULE/NAVY/OLIVE/ORANGE/BRICK → kit. Place: `place(s, st, instant)`.
 - [ ] **Step 2:** R4: `Y_ABOVE 138→154`, `Y_BELOW 205→228`; scale other literal y's. The formula at 30 mono is 18 units per character; confirm it still fits between x = 40 and 960.
 - [ ] **Step 3:** R6 on `#/cieq-formula` (four fragments). R7.
 
@@ -1516,7 +1518,7 @@ Per-file notes follow. Line numbers are as of the baseline commit.
 
 **Files:** `assets/js/ciflip-anim.html` (441 lines)
 
-- [ ] **Step 1:** R1–R3. Fonts: 15×5, 17×2. Colour variables → kit. The state function is `render(s, st, instant)`: pass `place: render`.
+- [ ] **Step 1:** R1–R3. Fonts: 15×5, 17×2, plus a `'font-size': FS` reference (`FS = 15`, the mean label at line 149 → label). Colour variables → kit. The state function is `render(s, st, instant)`: pass `place: render`.
 - [ ] **Step 2:** R4: `BASE 210→234`, `PEAK_Y 78→87`; scale other literal y's.
 - [ ] **Step 3:** R6 on `#/ciflip-intuition` (three fragments). R7.
 
@@ -1608,7 +1610,7 @@ Per-file notes follow. Line numbers are as of the baseline commit.
 **Files:**
 - Modify: `assets/js/ci-anim.html` (replace whole file)
 
-The slide keeps the `.claim-pair` under the stage, so this stage gets 330 units of height, not 445. Twenty intervals at a 13-unit step fit between y = 62 and y = 309; the axis sits at 300 with tick labels at 322; the μ label and the counter share the top band.
+The slide keeps the `.claim-pair` under the stage, so this stage gets 330 units of height, not 445. Twenty intervals at a 12-unit step fit between y = 62 and y = 290; the axis sits at 300 with tick labels at 324; the μ label and the counter share the top band.
 
 - [ ] **Step 1: Replace the file**
 
@@ -1638,8 +1640,9 @@ The slide keeps the `.claim-pair` under the stage, so this stage gets 330 units 
 
   var W = 1000, H = 330, X0 = 50, X1 = 950, VMIN = 88, VMAX = 112;
   // Top band 0-50 holds the mu label (two lines) and the counter; the rows
-  // run 62..309 at a 13-unit step; the axis sits at 300 with labels at 322.
-  var AXIS_Y = 300, MU_TOP = 54, ROW_TOP = 62, ROW_STEP = 13;
+  // run 62..290 at a 12-unit step (row 20 = 62 + 19*12 = 290), ten units
+  // clear of the axis at 300; tick labels sit at 324, inside the 330 canvas.
+  var AXIS_Y = 300, MU_TOP = 54, ROW_TOP = 62, ROW_STEP = 12;
 
   function px(v) { return X0 + (v - VMIN) * (X1 - X0) / (VMAX - VMIN); }
 
@@ -1763,7 +1766,7 @@ The slide keeps the `.claim-pair` under the stage, so this stage gets 330 units 
 ```bash
 quarto render 2>&1 | tail -1 && bash scripts/check-render.sh | tail -1
 ```
-Browser `#/ci-intuition`: the rain plays on entry; the counter reads `19 / 20 cover μ`; the last row sits above the axis; the tick labels (y 322) are inside the 347px wrap; the claim pair beneath is fully visible and the slide is not in `deckProbe.all().tall`. `deckProbe.here()` → `minFont: 18`. The μ label must not collide with the counter: they are at x = px(100) = 500 and x = 950, so they do not.
+Browser `#/ci-intuition`: the rain plays on entry; the counter reads `19 / 20 cover μ`; the last row (y = 290) sits clear of the axis; the tick labels (y 324) are inside the 347px wrap; the claim pair beneath is fully visible and the slide is not in `deckProbe.all().tall`. `deckProbe.here()` → `minFont: 18`. The μ label must not collide with the counter: they are at x = px(100) = 500 and x = 950, so they do not.
 
 - [ ] **Step 3: Commit**
 

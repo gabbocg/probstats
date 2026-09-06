@@ -156,7 +156,7 @@ Palette mapping, one name per hex used today:
 
 `register` does what every file's `init`/`mount`/`fragState` does today, once:
 
-- on `Reveal` `ready` and `slidechanged`: if a handle exists and the registration has `stop`, call `stop(s)`; then find the stage div in the current slide; if present, call `build`, count visible fragments among `frags`, and if non-zero call `place(s, count, true)` (snap, do not animate);
+- on `Reveal` `ready` and `slidechanged`: if a handle exists and the registration has `stop`, call `stop(s)`; then find the stage div in the current slide; if present, call `build`, count visible fragments among `frags`, and call `place(s, count, true)` (snap, do not animate) for every count including 0. Six files today skip the call at 0; their state-0 snap is idempotent with `build`, and every `place` must handle 0 anyway because hiding the first fragment reaches it;
 - on `fragmentshown` with a registered id at index `i`, `place(s, i + 1, false)`; on `fragmenthidden`, `place(s, i, false)`;
 - retry until `Reveal` exists, as the files do now.
 
