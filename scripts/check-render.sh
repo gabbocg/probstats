@@ -5,6 +5,7 @@
 #   2. a slide losing its animation stage or gating fragments
 #   3. a sim-card missing its layout variant (plot lands under the editor)
 #   4. webR chunks silently not reaching the filter
+#   5. a sim cell growing past the projection line budget or line length
 set -euo pipefail
 
 OUT="${1:-_site/index.html}"
@@ -37,6 +38,11 @@ echo "── animation stages ────────────────�
 for s in bins mm bayes bayeq ciflip cieq cond binom seller pois expo clt zstd ci pval pair ls smooth; do
   need "id=\"$s-stage\"" "stage #$s-stage"
 done
+# Every stage div must carry the shared class (seminars.scss sizes .stage).
+STAGE_DIVS=$( { grep -oE '<div id="[a-z0-9]+-stage" class="stage">' "$OUT" || true; } | wc -l | tr -d ' ')
+if [[ "$STAGE_DIVS" -eq 18 ]]; then echo "OK:   18 .stage divs"; else echo "FAIL: $STAGE_DIVS .stage divs (want 18)"; fail=1; fi
+need "window.StageKit = " "StageKit included"
+need "deck-sim-tune" "sim-tune included"
 
 echo "── gating fragments ───────────────────────────────"
 # Each stage's JS listens for these ids; losing one silently freezes a step.
@@ -81,6 +87,40 @@ if [[ "$got" -eq "$want" ]]; then
 else
   echo "FAIL: $got webR cells rendered but $want in sections/ — stale render?"; fail=1
 fi
+
+if grep -qE '^\s*editor-font-scale:\s*1\s*$' _quarto.yml; then
+  echo "OK:   editor-font-scale: 1 in _quarto.yml"
+else
+  echo "FAIL: editor-font-scale: 1 missing from _quarto.yml (Monaco will be half size)"; fail=1
+fi
+if grep -qE '^#\| context: setup' sections/00-how-to-use.qmd; then
+  echo "OK:   plot-text setup cell present"
+else
+  echo "FAIL: plot-text setup cell missing from sections/00-how-to-use.qmd"; fail=1
+fi
+
+echo "── sim-cell budgets (spec §4.3) ───────────────────"
+# Budget by slide shape: 14 lines plain, 10 with a .lede-min, 12 with a plot,
+# 8 on power-sim (claim pair above the card). 48 characters max everywhere.
+# `#|` option lines never count; a `#| context: setup` cell is exempt.
+budget_out=$(awk '
+  /^## / { id=$0; sub(/.*#/,"",id); sub(/\}.*/,"",id); lede=0; plot=0 }
+  /\.lede-min/ { lede=1 }
+  /\.sim-plot/ { plot=1 }
+  /^```\{webr-r\}/ { inchunk=1; n=0; mx=0; setup=0; next }
+  inchunk && /^```$/ {
+    inchunk=0
+    if (setup) next
+    budget = plot ? 12 : (lede ? 10 : 14); if (id == "power-sim") budget = 8
+    status = (n <= budget && mx <= 48) ? "OK:  " : "FAIL:"
+    if (status == "FAIL:") bad = 1
+    printf "%s %-11s lines %2d/%-2d longest %2d/48\n", status, id, n, budget, mx
+    next }
+  inchunk && /^#\|/ { if ($0 ~ /context: *setup/) setup=1; next }
+  inchunk { n++; if (length($0) > mx) mx = length($0) }
+  END { exit bad ? 1 : 0 }
+' sections/*.qmd) || fail=1
+echo "$budget_out"
 
 echo "───────────────────────────────────────────────────"
 [[ "$fail" -eq 0 ]] && echo "All checks passed." || { echo "Checks FAILED."; exit 1; }
