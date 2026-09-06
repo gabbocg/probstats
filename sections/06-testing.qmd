@@ -39,9 +39,8 @@ Below, $H_0$ is **true** in every single one of the 5,000 worlds. Every rejectio
 alpha <- 0.05   # <-- your significance level
 reps  <- 5000
 n     <- 30
-
 reject <- replicate(reps, {
-  x <- rnorm(n, mean = 100, sd = 15)  # H0 is TRUE
+  x <- rnorm(n, 100, 15)   # H0 is TRUE
   t <- (mean(x) - 100) / (sd(x)/sqrt(n))
   abs(t) > qt(1 - alpha/2, n - 1)
 })
@@ -56,7 +55,7 @@ You get back roughly `alpha`. Set it to `0.01` and the false-alarm rate follows.
 ## "Fail to reject" is not "accept" {.sim-slide #power-sim}
 
 ::: {.slide-kicker}
-Seminar 6 · the other error
+Seminar 6 · the other error · H₀ false, true mean 105
 :::
 
 :::: {.claim-pair}
@@ -82,8 +81,6 @@ Whether that is reassuring depends entirely on how much power you had.
 ::: {.sim-card .sim-text}
 ```{webr-r}
 n <- 10   # <-- try 10, then 50, then 200
-
-# H0 is FALSE here: the true mean is 105, not 100
 mean(replicate(4000, {
   x <- rnorm(n, mean = 105, sd = 15)
   t <- (mean(x) - 100) / (sd(x)/sqrt(n))

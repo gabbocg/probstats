@@ -31,16 +31,16 @@ Seminar 7 · same numbers, two tests
 
 ::: {.sim-card .sim-text}
 ```{webr-r}
-before <- c(3,15,8,19,5,12,17,7,14,10,6,16,9,13,11)
-after  <- c(1,13,5,17,4, 9,16,4,12, 7,5,13,7,10, 9)
-
+before <- c(3, 15, 8, 19, 5, 12, 17, 7,
+            14, 10, 6, 16, 9, 13, 11)
+after  <- c(1, 13, 5, 17, 4, 9, 16, 4,
+            12, 7, 5, 13, 7, 10, 9)
 ind <- t.test(after, before, var.equal = TRUE)
 par <- t.test(after, before, paired = TRUE)
-
-round(c(indep_t = ind$statistic,
-        indep_p = ind$p.value,
-        pair_t  = par$statistic,
-        pair_p  = par$p.value), 4)
+row <- function(r) c(t = unname(r$statistic),
+                     p = r$p.value)
+round(rbind(independent = row(ind),
+            paired      = row(par)), 4)
 ```
 :::
 

@@ -30,24 +30,20 @@ Seminar 9 · MSE and MAE
 :::
 
 ::: {.lede-min}
-This series **trends upward**, which breaks the no-trend assumption smoothing requires. The error metrics will tell you so.
+This series **trends upward**, which breaks the no-trend assumption smoothing requires. $F_2 = 67$ is given; the error metrics will tell you the rest.
 :::
 
 ::: {.sim-card .sim-text}
 ```{webr-r}
 x <- c(45, 62, 73, 87, 86, 95)   # <-- trending
-
 err <- function(a) {
-  f <- 67                        # F2 is given
+  f <- 67
   for (k in 2:5) f[k] <- a*x[k] + (1-a)*f[k-1]
-  x[2:6] - f[1:5]
-}
+  x[2:6] - f[1:5] }
 for (a in c(0.2, 0.4, 0.6, 0.8)) {
   e <- err(a)
-  cat("alpha", a,
-      " MSE", round(mean(e^2), 1),
-      " MAE", round(mean(abs(e)), 2), "\n")
-}
+  cat("a", a, " MSE", round(mean(e^2), 1),
+      " MAE", round(mean(abs(e)), 2), "\n") }
 ```
 :::
 

@@ -76,21 +76,17 @@ Seminar 5 · coverage
 #| fig-width: 5.7
 #| fig-height: 4.3
 #| out-width: "100%"
-mu <- 100; sigma <- 15   # the truth
-n <- 25; conf <- 0.95    # <-- your knobs
-reps <- 100
-
+mu <- 100; sigma <- 15; reps <- 100  # the truth
+n <- 25; conf <- 0.95                # <-- knobs
 se   <- sigma / sqrt(n)
 half <- qnorm(1 - (1 - conf)/2) * se
-xbar <- replicate(reps, mean(rnorm(n, mu, sigma)))
+xbar <- replicate(reps, mean(rnorm(n,mu,sigma)))
 hit  <- abs(xbar - mu) <= half
-
-plot(NA, ylim = c(1, reps), las = 1,
-     xlim = mu + c(-4, 4) * se,
-     xlab = "interval", ylab = "sample")
-abline(v = mu, lty = 2, lwd = 2, col = "#325D88")
-segments(xbar - half, 1:reps, xbar + half, 1:reps,
-         col = ifelse(hit, "#9FB6CC", "#B94A48"))
+plot(NA, ylim=c(1,reps), xlim=mu+c(-4,4)*se,
+     xlab = "interval", ylab = "sample", las=1)
+abline(v = mu, lty = 2, lwd=2, col = "#325D88")
+segments(xbar-half, 1:reps, xbar+half, 1:reps,
+        col = ifelse(hit, "#9FB6CC", "#B94A48"))
 mean(hit)
 ```
 :::
@@ -107,21 +103,17 @@ Seminar 5 · $\sigma$ known vs unknown
 
 ::: {.sim-card .sim-text}
 ```{webr-r}
-n <- 5                 # <-- try 5, then 25, then 100
+n <- 5            # <-- try 5, then 25, then 100
 mu <- 100; sigma <- 15; reps <- 2000
-
-# both rules use the SAMPLE sd; only the critical value differs
-z_rule <- function(x) qnorm(.975) * sd(x) / sqrt(n)
-t_rule <- function(x) qt(.975, n - 1) * sd(x) / sqrt(n)
-
-coverage <- function(rule) {
-  mean(replicate(reps, {
-    x <- rnorm(n, mu, sigma)
-    abs(mean(x) - mu) <= rule(x)
-  }))
-}
-round(c(used_z = coverage(z_rule),
-        used_t = coverage(t_rule)), 3)
+# same sample sd; only the cut-off differs
+z_rule <- function(x) qnorm(.975)*sd(x)/sqrt(n)
+t_rule <- function(x) qt(.975,n-1)*sd(x)/sqrt(n)
+cover <- function(rule) mean(replicate(reps, {
+  x <- rnorm(n, mu, sigma)
+  abs(mean(x) - mu) <= rule(x)
+}))
+round(c(used_z = cover(z_rule),
+        used_t = cover(t_rule)), 3)
 ```
 :::
 

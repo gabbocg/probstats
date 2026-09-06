@@ -61,16 +61,13 @@ Here we *know* the truth: experience is worth exactly 0.3 per year. Schooling ma
 ::: {.sim-card .sim-text}
 ```{webr-r}
 n <- 5000
-schooling  <- rnorm(n, 12, 3)
-experience <- 20 - 0.6*schooling + rnorm(n, 0, 3)
-wage <- 5 + 0.8*schooling + 0.3*experience + rnorm(n)
-
-full <- coef(lm(wage ~ schooling + experience))
-drop <- coef(lm(wage ~ experience))
-
-round(c(truth   = 0.3,
-        full    = full["experience"],
-        omitted = drop["experience"]), 3)
+school <- rnorm(n, 12, 3)
+exper  <- 20 - 0.6*school + rnorm(n, 0, 3)
+wage   <- 5 + 0.8*school + 0.3*exper + rnorm(n)
+both <- coef(lm(wage ~ school + exper))
+one  <- coef(lm(wage ~ exper))
+round(c(truth = 0.3, full = both[["exper"]],
+        omitted = one[["exper"]]), 3)
 ```
 :::
 
