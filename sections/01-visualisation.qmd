@@ -31,6 +31,8 @@ Seminar 1 · binning
 
 ::: {.sim-card .sim-plot}
 ```{webr-r}
+#| fig-width: 5.7
+#| fig-height: 4.3
 set.seed(7)
 x <- round(rgamma(120, 2.2, 0.45) + 4, 1)
 

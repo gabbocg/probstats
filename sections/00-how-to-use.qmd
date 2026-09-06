@@ -32,6 +32,11 @@ round(mean(x), 2)
 Press **Run** four or five times without changing a thing. The mean moves every time — *that* is the whole subject in one line.
 :::
 
+```{webr-r}
+#| context: setup
+setHook("before.plot.new", function() par(cex = 1.6, mar = c(3.6, 3.8, 1.6, 0.8), mgp = c(2.3, 0.8, 0)))
+```
+
 ::: {.slide-footer}
 First run takes a few seconds while R loads. After that it is instant.
 :::
