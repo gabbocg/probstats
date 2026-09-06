@@ -1,0 +1,227 @@
+<script>
+/*
+  Mean-vs-median animation — slide #mm-intuition (Seminar 2).
+
+  Teaching point: the mean is a balance point, so it is dragged towards
+  whatever is furthest away; the median only counts positions, so it does
+  not care how far the tail runs. The presenter advances fragments and:
+    0. eleven roughly symmetric values — the two markers sit on top of
+       each other, which is why the distinction looks pointless at first
+    1. the largest value walks out to 96 — the mean walks with it
+    2. a second value walks out to 92 — the mean moves again, the median
+       has still not moved a pixel
+
+  Fragment gating follows the deck convention: invisible .fi-frag spans on
+  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+*/
+(function () {
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var BASE = [38, 42, 45, 47, 49, 50, 52, 54, 56, 59, 62];
+
+  // Each state is the full value array, not a delta, so mean/median are
+  // always recomputed from what is actually on screen.
+  var VALUES = [
+    BASE,
+    BASE.map(function (v, i) { return i === 10 ? 96 : v; }),
+    BASE.map(function (v, i) { return i === 10 ? 96 : (i === 9 ? 92 : v); })
+  ];
+
+  var CAPTIONS = [
+    'symmetric data — mean and median agree',
+    'one outlier — the mean follows it',
+    'two outliers — the median has still not moved'
+  ];
+
+  // Stage geometry — fixed 1000x380 space, scaled to the slide via CSS.
+  var W = 1000, H = 380, X0 = 60, X1 = 940, VMIN = 0, VMAX = 100;
+  var AXIS_Y = 300, ROW_Y = 210, DOT_R = 9;
+  // The two markers are stacked, never side by side: in state 0 they land
+  // on almost the same value, and horizontal labels would collide there.
+  var MEAN_TOP = 306, MEDIAN_TOP = 340, TRI_H = 12, TRI_W = 8, LAB_DROP = 27;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function px(v) { return X0 + (v - VMIN) * (X1 - X0) / (VMAX - VMIN); }
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function mean(vals) {
+    var s = 0;
+    vals.forEach(function (v) { s += v; });
+    return s / vals.length;
+  }
+  function median(vals) {
+    var a = vals.slice().sort(function (x, y) { return x - y; });
+    var m = a.length >> 1;
+    return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+  }
+
+  // A marker is built at x = 0 and moved with a translate, so one tween of
+  // a single number drives the triangle, the label and the readout at once
+  // — they cannot drift apart.
+  function marker(svg, name, colour, top) {
+    var g = el('g', { transform: 'translate(0,0)' });
+    g.appendChild(el('polygon', {
+      points: '0,' + top + ' ' + (-TRI_W) + ',' + (top + TRI_H) +
+              ' ' + TRI_W + ',' + (top + TRI_H),
+      fill: colour
+    }));
+    var lab = el('text', {
+      x: -5, y: top + LAB_DROP, 'text-anchor': 'end', fill: colour,
+      'font-size': 15, 'font-family': 'Roboto, sans-serif'
+    });
+    lab.textContent = name;
+    g.appendChild(lab);
+    var num = el('text', {
+      x: 5, y: top + LAB_DROP, 'text-anchor': 'start', fill: colour,
+      'font-size': 15, 'font-weight': 700,
+      'font-family': 'JetBrains Mono, monospace'
+    });
+    g.appendChild(num);
+    svg.appendChild(g);
+
+    return {
+      set: function (v) {
+        g.setAttribute('transform', 'translate(' + px(v) + ',0)');
+        num.textContent = v.toFixed(1);
+      }
+    };
+  }
+
+  function build(stage) {
+    stage.innerHTML = '';
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+
+    // --- axis ---
+    svg.appendChild(el('line', {
+      x1: X0, y1: AXIS_Y, x2: X1, y2: AXIS_Y, stroke: '#E5E7EB', 'stroke-width': 1
+    }));
+    [0, 20, 40, 60, 80, 100].forEach(function (v) {
+      svg.appendChild(el('line', {
+        x1: px(v), y1: AXIS_Y, x2: px(v), y2: AXIS_Y + 6,
+        stroke: '#B0B7C0', 'stroke-width': 1
+      }));
+      var t = el('text', {
+        x: px(v), y: AXIS_Y - 12, 'text-anchor': 'middle',
+        fill: '#6E7681', 'font-size': 15,
+        'font-family': 'JetBrains Mono, monospace'
+      });
+      t.textContent = v;
+      svg.appendChild(t);
+    });
+
+    var cap = el('text', {
+      x: X0, y: 34, fill: '#6E7681', 'font-size': 17,
+      'font-family': 'Roboto, sans-serif', class: 'mm-caption'
+    });
+    cap.textContent = CAPTIONS[0];
+    svg.appendChild(cap);
+
+    // --- the sample ---
+    var dots = BASE.map(function (v) {
+      return svg.appendChild(el('circle', {
+        cx: px(v), cy: ROW_Y, r: DOT_R,
+        fill: '#325D88', opacity: 0.5, class: 'mm-dot'
+      }));
+    });
+
+    var mMean = marker(svg, 'mean', '#B94A48', MEAN_TOP);
+    var mMed = marker(svg, 'median', '#93C54B', MEDIAN_TOP);
+
+    stage.appendChild(svg);
+    var s = { dots: dots, cap: cap, mean: mMean, median: mMed, at: 0 };
+    snap(s, 0);
+    return s;
+  }
+
+  function snap(s, state) {
+    var vals = VALUES[state];
+    s.cap.textContent = CAPTIONS[state];
+    s.dots.forEach(function (d, i) { d.setAttribute('cx', px(vals[i])); });
+    s.mean.set(mean(vals));
+    s.median.set(median(vals));
+    s.at = state;
+  }
+
+  function place(s, state, instant) {
+    var vals = VALUES[state];
+    var from = VALUES[s.at];
+    s.cap.textContent = CAPTIONS[state];
+    s.at = state;
+
+    if (instant || REDUCE ||
+        typeof window.anime === 'undefined' || !window.anime.animate) {
+      snap(s, state);
+      return;
+    }
+
+    var A = window.anime;
+    A.animate(s.dots, {
+      cx: function (el, i) { return px(vals[i]); },
+      duration: 700,
+      ease: 'outCubic'
+    });
+
+    // The mean is tweened rather than jumped so the marker and its readout
+    // move together with the dot that is dragging them. The median gets the
+    // same treatment for symmetry of code — its start and end are equal, so
+    // on screen it simply refuses to budge, which is the whole point.
+    [[s.mean, mean(from), mean(vals)],
+     [s.median, median(from), median(vals)]].forEach(function (job) {
+      var mk = job[0], p = { v: job[1] }, end = job[2];
+      A.animate(p, {
+        v: end,
+        duration: 700,
+        ease: 'outCubic',
+        onUpdate: function () { mk.set(p.v); }
+      });
+    });
+  }
+
+  var ORDER = ['mm-frag-1', 'mm-frag-2'];
+  var STATES = { 'mm-frag-1': 1, 'mm-frag-2': 2 };
+
+  // How many gating fragments Reveal currently has shown. Landing on this
+  // slide via a #hash or by stepping backwards from a later slide leaves
+  // fragments already marked .visible; without this the freshly built stage
+  // would show the symmetric sample while Reveal believes it is done, and
+  // the next arrow press would leave the slide with nothing ever having moved.
+  function fragState(slide) {
+    var n = 0;
+    ORDER.forEach(function (id) {
+      var f = slide.querySelector('#' + id);
+      if (f && f.classList.contains('visible')) n++;
+    });
+    return n;
+  }
+
+  function init() {
+    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
+    var current = null;
+
+    function mount(slide) {
+      if (!slide) return;
+      var stage = slide.querySelector('#mm-stage');
+      if (!stage) { current = null; return; }
+      current = build(stage);
+      var s = fragState(slide);
+      if (s) place(current, s, true);   // snap, don't animate, on entry
+    }
+    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
+    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
+
+    Reveal.on('fragmentshown', function (e) {
+      var n = STATES[e.fragment.id];
+      if (current && n !== undefined) place(current, n);
+    });
+    Reveal.on('fragmenthidden', function (e) {
+      var n = STATES[e.fragment.id];
+      if (current && n !== undefined) place(current, n - 1);
+    });
+  }
+  init();
+})();
+</script>

@@ -1,0 +1,127 @@
+# Estimation {.hero #s05-estimation}
+
+::: {.sem-mark data-sem="5"}
+Seminar 5 · Confidence intervals
+:::
+
+The interval is random. The truth is not.
+
+::: {.lede}
+The formula $\bar x \pm z\,\sigma/\sqrt n$ looks like it was handed down. It was not — it is one geometric move, performed on the distribution of $\bar x$, and once you have seen the move the algebra is a transcript of it.
+:::
+
+## The move that builds the interval {.stage-slide #ciflip-intuition}
+
+::: {.stage-wrap .stage-wrap-400}
+<div id="ciflip-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="ciflip-frag-1"}
+[]{.fragment .fi-frag id="ciflip-frag-2"}
+[]{.fragment .fi-frag id="ciflip-frag-3"}
+
+::: {.slide-footer}
+Nothing new is constructed at the flip — the bracket is the *same width*, slid from $\mu$ to $\bar x$. So "$\bar x$ is within 5.88 of $\mu$" and "$\mu$ is within 5.88 of $\bar x$" are the same statement, and the second one is the interval.
+:::
+
+## Four parts, one interval {.stage-slide #cieq-formula}
+
+::: {.stage-wrap .stage-wrap-400}
+<div id="cieq-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="cieq-frag-1"}
+[]{.fragment .fi-frag id="cieq-frag-2"}
+[]{.fragment .fi-frag id="cieq-frag-3"}
+[]{.fragment .fi-frag id="cieq-frag-4"}
+
+::: {.slide-footer}
+Only $\bar x$ came from your sample. $z$ you chose, $\sigma$ and $n$ you knew — so the half-width 5.88 was fixed *before you collected anything*. That is why every interval on the next slide is exactly the same length.
+:::
+
+## What is actually random here? {.stage-slide #ci-intuition}
+
+::: {.stage-wrap .stage-wrap-ci}
+<div id="ci-stage"></div>
+:::
+
+:::: {.claim-pair}
+
+::: {.claim-cell .claim-wrong}
+[Tempting]{.claim-tag}
+
+"There is a 95% probability that $\mu$ lies in **my** interval."
+
+$\mu$ is a fixed number. It is either in there or it is not — no probability left to speak of.
+:::
+
+::: {.claim-cell .claim-right}
+[Correct]{.claim-tag}
+
+"95% of intervals **built this way** contain $\mu$."
+
+The randomness is in the sampling, so it lives in the interval's endpoints — never in $\mu$.
+:::
+
+::::
+
+## Check the 95% yourself {.sim-slide #ci-sim}
+
+::: {.slide-kicker}
+Seminar 5 · coverage
+:::
+
+::: {.sim-card .sim-plot}
+```{webr-r}
+mu <- 100; sigma <- 15   # the truth
+n <- 25; conf <- 0.95    # <-- your knobs
+reps <- 100
+
+se   <- sigma / sqrt(n)
+half <- qnorm(1 - (1 - conf)/2) * se
+xbar <- replicate(reps, mean(rnorm(n, mu, sigma)))
+hit  <- abs(xbar - mu) <= half
+
+plot(NA, ylim = c(1, reps), las = 1,
+     xlim = mu + c(-4, 4) * se,
+     xlab = "interval", ylab = "sample")
+abline(v = mu, lty = 2, lwd = 2, col = "#325D88")
+segments(xbar - half, 1:reps, xbar + half, 1:reps,
+         col = ifelse(hit, "#9FB6CC", "#B94A48"))
+mean(hit)
+```
+:::
+
+::: {.try-this}
+Run it a few times — the red misses wander around 5, they are not pinned to it. Then set `conf <- 0.80`: shorter intervals, more misses. **Precision is bought with coverage.**
+:::
+
+## Why the worksheet makes you switch to $t$ {.sim-slide #ci-t-vs-z}
+
+::: {.slide-kicker}
+Seminar 5 · $\sigma$ known vs unknown
+:::
+
+::: {.sim-card .sim-text}
+```{webr-r}
+n <- 5                 # <-- try 5, then 25, then 100
+mu <- 100; sigma <- 15; reps <- 2000
+
+# both rules use the SAMPLE sd; only the critical value differs
+z_rule <- function(x) qnorm(.975) * sd(x) / sqrt(n)
+t_rule <- function(x) qt(.975, n - 1) * sd(x) / sqrt(n)
+
+coverage <- function(rule) {
+  mean(replicate(reps, {
+    x <- rnorm(n, mu, sigma)
+    abs(mean(x) - mu) <= rule(x)
+  }))
+}
+round(c(used_z = coverage(z_rule),
+        used_t = coverage(t_rule)), 3)
+```
+:::
+
+::: {.try-this}
+At `n <- 5` the $z$ rule lands near 87%, not 95% — you paid for confidence you never received. The $t$ correction buys it back. Push `n` to 100 and the two rules converge, which is why the distinction stops mattering for large samples.
+:::

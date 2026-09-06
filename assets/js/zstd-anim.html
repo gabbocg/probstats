@@ -1,0 +1,344 @@
+<script>
+/*
+  Standardisation animation — slide #zstd-intuition.
+
+  Teaching point: the worksheet makes students compute Z = (X - mu)/sigma and
+  read one table. The thing the worksheet never shows is WHY one table is
+  enough. Standardising is a change of RULER, done in two moves:
+    0. X ~ N(100, 15^2), upper tail X > 120 shaded
+    1. subtract mu   — the curve SLIDES to zero; shape and height untouched
+    2. divide by sigma — the curve NARROWS and, because the total area under a
+       density is nailed to 1, it must therefore grow TALLER
+
+  The invariant is printed large and never changes: the shaded area is 0.0912
+  in all three states. The peak height is printed under it in small type and
+  goes 0.0266 -> 0.0266 -> 0.3989. The contrast between the number that moves
+  and the number that does not IS the lesson.
+
+  Honesty note. The curve is the true density f(x) drawn with ONE fixed
+  pixels-per-density-unit scale (PY), so the 15x height jump is arithmetic,
+  not art direction. That forces a choice about the sigma-scaling step,
+  because the axis also rescales: if sigma and the axis both shrink by 15 at
+  the same rate the curve's pixel shape never changes and there is nothing to
+  see. So the step is staged — sigma compresses first against the OLD ruler
+  (a tall thin spike, pixel area exactly conserved), then the ruler zooms in
+  to fit it. Both end states are exactly as specified; only the camera move
+  in between is a choice.
+
+  Fragment gating follows the deck convention: invisible .fi-frag spans on
+  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+*/
+(function () {
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // The cutoff is always the SAME number of standard deviations out. Deriving
+  // it from (mu, sigma) instead of hardcoding three values is what keeps the
+  // shaded area invariant on every intermediate frame, not just at rest.
+  var ZSTAR = 4 / 3;                              // 120 = 100 + (4/3)*15
+
+  // Stage geometry — fixed 1000x400 space, scaled to the slide via CSS.
+  var W = 1000, H = 400, X0 = 90, X1 = 910;
+  var BASE = 330, PY = 640;                       // 640 px per unit of density
+  var NPT = 400, NQ = 600;                        // curve samples / quadrature
+  var NS = 'http://www.w3.org/2000/svg';
+
+  // PY is the single scale the whole slide hangs on. The tallest thing ever
+  // drawn is the standard normal peak, 0.39894 * 640 = 255px, which puts the
+  // apex at y = 75 — just inside the headroom above the plot.
+
+  var STATES = [
+    { mu: 100, sigma: 15, axMin:  40, axMax: 160,
+      cap: 'a normal in its original units',
+      vline: 'X ~ N(100, 15²)', clab: 'X = 120' },
+    { mu:   0, sigma: 15, axMin: -60, axMax:  60,
+      cap: 'subtract mu — the shape is untouched',
+      vline: 'X - 100 ~ N(0, 15²)', clab: '20' },
+    { mu:   0, sigma:  1, axMin:  -4, axMax:   4,
+      cap: 'divide by sigma — narrower, so taller',
+      vline: 'Z ~ N(0, 1)', clab: 'z = 1.33' }
+  ];
+
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  // The density itself. Everything visual is downstream of this one line.
+  function dens(x, mu, sigma) {
+    var z = (x - mu) / sigma;
+    return Math.exp(-0.5 * z * z) / (sigma * Math.sqrt(2 * Math.PI));
+  }
+
+  // A frame is the complete drawable state: where the ruler starts and ends,
+  // and which normal is sitting on it.
+  function frame(mu, sigma, axMin, axMax) {
+    return { mu: mu, sigma: sigma, axMin: axMin, axMax: axMax,
+             cut: mu + ZSTAR * sigma };
+  }
+  function frameOf(i) {
+    var S = STATES[i];
+    return frame(S.mu, S.sigma, S.axMin, S.axMax);
+  }
+
+  function px(f, x) { return X0 + (x - f.axMin) / (f.axMax - f.axMin) * (X1 - X0); }
+  function py(d)    { return BASE - d * PY; }
+
+  // Trapezoidal integration of the plotted density from the cutoff outwards.
+  // Stopping at ten sigma rather than at axMax is the "negligible beyond"
+  // assumption made explicit: it keeps the step size a fixed fraction of
+  // sigma, so the answer does not drift when the spike is narrow relative to
+  // a still-wide ruler mid-transition.
+  function shadedArea(f) {
+    var hi = Math.min(f.axMax, f.cut + 10 * f.sigma);
+    var h = (hi - f.cut) / NQ, a = 0;
+    for (var i = 0; i < NQ; i++) {
+      a += (dens(f.cut + i * h, f.mu, f.sigma) +
+            dens(f.cut + (i + 1) * h, f.mu, f.sigma)) / 2 * h;
+    }
+    return a;
+  }
+
+  // Sampled uniformly in PIXEL space (~2px apart), so the spike stays smooth
+  // even when it is only 55px wide on a 120-unit ruler.
+  function curvePath(f) {
+    var d = '', i, x;
+    for (i = 0; i <= NPT; i++) {
+      x = f.axMin + (f.axMax - f.axMin) * i / NPT;
+      d += (i ? 'L' : 'M') + px(f, x).toFixed(2) + ' ' +
+           py(dens(x, f.mu, f.sigma)).toFixed(2);
+    }
+    return d;
+  }
+
+  // The upper tail as a closed region: along the curve from the cutoff to the
+  // right edge, down to the baseline, back along it.
+  function tailPath(f) {
+    var d = 'M' + px(f, f.cut).toFixed(2) + ' ' +
+            py(dens(f.cut, f.mu, f.sigma)).toFixed(2), i, x;
+    for (i = 0; i <= NPT; i++) {
+      x = f.axMin + (f.axMax - f.axMin) * i / NPT;
+      if (x <= f.cut) continue;
+      d += 'L' + px(f, x).toFixed(2) + ' ' +
+           py(dens(x, f.mu, f.sigma)).toFixed(2);
+    }
+    return d + 'L' + X1 + ' ' + BASE + 'L' + px(f, f.cut).toFixed(2) +
+           ' ' + BASE + 'Z';
+  }
+
+  // Ticks are generated from the CURRENT span rather than listed per state,
+  // so the ruler relabels itself continuously while it zooms. The step list
+  // is chosen so the rest states land exactly on the specified labels:
+  // span 120 -> step 20 (40..160, -60..60), span 8 -> step 1 (-4..4).
+  var STEPS = [0.5, 1, 2, 2.5, 5, 10, 20, 25, 50];
+  function tickStep(span) {
+    var best = STEPS[0];
+    for (var i = 0; i < STEPS.length; i++) if (span / STEPS[i] >= 6) best = STEPS[i];
+    return best;
+  }
+  function ticks(f) {
+    var step = tickStep(f.axMax - f.axMin);
+    var dec = (step % 1 === 0) ? 0 : 1;
+    var out = [], v = Math.ceil(f.axMin / step - 1e-9) * step;
+    for (; v <= f.axMax + 1e-9; v += step) {
+      if (Math.abs(v) < 1e-9) v = 0;              // no "-0" on the ruler
+      out.push({ v: v, x: px(f, v), t: v.toFixed(dec) });
+    }
+    return out;
+  }
+
+  function build(stage) {
+    stage.innerHTML = '';
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+
+    // --- caption: what move we just made ---
+    var cap = el('text', {
+      x: 40, y: 34, fill: '#6E7681', 'font-size': 17,
+      'font-family': 'Roboto, sans-serif', class: 'zstd-caption'
+    });
+    svg.appendChild(cap);
+
+    // --- the shaded tail, under the stroke so the outline stays crisp ---
+    var tail = svg.appendChild(el('path', {
+      d: '', fill: '#B94A48', 'fill-opacity': 0.18, stroke: 'none',
+      class: 'zstd-tail'
+    }));
+
+    // --- the density ---
+    var curve = svg.appendChild(el('path', {
+      d: '', fill: 'none', stroke: '#325D88', 'stroke-width': 2.5,
+      'stroke-linejoin': 'round', class: 'zstd-curve'
+    }));
+
+    // --- baseline, then a group the ruler is rebuilt into each frame ---
+    svg.appendChild(el('line', {
+      x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: '#E5E7EB', 'stroke-width': 1
+    }));
+    var axis = svg.appendChild(el('g', { class: 'zstd-axis' }));
+
+    // --- the cutoff: one vertical rule, always the same z, and its label ---
+    var cutline = svg.appendChild(el('line', {
+      x1: 0, y1: BASE, x2: 0, y2: 158,
+      stroke: '#B94A48', 'stroke-width': 1.5, opacity: 0.85
+    }));
+    var cutlab = el('text', {
+      x: 0, y: 148, 'text-anchor': 'middle', fill: '#B94A48', 'font-size': 15,
+      'font-family': 'JetBrains Mono, monospace'
+    });
+    svg.appendChild(cutlab);
+
+    // --- the readout. The big number is the invariant; the small one moves. ---
+    var alab = el('text', {
+      x: 900, y: 68, 'text-anchor': 'end', fill: '#6E7681', 'font-size': 14,
+      'font-family': 'Roboto, sans-serif'
+    });
+    alab.textContent = 'shaded area';
+    svg.appendChild(alab);
+
+    var aval = el('text', {
+      x: 900, y: 98, 'text-anchor': 'end', fill: '#B94A48', 'font-size': 26,
+      'font-weight': 700, 'font-family': 'JetBrains Mono, monospace',
+      class: 'zstd-area'
+    });
+    svg.appendChild(aval);
+
+    var peak = el('text', {
+      x: 900, y: 122, 'text-anchor': 'end', fill: '#6E7681', 'font-size': 14,
+      'font-family': 'JetBrains Mono, monospace', class: 'zstd-peak'
+    });
+    svg.appendChild(peak);
+
+    // --- which variable we are looking at, in mono so it reads as notation ---
+    var vline = el('text', {
+      x: X0, y: 386, fill: '#3E3F3A', 'font-size': 17,
+      'font-family': 'JetBrains Mono, monospace'
+    });
+    svg.appendChild(vline);
+
+    stage.appendChild(svg);
+    return { svg: svg, cap: cap, tail: tail, curve: curve, axis: axis,
+             cutline: cutline, cutlab: cutlab, aval: aval, peak: peak,
+             vline: vline, state: 0 };
+  }
+
+  // Everything that depends on the frame, redrawn. Called once per rAF tick
+  // during a transition — paths have no tweenable `d`, so a scalar is driven
+  // and the geometry is rebuilt from it.
+  function render(s, f) {
+    s.curve.setAttribute('d', curvePath(f));
+    s.tail.setAttribute('d', tailPath(f));
+
+    var cx = px(f, f.cut);
+    s.cutline.setAttribute('x1', cx);
+    s.cutline.setAttribute('x2', cx);
+    s.cutlab.setAttribute('x', cx);
+
+    s.aval.textContent = shadedArea(f).toFixed(4);
+    s.peak.textContent = 'peak ' + (1 / (f.sigma * Math.sqrt(2 * Math.PI))).toFixed(4);
+
+    while (s.axis.firstChild) s.axis.removeChild(s.axis.firstChild);
+    ticks(f).forEach(function (t) {
+      s.axis.appendChild(el('line', {
+        x1: t.x, y1: BASE, x2: t.x, y2: BASE + 6,
+        stroke: '#B0B7C0', 'stroke-width': 1
+      }));
+      var lab = el('text', {
+        x: t.x, y: BASE + 24, 'text-anchor': 'middle', fill: '#6E7681',
+        'font-size': 14, 'font-family': 'JetBrains Mono, monospace'
+      });
+      lab.textContent = t.t;
+      s.axis.appendChild(lab);
+    });
+  }
+
+  function words(s, i) {
+    s.cap.textContent = STATES[i].cap;
+    s.vline.textContent = STATES[i].vline;
+    s.cutlab.textContent = STATES[i].clab;
+  }
+
+  function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function win(t, a, b) { return clamp01((t - a) / (b - a)); }
+
+  function place(s, i, instant) {
+    var A = frameOf(s.state), B = frameOf(i);
+    words(s, i);
+
+    // Reveal only ever fires one fragment event at a time, so a two-step jump
+    // means something else moved us. The staged tween below assumes adjacent
+    // states, so snap instead of easing through geometry it was not built for.
+    if (instant || REDUCE || Math.abs(i - s.state) > 1 ||
+        typeof window.anime === 'undefined' || !window.anime.animate) {
+      render(s, B);
+      s.state = i;
+      return;
+    }
+
+    // Stagger the two halves of the move when sigma changes, so the squeeze
+    // is visible before the ruler catches up. Narrowing: curve first, ruler
+    // second. Widening (a fragment stepped back): ruler first, so the fat
+    // curve never has to spill off a ruler that is still too tight.
+    var narrow = B.sigma < A.sigma, wide = B.sigma > A.sigma;
+    var sw0 = narrow ? 0    : wide ? 0.45 : 0, sw1 = narrow ? 0.55 : 1;
+    var aw0 = narrow ? 0.45 : 0,               aw1 = wide   ? 0.55 : 1;
+
+    var p = { t: 0 };
+    window.anime.animate(p, {
+      t: 1,
+      duration: 800,
+      ease: 'outCubic',
+      onUpdate: function () {
+        var ts = win(p.t, sw0, sw1), ta = win(p.t, aw0, aw1);
+        render(s, frame(
+          lerp(A.mu, B.mu, ts), lerp(A.sigma, B.sigma, ts),
+          lerp(A.axMin, B.axMin, ta), lerp(A.axMax, B.axMax, ta)
+        ));
+      }
+    });
+    s.state = i;
+  }
+
+  var ORDER = ['zstd-frag-1', 'zstd-frag-2'];
+  var FRAGS = { 'zstd-frag-1': 1, 'zstd-frag-2': 2 };
+
+  // How many gating fragments Reveal currently has shown. Landing on this
+  // slide via a #hash or by stepping backwards from a later slide leaves
+  // fragments already marked .visible; without this the freshly built stage
+  // would sit at N(100, 15^2) while Reveal believes it is done, and the next
+  // arrow press would leave the slide with the animation never having run.
+  function fragState(slide) {
+    var n = 0;
+    ORDER.forEach(function (id) {
+      var f = slide.querySelector('#' + id);
+      if (f && f.classList.contains('visible')) n++;
+    });
+    return n;
+  }
+
+  function init() {
+    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
+    var current = null;
+
+    function mount(slide) {
+      if (!slide) return;
+      var stage = slide.querySelector('#zstd-stage');
+      if (!stage) { current = null; return; }
+      current = build(stage);
+      place(current, fragState(slide), true);   // snap, don't animate, on entry
+    }
+    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
+    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
+
+    Reveal.on('fragmentshown', function (e) {
+      var i = FRAGS[e.fragment.id];
+      if (current && i !== undefined) place(current, i);
+    });
+    Reveal.on('fragmenthidden', function (e) {
+      var i = FRAGS[e.fragment.id];
+      if (current && i !== undefined) place(current, i - 1);
+    });
+  }
+  init();
+})();
+</script>

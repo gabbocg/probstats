@@ -1,0 +1,108 @@
+# Probability {.hero #s03-probability}
+
+::: {.sem-mark data-sem="3"}
+Seminar 3 · Conditional probability and Bayes
+:::
+
+Evidence updates a belief. It does not replace it.
+
+::: {.lede}
+Every tree diagram and every "given that" on the worksheet is one move: discard the part of the world you now know did not happen, then rescale what is left. Do it with areas and Bayes' theorem stops being a formula to memorise.
+:::
+
+## Steve is meek, tidy, loves detail {.stage-slide #bayes-intuition}
+
+::: {.stage-wrap .stage-wrap-400}
+<div id="bayes-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="bayes-frag-1"}
+[]{.fragment .fi-frag id="bayes-frag-2"}
+[]{.fragment .fi-frag id="bayes-frag-3"}
+[]{.fragment .fi-frag id="bayes-frag-4"}
+
+::: {.slide-footer}
+Almost everyone says librarian. The description *does* fit librarians four times better — and Steve is still far more likely to be a farmer, because there are nineteen times as many of them. Both facts are in the picture at once.
+:::
+
+## The formula is just that picture {.stage-slide #bayeq-formula}
+
+::: {.stage-wrap .stage-wrap-400}
+<div id="bayeq-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="bayeq-frag-1"}
+[]{.fragment .fi-frag id="bayeq-frag-2"}
+[]{.fragment .fi-frag id="bayeq-frag-3"}
+[]{.fragment .fi-frag id="bayeq-frag-4"}
+
+::: {.slide-footer}
+Nothing is derived here that the grid did not already show. The numerator is one block, the denominator is every block that survived the evidence, and dividing them is the re-scaling you watched happen — which is why $0.020/0.115$ and $4/23$ are not merely close, they are the same number.
+:::
+
+## Move the prior, watch the answer move {.sim-slide #bayes-sim}
+
+::: {.slide-kicker}
+Seminar 3 · the base rate does the work
+:::
+
+::: {.sim-card .sim-text}
+```{webr-r}
+prior <- 0.05   # <-- P(librarian) in the population
+n <- 300000
+
+lib  <- runif(n) < prior
+# the description fits 40% of librarians, 10% of farmers
+fits <- runif(n) < ifelse(lib, 0.40, 0.10)
+
+round(c(prior     = prior,
+        posterior = mean(lib[fits])), 4)
+```
+:::
+
+::: {.try-this}
+The evidence is identical every time — only the prior changes. At `0.05` you get 0.17; at `0.50` you get 0.80. **The description never had an opinion about how common librarians are, so the base rate has to supply it.**
+:::
+
+## The same move, in pure proportions {.stage-slide #cond-intuition}
+
+::: {.stage-wrap .stage-wrap-400}
+<div id="cond-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="cond-frag-1"}
+[]{.fragment .fi-frag id="cond-frag-2"}
+[]{.fragment .fi-frag id="cond-frag-3"}
+
+::: {.slide-footer}
+This is your worksheet's tree diagram, drawn as area instead of branches: 80% would buy, 40% of those would also upgrade. Counting people or splitting a unit square — same operation, and the answer is again a ratio of what survived.
+:::
+
+## Count the managers instead {.sim-slide #cond-sim}
+
+::: {.slide-kicker}
+Seminar 3 · Bayes without the formula
+:::
+
+::: {.lede-min}
+You never need the theorem if you are willing to simulate 200,000 managers and count the ones you care about.
+:::
+
+::: {.sim-card .sim-text}
+```{webr-r}
+n   <- 200000
+buy <- runif(n) < 0.80
+
+# upgrading depends on whether they bought
+p_up <- ifelse(buy, 0.40, 0.10)
+up   <- runif(n) < p_up
+
+# keep ONLY the managers who would upgrade,
+# then ask what fraction of those are buyers
+round(mean(buy[up]), 4)
+```
+:::
+
+::: {.try-this}
+`buy[up]` **is** the conditioning step — one line doing what the tree diagram does, and what the grid did to Steve. Drop the buy rate to `0.20` and the answer collapses, for exactly the reason Steve is probably a farmer.
+:::

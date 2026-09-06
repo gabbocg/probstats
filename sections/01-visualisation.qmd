@@ -1,0 +1,48 @@
+# Describing data I {.hero #s01-visualisation}
+
+::: {.sem-mark data-sem="1"}
+Seminar 1 · Data visualisation
+:::
+
+A histogram is a choice, not a fact.
+
+::: {.lede}
+The worksheet asks which display suits which data. The harder question is what happens *after* you pick one — because the same thirty numbers can be made to tell two different stories.
+:::
+
+## The same 30 numbers, three ways {.stage-slide #bins-intuition}
+
+::: {.stage-wrap .stage-wrap-bins}
+<div id="bins-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="bins-frag-w1"}
+[]{.fragment .fi-frag id="bins-frag-w2"}
+
+::: {.slide-footer}
+Nothing was added or removed between the second and third views. Only the bin width changed — and with it, whether you would report a long right tail at all.
+:::
+
+## Turn the knob yourself {.sim-slide #bins-sim}
+
+::: {.slide-kicker}
+Seminar 1 · binning
+:::
+
+::: {.sim-card .sim-plot}
+```{webr-r}
+set.seed(7)
+x <- round(rgamma(120, 2.2, 0.45) + 4, 1)
+
+bw <- 1   # <-- bin width
+
+brk <- seq(floor(min(x)), ceiling(max(x)) + bw, bw)
+hist(x, breaks = brk, col = "#CBD9E6", border = "white", las = 1,
+     main = paste("bin width =", bw),
+     xlab = "R&D spend (% of revenue)")
+```
+:::
+
+::: {.try-this}
+Run it with `bw <- 1`, then `0.5`, then `5`. At which width does the right tail stop being visible? That is the width an optimist would choose.
+:::

@@ -1,0 +1,365 @@
+<script>
+/*
+  Bayes animation — slide #bayes-intuition (Seminar 3).
+
+  Teaching point: Bayes' theorem is not a formula to memorise, it is a RATIO
+  OF AREAS. Steve is meek, tidy and loves detail; everyone says "librarian"
+  and quietly forgets how few librarians there are. Advancing the fragments
+  walks the natural-frequency story over 200 people:
+    0. 200 people, one cell each                     (Steve is one of them)
+    1. the PRIOR — 10 librarians, 190 farmers
+    2. the LIKELIHOOD — 40% of librarians fit (4), 10% of farmers fit (19)
+    3. RESTRICT — throw away everyone who does not fit; 23 remain
+    4. the POSTERIOR — the 23 survivors gather into one row: 4 / 23 = 17%
+
+  Step 4 is the whole animation. Watching the 4 navy cells travel across the
+  grid and land next to 19 grey ones is what makes "the answer is a ratio"
+  visible rather than asserted; the arithmetic underneath is a caption.
+
+  The counts are chosen so nothing rounds: 40% of 10 = 4 exactly, and 10% of
+  each 10-cell farmer column = 1 exactly across 19 columns = 19.
+
+  Profession is carried by FILL (navy = librarian, grey = farmer) and never
+  changes. "Fits the description" is carried by a STROKE, so a cell can say
+  both things at once and the population stays readable at every step.
+
+  Fragment gating follows the deck convention: invisible .fi-frag spans on
+  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+*/
+(function () {
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Stage geometry — fixed 1000x400 space, scaled to the slide via CSS.
+  var W = 1000, H = 400;
+
+  // The population grid: 20 columns x 10 rows = one cell per person.
+  var COLS = 20, ROWS = 10, CELL = 24, GAP = 3, PITCH = CELL + GAP;  // 27
+  var X0 = 150, Y0 = 84;
+
+  var INK = '#3E3F3A', SOFT = '#6E7681', RULE = '#E5E7EB';
+  var NAVY = '#325D88', ORANGE = '#F47C3C', GREY = '#B0B7C0';
+  var MONO = 'JetBrains Mono, monospace', SANS = 'Roboto, sans-serif';
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function txt(attrs, s) { var t = el('text', attrs); t.textContent = s; return t; }
+  function setAttrs(n, p) { for (var k in p) n.setAttribute(k, p[k]); }
+
+  // Who fits the description — deterministic, no RNG, so the picture is the
+  // same in every rehearsal and in the room.
+  //   librarian column: 4 of 10  = 40%
+  //   each farmer column: 1 of 10 = 10%, at a row that walks by 3 so the
+  //   marked farmers do not read as a ruled line across the grid.
+  var LIB_FITS = [1, 3, 6, 8];
+  function fits(c, r) {
+    if (c === 0) return LIB_FITS.indexOf(r) >= 0;
+    return r === (c * 3 + 2) % 10;
+  }
+
+  // The posterior row: same pitch as the grid, so the gathered cells look
+  // like the grid cells they are rather than a new set of objects. Its LENGTH
+  // is counted off fits() rather than typed, so the row can never be sized for
+  // a different number of survivors than the grid actually produces.
+  var ROW_N = (function () {
+    var n = 0, c, r;
+    for (c = 0; c < COLS; c++) for (r = 0; r < ROWS; r++) if (fits(c, r)) n++;
+    return n;
+  })();
+  var ROW_Y = 200;
+  var ROW_W = ROW_N * PITCH - GAP;
+  var ROW_X = (W - ROW_W) / 2;
+
+  // The population, built once. Column-major so that column 0 — the
+  // librarians — comes first, which also hands the 4 navy survivors the
+  // first four slots of the posterior row for free.
+  var PEOPLE = (function () {
+    var a = [], c, r;
+    for (c = 0; c < COLS; c++) {
+      for (r = 0; r < ROWS; r++) {
+        a.push({
+          gx: X0 + c * PITCH, gy: Y0 + r * PITCH,
+          lib: c === 0, fit: fits(c, r), slot: -1, rank: -1
+        });
+      }
+    }
+    var slot = 0;
+    a.forEach(function (p) {
+      if (!p.fit) return;
+      p.rank = slot;
+      p.slot = slot;
+      p.rx = ROW_X + slot * PITCH;
+      slot++;
+    });
+    return a;
+  })();
+
+  // Keep these SHORT. The caption is left-anchored at x=40, y=34 and the
+  // readout panel starts at x=730; at 17px Roboto (~8.4px per character) a
+  // caption much past ~44 characters runs straight under the readout.
+  var CAPTIONS = {
+    0: '200 people. Steve is one of them.',
+    1: 'the prior — librarians are rare',
+    2: 'who fits the description?',
+    3: 'keep only the ones who fit',
+    4: 'the answer is a ratio of areas'
+  };
+
+  // Every number below is COUNTED off the grid that is actually drawn, never
+  // typed. The picture and its labels cannot drift apart: change LIB_FITS or
+  // fits() and these follow automatically. (Hardcoding them would have left
+  // the counts correct today and silently wrong after any edit.)
+  var N_TOTAL = PEOPLE.length;
+  var N_LIB   = PEOPLE.filter(function (p) { return p.lib; }).length;
+  var N_FARM  = N_TOTAL - N_LIB;
+  var FIT_LIB = PEOPLE.filter(function (p) { return p.lib && p.fit; }).length;
+  var FIT_FARM= PEOPLE.filter(function (p) { return !p.lib && p.fit; }).length;
+  var N_FIT   = FIT_LIB + FIT_FARM;
+
+  function pct(a, b) { return Math.round(100 * a / b) + '%'; }
+
+  // Readout panel content, one array of tokens per line. `m` marks a mono
+  // number, everything else is a Roboto label, so a line can lead with either
+  // ("librarians 10" vs "23 people fit"). State 4 has none: the big equation
+  // under the row says it, and the panel would sit over the row's right end.
+  var READOUT = {
+    0: [[{ t: 'meek, tidy, loves detail' }],
+        [{ t: 'librarian or farmer?' }]],
+    1: [[{ t: 'librarians' }, { t: String(N_LIB), m: 1 }],
+        [{ t: 'farmers' }, { t: String(N_FARM), m: 1 }],
+        [{ t: 'P(librarian) =' }, { t: pct(N_LIB, N_TOTAL), m: 1 }]],
+    2: [[{ t: pct(FIT_LIB, N_LIB) + ' of librarians →' }, { t: String(FIT_LIB), m: 1 }],
+        [{ t: pct(FIT_FARM, N_FARM) + ' of farmers →' }, { t: String(FIT_FARM), m: 1 }]],
+    3: [[{ t: String(N_FIT), m: 1 }, { t: 'people fit' }],
+        [{ t: String(FIT_LIB), m: 1 }, { t: 'of them are librarians' }]],
+    4: []
+  };
+
+  function build(stage) {
+    stage.innerHTML = '';
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+
+    var cap = txt({
+      x: 40, y: 34, fill: SOFT, 'font-size': 17, 'font-family': SANS,
+      class: 'bayes-caption'
+    }, CAPTIONS[0]);
+    svg.appendChild(cap);
+
+    // --- the 200 cells ----------------------------------------------------
+    // Every cell carries its orange stroke from the start at zero opacity;
+    // fading a stroke in is cheaper and steadier than adding one, and it
+    // keeps the rect's geometry identical across all five states.
+    var cells = PEOPLE.map(function (p) {
+      return svg.appendChild(el('rect', {
+        x: p.gx, y: p.gy, width: CELL, height: CELL, rx: 3, ry: 3,
+        fill: GREY, opacity: 0.35,
+        stroke: ORANGE, 'stroke-width': 3, 'stroke-opacity': 0,
+        class: 'bayes-cell'
+      }));
+    });
+
+    // --- posterior furniture ----------------------------------------------
+    // Brackets rather than plain rules: the ticks tie each label to the span
+    // of cells it counts, which is the one thing the row has to communicate.
+    var brNavy = svg.appendChild(el('path', {
+      d: 'M' + ROW_X + ' 226 V232 H' + (ROW_X + FIT_LIB * PITCH - GAP) + ' V226',
+      fill: 'none', stroke: NAVY, 'stroke-width': 2, opacity: 0
+    }));
+    var labNavy = svg.appendChild(txt({
+      x: ROW_X + (FIT_LIB * PITCH - GAP) / 2, y: 250, 'text-anchor': 'middle',
+      fill: NAVY, 'font-size': 15, 'font-family': SANS, opacity: 0
+    }, FIT_LIB + ' librarians'));
+
+    var brAll = svg.appendChild(el('path', {
+      d: 'M' + ROW_X + ' 260 V266 H' + (ROW_X + ROW_W) + ' V260',
+      fill: 'none', stroke: RULE, 'stroke-width': 2, opacity: 0
+    }));
+    var labAll = svg.appendChild(txt({
+      x: W / 2, y: 284, 'text-anchor': 'middle',
+      fill: SOFT, 'font-size': 15, 'font-family': SANS, opacity: 0
+    }, N_FIT + ' people fit the description'));
+
+    var result = svg.appendChild(txt({
+      x: W / 2, y: 322, 'text-anchor': 'middle', fill: NAVY,
+      'font-size': 24, 'font-weight': 700, 'font-family': MONO, opacity: 0
+    }, 'P(librarian | description) = ' + FIT_LIB + ' / ' + N_FIT +
+       ' = ' + pct(FIT_LIB, N_FIT)));
+
+    // --- readout panel ----------------------------------------------------
+    // Rebuilt from tokens on every state change; the whole group fades so the
+    // lines never half-swap in front of the audience.
+    var panel = svg.appendChild(el('g', { class: 'bayes-readout' }));
+
+    stage.appendChild(svg);
+
+    return {
+      state: 0, cap: cap, cells: cells, panel: panel,
+      brNavy: brNavy, labNavy: labNavy,
+      brAll: brAll, labAll: labAll, result: result
+    };
+  }
+
+  function drawPanel(s, st) {
+    s.panel.innerHTML = '';
+    (READOUT[st] || []).forEach(function (line, i) {
+      var t = el('text', { x: 730, y: 110 + i * 30 });
+      line.forEach(function (tok, j) {
+        var sp = el('tspan', {
+          fill: tok.m ? INK : SOFT,
+          'font-size': tok.m ? 17 : 15,
+          'font-family': tok.m ? MONO : SANS
+        });
+        if (j) sp.setAttribute('dx', 7);
+        sp.textContent = tok.t;
+        t.appendChild(sp);
+      });
+      s.panel.appendChild(t);
+    });
+  }
+
+  // Every per-cell target for a given state, plus the delay that gives the
+  // step its beat. Three moments earn a stagger and the rest do not: the
+  // prior walking down the librarian column, the strokes lighting up in
+  // reading order, and the gathering.
+  function targets(s, st) {
+    return s.cells.map(function (node, i) {
+      var p = PEOPLE[i];
+      var o, d = 0;
+
+      if (st === 0)      o = 0.35;
+      else if (st <= 2)  o = p.lib ? 1 : 0.55;
+      else if (st === 3) o = p.fit ? 1 : 0.06;
+      else               o = p.fit ? 1 : 0;
+
+      if (st === 1 && p.lib) d = (p.gy - Y0) / PITCH * 45;
+      else if (st === 2 && p.fit) d = p.rank * 22;
+      else if (st === 4 && p.fit) d = p.slot * 26;
+
+      return {
+        x: (st >= 4 && p.fit) ? p.rx : p.gx,
+        y: (st >= 4 && p.fit) ? ROW_Y : p.gy,
+        fill: (st >= 1 && p.lib) ? NAVY : GREY,
+        opacity: o,
+        'stroke-opacity': (st >= 2 && p.fit) ? 1 : 0,
+        delay: d
+      };
+    });
+  }
+
+  function render(s, st, instant) {
+    s.cap.textContent = CAPTIONS[st];
+    drawPanel(s, st);
+
+    var T = targets(s, st);
+    var shown = st === 4 ? 1 : 0;
+    var furniture = [s.brNavy, s.labNavy, s.brAll, s.labAll, s.result];
+
+    // The gathering is the point of the slide, so it gets a longer, slower
+    // beat than the ordinary state changes — going into it or back out.
+    var dur = (st === 4 || s.state === 4) ? 750 : 500;
+    var wasFour = s.state === 4;
+    s.state = st;
+
+    if (instant || REDUCE ||
+        typeof window.anime === 'undefined' || !window.anime.animate) {
+      s.cells.forEach(function (n, i) {
+        var t = T[i];
+        setAttrs(n, {
+          x: t.x, y: t.y, fill: t.fill, opacity: t.opacity,
+          'stroke-opacity': t['stroke-opacity']
+        });
+      });
+      furniture.forEach(function (n) { n.setAttribute('opacity', shown); });
+      s.panel.setAttribute('opacity', READOUT[st].length ? 1 : 0);
+      return;
+    }
+
+    var A = window.anime;
+
+    // Cancel whatever is still in flight before starting the next beat. Cell
+    // colour is state-dependent (grey until the prior is revealed), so a tween
+    // left running from the previous state keeps writing its own end values
+    // and can repaint the librarian column navy on top of a freshly rendered
+    // state 0 — visible if a presenter arrows back and forth quickly.
+    if (s.anim && s.anim.pause) s.anim.pause();
+    if (s.animFurniture && s.animFurniture.pause) s.animFurniture.pause();
+    if (s.animPanel && s.animPanel.pause) s.animPanel.pause();
+
+    s.anim = A.animate(s.cells, {
+      x: function (n, i) { return T[i].x; },
+      y: function (n, i) { return T[i].y; },
+      fill: function (n, i) { return T[i].fill; },
+      opacity: function (n, i) { return T[i].opacity; },
+      'stroke-opacity': function (n, i) { return T[i]['stroke-opacity']; },
+      delay: function (n, i) { return T[i].delay; },
+      duration: dur,
+      ease: 'outCubic'
+    });
+
+    // The labels wait for the cells to arrive; leaving state 4 they go first,
+    // so the row is never annotated with counts it no longer has.
+    s.animFurniture = A.animate(furniture, {
+      opacity: shown,
+      duration: shown ? 420 : 220,
+      delay: shown ? A.stagger(70, { start: dur * 0.7 }) : 0,
+      ease: 'outCubic'
+    });
+
+    s.panel.setAttribute('opacity', 0);
+    if (READOUT[st].length) {
+      s.animPanel = A.animate(s.panel, {
+        opacity: 1, duration: 360,
+        delay: wasFour ? 200 : 0, ease: 'outCubic'
+      });
+    }
+  }
+
+  var ORDER = ['bayes-frag-1', 'bayes-frag-2', 'bayes-frag-3', 'bayes-frag-4'];
+  var STATES = {
+    'bayes-frag-1': 1, 'bayes-frag-2': 2, 'bayes-frag-3': 3, 'bayes-frag-4': 4
+  };
+
+  // How many gating fragments Reveal currently has shown. Landing on this
+  // slide via a #hash or by stepping backwards from a later slide leaves
+  // fragments already marked .visible; without this the freshly built stage
+  // would show a flat grey grid while Reveal believes it is done, and the
+  // next arrow press would leave the slide with the animation never run.
+  function fragState(slide) {
+    var n = 0;
+    ORDER.forEach(function (id) {
+      var f = slide.querySelector('#' + id);
+      if (f && f.classList.contains('visible')) n++;
+    });
+    return n;
+  }
+
+  function init() {
+    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
+    var current = null;
+
+    function mount(slide) {
+      if (!slide) return;
+      var stage = slide.querySelector('#bayes-stage');
+      if (!stage) { current = null; return; }
+      current = build(stage);
+      var s = fragState(slide);
+      render(current, s, true);          // snap, don't animate, on entry
+    }
+    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
+    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
+
+    Reveal.on('fragmentshown', function (e) {
+      var st = STATES[e.fragment.id];
+      if (current && st !== undefined) render(current, st);
+    });
+    Reveal.on('fragmenthidden', function (e) {
+      var st = STATES[e.fragment.id];
+      if (current && st !== undefined) render(current, st - 1);
+    });
+  }
+  init();
+})();
+</script>

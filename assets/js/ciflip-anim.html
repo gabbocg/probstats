@@ -1,0 +1,441 @@
+<script>
+/*
+  Confidence-interval animation — slide #ciflip-intuition (Seminar 5).
+
+  Teaching point: a confidence interval is not a new object that appears out
+  of a formula. It is the SAMPLING DISTRIBUTION'S OWN BAND, measured from the
+  other end. Advancing the fragments performs exactly that flip:
+    0. the sampling distribution of xbar — where sample means land
+    1. the central 95% band, mu +/- 1.96*SE — a fixed width around mu
+    2. THE FLIP — one sample lands at xbar = 103.2, and the SAME band, the
+       same number of pixels wide, slides across to sit around xbar instead.
+       It still straddles mu, so this interval covers mu.
+    3. the 5% — a sample at xbar = 107.5 fell outside the band in state 1, so
+       the band centred on it cannot reach back to mu. That is the miss.
+
+  Step 2 is the whole animation. The lane-B bracket is not drawn where it
+  belongs and faded in: it is created on top of lane A and TRAVELS, so the
+  audience sees one fixed-width object being relocated. "95% of sample means
+  land within 5.88 of mu" and "mu is within 5.88 of 95% of sample means" are
+  the same sentence, and the only honest way to show that is to move the
+  same bracket.
+
+  Every number is derived from (MU, SIGMA, N, Z): SE = sigma/sqrt(n) and
+  HALF = z*SE drive the curve, the shading, all three brackets and every
+  printed digit, and the covers/misses verdicts are COMPUTED by comparing
+  |xbar - mu| against HALF rather than asserted in a string. The two sample
+  means are the only hardcoded inputs, so the picture is identical in every
+  rehearsal and in the room — no RNG.
+
+  Fragment gating follows the deck convention: invisible .fi-frag spans on
+  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+*/
+(function () {
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // --- the statistics ------------------------------------------------------
+  var MU = 100, SIGMA = 15, N = 25, CONF = 0.95, Z = 1.959964;
+  var SE = SIGMA / Math.sqrt(N);                 // 3
+  var HALF = Z * SE;                             // 5.879892 -> "5.88"
+
+  // The two samples. Chosen, not drawn: one inside the band and one outside,
+  // so both sides of the 95/5 split are on screen at once.
+  var XBAR_HIT = 103.2, XBAR_MISS = 107.5;
+
+  // The verdicts are the point of the slide, so they are decided here by the
+  // same comparison the students are being taught, not typed into a label.
+  function covers(xbar) { return Math.abs(xbar - MU) <= HALF; }
+
+  var PCT  = (CONF * 100).toFixed(0);            // "95"
+  var TAIL = (100 - CONF * 100).toFixed(0);      // "5"
+
+  // Trailing zeros are noise on a round number: SE prints as "3", not "3.00".
+  function tidy(v) { return String(Math.round(v * 100) / 100); }
+
+  // --- stage geometry — fixed 1000x400 space, scaled to the slide via CSS ---
+  var W = 1000, H = 400;
+  var X0 = 90, X1 = 910, VMIN = 88, VMAX = 112;
+  var SCALE = (X1 - X0) / (VMAX - VMIN);         // 34.1667 px per unit
+  var BASE = 210, PEAK_Y = 78;                   // baseline and apex of xbar
+  var NPT = 200, NSHADE = 120;                   // curve / shading samples
+
+  var INK = '#3E3F3A', SOFT = '#6E7681', RULE = '#E5E7EB';
+  var NAVY = '#325D88', OLIVE = '#93C54B', BRICK = '#B94A48', GREY = '#B0B7C0';
+  var MONO = 'JetBrains Mono, monospace', SANS = 'Roboto, sans-serif';
+  var NS = 'http://www.w3.org/2000/svg';
+
+  // The three lanes below the axis. Each is a bracket plus a label under it;
+  // the mu rule runs down through all of them so any lane can be read against
+  // it by eye — "does this bracket contain the dashed line?" is the question
+  // the whole slide is asking.
+  var LANE_A = { br: 262, lab: 284 };            // the band around mu
+  var LANE_B = { br: 316, lab: 338 };            // the interval around XBAR_HIT
+  var LANE_C = { br: 356, lab: 378 };            // the interval around XBAR_MISS
+  var TICK = 7;                                  // bracket end-tick length
+
+  function px(v) { return X0 + (v - VMIN) * SCALE; }
+  function py(d) { return BASE - d * PY; }
+
+  // The density of xbar. One fixed pixels-per-density scale, derived so the
+  // apex lands exactly on PEAK_Y — change SIGMA or N and the curve rescales
+  // itself instead of overflowing the headroom.
+  function dens(x) {
+    var z = (x - MU) / SE;
+    return Math.exp(-0.5 * z * z) / (SE * Math.sqrt(2 * Math.PI));
+  }
+  var PY = (BASE - PEAK_Y) / dens(MU);
+
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function txt(attrs, s) { var t = el('text', attrs); t.textContent = s; return t; }
+
+  // Sampled across the whole ruler, which is mu +/- 4 SE, so the curve meets
+  // the baseline at both ends and needs no clipping.
+  function curvePath() {
+    var d = '', i, x;
+    for (i = 0; i <= NPT; i++) {
+      x = VMIN + (VMAX - VMIN) * i / NPT;
+      d += (i ? 'L' : 'M') + px(x).toFixed(2) + ' ' + py(dens(x)).toFixed(2);
+    }
+    return d;
+  }
+
+  // The central CONF of the curve as a closed region: along the curve from
+  // mu-HALF to mu+HALF, down to the baseline, back along it.
+  function bandPath() {
+    var lo = MU - HALF, hi = MU + HALF, d = '', i, x;
+    for (i = 0; i <= NSHADE; i++) {
+      x = lo + (hi - lo) * i / NSHADE;
+      d += (i ? 'L' : 'M') + px(x).toFixed(2) + ' ' + py(dens(x)).toFixed(2);
+    }
+    return d + 'L' + px(hi).toFixed(2) + ' ' + BASE +
+               'L' + px(lo).toFixed(2) + ' ' + BASE + 'Z';
+  }
+
+  // A bracket in VALUE space: centre +/- HALF, with end ticks pointing down
+  // at the label. Every lane is built by this one function, from the same
+  // HALF, which is what makes "the same width" true in pixels and not just
+  // in the caption.
+  function bracket(centre, y) {
+    var a = px(centre - HALF), b = px(centre + HALF);
+    return 'M' + a.toFixed(2) + ' ' + y + 'V' + (y + TICK) +
+           'H' + b.toFixed(2) + 'V' + y;
+  }
+  function mid(centre) { return (px(centre - HALF) + px(centre + HALF)) / 2; }
+
+  // The flip itself, in pixels: lane B is lane A shifted right by the distance
+  // from mu to xbar, and down one lane. u = 0 puts lane B exactly on top of
+  // lane A; u = 1 is its resting place.
+  var SHIFT_X = px(XBAR_HIT) - px(MU);
+  var SHIFT_Y = LANE_B.br - LANE_A.br;
+
+  // Keep these SHORT. The caption is left-anchored at x=40, y=34; at 17px
+  // Roboto (~8.4px per character) anything much past ~46 characters runs
+  // under the right-hand furniture.
+  var CAPTIONS = {
+    0: 'where sample means land',
+    1: PCT + '% of them land in this band',
+    2: 'the same distance, from x̄ instead',
+    3: 'the ' + TAIL + '% is exactly this case'
+  };
+
+  // JetBrains Mono does not compose U+0304, so a typed "x̄" renders as an "x"
+  // with a stray macron beside it. Emit a bare "x" and draw the bar instead —
+  // the mono grid (0.6 em advance) makes the overline's span exact.
+  function meanLabel(parent, cx, y, value, colour) {
+    var FS = 15, ADV = FS * 0.6;
+    var str = 'x = ' + value.toFixed(1);
+    var x0 = cx - str.length * ADV / 2;
+    parent.appendChild(txt({
+      x: x0, y: y, fill: colour, 'font-size': FS, 'font-family': MONO
+    }, str));
+    parent.appendChild(el('line', {
+      x1: x0 + ADV * 0.12, y1: y - 11.5, x2: x0 + ADV * 0.88, y2: y - 11.5,
+      stroke: colour, 'stroke-width': 1.6, 'stroke-linecap': 'round'
+    }));
+  }
+
+  function build(stage) {
+    stage.innerHTML = '';
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+
+    var cap = svg.appendChild(txt({
+      x: 40, y: 34, fill: SOFT, 'font-size': 17, 'font-family': SANS,
+      class: 'ciflip-caption'
+    }, CAPTIONS[0]));
+
+    // --- the shaded band, under the stroke so the outline stays crisp ---
+    var band = svg.appendChild(el('path', {
+      d: bandPath(), fill: NAVY, 'fill-opacity': 0.16, stroke: 'none',
+      opacity: 0, class: 'ciflip-band'
+    }));
+
+    // --- the sampling distribution of xbar ---
+    svg.appendChild(el('path', {
+      d: curvePath(), fill: 'none', stroke: NAVY, 'stroke-width': 2.5,
+      'stroke-linejoin': 'round', class: 'ciflip-curve'
+    }));
+
+    // --- the ruler ---
+    svg.appendChild(el('line', {
+      x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: RULE, 'stroke-width': 1
+    }));
+    [90, 95, 100, 105, 110].forEach(function (v) {
+      svg.appendChild(el('line', {
+        x1: px(v), y1: BASE, x2: px(v), y2: BASE + 6,
+        stroke: GREY, 'stroke-width': 1
+      }));
+    });
+
+    // --- mu: one dashed rule the whole picture is read against ---
+    // Drawn before the tick labels and the lane labels so that where it
+    // crosses type, the type wins.
+    svg.appendChild(el('line', {
+      x1: px(MU), y1: PEAK_Y, x2: px(MU), y2: 380,
+      stroke: NAVY, 'stroke-width': 1.5, 'stroke-dasharray': '5 5',
+      opacity: 0.75
+    }));
+
+    [90, 95, 100, 105, 110].forEach(function (v) {
+      svg.appendChild(txt({
+        x: px(v), y: 232, 'text-anchor': 'middle', fill: SOFT,
+        'font-size': 15, 'font-family': MONO
+      }, String(v)));
+    });
+
+    svg.appendChild(txt({
+      x: px(MU) + 12, y: 70, fill: NAVY, 'font-size': 17, 'font-family': MONO
+    }, 'μ = ' + MU));
+
+    // The one number the students have to carry into every other slide, put
+    // where the right shoulder leaves room for it.
+    svg.appendChild(txt({
+      x: 720, y: 150, fill: SOFT, 'font-size': 15, 'font-family': MONO
+    }, 'SE = σ/√n = ' + tidy(SE)));
+
+    // --- lane A: the band around mu ---
+    var gA = svg.appendChild(el('g', { opacity: 0, class: 'ciflip-lane-a' }));
+    gA.appendChild(el('path', {
+      d: bracket(MU, LANE_A.br), fill: 'none', stroke: NAVY, 'stroke-width': 2
+    }));
+    gA.appendChild(txt({
+      x: mid(MU), y: LANE_A.lab, 'text-anchor': 'middle', fill: NAVY,
+      'font-size': 15, 'font-family': SANS
+    }, PCT + '% of x̄ land within ' + HALF.toFixed(2) + ' of μ'));
+
+    // --- lane C: the interval that misses (drawn under the dots) ---
+    var gC = svg.appendChild(el('g', { opacity: 0, class: 'ciflip-lane-c' }));
+    gC.appendChild(el('path', {
+      d: bracket(XBAR_MISS, LANE_C.br), fill: 'none', stroke: BRICK,
+      'stroke-width': 2
+    }));
+    gC.appendChild(txt({
+      x: mid(XBAR_MISS), y: LANE_C.lab, 'text-anchor': 'middle', fill: BRICK,
+      'font-size': 15, 'font-family': SANS
+    }, 'x̄ fell ' + (covers(XBAR_MISS) ? 'inside' : 'outside') +
+       ' the band — μ is ' + (covers(XBAR_MISS) ? 'in it' : 'not in it')));
+
+    // --- lane B: the flip. The bracket lives in its own group so it can be
+    // translated as a rigid body; its label is a separate node that stays put
+    // and fades in on arrival, because a label riding along would land on top
+    // of lane A's label for the first half of the journey. ---
+    var gB = svg.appendChild(el('g', { opacity: 0, class: 'ciflip-lane-b' }));
+    var brB = gB.appendChild(el('path', {
+      d: bracket(XBAR_HIT, LANE_B.br), fill: 'none', stroke: OLIVE,
+      'stroke-width': 2
+    }));
+    var labB = svg.appendChild(txt({
+      x: mid(XBAR_HIT), y: LANE_B.lab, 'text-anchor': 'middle', fill: OLIVE,
+      'font-size': 15, 'font-family': SANS, opacity: 0
+    }, 'same width, now centred on x̄ — μ is ' +
+       (covers(XBAR_HIT) ? 'inside' : 'outside')));
+
+    // --- the two samples, on top of everything ---
+    var gHit = svg.appendChild(el('g', { opacity: 0, class: 'ciflip-hit' }));
+    gHit.appendChild(el('circle', {
+      cx: px(XBAR_HIT), cy: BASE, r: 6, fill: NAVY
+    }));
+    meanLabel(gHit, px(XBAR_HIT), 194, XBAR_HIT, INK);
+
+    var gMiss = svg.appendChild(el('g', { opacity: 0, class: 'ciflip-miss' }));
+    gMiss.appendChild(el('circle', {
+      cx: px(XBAR_MISS), cy: BASE, r: 6, fill: BRICK
+    }));
+    meanLabel(gMiss, px(XBAR_MISS), 194, XBAR_MISS, BRICK);
+
+    stage.appendChild(svg);
+
+    return {
+      state: 0, cap: cap, band: band, gA: gA, gB: gB, brB: brB, labB: labB,
+      gC: gC, gHit: gHit, gMiss: gMiss
+    };
+  }
+
+  // Where lane B's bracket sits: u = 0 is exactly on lane A, u = 1 is home.
+  function placeB(s, u) {
+    var dx = (u - 1) * SHIFT_X, dy = (u - 1) * SHIFT_Y;
+    s.gB.setAttribute('transform',
+      'translate(' + dx.toFixed(2) + ' ' + dy.toFixed(2) + ')');
+  }
+
+  // Target opacity of every gated element for a given state.
+  function opacities(st) {
+    return {
+      band: st >= 1 ? 1 : 0,
+      gA:   st >= 1 ? 1 : 0,
+      gB:   st >= 2 ? 1 : 0,
+      labB: st >= 2 ? 1 : 0,
+      gHit: st >= 2 ? 1 : 0,
+      gC:   st >= 3 ? 1 : 0,
+      gMiss:st >= 3 ? 1 : 0
+    };
+  }
+
+  function render(s, st, instant) {
+    var prev = s.state;
+    s.state = st;
+    s.cap.textContent = CAPTIONS[st];
+    var O = opacities(st);
+
+    // Cancel whatever is still in flight before starting the next beat. The
+    // flip drives lane B's transform and stroke colour, so a tween left
+    // running from the previous state keeps writing its own end values over
+    // a freshly rendered one — visible as a bracket sliding back into a state
+    // that no longer has it if a presenter arrows back and forth quickly.
+    if (s.anim && s.anim.pause) s.anim.pause();
+    if (s.animOpa && s.animOpa.pause) s.animOpa.pause();
+    if (s.animB && s.animB.pause) s.animB.pause();
+    if (s.animLab && s.animLab.pause) s.animLab.pause();
+    if (s.animStroke && s.animStroke.pause) s.animStroke.pause();
+
+    if (instant || REDUCE ||
+        typeof window.anime === 'undefined' || !window.anime.animate) {
+      s.band.setAttribute('opacity', O.band);
+      s.gA.setAttribute('opacity', O.gA);
+      s.gB.setAttribute('opacity', O.gB);
+      s.labB.setAttribute('opacity', O.labB);
+      s.gHit.setAttribute('opacity', O.gHit);
+      s.gC.setAttribute('opacity', O.gC);
+      s.gMiss.setAttribute('opacity', O.gMiss);
+      s.brB.setAttribute('stroke', OLIVE);
+      placeB(s, 1);
+      return;
+    }
+
+    var A = window.anime;
+    var flipIn  = (st === 2 && prev === 1);
+    var flipOut = (st === 1 && prev === 2);
+
+    // Everything that is only ever a fade. Lane B is handled apart from this
+    // list whenever it is flipping, so its timing is not tied to the others'.
+    var fades = [
+      { n: s.band,  o: O.band },
+      { n: s.gA,    o: O.gA },
+      { n: s.gHit,  o: O.gHit },
+      { n: s.gC,    o: O.gC },
+      { n: s.gMiss, o: O.gMiss }
+    ];
+    if (!flipIn && !flipOut) {
+      fades.push({ n: s.gB, o: O.gB });
+      fades.push({ n: s.labB, o: O.labB });
+      s.brB.setAttribute('stroke', OLIVE);
+      placeB(s, 1);
+    }
+    s.animOpa = A.animate(fades.map(function (f) { return f.n; }), {
+      opacity: function (n, i) { return fades[i].o; },
+      duration: 380,
+      ease: 'outCubic'
+    });
+
+    if (flipIn) {
+      // THE FLIP. The bracket is created on lane A, in lane A's navy, and is
+      // then carried to lane B; only on arrival does it turn olive and pick
+      // up its label. Nothing about it is redrawn, which is the claim.
+      placeB(s, 0);
+      s.brB.setAttribute('stroke', NAVY);
+      s.labB.setAttribute('opacity', 0);
+      s.gB.setAttribute('opacity', 0);
+
+      s.animB = A.animate(s.gB, {
+        opacity: 1, duration: 200, delay: 180, ease: 'outCubic'
+      });
+
+      var p = { u: 0 };
+      s.anim = A.animate(p, {
+        u: 1, duration: 800, delay: 300, ease: 'outCubic',
+        onUpdate: function () { placeB(s, p.u); }
+      });
+
+      s.animStroke = A.animate(s.brB, {
+        stroke: OLIVE, duration: 420, delay: 620, ease: 'outCubic'
+      });
+      s.animLab = A.animate(s.labB, {
+        opacity: 1, duration: 320, delay: 940, ease: 'outCubic'
+      });
+
+    } else if (flipOut) {
+      // Stepping back must undo the flip rather than blink it away, or the
+      // second viewing of the slide tells a different story from the first.
+      s.brB.setAttribute('stroke', NAVY);
+      s.animLab = A.animate(s.labB, {
+        opacity: 0, duration: 160, ease: 'outCubic'
+      });
+      var q = { u: 1 };
+      s.anim = A.animate(q, {
+        u: 0, duration: 500, delay: 120, ease: 'outCubic',
+        onUpdate: function () { placeB(s, q.u); }
+      });
+      s.animB = A.animate(s.gB, {
+        opacity: 0, duration: 200, delay: 440, ease: 'outCubic'
+      });
+    }
+  }
+
+  var ORDER = ['ciflip-frag-1', 'ciflip-frag-2', 'ciflip-frag-3'];
+  var STATES = {
+    'ciflip-frag-1': 1, 'ciflip-frag-2': 2, 'ciflip-frag-3': 3
+  };
+
+  // How many gating fragments Reveal currently has shown. Landing on this
+  // slide via a #hash or by stepping backwards from a later slide leaves
+  // fragments already marked .visible; without this the freshly built stage
+  // would show a bare curve while Reveal believes it is done, and the next
+  // arrow press would leave the slide with the animation never having run.
+  function fragState(slide) {
+    var n = 0;
+    ORDER.forEach(function (id) {
+      var f = slide.querySelector('#' + id);
+      if (f && f.classList.contains('visible')) n++;
+    });
+    return n;
+  }
+
+  function init() {
+    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
+    var current = null;
+
+    function mount(slide) {
+      if (!slide) return;
+      var stage = slide.querySelector('#ciflip-stage');
+      if (!stage) { current = null; return; }
+      current = build(stage);
+      render(current, fragState(slide), true);   // snap, don't animate, on entry
+    }
+    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
+    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
+
+    Reveal.on('fragmentshown', function (e) {
+      var st = STATES[e.fragment.id];
+      if (current && st !== undefined) render(current, st);
+    });
+    Reveal.on('fragmenthidden', function (e) {
+      var st = STATES[e.fragment.id];
+      if (current && st !== undefined) render(current, st - 1);
+    });
+  }
+  init();
+})();
+</script>

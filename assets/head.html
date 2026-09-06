@@ -1,0 +1,43 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<script>
+  // anime.js loader. Prefer the CDN, fall back to the vendored copy.
+  //
+  // Why this is not just a <script src> tag: anime.js ships a UMD bundle whose
+  // first check is `typeof define === "function" && define.amd`. quarto-webr
+  // loads Monaco's AMD loader, which defines exactly that — so the bundle
+  // registers itself as an anonymous AMD module and NEVER assigns
+  // window.anime. Every animation in this deck then silently takes its
+  // no-motion fallback path: the slides still render correctly, they just stop
+  // moving, which is almost impossible to spot in a screenshot.
+  //
+  // Worse, a plain tag makes it a RACE — the tag is injected early but resolves
+  // over the network, so whether Monaco's loader has defined `define` by the
+  // time the bundle executes is pure timing. Fetch the source and evaluate it
+  // with define/exports/module shadowed to undefined, forcing the UMD's global
+  // branch deterministically whether or not an AMD loader is present.
+  (function () {
+    var SOURCES = [
+      'https://cdn.jsdelivr.net/npm/animejs@4.5.0/dist/bundles/anime.umd.min.js',
+      'assets/vendor/anime.min.js'
+    ];
+    function boot(i) {
+      if (i >= SOURCES.length) {
+        console.error('[deck] anime.js unavailable — slides will render but not animate');
+        return;
+      }
+      fetch(SOURCES[i])
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(function (src) {
+          (new Function('define', 'exports', 'module', src))
+            .call(window, undefined, undefined, undefined);
+          if (!window.anime || typeof window.anime.animate !== 'function') {
+            throw new Error('bundle loaded but window.anime.animate is missing');
+          }
+        })
+        .catch(function () { boot(i + 1); });
+    }
+    boot(0);
+  })();
+</script>

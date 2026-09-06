@@ -1,0 +1,285 @@
+<script>
+/*
+  Bayes equation animation — slide #bayeq-formula (Seminar 3).
+
+  The companion to #bayes-intuition. That slide shows the answer as a ratio of
+  areas; this one puts the SAME numbers into the formula and brackets each
+  component in turn, so "prior", "likelihood" and "evidence" attach to a piece
+  of algebra the room has already seen as a picture:
+
+    0. the bare equation
+    1. bracket the PRIOR        P(L)     — the width of the navy column
+    2. bracket the LIKELIHOOD   P(D|L)   — the fraction ringed inside it
+    3. bracket the EVIDENCE     P(D)     — everyone ringed, either profession
+    4. bracket the POSTERIOR    P(L|D)   — the navy share of those
+
+  Every number is DERIVED from the four inputs at the top, never typed, and the
+  arithmetic line assembles one step at a time alongside the brackets. The
+  closing identity 0.020 / 0.115 = 4/23 is exact, not a rounding coincidence,
+  and the code asserts it rather than asking you to trust it.
+
+  Text is positioned arithmetically rather than measured: the deck's mono face
+  (JetBrains Mono) has a 0.6 em advance, so a character grid is exact and needs
+  no getComputedTextLength() pass that would depend on webfont load timing.
+
+  Fragment gating follows the deck convention: invisible .fi-frag spans on the
+  slide, listened to via Reveal's fragmentshown/fragmenthidden.
+*/
+(function () {
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var W = 1000, H = 400;
+  var INK = '#3E3F3A', SOFT = '#6E7681', RULE = '#E5E7EB';
+  var NAVY = '#325D88', ORANGE = '#F47C3C', BRICK = '#B94A48';
+  var MONO = 'JetBrains Mono, monospace', SANS = 'Roboto, sans-serif';
+  var NS = 'http://www.w3.org/2000/svg';
+
+  // --- the only four inputs; everything else is computed ------------------
+  var N_LIB = 10, N_FARM = 190, P_FIT_LIB = 0.40, P_FIT_FARM = 0.10;
+
+  var N_TOTAL  = N_LIB + N_FARM;                       // 200
+  var PRIOR    = N_LIB / N_TOTAL;                      // 0.05
+  var FIT_LIB  = Math.round(N_LIB * P_FIT_LIB);        // 4
+  var FIT_FARM = Math.round(N_FARM * P_FIT_FARM);      // 19
+  var N_FIT    = FIT_LIB + FIT_FARM;                   // 23
+  var NUM      = PRIOR * P_FIT_LIB;                    // 0.020
+  var DEN      = NUM + (1 - PRIOR) * P_FIT_FARM;       // 0.115
+  var POST     = NUM / DEN;                            // 0.173913...
+
+  // The whole point of the slide is that the algebra and the count agree
+  // exactly. If a future edit breaks that, say so loudly rather than drawing
+  // two different answers side by side.
+  if (Math.abs(POST - FIT_LIB / N_FIT) > 1e-12) {
+    console.error('[bayeq] formula and grid disagree:', POST, FIT_LIB + '/' + N_FIT);
+  }
+
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function txt(attrs, s) { var t = el('text', attrs); t.textContent = s; return t; }
+
+  // --- character-grid layout ---------------------------------------------
+  var FS = 26, ADV = FS * 0.6;                 // JetBrains Mono advance
+  // SVG <text> collapses leading/trailing whitespace, so a separator token
+  // written as ' · ' renders one glyph wide while the character grid has
+  // already reserved three — every token after it lands short. Non-breaking
+  // spaces are real glyphs at the same mono advance, so the grid stays honest.
+  var NB = '\u00a0';
+  var LHS_X = 150, EQ_X = 285, CX = 630;       // fraction centre
+  var Y_NUM = 170, Y_BAR = 190, Y_DEN = 228, Y_LHS = 199;
+
+  // A row is a list of {s, c} tokens laid on the character grid, centred on cx.
+  // Returns the token nodes plus each one's [x0, x1] so a bracket can span it.
+  function row(svg, tokens, cx, y) {
+    var chars = tokens.reduce(function (n, t) { return n + t.s.length; }, 0);
+    var x = cx - chars * ADV / 2;
+    return tokens.map(function (t) {
+      var x0 = x, x1 = x + t.s.length * ADV;
+      x = x1;
+      return {
+        node: svg.appendChild(txt({
+          x: x0, y: y, fill: t.c || INK, 'font-size': FS,
+          'font-family': MONO, 'letter-spacing': 0
+        }, t.s)),
+        x0: x0, x1: x1
+      };
+    });
+  }
+
+  // Bracket spanning [x0,x1]; `up` draws the ticks pointing down at the text
+  // above it, otherwise up at the text below.
+  function bracket(svg, x0, x1, y, up, colour) {
+    var t = up ? 6 : -6;
+    return svg.appendChild(el('path', {
+      d: 'M' + x0 + ' ' + (y + t) + ' V' + y + ' H' + x1 + ' V' + (y + t),
+      fill: 'none', stroke: colour, 'stroke-width': 2,
+      'stroke-linecap': 'round', opacity: 0
+    }));
+  }
+
+  function f3(v) { return v.toFixed(3); }
+
+  var CAPTIONS = {
+    0: 'one equation, four moving parts',
+    1: 'the prior',
+    2: 'the likelihood',
+    3: 'the evidence',
+    4: 'the posterior'
+  };
+
+  // Annotation under the equation: what the bracketed piece MEANS, in counts.
+  var NOTES = {
+    0: { t: '', c: SOFT },
+    1: { t: 'how common librarians are — ' + N_LIB + ' of ' + N_TOTAL, c: NAVY },
+    2: { t: 'how well Steve fits one — ' + FIT_LIB + ' of those ' + N_LIB, c: ORANGE },
+    3: { t: 'everyone who fits, either way — ' + FIT_LIB + ' + ' + FIT_FARM +
+           ' = ' + N_FIT, c: INK },
+    4: { t: 'the navy share of those ' + N_FIT, c: BRICK }
+  };
+
+  // The arithmetic assembles a step at a time, mirroring the brackets.
+  var MATHS = {
+    0: '',
+    1: f3(PRIOR),
+    2: f3(PRIOR) + ' × ' + P_FIT_LIB.toFixed(2) + ' = ' + f3(NUM),
+    3: f3(NUM) + ' / ' + f3(DEN),
+    4: f3(NUM) + ' / ' + f3(DEN) + ' = ' + FIT_LIB + '/' + N_FIT +
+       ' = ' + POST.toFixed(3)
+  };
+
+  function build(stage) {
+    stage.innerHTML = '';
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    stage.appendChild(svg);
+
+    var cap = txt({
+      x: 40, y: 34, fill: SOFT, 'font-size': 17, 'font-family': SANS,
+      class: 'bayeq-caption'
+    }, CAPTIONS[0]);
+    svg.appendChild(cap);
+
+    // P(L|D)  =
+    var lhs = row(svg, [{ s: 'P(L|D)', c: BRICK }], LHS_X + 3 * ADV, Y_LHS);
+    svg.appendChild(txt({
+      x: EQ_X, y: Y_LHS, fill: INK, 'font-size': FS, 'font-family': MONO
+    }, '='));
+
+    // numerator: P(L) · P(D|L)
+    var num = row(svg, [
+      { s: 'P(L)', c: NAVY },
+      { s: NB + '·' + NB },
+      { s: 'P(D|L)', c: ORANGE }
+    ], CX, Y_NUM);
+
+    // denominator: P(L)·P(D|L) + P(F)·P(D|F)
+    var den = row(svg, [
+      { s: 'P(L)', c: NAVY },
+      { s: '·' },
+      { s: 'P(D|L)', c: ORANGE },
+      { s: NB + NB + '+' + NB + NB },
+      { s: 'P(F)' },
+      { s: '·' },
+      { s: 'P(D|F)' }
+    ], CX, Y_DEN);
+
+    var barX0 = den[0].x0 - 16, barX1 = den[den.length - 1].x1 + 16;
+    svg.appendChild(el('line', {
+      x1: barX0, y1: Y_BAR, x2: barX1, y2: Y_BAR,
+      stroke: INK, 'stroke-width': 2
+    }));
+
+    // Brackets: prior and likelihood sit above the numerator, the evidence
+    // under the whole denominator, the posterior above the left-hand side.
+    var brackets = {
+      1: bracket(svg, num[0].x0, num[0].x1, 142, 1, NAVY),
+      2: bracket(svg, num[2].x0, num[2].x1, 142, 1, ORANGE),
+      3: bracket(svg, barX0, barX1, 250, 0, INK),
+      4: bracket(svg, lhs[0].x0, lhs[0].x1, 160, 1, BRICK)
+    };
+
+    var note = txt({
+      x: W / 2, y: 305, 'text-anchor': 'middle', fill: SOFT,
+      'font-size': 18, 'font-family': SANS, opacity: 0
+    }, '');
+    svg.appendChild(note);
+
+    var sum = txt({
+      x: W / 2, y: 352, 'text-anchor': 'middle', fill: INK,
+      'font-size': 22, 'font-family': MONO, opacity: 0
+    }, '');
+    svg.appendChild(sum);
+
+    return { state: 0, cap: cap, brackets: brackets, note: note, sum: sum };
+  }
+
+  // A bracket is full strength only while it is the one being discussed;
+  // earlier ones stay on the slide but drop back so the eye is never asked
+  // which of four things it should be looking at.
+  function target(i, st) {
+    if (i > st) return 0;
+    return i === st ? 1 : 0.3;
+  }
+
+  function place(s, st, instant) {
+    s.state = st;
+    s.cap.textContent = CAPTIONS[st];
+    s.note.textContent = NOTES[st].t;
+    s.note.setAttribute('fill', NOTES[st].c);
+    s.sum.textContent = MATHS[st];
+
+    var live = typeof window.anime !== 'undefined' && window.anime.animate;
+    var fast = instant || REDUCE || !live;
+
+    var keys = [1, 2, 3, 4];
+    if (fast) {
+      keys.forEach(function (i) {
+        s.brackets[i].setAttribute('opacity', target(i, st));
+      });
+      s.note.setAttribute('opacity', NOTES[st].t ? 1 : 0);
+      s.sum.setAttribute('opacity', MATHS[st] ? 1 : 0);
+      return;
+    }
+
+    if (s.anim && s.anim.pause) s.anim.pause();
+    if (s.animText && s.animText.pause) s.animText.pause();
+
+    var A = window.anime;
+    s.anim = A.animate(keys.map(function (i) { return s.brackets[i]; }), {
+      opacity: function (n, i) { return target(keys[i], st); },
+      duration: 420, ease: 'outQuad'
+    });
+    s.animText = A.animate([s.note, s.sum], {
+      opacity: function (n, i) {
+        return (i === 0 ? NOTES[st].t : MATHS[st]) ? 1 : 0;
+      },
+      duration: 360, delay: 120, ease: 'outQuad'
+    });
+  }
+
+  var ORDER = ['bayeq-frag-1', 'bayeq-frag-2', 'bayeq-frag-3', 'bayeq-frag-4'];
+  var STATES = {
+    'bayeq-frag-1': 1, 'bayeq-frag-2': 2,
+    'bayeq-frag-3': 3, 'bayeq-frag-4': 4
+  };
+
+  // How many gating fragments Reveal currently has shown. Landing here via a
+  // #hash or stepping backwards from a later slide leaves fragments already
+  // marked .visible; without this the freshly built stage would show a bare
+  // equation while Reveal believes it is done.
+  function fragState(slide) {
+    var n = 0;
+    ORDER.forEach(function (id) {
+      var f = slide.querySelector('#' + id);
+      if (f && f.classList.contains('visible')) n++;
+    });
+    return n;
+  }
+
+  function init() {
+    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
+    var current = null;
+
+    function mount(slide) {
+      if (!slide) return;
+      var stage = slide.querySelector('#bayeq-stage');
+      if (!stage) { current = null; return; }
+      current = build(stage);
+      place(current, fragState(slide), true);
+    }
+    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
+    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
+
+    Reveal.on('fragmentshown', function (e) {
+      var st = STATES[e.fragment.id];
+      if (current && st !== undefined) place(current, st);
+    });
+    Reveal.on('fragmenthidden', function (e) {
+      var st = STATES[e.fragment.id];
+      if (current && st !== undefined) place(current, st - 1);
+    });
+  }
+  init();
+})();
+</script>

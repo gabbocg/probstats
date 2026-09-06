@@ -1,0 +1,49 @@
+# Comparing two populations {.hero #s07-two-populations}
+
+::: {.sem-mark data-sem="7"}
+Seminar 7 · Paired vs independent
+:::
+
+The design decides the test, and the test decides the answer.
+
+::: {.lede}
+The worksheet gives you two-sample tests and paired tests as separate recipes. They are not interchangeable — run the wrong one on the same numbers and a real effect can vanish completely.
+:::
+
+## The same data, twice {.stage-slide #pair-intuition}
+
+::: {.stage-wrap .stage-wrap-400}
+<div id="pair-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="pair-frag-1"}
+[]{.fragment .fi-frag id="pair-frag-2"}
+
+::: {.slide-footer}
+The left picture is honest and useless: firms differ hugely from each other, and that between-firm spread drowns the effect. Pairing subtracts it away — every firm becomes its own control.
+:::
+
+## Watch the signal appear {.sim-slide #pair-sim}
+
+::: {.slide-kicker}
+Seminar 7 · same numbers, two tests
+:::
+
+::: {.sim-card .sim-text}
+```{webr-r}
+before <- c(3,15,8,19,5,12,17,7,14,10,6,16,9,13,11)
+after  <- c(1,13,5,17,4, 9,16,4,12, 7,5,13,7,10, 9)
+
+ind <- t.test(after, before, var.equal = TRUE)
+par <- t.test(after, before, paired = TRUE)
+
+round(c(indep_t = ind$statistic,
+        indep_p = ind$p.value,
+        pair_t  = par$statistic,
+        pair_p  = par$p.value), 4)
+```
+:::
+
+::: {.try-this}
+Identical numbers, identical difference in means of $-2.2$ — but the independent test cannot see it and the paired test finds it overwhelming. **The information was in which rows belong together, and the independent test throws that away.**
+:::

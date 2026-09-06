@@ -1,0 +1,375 @@
+<script>
+/*
+  Binomial construction animation — slide #binom-intuition.
+
+  Teaching point: the Binomial is not a shape you memorise, it is a COUNT.
+  Fix n = 10 independent trials with p = 0.3, run the strip, and tally how
+  many came up. The presenter advances fragments:
+    0. one empty strip of 10 trials  (the experiment, not yet run)
+    1. 80 rounds accumulate into a histogram of the count
+    2. the exact pmf is laid over the tally  (it was there all along)
+    3. why the coefficient exists — three different arrangements, same count
+
+  Fragment 3 is the payload. C(10,3) is not decoration: every arrangement of
+  3 successes carries the same probability 0.3^3 * 0.7^7, and the count is
+  blind to which positions they landed in, so the 120 of them add up.
+
+  Fragment gating follows the deck convention: invisible .fi-frag spans on
+  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+*/
+(function () {
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var N = 10, P = 0.3, NK = N + 1, NR = 80;    // trials, success prob, rounds
+
+  // Stage geometry — fixed 1000x400 space, scaled to the slide via CSS.
+  var W = 1000, H = 400;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  // --- trial strip, top left ---
+  var SX = 60, SY = 70, SIDE = 26, SGAP = 6;
+  var SPITCH = SIDE + SGAP;
+
+  // --- histogram, right ---
+  var X0 = 470, X1 = 950, BASE = 330, BW = 38;
+  var SLOT = (X1 - X0) / NK;                   // ~43.6 per slot, 38 of it inked
+  var RMAX = 0.30, HMAX = 240;                 // rel. freq 0.30 reaches 240px
+
+  // --- fragment 3 panel, under the trial strip ---
+  var MX = 60, MY = 156, MSIDE = 18, MGAP = 4, MPITCH = 34;
+  var ARRANGEMENTS = [[0, 1, 2], [1, 4, 7], [7, 8, 9]];
+  var HILITE = 3;                              // the k we open up
+
+  function bx(k) { return X0 + k * SLOT + (SLOT - BW) / 2; }
+  function ht(rel) { return rel * (HMAX / RMAX); }
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  // Seeded LCG. A deck must show the same 80 rounds in the lecture theatre
+  // that it showed in rehearsal, so Math.random() is off the table.
+  function lcg(seed) {
+    return function () {
+      seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff;
+      return seed / 0x7fffffff;
+    };
+  }
+
+  // 80 rounds of 10 Bernoulli(0.3) trials, generated once at load. CUM[r] is
+  // the count histogram after r rounds, so CUM[0] is empty and CUM[80] final.
+  var ROUNDS = [], CUM = [], TALLY = [];
+  (function () {
+    var rand = lcg(82), k, r, j, row, c;
+    for (k = 0; k < NK; k++) TALLY.push(0);
+    CUM.push(TALLY.slice());
+    for (r = 0; r < NR; r++) {
+      row = []; c = 0;
+      for (j = 0; j < N; j++) { var s = rand() < P ? 1 : 0; row.push(s); c += s; }
+      ROUNDS.push(row);
+      TALLY[c]++;
+      CUM.push(TALLY.slice());
+    }
+  })();
+
+  var EMPTY = ROUNDS[0].map(function () { return 0; });
+
+  // At the arrangement panel every number on screen is about k = 3: the
+  // highlighted bar, the three mini-strips, C(10,3). Leaving the main strip
+  // on the last simulated round (which happens to give 4) contradicts all of
+  // them, so pin it to a 3-success outcome — and deliberately one that is NOT
+  // among ARRANGEMENTS, so it reads as a fourth example rather than a repeat.
+  var K3 = [0, 0, 1, 0, 0, 1, 0, 0, 0, 1];
+  var ZEROS = CUM[0];
+
+  // Binomial pmf by recurrence: P(0) = (1-p)^n, then
+  // P(k) = P(k-1) * (n-k+1)/k * p/(1-p) — no factorial is ever formed, so
+  // nothing overflows and the printed 0.3^3 * 0.7^7 constant is reproducible.
+  function binomPmf(n, p) {
+    var q = 1 - p, ratio = p / q, out = [], v = Math.exp(n * Math.log(q));
+    out.push(v);
+    for (var k = 1; k <= n; k++) { v = v * ((n - k + 1) / k) * ratio; out.push(v); }
+    return out;
+  }
+  var PMF = binomPmf(N, P);
+
+  // The single-arrangement probability printed on the frag-3 panel, computed
+  // here rather than typed in, so the slide cannot drift from the maths.
+  var ONE_WAY = Math.pow(P, HILITE) * Math.pow(1 - P, N - HILITE);
+
+  // Stepped outline over the same slots the bars occupy: up the left edge of
+  // bar 0, across each top, down the right edge of bar 10.
+  function stepPoints(pmf) {
+    var pts = [bx(0) + ',' + BASE];
+    for (var k = 0; k < NK; k++) {
+      var y = BASE - ht(pmf[k]);
+      pts.push(bx(k) + ',' + y);
+      pts.push((bx(k) + BW) + ',' + y);
+      if (k < N) pts.push(bx(k + 1) + ',' + BASE, bx(k + 1) + ',' + BASE);
+    }
+    pts.push((bx(N) + BW) + ',' + BASE);
+    return pts.join(' ');
+  }
+
+  function square(svg, x, y, side, cls) {
+    return svg.appendChild(el('rect', {
+      x: x, y: y, width: side, height: side, rx: 3,
+      fill: '#FFFFFF', stroke: '#B0B7C0', 'stroke-width': 1, class: cls
+    }));
+  }
+  // One square's two possible looks. Success is inked navy, failure is a
+  // hollow outline, so the strip reads as a row of coin flips at a glance.
+  function paint(sq, hit) {
+    sq.setAttribute('fill', hit ? '#325D88' : '#FFFFFF');
+    sq.setAttribute('stroke', hit ? '#325D88' : '#B0B7C0');
+    sq.setAttribute('opacity', hit ? 0.75 : 1);
+  }
+
+  function build(stage) {
+    stage.innerHTML = '';
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    var i, k, t;
+
+    // --- caption: what the presenter is saying right now ---
+    var cap = el('text', {
+      x: 40, y: 34, fill: '#6E7681', 'font-size': 17,
+      'font-family': 'Roboto, sans-serif', class: 'binom-caption'
+    });
+    svg.appendChild(cap);
+
+    // --- the experiment, stated once above the strip ---
+    var head = el('text', {
+      x: SX, y: 58, fill: '#6E7681', 'font-size': 15,
+      'font-family': 'Roboto, sans-serif'
+    });
+    head.textContent = '10 independent trials, p = 0.3';
+    svg.appendChild(head);
+
+    // --- trial strip: 10 squares, repainted once per round ---
+    var cells = [];
+    for (i = 0; i < N; i++) {
+      cells.push(square(svg, SX + i * SPITCH, SY, SIDE, 'binom-cell'));
+    }
+    var count = el('text', {
+      x: SX + N * SPITCH + 22, y: SY + 19, fill: '#3E3F3A', 'font-size': 20,
+      'font-family': 'JetBrains Mono, monospace', class: 'binom-count'
+    });
+    svg.appendChild(count);
+
+    // --- histogram bars, one per possible count k ---
+    var bars = [];
+    for (k = 0; k < NK; k++) {
+      bars.push(svg.appendChild(el('rect', {
+        x: bx(k), y: BASE, width: BW, height: 0,
+        fill: '#325D88', opacity: 0.55, class: 'binom-bar'
+      })));
+    }
+
+    // --- exact pmf, hidden until fragment 2 ---
+    var pmf = el('g', { opacity: 0, class: 'binom-pmf' });
+    pmf.appendChild(el('polyline', {
+      points: stepPoints(PMF), fill: 'none',
+      stroke: '#B94A48', 'stroke-width': 2, 'stroke-linejoin': 'round',
+      opacity: 0.8
+    }));
+    pmf.appendChild(el('line', {
+      x1: 740, y1: 44, x2: 776, y2: 44,
+      stroke: '#B94A48', 'stroke-width': 2, opacity: 0.8
+    }));
+    t = el('text', {
+      x: 784, y: 49, fill: '#6E7681', 'font-size': 15,
+      'font-family': 'Roboto, sans-serif'
+    });
+    t.textContent = 'Binomial(10, 0.3)';
+    pmf.appendChild(t);
+    svg.appendChild(pmf);
+
+    // --- axis and k labels ---
+    svg.appendChild(el('line', {
+      x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: '#E5E7EB', 'stroke-width': 1
+    }));
+    for (k = 0; k < NK; k++) {
+      t = el('text', {
+        x: bx(k) + BW / 2, y: BASE + 24, 'text-anchor': 'middle',
+        fill: '#6E7681', 'font-size': 15,
+        'font-family': 'JetBrains Mono, monospace'
+      });
+      t.textContent = k;
+      svg.appendChild(t);
+    }
+
+    // --- fragment 3 panel: three strips that the count cannot tell apart ---
+    var order = el('g', { opacity: 0, class: 'binom-order' });
+    ARRANGEMENTS.forEach(function (hits, row) {
+      for (var j = 0; j < N; j++) {
+        var sq = square(order, MX + j * (MSIDE + MGAP), MY + row * MPITCH, MSIDE);
+        paint(sq, hits.indexOf(j) >= 0 ? 1 : 0);
+      }
+    });
+    // The two lines sit under the strips, not beside them: the histogram
+    // starts at x = 470 and a 42-character mono line would run straight
+    // through the bars.
+    var l1 = el('text', {
+      x: MX, y: MY + 3 * MPITCH + 36, fill: '#3E3F3A', 'font-size': 17,
+      'font-family': 'JetBrains Mono, monospace'
+    });
+    l1.textContent = 'C(10,3) = 120 arrangements';
+    order.appendChild(l1);
+    var l2 = el('text', {
+      x: MX, y: MY + 3 * MPITCH + 60, fill: '#6E7681', 'font-size': 15,
+      'font-family': 'JetBrains Mono, monospace'
+    });
+    l2.textContent = 'each with probability 0.3³ × 0.7⁷ = ' +
+                     ONE_WAY.toFixed(5);
+    order.appendChild(l2);
+    svg.appendChild(order);
+
+    stage.appendChild(svg);
+    return {
+      cap: cap, cells: cells, count: count, bars: bars,
+      pmf: pmf, order: order, state: 0, gen: 0, timer: 0
+    };
+  }
+
+  var CAPTIONS = [
+    'one round = 10 trials, count successes',
+    '80 rounds, tallied by how many succeeded',
+    'the tally is converging to the pmf',
+    'the count forgets the order'
+  ];
+
+  function live() {
+    return typeof window.anime !== 'undefined' && !!window.anime.animate;
+  }
+
+  // Kill any round playback still in flight. Bumping gen orphans the pending
+  // step callback as well, in case the timeout has already fired.
+  function stop(s) {
+    s.gen++;
+    if (s.timer) { clearTimeout(s.timer); s.timer = 0; }
+  }
+
+  function setStrip(s, pattern) {
+    var c = 0, i;
+    for (i = 0; i < N; i++) { paint(s.cells[i], pattern[i]); c += pattern[i]; }
+    s.count.textContent = c + (c === 1 ? ' success' : ' successes');
+  }
+
+  function setBars(s, counts, fast) {
+    if (fast) {
+      s.bars.forEach(function (b, k) {
+        var h = ht(counts[k] / NR);
+        b.setAttribute('height', h);
+        b.setAttribute('y', BASE - h);
+      });
+      return;
+    }
+    // Rects grow downward from y, so y and height have to move together or
+    // the bars would slide off the baseline mid-flight.
+    window.anime.animate(s.bars, {
+      height: function (e, k) { return ht(counts[k] / NR); },
+      y: function (e, k) { return BASE - ht(counts[k] / NR); },
+      duration: 520,
+      delay: window.anime.stagger(22),
+      ease: 'outCubic'
+    });
+  }
+
+  function fade(node, to, fast) {
+    if (fast) { node.setAttribute('opacity', to); return; }
+    window.anime.animate(node, { opacity: to, duration: 420, ease: 'outQuad' });
+  }
+
+  // Replay the 80 rounds at ~45ms each: strip repaints, the one bar that just
+  // gained a round eases up. Slower than a jump, faster than watching paint
+  // dry — it should read as a simulation accumulating, not as a transition.
+  function playRounds(s) {
+    var gen = s.gen, r = 0;
+    (function step() {
+      if (gen !== s.gen) return;                 // superseded by a newer state
+      setStrip(s, ROUNDS[r]);
+      var k = 0, i;
+      for (i = 0; i < N; i++) k += ROUNDS[r][i];
+      var h = ht(CUM[r + 1][k] / NR);
+      window.anime.animate(s.bars[k], {
+        height: h, y: BASE - h, duration: 200, ease: 'outCubic'
+      });
+      r++;
+      if (r >= NR) return;
+      s.timer = setTimeout(step, 45);
+    })();
+  }
+
+  function place(s, state, instant) {
+    stop(s);
+    var prev = s.state;
+    s.state = state;
+    s.cap.textContent = CAPTIONS[state];
+    var fast = instant || REDUCE || !live();
+
+    fade(s.pmf, state >= 2 ? 1 : 0, fast);
+    fade(s.order, state >= 3 ? 1 : 0, fast);
+    s.bars[HILITE].setAttribute('fill', state >= 3 ? '#F47C3C' : '#325D88');
+    s.bars[HILITE].setAttribute('opacity', state >= 3 ? 0.85 : 0.55);
+
+    if (state === 0) {
+      setStrip(s, EMPTY);
+      setBars(s, ZEROS, fast);
+      return;
+    }
+    setStrip(s, state >= 3 ? K3 : ROUNDS[NR - 1]);
+    // Only the 0 -> 1 step earns the replay. Stepping back from the pmf
+    // overlay must not re-run 3.6 seconds of simulation the room just saw.
+    if (!fast && prev < 1) {
+      setBars(s, ZEROS, true);
+      playRounds(s);
+      return;
+    }
+    setBars(s, CUM[NR], fast);
+  }
+
+  var ORDER = ['binom-frag-1', 'binom-frag-2', 'binom-frag-3'];
+  var STATES = { 'binom-frag-1': 1, 'binom-frag-2': 2, 'binom-frag-3': 3 };
+
+  // How many gating fragments Reveal currently has shown. Landing on this
+  // slide via a #hash or by stepping backwards from a later slide leaves
+  // fragments already marked .visible; without this the freshly built stage
+  // would show an empty strip while Reveal believes it is done, and the next
+  // arrow press would leave the slide with the animation never having run.
+  function fragState(slide) {
+    var n = 0;
+    ORDER.forEach(function (id) {
+      var f = slide.querySelector('#' + id);
+      if (f && f.classList.contains('visible')) n++;
+    });
+    return n;
+  }
+
+  function init() {
+    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
+    var current = null;
+
+    function mount(slide) {
+      if (current) stop(current);
+      if (!slide) return;
+      var stage = slide.querySelector('#binom-stage');
+      if (!stage) { current = null; return; }
+      current = build(stage);
+      place(current, fragState(slide), true);   // snap, don't animate, on entry
+    }
+    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
+    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
+
+    Reveal.on('fragmentshown', function (e) {
+      var s = STATES[e.fragment.id];
+      if (current && s !== undefined) place(current, s);
+    });
+    Reveal.on('fragmenthidden', function (e) {
+      var s = STATES[e.fragment.id];
+      if (current && s !== undefined) place(current, s - 1);
+    });
+  }
+  init();
+})();
+</script>

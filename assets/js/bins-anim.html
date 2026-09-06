@@ -1,0 +1,155 @@
+<script>
+/*
+  Binning animation — slide #bins-intuition.
+
+  Teaching point: a histogram is not in the data, it is a CHOICE. The same
+  30 numbers are shown three ways as the presenter advances fragments:
+    0. loose on a number line  (what you actually have)
+    1. stacked into bins of width 1
+    2. re-stacked into bins of width 2  (the shape changes)
+
+  Fragment gating follows the deck convention: invisible .fi-frag spans on
+  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+*/
+(function () {
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var DATA = [6.1, 6.3, 6.4, 6.7, 6.9, 7.0, 7.1, 7.2, 7.4, 7.6,
+              7.8, 7.9, 8.1, 8.3, 8.4, 8.6, 8.9, 9.2, 9.4, 9.7,
+              10.1, 10.4, 10.9, 11.3, 11.8, 12.2, 12.7, 13.1, 13.8, 14.2];
+
+  var W = 1000, H = 430, X0 = 60, VMIN = 5.5, VMAX = 15.5, SCALE = 88;
+  var AXIS_Y = 400, STRIP_Y = 118, DOT_R = 7, GAP = 17, FLOOR = AXIS_Y - 14;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function px(v) { return X0 + (v - VMIN) * SCALE; }
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  // Where each dot sits for a given bin width. width === 0 means "loose".
+  function layout(width) {
+    if (!width) {
+      return DATA.map(function (v) { return { x: px(v), y: STRIP_Y }; });
+    }
+    var counts = {};
+    return DATA.map(function (v) {
+      var b = Math.floor((v - 6) / width);          // bins start at 6
+      var j = counts[b] || 0;
+      counts[b] = j + 1;
+      var centre = 6 + b * width + width / 2;
+      return { x: px(centre), y: FLOOR - j * GAP };
+    });
+  }
+
+  function build(stage) {
+    stage.innerHTML = '';
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+
+    svg.appendChild(el('line', {
+      x1: X0, y1: AXIS_Y, x2: px(VMAX), y2: AXIS_Y,
+      stroke: '#E5E7EB', 'stroke-width': 1
+    }));
+    for (var v = 6; v <= 15; v++) {
+      svg.appendChild(el('line', {
+        x1: px(v), y1: AXIS_Y, x2: px(v), y2: AXIS_Y + 6,
+        stroke: '#B0B7C0', 'stroke-width': 1
+      }));
+      var t = el('text', {
+        x: px(v), y: AXIS_Y + 25, 'text-anchor': 'middle', fill: '#6E7681',
+        'font-size': 15, 'font-family': 'JetBrains Mono, monospace'
+      });
+      t.textContent = v;
+      svg.appendChild(t);
+    }
+
+    var cap = el('text', {
+      x: X0, y: 32, fill: '#6E7681', 'font-size': 17,
+      'font-family': 'Roboto, sans-serif', class: 'bins-caption'
+    });
+    cap.textContent = '30 numbers, no bins yet';
+    svg.appendChild(cap);
+
+    var dots = DATA.map(function (v, i) {
+      var p = layout(0)[i];
+      return svg.appendChild(el('circle', {
+        cx: p.x, cy: p.y, r: DOT_R,
+        fill: '#325D88', opacity: 0.5, class: 'bins-dot'
+      }));
+    });
+
+    stage.appendChild(svg);
+    return { dots: dots, cap: cap };
+  }
+
+  var CAPTIONS = {
+    0: '30 numbers, no bins yet',
+    1: 'bin width 1 — a long right tail',
+    2: 'bin width 2 — the tail all but disappears'
+  };
+
+  function place(s, width, instant) {
+    var pts = layout(width);
+    s.cap.textContent = CAPTIONS[width];
+    if (instant || REDUCE ||
+        typeof window.anime === 'undefined' || !window.anime.animate) {
+      s.dots.forEach(function (d, i) {
+        d.setAttribute('cx', pts[i].x); d.setAttribute('cy', pts[i].y);
+      });
+      return;
+    }
+    window.anime.animate(s.dots, {
+      cx: function (el, i) { return pts[i].x; },
+      cy: function (el, i) { return pts[i].y; },
+      duration: 620,
+      delay: window.anime.stagger(14),
+      ease: 'outCubic'
+    });
+  }
+
+  var ORDER = ['bins-frag-w1', 'bins-frag-w2'];
+  var STATES = { 'bins-frag-w1': 1, 'bins-frag-w2': 2 };
+
+  // How many gating fragments Reveal currently has shown. Landing on this
+  // slide via a #hash or by stepping backwards from a later slide leaves
+  // fragments already marked .visible; without this the freshly built stage
+  // would show loose dots while Reveal believes it is done, and the next
+  // arrow press would leave the slide with the animation never having run.
+  function fragState(slide) {
+    var n = 0;
+    ORDER.forEach(function (id) {
+      var f = slide.querySelector('#' + id);
+      if (f && f.classList.contains('visible')) n++;
+    });
+    return n;
+  }
+
+  function init() {
+    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
+    var current = null;
+
+    function mount(slide) {
+      if (!slide) return;
+      var stage = slide.querySelector('#bins-stage');
+      if (!stage) { current = null; return; }
+      current = build(stage);
+      var s = fragState(slide);
+      if (s) place(current, s, true);   // snap, don't animate, on entry
+    }
+    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
+    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
+
+    Reveal.on('fragmentshown', function (e) {
+      var w = STATES[e.fragment.id];
+      if (current && w !== undefined) place(current, w);
+    });
+    Reveal.on('fragmenthidden', function (e) {
+      var w = STATES[e.fragment.id];
+      if (current && w !== undefined) place(current, w - 1);
+    });
+  }
+  init();
+})();
+</script>

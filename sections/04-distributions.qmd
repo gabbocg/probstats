@@ -1,0 +1,208 @@
+# Distributions {.hero #s04-distributions}
+
+::: {.sem-mark data-sem="4"}
+Seminar 4 · Binomial, Poisson, exponential, normal
+:::
+
+Four names for one story.
+
+::: {.lede}
+The worksheet presents these as four separate recipes with four separate tables. They are not separate. Three of them are the *same stream of events* asked different questions, and the fourth shows up whenever you add things together.
+:::
+
+## Where the binomial comes from {.stage-slide #binom-intuition}
+
+::: {.stage-wrap .stage-wrap-400}
+<div id="binom-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="binom-frag-1"}
+[]{.fragment .fi-frag id="binom-frag-2"}
+[]{.fragment .fi-frag id="binom-frag-3"}
+
+::: {.slide-footer}
+The binomial coefficient is not decoration. Because the count discards *which* trials succeeded, all 120 orderings of three successes collapse into one bar — and $\binom{n}{k}$ is exactly how many collapsed.
+:::
+
+## Which seller do you trust? {.stage-slide #seller-intuition}
+
+::: {.stage-wrap .stage-wrap-400}
+<div id="seller-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="seller-frag-1"}
+[]{.fragment .fi-frag id="seller-frag-2"}
+[]{.fragment .fi-frag id="seller-frag-3"}
+
+::: {.slide-footer}
+Same formula as the last slide, turned around: there we fixed the rate and asked which counts were likely; here we fix the count we saw and ask which rates are. More reviews narrow the curve — but narrow is not the same as good, and the 93% seller is merely *precisely* mediocre. Below $s=0.5$ every curve is flat against zero, which is why the axis starts there.
+:::
+
+## Ten out of ten is weak evidence {.sim-slide #seller-sim}
+
+::: {.slide-kicker}
+Seminar 4 · likelihood, and a decision
+:::
+
+::: {.sim-card .sim-plot}
+```{webr-r}
+s <- seq(0.5, 1, length.out = 401)
+rel <- function(k, n) { L <- dbinom(k, n, s); L / max(L) }
+
+plot(s, rel(10, 10), type = "l", lwd = 2, las = 1,
+     col = "#325D88", xlab = "true rate s",
+     ylab = "relative likelihood")
+lines(s, rel(48, 50),   lwd = 2, col = "#93C54B")
+lines(s, rel(186, 200), lwd = 2, col = "#B94A48")
+
+# flat prior -> posterior for s is Beta(k+1, n-k+1)
+good <- function(k, n) 1 - pbeta(0.95, k + 1, n - k + 1)
+round(c(A = good(10, 10), B = good(48, 50),
+        C = good(186, 200)), 4)
+```
+:::
+
+::: {.try-this}
+A perfect 10/10 gives only a **0.43** chance the true rate beats 95%; 48/50 gives **0.47** and wins. Now change `good(10, 10)` to `good(100, 100)` — a perfect hundred — and watch it overtake everything. **It was never the percentage; it was how much the percentage was resting on.**
+:::
+
+## Hold $np$ fixed and push $n$ up {.stage-slide #pois-intuition}
+
+::: {.stage-wrap .stage-wrap-400}
+<div id="pois-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="pois-frag-1"}
+[]{.fragment .fi-frag id="pois-frag-2"}
+[]{.fragment .fi-frag id="pois-frag-3"}
+
+::: {.slide-footer}
+Watch what is lost: at $n = 1000$ you can no longer recover $n$ or $p$ from the shape — only their product. That is why the Poisson has *one* parameter, and why it suits events with no natural "number of trials" at all.
+:::
+
+## The same events, a different question {.stage-slide #expo-intuition}
+
+::: {.stage-wrap .stage-wrap-400}
+<div id="expo-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="expo-frag-1"}
+[]{.fragment .fi-frag id="expo-frag-2"}
+[]{.fragment .fi-frag id="expo-frag-3"}
+
+::: {.slide-footer}
+One timeline, two distributions. Count per interval and you get Poisson; measure the gaps and you get exponential. The last step is the exponential's defining property — the re-normalised remaining waits land back on the *same* curve.
+:::
+
+## Memorylessness is not a figure of speech {.sim-slide #memory-sim}
+
+::: {.slide-kicker}
+Seminar 4 · the exponential's defining property
+:::
+
+::: {.lede-min}
+A machine has lasted 10 years. Is it now more likely to fail soon? If lifetimes are exponential, the answer is exactly no — and that is a strong, testable claim.
+:::
+
+::: {.sim-card .sim-text}
+```{webr-r}
+x <- rexp(500000, rate = 0.1)   # mean life 10 yrs
+s <- 10                         # <-- already survived
+
+fresh <- mean(x > 5)
+used  <- mean(x > s + 5) / mean(x > s)
+
+round(c(new_lasts_5_more  = fresh,
+        used_lasts_5_more = used), 4)
+```
+:::
+
+::: {.try-this}
+Both land on 0.607. A brand-new machine and a 10-year-old one have the *same* chance of surviving another five years. Change `s` to anything you like — it never matters. **This is also why the exponential is often the wrong model for physical wear.**
+:::
+
+## Why the normal turns up at all {.stage-slide #clt-intuition}
+
+::: {.stage-wrap .stage-wrap-400}
+<div id="clt-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="clt-frag-1"}
+[]{.fragment .fi-frag id="clt-frag-2"}
+[]{.fragment .fi-frag id="clt-frag-3"}
+
+::: {.slide-footer}
+The population on the left never changes and never becomes normal. It is the **mean** that does — and it also narrows, at the rate $\sigma/\sqrt{n}$. Both panels share one axis so the narrowing is real, not an artefact of rescaling.
+:::
+
+## One table for every normal {.stage-slide #zstd-intuition}
+
+::: {.stage-wrap .stage-wrap-400}
+<div id="zstd-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="zstd-frag-1"}
+[]{.fragment .fi-frag id="zstd-frag-2"}
+
+::: {.slide-footer}
+Subtracting $\mu$ moves the curve; dividing by $\sigma$ squeezes it — and a squeezed density must grow *taller*, because the area underneath is always 1. The shaded probability never moves. Standardising changes the ruler, not the answer.
+:::
+
+## Check the approximation {.sim-slide #pois-sim}
+
+::: {.slide-kicker}
+Seminar 4 · exact vs approximate
+:::
+
+::: {.lede-min}
+Three mistakes per 10,000 transactions; 10,000 audited. What is the chance of four or more? Compute it both ways.
+:::
+
+::: {.sim-card .sim-text}
+```{webr-r}
+n <- 10000; p <- 0.0003   # <-- keep n * p = 3
+mu <- n * p
+
+# P(4 or more mistakes)
+exact  <- 1 - pbinom(3, n, p)
+approx <- 1 - ppois(3, mu)
+
+round(c(binomial = exact,
+        poisson  = approx,
+        gap      = exact - approx), 6)
+```
+:::
+
+::: {.try-this}
+The gap rounds to zero at six decimal places — the approximation costs you nothing here. Now set `n <- 20; p <- 0.15` (still $np = 3$) and watch it open up. **That** is what "large $n$, small $p$" is protecting you from.
+:::
+
+## Break the bell on purpose {.sim-slide #clt-sim}
+
+::: {.slide-kicker}
+Seminar 4 · the CLT, stress-tested
+:::
+
+::: {.sim-card .sim-plot}
+```{webr-r}
+n <- 5          # <-- draws per average
+reps <- 4000
+
+# a population with no bell shape at all
+pop <- function(k) rexp(k, rate = 1)^2
+sigma <- sd(pop(200000))
+
+xbar <- replicate(reps, mean(pop(n)))
+
+hist(xbar, breaks = 40, col = "#CBD9E6",
+     border = "white", las = 1, main = "",
+     xlab = paste("mean of", n, "draws"))
+
+round(c(sd_obs  = sd(xbar),
+        se_pred = sigma/sqrt(n)), 3)
+```
+:::
+
+::: {.try-this}
+At `n <- 1` you see the raw population — violently skewed. By `n <- 30` it is close to symmetric, and `sd_obs` tracks $\sigma/\sqrt{n}$ throughout. The CLT is a claim about the **mean**, and it survives a parent this ugly.
+:::

@@ -1,0 +1,56 @@
+# Forecasting {.hero #s09-forecasting}
+
+::: {.sem-mark data-sem="9"}
+Seminar 9 · Exponential smoothing
+:::
+
+$\alpha$ is how much you trust the latest number.
+
+::: {.lede}
+$F_{t+1} = \alpha x_t + (1-\alpha)F_t$ looks like it only remembers one step back. Unfold it and every observation you have ever seen is in there — each one weighted a little less than the one after it.
+:::
+
+## The memory hidden in one line {.stage-slide #smooth-intuition}
+
+::: {.stage-wrap .stage-wrap-400}
+<div id="smooth-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="smooth-frag-1"}
+[]{.fragment .fi-frag id="smooth-frag-2"}
+
+::: {.slide-footer}
+At $\alpha = 0.8$ the forecast is barely a forecast — it is last month's number with a delay. At $\alpha = 0.2$ it is so smooth it cannot turn a corner. Choosing $\alpha$ is choosing where on that line to stand.
+:::
+
+## Let the data pick $\alpha$ {.sim-slide #smooth-sim}
+
+::: {.slide-kicker}
+Seminar 9 · MSE and MAE
+:::
+
+::: {.lede-min}
+This series **trends upward**, which breaks the no-trend assumption smoothing requires. The error metrics will tell you so.
+:::
+
+::: {.sim-card .sim-text}
+```{webr-r}
+x <- c(45, 62, 73, 87, 86, 95)   # <-- trending
+
+err <- function(a) {
+  f <- 67                        # F2 is given
+  for (k in 2:5) f[k] <- a*x[k] + (1-a)*f[k-1]
+  x[2:6] - f[1:5]
+}
+for (a in c(0.2, 0.4, 0.6, 0.8)) {
+  e <- err(a)
+  cat("alpha", a,
+      " MSE", round(mean(e^2), 1),
+      " MAE", round(mean(abs(e)), 2), "\n")
+}
+```
+:::
+
+::: {.try-this}
+Both metrics fall as $\alpha$ rises — the method is straining to keep up with a trend it was never built for. Every error is *positive*: it is late, every single month. **Persistent one-signed errors are the diagnostic that you need a trend model, not a better $\alpha$.**
+:::

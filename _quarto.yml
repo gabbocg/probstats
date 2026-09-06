@@ -1,0 +1,77 @@
+project:
+  type: default
+  render: ["index.qmd"]
+  output-dir: _site
+  resources:
+    - assets/vendor/
+
+filters:
+  - webr
+
+webr:
+  packages: []
+  show-startup-message: false
+  autoload-packages: true
+
+format:
+  revealjs:
+    theme: [default, assets/theme.scss, assets/seminars.scss]
+    slide-number: c/t
+    revealjs-plugins:
+      - drop
+    progress: true
+    controls: true
+    controls-layout: edges
+    controls-back-arrows: visible
+    navigation-mode: linear
+    footer: "[gcabrerag.rbind.io](https://gcabrerag.rbind.io)"
+    transition: fade
+    transition-speed: fast
+    history: true
+    chalkboard:
+      buttons: true
+    menu:
+      side: left
+      numbers: true
+    include-in-header:
+      - file: assets/head.html
+    include-after-body:
+      - file: assets/animations.html
+      - file: assets/js/bins-anim.html
+      - file: assets/js/mm-anim.html
+      - file: assets/js/bayes-anim.html
+      - file: assets/js/bayeq-anim.html
+      - file: assets/js/cond-anim.html
+      - file: assets/js/binom-anim.html
+      - file: assets/js/seller-anim.html
+      - file: assets/js/pois-anim.html
+      - file: assets/js/expo-anim.html
+      - file: assets/js/clt-anim.html
+      - file: assets/js/zstd-anim.html
+      - file: assets/js/ciflip-anim.html
+      - file: assets/js/cieq-anim.html
+      - file: assets/js/ci-anim.html
+      - file: assets/js/pval-anim.html
+      - file: assets/js/pair-anim.html
+      - file: assets/js/ls-anim.html
+      - file: assets/js/smooth-anim.html
+    code-line-numbers: false
+    code-copy: false
+    highlight-style: assets/syntax.theme
+
+execute:
+  echo: true
+  warning: false
+  message: false
+  # NOT `freeze: auto`. Freeze keys its cache on index.qmd alone, so edits to
+  # the {{< include >}}d files in sections/ silently render stale slides.
+  # Nothing here executes at render time anyway — every chunk is `webr-r`,
+  # which runs client-side — so there is no cost to leaving freeze off.
+  freeze: false
+
+knitr:
+  opts_chunk:
+    dev: "svg"
+    fig.width: 7
+    fig.height: 4.2
+    fig.align: "center"

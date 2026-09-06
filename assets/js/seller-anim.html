@@ -1,0 +1,373 @@
+<script>
+/*
+  Three-sellers animation — slide #seller-intuition (Seminar 4).
+
+  Teaching point: this is #binom-intuition READ BACKWARDS. There the success
+  rate was fixed at p = 0.3 and the count k varied, and the answer was a
+  distribution over counts. Here the count is the thing you already saw — it
+  is data, it is finished — and the unknown is the rate s. Same expression,
+  s^k * (1-s)^(n-k), scanned along the other axis. Nothing new is being
+  taught; the formula is being turned round.
+
+  Three online sellers, all excellent on the face of it:
+    A:  10 of 10   (100%)
+    B:  48 of 50   (96%)
+    C: 186 of 200  (93%)
+  The picture answers "which would you actually buy from?" and the answer is
+  B, which no single percentage on that list would have told you.
+
+  Advancing the fragments adds one seller at a time:
+    0. an empty plot over s — the axis of the question
+    1. A: a broad slab. Ten reviews barely narrow anything; s could be 0.80.
+    2. B: visibly tighter, and still sitting high.
+    3. C: a spike. Two hundred reviews pin s down precisely — precisely at a
+       mediocre value. Narrow is not the same as good, and that contrast
+       between A's slab and C's needle is the whole slide.
+
+  Every number is computed here, not typed: the curves, the plausible ranges
+  and the three tail probabilities all come out of the same likelihood. Two
+  things make that survivable in floating point:
+    - the likelihood is formed in LOGS and shifted by its own maximum before
+      exponentiating. 0.93^186 is about 1e-6 and the far tail is far worse;
+      exponentiating first would hand back a flat zero and the curve would
+      simply not be there.
+    - each curve is normalised to ITS OWN peak, which is the only way three
+      sellers with wildly different amounts of evidence can share one frame.
+      That makes the heights meaningless across sellers and the shapes the
+      entire message, so the y-axis label says so out loud.
+
+  Fragment gating follows the deck convention: invisible .fi-frag spans on
+  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+*/
+(function () {
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // --- the three sellers ---------------------------------------------------
+  var SELLERS = [
+    { id: 'A', k: 10,  n: 10,  colour: '#325D88' },
+    { id: 'B', k: 48,  n: 50,  colour: '#93C54B' },
+    { id: 'C', k: 186, n: 200, colour: '#B94A48' }
+  ];
+
+  var THRESH = 0.10;      // "plausible" = relative likelihood at least this
+  var GOOD = 0.95;        // the bar a seller has to clear to be worth it
+  var NGRID = 20001;      // integration/scan grid on [0,1]; 0.95 lands on it
+
+  // log of s^k * (1-s)^(n-k). The guards are not paranoia: seller A has
+  // n - k = 0, so the second term is 0 * log(0) = NaN at s = 1 — exactly the
+  // point where A's curve peaks — unless a zero exponent short-circuits to 0.
+  function logLik(k, n, s) {
+    var a = k > 0 ? k * Math.log(s) : 0;
+    var b = (n - k) > 0 ? (n - k) * Math.log(1 - s) : 0;
+    return a + b;
+  }
+
+  // Everything the slide prints about one seller, derived once at load.
+  // rel(s) is the likelihood divided by its own maximum, so rel(peak) = 1 by
+  // construction and no exponential ever leaves the range [0, 1].
+  function analyse(sl) {
+    var k = sl.k, n = sl.n;
+    var peak = k / n;                       // the MLE, and the shift constant
+    var top = logLik(k, n, peak);
+
+    function rel(s) {
+      var v = Math.exp(logLik(k, n, s) - top);
+      return isFinite(v) ? v : 0;
+    }
+
+    // One pass over the grid does both jobs: the ends of the plausible range
+    // and the trapezoid integral, with the tail above 0.95 accumulated from
+    // the same segments so the two can never disagree.
+    var lo = 1, hi = 0, tot = 0, tail = 0, prevR = null, prevS = 0, i, s, r, w;
+    for (i = 0; i < NGRID; i++) {
+      s = i / (NGRID - 1);
+      r = rel(s);
+      if (r >= THRESH) { if (s < lo) lo = s; if (s > hi) hi = s; }
+      if (prevR !== null) {
+        w = (s - prevS) * (r + prevR) / 2;
+        tot += w;
+        if (prevS >= GOOD) tail += w;
+      }
+      prevR = r; prevS = s;
+    }
+
+    return {
+      id: sl.id, k: k, n: n, colour: sl.colour, rel: rel,
+      peak: peak, lo: lo, hi: hi, ptail: tail / tot
+    };
+  }
+  var S = SELLERS.map(analyse);
+
+  // --- stage geometry — fixed 1000x400 space, scaled to the slide via CSS ---
+  var W = 1000, H = 400;
+  var X0 = 90, X1 = 700, SMIN = 0.5, SMAX = 1.0;
+  var BASE = 280, PEAK_Y = 80;             // baseline, and where rel = 1 lands
+  var NPT = 320;                           // samples along each curve
+  var TICK = 7;                            // bracket end-tick length
+
+  var SOFT = '#6E7681', RULE = '#E5E7EB', GREY = '#B0B7C0';
+  var MONO = 'JetBrains Mono, monospace', SANS = 'Roboto, sans-serif';
+  var NS = 'http://www.w3.org/2000/svg';
+  var NB = ' ';    // SVG <text> eats runs of ordinary spaces; this one survives
+
+  // The brackets stack under the axis, one lane per seller, in reveal order.
+  var LANE_Y = [322, 346, 370];
+
+  // The readout on the right. Two lines per seller, 34px apart, with a wider
+  // gap between blocks so each record reads with its own probability.
+  var RD_X = 740, RD_Y = 110, RD_LINE = 34, RD_BLOCK = 78;
+
+  function px(s) { return X0 + (s - SMIN) * (X1 - X0) / (SMAX - SMIN); }
+  function py(r) { return BASE - r * (BASE - PEAK_Y); }
+
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function txt(attrs, s) { var t = el('text', attrs); t.textContent = s; return t; }
+
+  // Left-pad with non-breaking spaces so the three records line up on their
+  // slashes: "10 / 10" and "186 / 200" are different widths otherwise.
+  function pad(v, w) {
+    var s = String(v);
+    while (s.length < w) s = NB + s;
+    return s;
+  }
+
+  // The visible half of the curve. s below 0.5 is dead space for all three
+  // sellers — nobody with 93% of two hundred reviews is a coin flip — so the
+  // plot is truncated there and the axis label admits it.
+  function curvePath(a) {
+    var d = '', i, s;
+    for (i = 0; i <= NPT; i++) {
+      s = SMIN + (SMAX - SMIN) * i / NPT;
+      d += (i ? 'L' : 'M') + px(s).toFixed(2) + ' ' + py(a.rel(s)).toFixed(2);
+    }
+    return d;
+  }
+
+  // A bracket in s-space with end ticks pointing down, same shape as the
+  // confidence-interval lanes on #ciflip-intuition so the two slides read as
+  // the same gesture: "this is the range the data will tolerate".
+  function bracket(a, y) {
+    var x0 = px(a.lo), x1 = px(a.hi);
+    return 'M' + x0.toFixed(2) + ' ' + y + 'V' + (y + TICK) +
+           'H' + x1.toFixed(2) + 'V' + y;
+  }
+
+  function build(stage) {
+    stage.innerHTML = '';
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    var i;
+
+    var cap = svg.appendChild(txt({
+      x: 40, y: 34, fill: SOFT, 'font-size': 17, 'font-family': SANS,
+      class: 'seller-caption'
+    }, CAPTIONS[0]));
+
+    // --- what the vertical axis is, and the caveat that comes with it ---
+    svg.appendChild(txt({
+      x: X0, y: 64, fill: SOFT, 'font-size': 14, 'font-family': SANS
+    }, 'relative likelihood (each curve scaled to its own peak)'));
+
+    // --- the s axis ---
+    svg.appendChild(el('line', {
+      x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: RULE, 'stroke-width': 1
+    }));
+    for (i = 0; i <= 5; i++) {
+      var v = 0.5 + i * 0.1;
+      svg.appendChild(el('line', {
+        x1: px(v), y1: BASE, x2: px(v), y2: BASE + 6,
+        stroke: GREY, 'stroke-width': 1
+      }));
+      svg.appendChild(txt({
+        x: px(v), y: 302, 'text-anchor': 'middle', fill: SOFT,
+        'font-size': 14, 'font-family': MONO
+      }, v.toFixed(1)));
+    }
+    // Left-anchored, and broken over two short lines rather than set on one
+    // long one. Every bracket sits on the right half of the axis, so the
+    // strip from x = 90 to about x = 310 is the only clear space under it,
+    // and a centred — or single 40-character — title runs straight through
+    // seller A's range label, which is right-anchored at x = 439. The
+    // truncation has to be admitted somewhere, so it gets the second line.
+    svg.appendChild(txt({
+      x: X0, y: 333, fill: SOFT, 'font-size': 14, 'font-family': SANS
+    }, 'true success rate s'));
+    svg.appendChild(txt({
+      x: X0, y: 353, fill: SOFT, 'font-size': 14, 'font-family': SANS
+    }, '(axis truncated below 0.5)'));
+
+    // --- one curve, one bracket lane and one readout block per seller ---
+    var lanes = S.map(function (a, idx) {
+      var path = svg.appendChild(el('path', {
+        d: curvePath(a), fill: 'none', stroke: a.colour, 'stroke-width': 2.5,
+        'stroke-linejoin': 'round', 'stroke-linecap': 'round',
+        opacity: 0, class: 'seller-curve'
+      }));
+
+      // Bracket, its numeric range, and the readout share one group so a
+      // seller arrives (and leaves) as a single object.
+      var side = svg.appendChild(el('g', {
+        opacity: 0, class: 'seller-side'
+      }));
+      side.appendChild(el('path', {
+        d: bracket(a, LANE_Y[idx]), fill: 'none', stroke: a.colour,
+        'stroke-width': 2
+      }));
+      // The range sits to the LEFT of its bracket: to the right is the
+      // readout column, and seller A's bracket already reaches x = 700.
+      side.appendChild(txt({
+        x: px(a.lo) - 10, y: LANE_Y[idx] + 5, 'text-anchor': 'end',
+        fill: a.colour, 'font-size': 13, 'font-family': MONO
+      }, a.id + NB + '[' + a.lo.toFixed(3) + ', ' + a.hi.toFixed(3) + ']'));
+
+      var y = RD_Y + idx * RD_BLOCK;
+      side.appendChild(txt({
+        x: RD_X, y: y, fill: a.colour, 'font-size': 17, 'font-family': MONO
+      }, a.id + NB + NB + pad(a.k, 3) + ' / ' + pad(a.n, 3)));
+      side.appendChild(txt({
+        x: RD_X, y: y + RD_LINE, fill: SOFT, 'font-size': 14,
+        'font-family': SANS
+      }, 'P(s > ' + GOOD.toFixed(2) + ') = ' + a.ptail.toFixed(2)));
+
+      return { path: path, side: side, len: 0, on: false };
+    });
+
+    stage.appendChild(svg);
+
+    // Path lengths are only measurable once the svg is in the document, so
+    // the dash setup happens after the append rather than at creation.
+    lanes.forEach(function (ln) {
+      var len = 0;
+      try { len = ln.path.getTotalLength(); } catch (e) { len = 0; }
+      ln.len = len;
+      ln.path.setAttribute('stroke-dasharray', len);
+      ln.path.setAttribute('stroke-dashoffset', len);
+    });
+
+    return { state: 0, cap: cap, lanes: lanes, anims: [] };
+  }
+
+  // Keep these SHORT. The caption is left-anchored at x=40, y=34 and the
+  // readout column starts at x=740; at 17px Roboto (~8.4px per character)
+  // anything much past ~46 characters runs under it.
+  var CAPTIONS = [
+    'same formula, now s varies not k',
+    '10 of 10 — but only ten',
+    '48 of 50 — narrower already',
+    '186 of 200 — narrowest, and lowest'
+  ];
+
+  function live() {
+    return typeof window.anime !== 'undefined' && !!window.anime.animate;
+  }
+
+  // Cancel everything still in flight before the next beat. A curve draw runs
+  // for the best part of a second; a presenter arrowing back during it would
+  // otherwise have the old tween keep writing its own dashoffset over a state
+  // that no longer contains that seller.
+  function stop(s) {
+    s.anims.forEach(function (a) { if (a && a.pause) a.pause(); });
+    s.anims = [];
+  }
+
+  function render(s, st, instant) {
+    stop(s);
+    s.state = st;
+    s.cap.textContent = CAPTIONS[st];
+    var fast = instant || REDUCE || !live();
+    var A = window.anime;
+
+    s.lanes.forEach(function (ln, idx) {
+      var on = st >= idx + 1;
+
+      if (fast) {
+        ln.path.setAttribute('opacity', on ? 1 : 0);
+        ln.path.setAttribute('stroke-dashoffset', on ? 0 : ln.len);
+        ln.side.setAttribute('opacity', on ? 1 : 0);
+        ln.on = on;
+        return;
+      }
+      if (on === ln.on) return;             // already where it should be
+
+      if (on) {
+        // The curve is drawn left to right, so the eye follows the rise and
+        // arrives at the peak; the bracket and the readout land just after,
+        // once there is a shape for them to describe.
+        ln.path.setAttribute('opacity', 1);
+        ln.path.setAttribute('stroke-dashoffset', ln.len);
+        var p = { u: 0 };
+        s.anims.push(A.animate(p, {
+          u: 1, duration: 900, ease: 'outCubic',
+          onUpdate: function () {
+            ln.path.setAttribute('stroke-dashoffset', (1 - p.u) * ln.len);
+          }
+        }));
+        s.anims.push(A.animate(ln.side, {
+          opacity: 1, duration: 380, delay: 560, ease: 'outQuad'
+        }));
+      } else {
+        // Rewind the dash on the way out, so stepping back and forward draws
+        // the curve again instead of blinking a finished one into place.
+        s.anims.push(A.animate(ln.path, {
+          opacity: 0, duration: 260, ease: 'outQuad',
+          onComplete: function () {
+            ln.path.setAttribute('stroke-dashoffset', ln.len);
+          }
+        }));
+        s.anims.push(A.animate(ln.side, {
+          opacity: 0, duration: 260, ease: 'outQuad'
+        }));
+      }
+      ln.on = on;
+    });
+  }
+
+  var ORDER = ['seller-frag-1', 'seller-frag-2', 'seller-frag-3'];
+  var STATES = {
+    'seller-frag-1': 1, 'seller-frag-2': 2, 'seller-frag-3': 3
+  };
+
+  // How many gating fragments Reveal currently has shown. Landing on this
+  // slide via a #hash or by stepping backwards from a later slide leaves
+  // fragments already marked .visible; without this the freshly built stage
+  // would show an empty plot while Reveal believes it is done, and the next
+  // arrow press would leave the slide with the animation never having run.
+  function fragState(slide) {
+    var n = 0;
+    ORDER.forEach(function (id) {
+      var f = slide.querySelector('#' + id);
+      if (f && f.classList.contains('visible')) n++;
+    });
+    return n;
+  }
+
+  function init() {
+    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
+    var current = null;
+
+    function mount(slide) {
+      if (current) stop(current);
+      if (!slide) return;
+      var stage = slide.querySelector('#seller-stage');
+      if (!stage) { current = null; return; }
+      current = build(stage);
+      render(current, fragState(slide), true);   // snap, don't animate, on entry
+    }
+    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
+    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
+
+    Reveal.on('fragmentshown', function (e) {
+      var st = STATES[e.fragment.id];
+      if (current && st !== undefined) render(current, st);
+    });
+    Reveal.on('fragmenthidden', function (e) {
+      var st = STATES[e.fragment.id];
+      if (current && st !== undefined) render(current, st - 1);
+    });
+  }
+  init();
+})();
+</script>

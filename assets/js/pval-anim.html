@@ -1,0 +1,288 @@
+<script>
+/*
+  p-value animation — slide #pval-intuition.
+
+  Teaching point: the p-value is not a verdict, it is an AREA. We build the
+  null distribution by brute force and then read the tail off the picture:
+    0. an empty axis                    (what would H0 produce?)
+    1. 200 simulated z's rain into bins (that is the null distribution)
+    2. the observed z = 2.0 drops on it (what our sample actually gave)
+    3. everything at least that extreme lights up  (that share IS the p-value)
+
+  The 200 draws come from a seeded LCG + Box-Muller rather than Math.random,
+  so the histogram is pixel-identical in every run of the lecture. The number
+  printed in state 3 is counted off the dots on screen, not quoted from a
+  table — with this seed 5 of the 200 land beyond z = 2, so p = 0.025 (the
+  theoretical value is 0.023; the gap is the point of a simulation).
+
+  Fragment gating follows the deck convention: invisible .fi-frag spans on
+  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+*/
+(function () {
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var N = 200, ZOBS = 2.0, BINW = 0.4;
+  var NAVY = '#325D88', BRICK = '#B94A48';
+
+  // Stage geometry — fixed 1000x400 space, scaled to the slide via CSS.
+  var W = 1000, H = 400, X0 = 80, X1 = 940, ZMIN = -4, ZMAX = 4;
+  var BASE = 320, TOP = 60;            // baseline, and the ceiling of the tail
+  var SIDE = 9, STEP = 9.5;            // dot size, and stack pitch
+  var DOT_OP = 0.5, SHADE_OP = 0.1, SKY = -30;   // SKY = where dots wait
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function px(z) { return X0 + (z - ZMIN) * (X1 - X0) / (ZMAX - ZMIN); }
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  // Seeded LCG (glibc constants, kept exact with imul + a 31-bit mask so the
+  // multiply cannot drift past 2^53) fed through Box-Muller.
+  function nulls(seed, n) {
+    function u() {
+      seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff;
+      return (seed + 1) / 2147483649;          // strictly inside (0, 1)
+    }
+    var z = [];
+    while (z.length < n) {
+      var a = u(), b = u(), r = Math.sqrt(-2 * Math.log(a));
+      z.push(r * Math.cos(2 * Math.PI * b));
+      if (z.length < n) z.push(r * Math.sin(2 * Math.PI * b));
+    }
+    return z;
+  }
+  var DRAWS = nulls(864, N);
+
+  // Stack each draw in its bin, in arrival order — so the rain reads as a
+  // simulation piling up rather than a histogram assembling itself.
+  function layout() {
+    var counts = {};
+    return DRAWS.map(function (v) {
+      var b = Math.floor((v - ZMIN) / BINW);
+      var j = counts[b] || 0;
+      counts[b] = j + 1;
+      var centre = ZMIN + b * BINW + BINW / 2;
+      return { x: px(centre) - SIDE / 2, y: BASE - SIDE - j * STEP };
+    });
+  }
+
+  function build(stage) {
+    stage.innerHTML = '';
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+
+    // --- shaded tail: behind the dots, so the dots stay legible ---
+    var shade = el('rect', {
+      x: px(ZOBS), y: TOP, width: X1 - px(ZOBS), height: BASE - TOP,
+      fill: BRICK, opacity: 0, class: 'pval-shade'
+    });
+    svg.appendChild(shade);
+
+    // --- axis ---
+    svg.appendChild(el('line', {
+      x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: '#E5E7EB', 'stroke-width': 1
+    }));
+    [-3, -2, -1, 0, 1, 2, 3].forEach(function (z) {
+      svg.appendChild(el('line', {
+        x1: px(z), y1: BASE, x2: px(z), y2: BASE + 6,
+        stroke: '#B0B7C0', 'stroke-width': 1
+      }));
+      var t = el('text', {
+        x: px(z), y: BASE + 25, 'text-anchor': 'middle', fill: '#6E7681',
+        'font-size': 15, 'font-family': 'JetBrains Mono, monospace'
+      });
+      t.textContent = z;
+      svg.appendChild(t);
+    });
+
+    var cap = el('text', {
+      x: 40, y: 34, fill: '#6E7681', 'font-size': 17,
+      'font-family': 'Roboto, sans-serif', class: 'pval-caption'
+    });
+    svg.appendChild(cap);
+
+    // --- the 200 draws, parked above the stage until they are called for ---
+    var pts = layout(), tail = [], rest = [];
+    var dots = DRAWS.map(function (v, i) {
+      rest.push(pts[i].y);
+      var d = svg.appendChild(el('rect', {
+        x: pts[i].x, y: SKY, width: SIDE, height: SIDE, rx: 1.5,
+        fill: NAVY, opacity: 0, class: 'pval-dot'
+      }));
+      if (v > ZOBS) tail.push(d);
+      return d;
+    });
+
+    // --- observed statistic: drawn over the dots ---
+    var obs = el('g', { class: 'pval-obs', opacity: 0 });
+    obs.appendChild(el('line', {
+      x1: px(ZOBS), y1: TOP, x2: px(ZOBS), y2: BASE,
+      stroke: BRICK, 'stroke-width': 2.5
+    }));
+    var obsLab = el('text', {
+      x: px(ZOBS), y: TOP - 12, 'text-anchor': 'middle', fill: BRICK,
+      'font-size': 17, 'font-weight': 700,
+      'font-family': 'JetBrains Mono, monospace'
+    });
+    obsLab.textContent = 'observed z = ' + ZOBS.toFixed(1);
+    obs.appendChild(obsLab);
+    svg.appendChild(obs);
+
+    // --- the verdict, right-aligned over the shaded tail so it clears both
+    //     the observed-z label above it and the vertical line to its left ---
+    var res = el('g', { class: 'pval-res', opacity: 0 });
+    var p = el('text', {
+      x: X1, y: 100, 'text-anchor': 'end', fill: BRICK, 'font-size': 18,
+      'font-weight': 700, 'font-family': 'JetBrains Mono, monospace'
+    });
+    p.textContent = 'p = ' + tail.length + '/' + N + ' = ' +
+                    (tail.length / N).toFixed(3);
+    res.appendChild(p);
+    ['the share of the null world', 'at least this extreme'].forEach(
+      function (line, i) {
+        var t = el('text', {
+          x: X1, y: 124 + i * 18, 'text-anchor': 'end', fill: '#6E7681',
+          'font-size': 14, 'font-family': 'Roboto, sans-serif'
+        });
+        t.textContent = line;
+        res.appendChild(t);
+      });
+    svg.appendChild(res);
+
+    stage.appendChild(svg);
+    return { dots: dots, tail: tail, rest: rest, shade: shade,
+             obs: obs, res: res, cap: cap, state: 0 };
+  }
+
+  var CAPTIONS = {
+    0: 'if H0 were true, what test statistics would we see?',
+    1: '200 samples drawn under H0 — this is the null distribution',
+    2: 'our sample produced this',
+    3: 'the p-value is that shaded share — nothing more'
+  };
+
+  // Each layer compares the state it is going to with the state it came from,
+  // so a fragmenthidden reverses exactly the tween that showed it and a
+  // no-op step (say 1 -> 2 for the dots) costs nothing.
+  function rain(s, n, prev, A) {
+    var down = n >= 1;
+    if (!A) {
+      s.dots.forEach(function (d, i) {
+        d.setAttribute('y', down ? s.rest[i] : SKY);
+        d.setAttribute('opacity', down ? DOT_OP : 0);
+      });
+      return;
+    }
+    if (down === (prev >= 1)) return;
+    A.animate(s.dots, {
+      y: function (t, i) { return down ? s.rest[i] : SKY; },
+      opacity: down ? [0, DOT_OP] : 0,
+      duration: 520,
+      delay: A.stagger(6, down ? {} : { from: 'last' }),
+      ease: down ? 'outQuad' : 'inQuad'
+    });
+  }
+
+  function observed(s, n, prev, A) {
+    var on = n >= 2;
+    if (!A) {
+      s.obs.setAttribute('opacity', on ? 1 : 0);
+      s.obs.style.transform = on ? 'none' : 'translateY(-46px)';
+      return;
+    }
+    if (on === (prev >= 2)) return;
+    A.animate(s.obs, {
+      opacity: on ? [0, 1] : 0,
+      translateY: on ? [-46, 0] : -46,
+      duration: 420,
+      ease: on ? 'outQuad' : 'inQuad'
+    });
+  }
+
+  function verdict(s, n, prev, A) {
+    var on = n >= 3;
+    var off = n >= 1 ? DOT_OP : 0;          // where a cooled dot goes back to
+    if (!A) {
+      s.shade.setAttribute('opacity', on ? SHADE_OP : 0);
+      s.res.setAttribute('opacity', on ? 1 : 0);
+      s.tail.forEach(function (d) {
+        d.setAttribute('fill', on ? BRICK : NAVY);
+        d.setAttribute('opacity', on ? 1 : off);
+      });
+      return;
+    }
+    if (on === (prev >= 3)) return;
+    A.animate(s.shade, {
+      opacity: on ? [0, SHADE_OP] : 0, duration: 420, ease: 'outQuad'
+    });
+    A.animate(s.tail, {
+      fill: on ? BRICK : NAVY,
+      opacity: on ? 1 : off,
+      duration: 380,
+      delay: A.stagger(70),
+      ease: 'outQuad'
+    });
+    A.animate(s.res, {
+      opacity: on ? [0, 1] : 0,
+      duration: 380,
+      delay: on ? 260 : 0,
+      ease: 'outQuad'
+    });
+  }
+
+  function place(s, n, instant) {
+    var A = (instant || REDUCE ||
+             typeof window.anime === 'undefined' || !window.anime.animate)
+            ? null : window.anime;
+    var prev = s.state;
+    s.state = n;
+    s.cap.textContent = CAPTIONS[n];
+    rain(s, n, prev, A);           // verdict() runs last: it overrides the
+    observed(s, n, prev, A);       // tail dots' colour set by rain()
+    verdict(s, n, prev, A);
+  }
+
+  var ORDER = ['pval-frag-1', 'pval-frag-2', 'pval-frag-3'];
+  var STATES = { 'pval-frag-1': 1, 'pval-frag-2': 2, 'pval-frag-3': 3 };
+
+  // How many gating fragments Reveal currently has shown. Landing on this
+  // slide via a #hash or by stepping backwards from a later slide leaves
+  // fragments already marked .visible; without this the freshly built stage
+  // would show an empty axis while Reveal believes it is done, and the next
+  // arrow press would leave the slide with the animation never having run.
+  function fragState(slide) {
+    var n = 0;
+    ORDER.forEach(function (id) {
+      var f = slide.querySelector('#' + id);
+      if (f && f.classList.contains('visible')) n++;
+    });
+    return n;
+  }
+
+  function init() {
+    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
+    var current = null;
+
+    function mount(slide) {
+      if (!slide) return;
+      var stage = slide.querySelector('#pval-stage');
+      if (!stage) { current = null; return; }
+      current = build(stage);
+      place(current, fragState(slide), true);   // snap, don't animate, on entry
+    }
+    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
+    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
+
+    Reveal.on('fragmentshown', function (e) {
+      var n = STATES[e.fragment.id];
+      if (current && n !== undefined) place(current, n);
+    });
+    Reveal.on('fragmenthidden', function (e) {
+      var n = STATES[e.fragment.id];
+      if (current && n !== undefined) place(current, n - 1);
+    });
+  }
+  init();
+})();
+</script>

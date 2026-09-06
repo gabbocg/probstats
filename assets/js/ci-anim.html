@@ -1,0 +1,173 @@
+<script>
+/*
+  CI coverage animation — slide #ci-intuition.
+
+  Teaching point: mu is a fixed vertical line; the INTERVALS are what move.
+  Twenty 95% intervals rain in from a mu = 100, sigma = 15, n = 25 world
+  (so SE = 3 and the half-width is 1.96 * 3 = 5.88). Exactly one of the
+  twenty misses, which is what 95% coverage looks like at this sample size.
+
+  Sample means are hardcoded rather than drawn live so the picture is the
+  same in every run of the lecture — the live version is the webR slide
+  that follows.
+*/
+(function () {
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var MU = 100, HALF = 5.88;
+  var MEANS = [101.2, 98.4, 103.1, 99.6, 96.9, 100.8, 104.2, 97.5, 102.3, 94.0,
+               100.1, 105.4, 98.9, 101.7, 97.1, 103.6, 99.2, 100.5, 96.3, 102.8];
+
+  // Stage geometry — fixed 1000x470 space, scaled to the slide via CSS.
+  var W = 1000, H = 470, X0 = 50, X1 = 950, VMIN = 88, VMAX = 112;
+  // MU_TOP sits below the two-line mu label so the dashed line does not
+  // strike through the "unknown, but fixed" caption.
+  var AXIS_Y = 432, MU_TOP = 60, ROW_TOP = 74, ROW_STEP = 17;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function px(v) { return X0 + (v - VMIN) * (X1 - X0) / (VMAX - VMIN); }
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function build(stage) {
+    stage.innerHTML = '';
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+
+    // --- axis ---
+    svg.appendChild(el('line', {
+      x1: X0, y1: AXIS_Y, x2: X1, y2: AXIS_Y, stroke: '#E5E7EB', 'stroke-width': 1
+    }));
+    [90, 95, 100, 105, 110].forEach(function (v) {
+      svg.appendChild(el('line', {
+        x1: px(v), y1: AXIS_Y, x2: px(v), y2: AXIS_Y + 6,
+        stroke: '#B0B7C0', 'stroke-width': 1
+      }));
+      var t = el('text', {
+        x: px(v), y: AXIS_Y + 24, 'text-anchor': 'middle',
+        fill: '#6E7681', 'font-size': 15,
+        'font-family': 'JetBrains Mono, monospace'
+      });
+      t.textContent = v;
+      svg.appendChild(t);
+    });
+
+    // --- mu line: the thing that does NOT move ---
+    var muLine = el('line', {
+      x1: px(MU), y1: MU_TOP, x2: px(MU), y2: AXIS_Y,
+      stroke: '#325D88', 'stroke-width': 2, 'stroke-dasharray': '6 5',
+      class: 'ci-mu', opacity: 0
+    });
+    svg.appendChild(muLine);
+
+    var muLab = el('text', {
+      x: px(MU), y: 30, 'text-anchor': 'middle', fill: '#325D88',
+      'font-size': 19, 'font-weight': 700,
+      'font-family': 'JetBrains Mono, monospace', class: 'ci-mu-lab', opacity: 0
+    });
+    muLab.textContent = 'μ = 100';
+    svg.appendChild(muLab);
+
+    var muSub = el('text', {
+      x: px(MU), y: 50, 'text-anchor': 'middle', fill: '#6E7681',
+      'font-size': 13, 'font-family': 'Roboto, sans-serif',
+      class: 'ci-mu-lab', opacity: 0
+    });
+    muSub.textContent = 'unknown, but fixed';
+    svg.appendChild(muSub);
+
+    // --- intervals ---
+    var hits = 0;
+    MEANS.forEach(function (m, i) {
+      var covers = (m - HALF) <= MU && MU <= (m + HALF);
+      if (covers) hits++;
+      var y = ROW_TOP + i * ROW_STEP;
+      var colour = covers ? '#325D88' : '#B94A48';
+
+      var g = el('g', { class: 'ci-int', opacity: 0 });
+      g.style.transformBox = 'fill-box';
+      g.style.transformOrigin = 'center';
+      g.appendChild(el('line', {
+        x1: px(m - HALF), y1: y, x2: px(m + HALF), y2: y,
+        stroke: colour, 'stroke-width': covers ? 2.4 : 3.2,
+        'stroke-linecap': 'round', opacity: covers ? 0.55 : 1
+      }));
+      g.appendChild(el('circle', {
+        cx: px(m), cy: y, r: covers ? 2.8 : 3.6,
+        fill: colour, opacity: covers ? 0.75 : 1
+      }));
+      svg.appendChild(g);
+    });
+
+    // --- running counter ---
+    var cnt = el('text', {
+      x: X1, y: 30, 'text-anchor': 'end', fill: '#3E3F3A',
+      'font-size': 20, 'font-weight': 700,
+      'font-family': 'JetBrains Mono, monospace', class: 'ci-count', opacity: 0
+    });
+    cnt.textContent = '0 / 20 cover μ';
+    svg.appendChild(cnt);
+
+    stage.appendChild(svg);
+    return { muParts: svg.querySelectorAll('.ci-mu, .ci-mu-lab'),
+             ints: svg.querySelectorAll('.ci-int'), cnt: cnt, hits: hits };
+  }
+
+  function show(nodes) {
+    Array.prototype.forEach.call(nodes, function (n) { n.setAttribute('opacity', 1); });
+  }
+
+  function run(stage) {
+    var s = build(stage);
+
+    if (REDUCE || typeof window.anime === 'undefined' || !window.anime.animate) {
+      show(s.muParts); show(s.ints);
+      s.cnt.setAttribute('opacity', 1);
+      s.cnt.textContent = s.hits + ' / 20 cover μ';
+      return;
+    }
+
+    var A = window.anime;
+    A.animate(s.muParts, { opacity: [0, 1], duration: 420, ease: 'outQuad' });
+
+    // Intervals grow out from their own centre, one after another.
+    Array.prototype.forEach.call(s.ints, function (g) {
+      g.style.transform = 'scaleX(0)';
+    });
+    A.animate(s.ints, {
+      opacity: [0, 1],
+      scaleX: [0, 1],
+      duration: 340,
+      delay: A.stagger(85, { start: 320 }),
+      ease: 'outQuad'
+    });
+
+    // Counter ticks up in step with the intervals landing.
+    var c = { v: 0 };
+    s.cnt.setAttribute('opacity', 1);
+    A.animate(c, {
+      v: s.hits,
+      duration: 85 * s.ints.length,
+      delay: 420,
+      ease: 'linear',
+      onUpdate: function () {
+        s.cnt.textContent = Math.round(c.v) + ' / 20 cover μ';
+      }
+    });
+  }
+
+  function init() {
+    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
+    function maybe(slide) {
+      if (!slide) return;
+      var stage = slide.querySelector('#ci-stage');
+      if (stage) run(stage);
+    }
+    Reveal.on('slidechanged', function (e) { maybe(e.currentSlide); });
+    Reveal.on('ready', function () { maybe(Reveal.getCurrentSlide()); });
+  }
+  init();
+})();
+</script>

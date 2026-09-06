@@ -1,0 +1,1647 @@
+/*-- scss:defaults --*/
+
+// Sandstone-inspired palette on a pure-white ground
+$body-bg: #FFFFFF;
+$body-color: #3E3F3A;
+$link-color: #325D88;
+$link-color-hover: #2A4E72;
+$selection-bg: rgba(50, 93, 136, 0.22);
+$selection-color: #FFFFFF;
+
+// Code blocks
+$code-bg: #FFFFFF;
+$code-color: #3E3F3A;
+$code-block-bg: #F6F8FA;
+$code-block-border-color: #E5E7EB;
+
+// Typography — Roboto body, JetBrains Mono code
+$font-family-sans-serif: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+$font-family-monospace: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+$presentation-font-size-root: 36px;
+$presentation-line-height: 1.5;
+$presentation-h1-font-size: 2em;
+$presentation-h2-font-size: 1.35em;
+$presentation-h3-font-size: 1.05em;
+$presentation-heading-font-weight: 700;
+$presentation-heading-color: #3E3F3A;
+$presentation-heading-line-height: 1.15;
+
+/*-- scss:rules --*/
+
+:root {
+  --bg: #FFFFFF;
+  --bg-elev: #FFFFFF;
+  --bg-soft: #F6F8FA;       // GitHub-docs grey for code/output panels
+  --ink: #3E3F3A;
+  --ink-soft: #6E7681;
+  --ink-dim: #B0B7C0;
+  --accent-1: #325D88;      // navy — primary
+  --accent-1-deep: #2A4E72;
+  --accent-2: #93C54B;      // olive — success / output
+  --accent-3: #F47C3C;      // orange — warn / attention
+  --accent-4: #B94A48;      // brick — logical/factor tokens
+  --rule: #E5E7EB;
+  --rule-soft: #F0F2F5;
+}
+
+// Global reveal tuning
+.reveal {
+  letter-spacing: -0.005em;
+  font-weight: 400;
+}
+.reveal h1, .reveal h2, .reveal h3 {
+  letter-spacing: -0.018em;
+  font-weight: 700;
+}
+
+// Slide title underline — accent bar
+.reveal section > h2::after {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 3px;
+  margin-top: 0.55em;
+  background: var(--accent-1);
+  border-radius: 2px;
+}
+// Inline code inside a slide title (e.g. `library()` on the R-scripts slide)
+// otherwise carries vertical padding from `.reveal :not(pre) > code`, which
+// bumps the line box taller and drops the ::after underline a few pixels lower
+// than titles without inline code. Zero the vertical padding and pin the line
+// height so the underline lands at the same offset for every h2.
+.reveal section > h2 > code,
+.reveal section > h2 code {
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 1;
+  vertical-align: baseline;
+}
+
+// Section badge — small uppercase label above a title
+.section-badge {
+  font-size: 0.42em;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+  font-weight: 600;
+  margin-bottom: 0.5em;
+}
+
+// Hero slide — full-bleed cream, oversized title, muted framing.
+// Flex-column-center fills the vertical space so short hero content
+// doesn't leave the bottom two-thirds of the slide empty.
+.reveal section.hero {
+  background: var(--bg);
+  min-height: 100%;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+.reveal section.hero > * {
+  text-align: left;
+  width: 100%;
+}
+.reveal section.hero h1 {
+  font-size: 2.4em;
+  color: var(--ink);
+  margin-top: 0.15em;
+  margin-bottom: 0;
+  line-height: 1.05;
+}
+.reveal section.hero h1::after {
+  content: "";
+  display: block;
+  width: 56px;
+  height: 3px;
+  background: var(--accent-1);
+  margin-top: 0.5em;
+  border-radius: 2px;
+}
+.reveal section.hero .section-badge {
+  color: var(--accent-1);
+  font-size: 0.4em;
+  margin-bottom: 0.1em;
+}
+// Hero tagline: the bare paragraph that sits between .section-badge and
+// .lede in every module hero. Without dedicated styling it renders as an
+// orphan body <p> that looks like a duplicate heading. Give it a proper
+// subtitle voice — Roboto medium, prominent but clearly not another H2.
+.reveal section.hero > p {
+  font-size: 1.15em;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin: 0.45em 0 0.1em 0;
+  max-width: 78%;
+}
+.reveal section.hero .lede {
+  font-style: italic;
+  color: var(--ink-soft);
+  margin-top: 0.7em;
+  max-width: 78%;
+}
+
+// Code blocks — soft grey inset panel, navy left ledger (code = "input")
+.reveal pre {
+  background: var(--bg-soft);
+  border: none;
+  border-left: 3px solid var(--accent-1);
+  border-radius: 0 4px 4px 0;
+  padding: 0.5em 0.9em;
+  box-shadow: none;
+  margin: 0.4em 0;
+  overflow: visible;
+}
+.reveal code {
+  font-family: $font-family-monospace;
+  font-size: 0.78em;
+  line-height: 1.55;
+}
+.reveal pre code {
+  padding: 0;
+  color: var(--ink);
+  background: transparent;
+}
+// Kill Quarto's outer sourceCode div wrapper (scope to div so it doesn't
+// clobber the <pre class="sourceCode"> background)
+.reveal div.sourceCode {
+  background: transparent;
+  border: none;
+}
+// Force soft grey on any pre that carries .sourceCode
+.reveal pre.sourceCode {
+  background: var(--bg-soft);
+}
+// Ensure code + output wrappers stretch full-width so widths line up
+.reveal .code-copy-outer-scaffold,
+.reveal .cell,
+.reveal .cell > .cell-output,
+.reveal div.sourceCode.cell-code {
+  display: block;
+  width: 100%;
+  padding-right: 0;
+  margin-right: 0;
+}
+
+// Force code + output <pre> to identical width — override Reveal default (90%)
+.reveal pre.sourceCode,
+.reveal .cell-output pre,
+.reveal .cell-output-stdout pre,
+.reveal .cell-output-display pre {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  box-sizing: border-box;
+}
+
+// Kill Quarto's copy button — visual noise on projected slides
+.reveal .code-copy-button,
+.reveal .code-copy-outer-scaffold > button {
+  display: none !important;
+}
+
+// Kill line numbers from executed chunks
+.reveal pre.numberSource code > span > a[href=""] {
+  display: none;
+}
+.reveal pre.numberSource {
+  padding-left: 0.75em;
+}
+.reveal pre.numberSource code > span {
+  padding-left: 0 !important;
+  border-left: none !important;
+}
+
+// Executed-chunk wrapper: strip extra padding so it matches static ```r blocks
+.reveal .cell {
+  margin: 0.4em 0;
+}
+.reveal .cell .sourceCode {
+  margin: 0;
+}
+
+// R output blocks — same panel style as code, olive left border
+.reveal .cell-output {
+  margin-top: 0.1em;
+}
+.reveal .cell-output pre,
+.reveal .cell-output-stdout pre,
+.reveal .cell-output-display pre {
+  background: var(--bg-soft);
+  border: none;
+  border-left: 3px solid var(--accent-2);
+  border-radius: 0 4px 4px 0;
+  color: var(--ink);
+  box-shadow: none;
+  padding: 0.5em 0.9em;
+  margin: 0.2em 0 0.4em 0;
+}
+
+// Inline code — thin outline, palette-consistent
+.reveal :not(pre) > code {
+  background: var(--bg-soft);
+  color: var(--accent-1);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.82em;
+}
+
+// Progress bar — accent color
+.reveal .progress {
+  color: var(--accent-1);
+  height: 4px;
+}
+.reveal .progress span {
+  background: var(--accent-1);
+}
+
+// Reveal.js navigation arrows — match the palette
+.reveal .controls {
+  color: var(--accent-1);
+  opacity: 0.75;
+}
+.reveal .controls:hover {
+  opacity: 1;
+}
+.reveal .controls button.enabled {
+  color: var(--accent-1);
+}
+.reveal .controls button.enabled:hover {
+  color: var(--accent-1-deep);
+}
+.reveal .controls button.enabled.fragmented {
+  color: var(--accent-1);
+}
+
+// Slide number chrome — quiet
+.reveal .slide-number {
+  color: var(--ink-dim);
+  background: transparent;
+  font-family: $font-family-monospace;
+  font-size: 0.55em;
+  letter-spacing: 0.06em;
+}
+
+// ---- Ordered + unordered lists: symmetric, roomier vertical rhythm ----
+// Reveal's theme sets `.reveal ol/ul { display: inline-block }`, which anchors
+// the list to the surrounding line's baseline and yields asymmetric space
+// above vs. below. Force a proper block with a slightly larger top/bottom
+// margin so paragraphs collapse symmetrically around the list.
+.reveal section ol,
+.reveal section ul {
+  display: block;
+  margin: 0.6em 0 1.6em 1em;
+}
+
+// Tables share the same vertical rhythm as lists so a mixed slide
+// (paragraph → list → table → paragraph) reads with consistent spacing.
+.reveal section table {
+  margin: 0.6em auto 1.6em auto;
+}
+
+// Slide 15 (Dimensionality & homogeneity) — the table sits inside a <li>,
+// so the neighbouring bullet's tight flow makes the top and bottom gaps
+// feel cramped. Give this specific table extra room above and below.
+.reveal section#dimensionality-homogeneity li table {
+  margin: 1.2em auto 1.2em auto;
+}
+
+// ---- Slide 15: styled dimensionality/homogeneity grid ----
+.reveal section .dh-intro {
+  max-width: 640px;
+  margin: 0.4em 0 0.8em;   // left-anchored (was auto/center)
+  font-size: 0.72em;
+  color: var(--ink);
+  line-height: 1.5;
+  text-align: left;
+}
+.dh-grid {
+  display: grid;
+  grid-template-columns: 68px 1fr 1fr;
+  grid-template-rows: auto repeat(3, 1fr);
+  gap: 8px 12px;
+  max-width: 560px;         // smaller table per user request
+  margin: 0 auto;
+  font-family: $font-family-sans-serif;
+}
+.dh-corner {}
+.dh-col-head {
+  padding: 7px 10px;
+  font-size: 0.34em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.dh-col-head.dh-homo   { background: rgba(147, 197, 75, 0.16); color: #4E6B33; }
+.dh-col-head.dh-hetero { background: rgba(50, 93, 136, 0.14); color: #2A4E72; }
+.dh-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.dh-homo-dot   { background: #93C54B; }
+.dh-hetero-dot { background: #325D88; }
+.dh-row-head {
+  align-self: center;
+  justify-self: end;
+  padding-right: 4px;
+  font-weight: 700;
+  color: var(--accent-1);
+  font-size: 0.72em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.dh-row-head-d { font-weight: 400; color: var(--ink-soft); font-size: 0.82em; margin-left: 1px; }
+.dh-cell {
+  padding: 10px 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  font-weight: 600;
+  text-align: center;
+  font-size: 0.55em;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+}
+.dh-cell.dh-homo   { border-left: 3px solid #93C54B; }
+.dh-cell.dh-hetero { border-left: 3px solid #325D88; }
+.dh-cell.dh-empty {
+  color: var(--ink-dim);
+  font-size: 1.1em;
+  font-weight: 300;
+  background: transparent;
+  border-style: dashed;
+  border-left-style: dashed;
+  border-left-color: var(--rule);
+}
+// Styled after Quarto's `::: {.callout-note}` blocks: light navy tint,
+// accent-1 left border, circular info-icon marker at the left.
+.reveal section .dh-note {
+  margin: 1.8em 0 0.4em;    // extra top gap so the note detaches cleanly from the block above it
+  padding: 10px 14px 10px 44px;
+  background: rgba(50, 93, 136, 0.07);
+  border: 1px solid rgba(50, 93, 136, 0.18);
+  border-left: 4px solid var(--accent-1);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.6em;
+  color: var(--ink);
+  line-height: 1.55;
+  font-style: normal;
+  position: relative;
+}
+.reveal section .dh-note::before {
+  content: "i";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);   // vertically centre the icon in the note
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 0.85em;
+  line-height: 1;
+}
+.reveal section .dh-note p { margin: 0; }
+.reveal section .dh-note p + p { margin-top: 0.3em; }
+.reveal section .dh-note strong { color: var(--accent-1); }
+
+// ---- Slide 16: type-card two-column layout (Vectors & lists) ----
+.type-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 26px;
+  max-width: 100%;
+  margin-top: 0.4em;
+}
+.type-card {
+  padding: 16px 20px 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(20, 28, 45, 0.03);
+  overflow: hidden;         // still clip horizontal escape
+  min-width: 0;
+  box-sizing: border-box;
+}
+// Inner qwebr containers — keep them from pushing the card wider, but do NOT
+// cap heights: the compact stdout line-height (below) makes the list output
+// short enough to display in full without a scrollbar.
+.type-card .qwebr-editor,
+.type-card div.sourceCode,
+.type-card .qwebr-output-code-area,
+.type-card .qwebr-output-graph-area,
+.type-card pre {
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+.type-card .qwebr-editor { font-size: 0.85em; }
+
+// ---- Slide 17: Equivalent verbs comparison ----
+.reveal section .verb-intro {
+  font-size: 0.72em;
+  color: var(--ink);
+  margin: 0.2em 0 0.7em;
+  line-height: 1.45;
+}
+.verb-table {
+  margin: 0 auto 0.8em;
+  max-width: 760px;             // caps overall footprint so the table doesn't fill the whole slide
+}
+.verb-table table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.48em;            // aggressive shrink — was 0.6 originally
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.verb-table thead th {
+  background: var(--bg-soft);
+  color: var(--accent-1);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85em;
+  padding: 5px 9px;
+  text-align: left;
+  border-bottom: 2px solid var(--accent-1);
+}
+.verb-table thead th:nth-child(2) { background: rgba(147, 197, 75, 0.16); color: #4E6B33; }
+.verb-table thead th:nth-child(3) { background: rgba(50, 93, 136, 0.14);  color: #2A4E72; }
+.verb-table thead th:nth-child(4) { background: rgba(85, 122, 62, 0.16);  color: #3E5B2C; }
+.verb-table tbody tr:nth-child(even) td { background: var(--bg-soft); }
+.verb-table tbody td {
+  padding: 4px 9px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: middle;
+  line-height: 1.35;
+}
+.verb-table tbody tr:last-child td { border-bottom: none; }
+.verb-table tbody td:first-child { font-weight: 700; color: var(--ink); }
+.verb-table code {
+  font-size: 0.94em;
+  background: transparent;
+  color: var(--accent-1);
+  padding: 0;
+}
+// Single full-width type-card sitting under the verb table.
+.reveal section > .type-card {
+  max-width: 100%;
+  margin-top: 0.4em;
+}
+
+// h3 headings inside type-cards render tighter — the tag already carries the
+// kicker, so the h3 acts as the concept title.
+.type-card h3 {
+  font-size: 0.9em;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0.15em 0 0.4em;
+  line-height: 1.2;
+}
+
+// Subtle footer hint inside a type-card (e.g. "Create it — File → …" on the
+// R scripts slide). Sits below the main body copy with a soft rule above it.
+.script-hint {
+  margin-top: 0.6em;
+  padding-top: 0.5em;
+  border-top: 1px dashed var(--rule);
+  font-size: 0.62em;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+.script-hint .kbd { font-size: 0.9em; }
+
+// Chalkboard buttons ship in the bottom-left by default. Quarto Drop's
+// bottom-left webR terminal button sits at `left: 54px`; its own CSS pushes
+// the chalkboard controls to `left: 95px` when the plugin is loaded, so no
+// extra work is needed here.
+
+// The chalkboard palette lives inside the chalkboard container, whose
+// visibility the plugin toggles on `c` (showChalkboard/closeChalkboard); the
+// notes-canvas palette is toggled explicitly by the plugin on `b`. So we only
+// need to fix the swatch colours — each swatch is
+// `<li style="color: …"><i class="fa fa-square"></i>`, and our
+// `.reveal i { color: var(--ink) }` emphasis rule below would otherwise paint
+// every square ink-black against the chalkboard's black background. Let the
+// icon inherit its `<li>`'s inline colour instead.
+.reveal .palette li i { color: inherit; }
+
+// Pen strokes drawn via reveal-chalkboard live on the #notescanvas (z:24)
+// and #chalkboard (z:26) containers — both above the r-wasm/drop terminal
+// panel (z:5), so the strokes stay painted over the terminal when it slides
+// up. Rather than push the drop panel above every other reveal UI element
+// (menu, controls, toggle buttons), tuck the canvases *below* the drop just
+// while the terminal is active. Drawings reappear at the same z-index the
+// moment the terminal is closed. Needs !important because the plugin sets
+// z-index inline on these containers via `container.style.zIndex = …`.
+.reveal:has(.drop.active) #notescanvas,
+.reveal:has(.drop.active) #chalkboard {
+  z-index: 1 !important;
+}
+
+// While the terminal is open, the chalkboard + notes-canvas overlays are
+// tucked behind the slides — pressing the easel/brush toggles would still
+// fire but produce no visible feedback. Dim the two buttons and disable
+// them so the state reads as inactive. Match the drop panel's 0.25s ease.
+.reveal .slide-chalkboard-buttons {
+  transition: opacity 0.25s ease-in-out;
+}
+.reveal:has(.drop.active) .slide-chalkboard-buttons {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+// ---- Slides 4–5: numbered install-step list ----
+// Replaces the plain ol markers with round accent-coloured badges. The wrapper
+// resets the counter so each list is independent.
+.step-list ol {
+  counter-reset: step-counter;
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0.3em 0 0.2em;    // tighter — was 0.4em 0
+}
+.step-list ol li {
+  counter-increment: step-counter;
+  position: relative;
+  padding: 3px 0 3px 50px;
+  min-height: 32px;
+  font-size: 0.7em;
+  line-height: 1.4;
+  margin: 0;
+}
+.step-list ol li::before {
+  content: counter(step-counter);
+  position: absolute;
+  left: 6px;
+  top: 1px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $font-family-monospace;
+  font-weight: 700;
+  font-size: 0.82em;
+  box-shadow: 0 1px 2px rgba(20, 28, 45, 0.15);
+}
+// Slightly airier variant — used on slide 4 where the step list sits next to
+// an image and can afford more vertical breathing room.
+.step-list.step-list-spaced ol li {
+  padding: 10px 0 10px 54px;
+  min-height: 42px;
+}
+.step-list.step-list-spaced ol li::before {
+  top: 6px;
+}
+
+// ---- Slides 4, 5 & 6: install-step steps + logo two-column layout ----
+// Quarto's Reveal theme rule `div.columns { display: initial }` has
+// specificity (0,1,1) — higher than our old `.install-r-columns` (0,1,0),
+// so it silently killed the flex layout and stacked the columns. Prefix with
+// `.reveal` to lift specificity to (0,2,0) and beat the theme rule.
+.reveal .install-r-columns,
+.reveal .install-rstudio-columns,
+.reveal .install-posit-columns {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.reveal .install-r-columns > .column,
+.reveal .install-rstudio-columns > .column,
+.reveal .install-posit-columns > .column {
+  display: block;
+}
+.reveal .install-r-columns > .column:nth-child(2),
+.reveal .install-rstudio-columns > .column:nth-child(2),
+.reveal .install-posit-columns > .column:nth-child(2) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.reveal img.install-r-logo,
+.reveal img.install-rstudio-logo,
+.reveal img.install-posit-logo {
+  display: block;
+  margin: 0;
+  height: auto;
+}
+.reveal img.install-r-logo       { max-width: 260px; }
+.reveal img.install-rstudio-logo { max-width: 240px; }
+.reveal img.install-posit-logo   { max-width: 100%; width: 400px; }
+
+// ---- Slide 6: Posit Cloud free-tier stat block ----
+// The .stat-block wraps a small uppercase title above the three-cell grid so
+// the "Free tier" context reads without needing its own paragraph.
+.stat-block {
+  margin: 0.6em 0 0.4em;
+  padding: 14px 18px 12px;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--accent-1);
+  border-radius: 6px;
+}
+.stat-block-title {
+  font-size: 0.38em;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+  margin-bottom: 10px;
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 0.4em 0 0.3em;   // tighter — was 0.8em 0
+}
+// Inside a .stat-block, the stat-grid loses its own vertical margin so the
+// group reads as one panel.
+.stat-block .stat-grid { margin: 0; }
+.stat-cell {
+  padding: 12px 12px 10px;
+  background: var(--bg-soft);
+  border-radius: 6px;
+  border-top: 3px solid var(--accent-1);
+  text-align: center;
+}
+.stat-cell .stat-num {
+  display: block;
+  font-family: $font-family-monospace;
+  font-size: 1.3em;
+  font-weight: 700;
+  color: var(--accent-1);
+  line-height: 1.05;
+}
+.stat-cell .stat-label {
+  display: block;
+  font-size: 0.38em;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 6px;
+  line-height: 1.3;
+}
+
+// ---- Slide 8: importer package pills ----
+.pkg-pills {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0.35em 0 0.2em;  // tighter — was 0.6em 0
+}
+.pkg-pill {
+  padding: 8px 12px;
+  background: var(--bg-soft);
+  border-left: 3px solid var(--accent-1);
+  border-radius: 3px;
+  font-size: 0.58em;
+  line-height: 1.45;
+}
+.pkg-pill code {
+  display: block;
+  color: var(--accent-1);
+  background: transparent;
+  padding: 0;
+  font-weight: 700;
+  font-size: 1.1em;
+  margin-bottom: 3px;
+}
+.pkg-pill .pkg-desc { color: var(--ink-soft); }
+
+// ---- Slides 20 / 21: subsetting operators — bulleted list next to code ----
+// Two-column layout: left column is a plain bullet list mapping each
+// operator to its effect, right column holds the webR code chunk. No cards,
+// no pills — just a lightweight side-by-side that visually anchors the code
+// against its explanation.
+.reveal .subset-columns {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  margin: 0.4em 0 0.6em;
+}
+.reveal .subset-columns > .column {
+  display: block;
+  min-width: 0;
+}
+.reveal .subset-columns > .column:first-child ul {
+  margin: 0;
+  padding-left: 1.1em;
+  font-size: 0.6em;
+  line-height: 1.7;
+}
+.reveal .subset-columns > .column:first-child ul li { margin: 0; }
+.reveal .subset-columns > .column:first-child ul li code {
+  color: var(--accent-1);
+  background: transparent;
+  padding: 0;
+  font-weight: 700;
+  font-size: 1em;
+}
+
+// Small section divider used on slide 8 above the importer pills — an
+// uppercase kicker with a soft rule under it.
+.section-mini {
+  font-size: 0.48em;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+  margin: 1em 0 0.35em;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--rule);
+}
+
+// ---- Slide 8: numbered "step-mark" kickers to connect the two halves ----
+// Numbered navy badge + uppercase kicker text, joined by a soft rule that
+// bridges the badge to the right slide edge. Reads as "1 — Install" and
+// "2 — Explore importers", giving the slide an unambiguous top-to-bottom flow.
+.step-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0.8em 0 0.4em;
+  font-size: 0.5em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+}
+.step-mark::before {
+  content: attr(data-step);
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $font-family-monospace;
+  font-size: 1.1em;
+  letter-spacing: 0;
+  box-shadow: 0 1px 2px rgba(20, 28, 45, 0.15);
+}
+.step-mark::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--rule), transparent);
+}
+// Pandoc wraps fenced-div text content in <p> — inherit the kicker styling
+// so the paragraph doesn't fight it.
+.step-mark p {
+  margin: 0;
+  font-size: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  font-weight: inherit;
+  line-height: 1;
+}
+
+// ---- Slide 9: two-step "keep packages current" workflow ----
+.pkg-workflow { margin: 0.4em 0 0.2em; }
+.pkg-step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: var(--bg-soft);
+  border-left: 3px solid var(--accent-1);
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+.pkg-step-num {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $font-family-monospace;
+  font-weight: 700;
+  font-size: 0.6em;
+  flex-shrink: 0;
+}
+.pkg-step-content code {
+  color: var(--accent-1);
+  background: transparent;
+  padding: 0;
+  font-weight: 700;
+  font-size: 0.7em;
+}
+.pkg-step-desc {
+  font-size: 0.5em;
+  color: var(--ink-soft);
+  line-height: 1.4;
+  margin-top: 3px;
+}
+
+// ---- Slide 11: problem-vs-solution comparison ----
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin: 0.6em 0 0.4em;
+  align-items: stretch;
+}
+.compare-cell {
+  padding: 14px 18px 12px;
+  border-radius: 6px;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  font-size: 0.6em;
+  line-height: 1.5;
+}
+.compare-cell.compare-bad  { border-left: 4px solid var(--accent-4); }
+.compare-cell.compare-good { border-left: 4px solid var(--accent-2); }
+// Pandoc wraps the bracketed span in a <p> — flatten that paragraph so the
+// tag pill sits tight at the top and doesn't push the content down.
+.compare-cell > p:first-child {
+  margin: 0 0 8px;
+  line-height: 1;
+}
+.compare-cell > p { margin: 0 0 6px; }
+.compare-cell > p:last-child { margin-bottom: 0; }
+// Code block inside a compare cell — pure white pane on the tinted cell so it
+// visually reads as "code sample" not a nested cell.
+.compare-cell pre,
+.compare-cell div.sourceCode pre {
+  margin: 4px 0 8px !important;
+  padding: 6px 10px !important;
+  background: #FFFFFF !important;
+  border-left: 3px solid var(--accent-1) !important;
+  font-size: 1em;
+  width: 100%;
+  box-sizing: border-box;
+}
+.compare-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 3px;
+}
+.compare-bad  .compare-tag { background: rgba(185, 74, 72, 0.14); color: #8A3937; }
+.compare-good .compare-tag { background: rgba(147, 197, 75, 0.18); color: #4E6B33; }
+
+// Slides 4–11 keep a single-column flow — tighten paragraph margins that
+// sit adjacent to a step-list, stat-grid, pkg-pills, or dh-note so the
+// vertical rhythm doesn't stack blank slabs of space.
+.reveal .slide > .step-list,
+.reveal .slide > .stat-grid,
+.reveal .slide > .pkg-pills,
+.reveal .slide > .script-hint,
+.reveal .slide > .dh-note {
+  & + p { margin-top: 0.35em; }
+}
+.reveal .slide > p + .step-list,
+.reveal .slide > p + .stat-grid,
+.reveal .slide > p + .pkg-pills,
+.reveal .slide > p + .dh-note { margin-top: 0.25em; }
+
+// ---- Slide 17: Matrices & arrays animation ----
+// Full-width SVG stage above the two code-cards. Cell transforms drive the
+// vector → matrix → cube transition (see assets/js/matrix-anim.html).
+.reveal section.mx-slide {
+  display: block !important;
+  text-align: left !important;
+}
+// SVG is drawn at a fixed 1100×320 coordinate space so CSS transforms on the
+// <g> cells use pixel units that match the viewBox 1:1. The whole stage is
+// then scaled via CSS transform to fit inside the slide — same technique as
+// the other animation stages in this deck.
+.mx-stage-wrap {
+  position: relative;
+  margin: 0 auto 12px;         // sits above the code cards
+  height: 322px;               // matches 460 × 0.7 = 322
+  overflow: visible;
+}
+#mx-stage {
+  position: relative;
+  width: 1100px;
+  height: 460px;
+  margin: 0 auto;
+  display: block;
+  transform: scale(0.7);       // 1100 × 0.7 = 770 wide, 460 × 0.7 = 322 tall
+  transform-origin: top center;
+}
+#mx-stage svg {
+  display: block;
+  width: 1100px;
+  height: 460px;
+}
+.mx-cell {
+  will-change: transform, opacity;
+}
+.mx-cell rect {
+  filter: drop-shadow(0 1px 2px rgba(20, 28, 45, 0.06));
+}
+// Tighten the stdout print so the blank lines R inserts between list
+// elements ($dbl, $int, ...) don't take a full leaded line each.
+.type-card .qwebr-output-code-area pre,
+.type-card pre.qwebr-output-code,
+.type-card code.qwebr-output-code-stdout,
+.type-card code.qwebr-output-code-stderr {
+  line-height: 1.0;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+// Cap the RUN output height so long stdout (matrices with dimnames,
+// data.frame prints, etc.) can't grow the card past the slide bottom.
+.type-card .qwebr-output-code-area,
+.type-card .qwebr-output-graph-area {
+  max-height: 200px;
+  overflow-y: auto;
+}
+// Two-column code layout: editor on the left, output on the right.
+// The qwebr DOM nests both inside `.qwebr-console-area`, so grid-splitting
+// that node cleanly places the editor + output side-by-side while leaving
+// the toolbar (with the Run button) full-width above.
+.type-card.code-2col .qwebr-console-area {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-items: start;
+}
+.type-card.code-2col .qwebr-console-area > * { min-width: 0; }
+.type-card.code-2col .qwebr-output-code-area {
+  min-height: 60px;             // reserves a visible target before Run is clicked
+  background: var(--bg-soft);
+  border: 1px dashed var(--rule);
+  border-radius: 4px;
+}
+.type-vector { border-top: 3px solid #93C54B; }
+.type-list   { border-top: 3px solid #325D88; }
+.type-card-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 0.42em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  background: var(--rule);
+  color: var(--accent-1);
+  margin-bottom: 8px;
+}
+.type-vector .type-card-tag { background: rgba(147, 197, 75, 0.18); color: #4E6B33; }
+.type-list   .type-card-tag { background: rgba(50, 93, 136, 0.14); color: #2A4E72; }
+.type-card h3 {
+  margin: 4px 0 6px;
+  font-size: 0.85em;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+// Pandoc wraps a bracketed span placed on its own line in a paragraph, so
+// the tag sits in the FIRST <p>; the descriptive prose sits in the paragraph
+// that follows the <h3>. Target them separately so the tag isn't shrunk twice.
+.type-card > p:first-of-type {
+  margin: 0 0 6px;
+  line-height: 1;
+}
+.type-card > h3 + p {
+  margin: 0 0 12px;
+  font-size: 0.7em;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+// Bullet lists inside a type-card (e.g. "Reproducible / Version-controllable /
+// Re-runnable" on slide 12) inherit the deck's default reveal ul size, which
+// renders bigger than the card's h3. Pin them to the same 0.7em as the
+// descriptive paragraph so they read at the right scale.
+.type-card > ul,
+.type-card > ol {
+  font-size: 0.7em;
+  line-height: 1.55;
+  margin: 0.2em 0 0.8em 1em;
+  color: var(--ink);
+}
+.type-card > ul li,
+.type-card > ol li { margin: 0.1em 0; }
+.type-card .cell { margin-bottom: 0; }
+
+// ---- Minimalist aesthetic accents (slides 18/19, reusable elsewhere) ----
+// A slide can now stay single-column and card-free but still feel deliberate
+// via three tiny helpers: a kicker under the h2, a lightly-emphasised lead
+// paragraph, and a muted one-line footer. Zero boxes, zero pills.
+.slide-kicker {
+  font-size: 0.4em;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+  margin: 0.3em 0 0.75em;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--rule);
+  max-width: 640px;
+}
+.slide-kicker p { margin: 0; font-size: inherit; letter-spacing: inherit; }
+
+.lede-min {
+  margin: 0.4em 0 0.6em;
+  font-size: 0.78em;
+  line-height: 1.55;
+  color: var(--ink);
+  max-width: 780px;
+  padding-left: 14px;
+  border-left: 2px solid var(--accent-1);
+}
+.lede-min p { margin: 0; font-size: inherit; }
+
+.slide-footer {
+  margin: 0.7em 0 0;
+  font-size: 0.56em;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  max-width: 780px;
+}
+.slide-footer p { margin: 0; font-size: inherit; }
+
+// ---- About-me slide (slide 2) ----
+.reveal section.about-slide {
+  display: block !important;
+  text-align: left !important;
+}
+.about-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 44px;
+  align-items: center;
+  margin-top: 24px;
+}
+.about-avatar img {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--rule);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+.about-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 0.85em;
+  line-height: 1.7;
+}
+.about-list li {
+  padding-left: 0 !important;
+  margin-bottom: 0.4em;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.about-list li::before { content: none !important; }
+.about-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--accent-1);
+  flex-shrink: 0;
+}
+.about-icon svg { width: 20px; height: 20px; }
+.about-list a {
+  color: var(--accent-1);
+  border-bottom: none;
+  text-decoration: underline;
+  text-decoration-color: rgba(50, 93, 136, 0.25);
+  text-underline-offset: 3px;
+}
+.about-list a:hover {
+  color: var(--accent-1-deep);
+  text-decoration-color: var(--accent-1);
+}
+.about-hint {
+  color: var(--ink-soft);
+  font-size: 0.85em;
+  margin-left: 6px;
+}
+
+// Footer (persistent at bottom of every slide)
+.reveal .footer {
+  color: var(--ink-soft);
+  font-size: 0.5em;
+  letter-spacing: 0.06em;
+  font-family: $font-family-monospace;
+  bottom: 12px;
+}
+.reveal .footer a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  border-bottom: none;
+}
+.reveal .footer a:hover {
+  color: var(--accent-1);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-1);
+}
+
+// Title slide — ORCID icon as a superscript right after the author name:
+//   "Gabriel Cabrera^{ORCID}"
+.reveal #title-slide .quarto-title-authors {
+  margin-top: 0.8em;
+  // The trailing ‡ superscript + ORCID icon add ~24px of visual weight
+  // to the right of the name. Nudge the whole authors block right so the
+  // NAME TEXT sits on the geometric centerline rather than the whole line.
+  padding-left: 26px;
+}
+// The parent padding-left above also drags the affiliation right, but the
+// affiliation has its own leading "‡ " marker — so we need to pull it back
+// LEFT to visually center the "The University of Manchester" text.
+.reveal #title-slide .quarto-title-affiliation {
+  position: relative;
+  left: -20px;
+}
+// Push the date down a touch so it sits clear of the affiliation line above it.
+.reveal #title-slide .date {
+  margin-top: 1em;
+}
+.reveal #title-slide .quarto-title-author-name {
+  display: inline;
+  font-family: $font-family-sans-serif;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+// Hide Quarto's default low-res PNG icon
+.reveal #title-slide .quarto-title-author a[href*="orcid.org"] img {
+  display: none;
+}
+// Replace with a crisp inline SVG via background-image
+.reveal #title-slide .quarto-title-author a[href*="orcid.org"] {
+  display: inline-block;
+  // negative margin eats the HTML whitespace between </a>(name) and <a>(orcid)
+  margin-left: -4px;
+  width: 16px;
+  height: 16px;
+  vertical-align: super;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><circle cx='128' cy='128' r='128' fill='%23A6CE39'/><g fill='%23FFFFFF'><path d='M86.3 186.2H70.9V79.1h15.4v107.1z'/><path d='M108.9 79.1h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7 0-21.5-13.7-39.7-43.7-39.7h-23.7v79.4z'/><circle cx='78.6' cy='56.8' r='10.1'/></g></svg>") no-repeat center / contain;
+}
+
+// Utilities
+.lede {
+  font-size: 1.05em;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+.muted { color: var(--ink-soft); }
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.55em;
+  background: var(--rule);
+  color: var(--accent-1);
+  border-radius: 3px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  font-family: $font-family-monospace;
+  font-size: 0.82em;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  color: var(--ink);
+}
+
+// Emphasis
+.reveal em, .reveal i { color: var(--ink); }
+.reveal strong, .reveal b { color: var(--ink); }
+
+// Links — subtle underline via text-decoration, not a heavy border-bottom
+.reveal a {
+  color: var(--accent-1);
+  text-decoration: underline;
+  text-decoration-color: rgba(50, 93, 136, 0.28);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  border-bottom: none;
+}
+.reveal a:hover {
+  color: var(--accent-1-deep);
+  text-decoration-color: var(--accent-1);
+}
+
+// Tables — quiet editorial look
+.reveal table {
+  border-collapse: collapse;
+  font-size: 0.68em;
+}
+.reveal table th {
+  background: var(--bg-soft);
+  color: var(--accent-1);
+  border-bottom: 2px solid var(--accent-1);
+  padding: 6px 12px;
+  text-align: left;
+  font-weight: 600;
+}
+.reveal table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--rule);
+}
+
+// Animation helpers (from T5)
+.vec-cell, .mat-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4em;
+  height: 2.4em;
+  margin: 0 4px;
+  background: var(--bg-soft);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font-family: $font-family-monospace;
+  font-weight: 600;
+  color: var(--accent-1);
+}
+.vec-row { display: flex; gap: 8px; justify-content: center; }
+.mat-grid { display: grid; gap: 6px; justify-content: center; }
+.bracket-target { position: relative; display: inline-block; padding: 0 2px; border-radius: 4px; }
+
+// JS sets stroke-dasharray + dashoffset from getTotalLength() on dispatch.
+// Until then, hide via opacity so the path doesn't flash visible.
+.line-draw-svg path.draw { opacity: 0; }
+.line-draw-svg path.draw[style*="stroke-dashoffset"] { opacity: 1; }
+
+.count-up { font-variant-numeric: tabular-nums; color: var(--accent-1); font-weight: 700; }
+.pipe-stage {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  padding: 10px 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font-family: $font-family-monospace;
+  font-size: 0.72em;
+  color: var(--accent-1);
+  font-weight: 600;
+}
+.pipe-arrow { color: var(--ink-soft); font-size: 1.2em; margin: 0 6px; }
+
+// mutate() animation demo (Emil-style TM.gate pattern, our palette)
+// Override Quarto's title-slide centering for the demo slide
+.reveal section.mu-slide {
+  display: block !important;
+  text-align: left !important;
+}
+.reveal section.mu-slide h1 {
+  font-size: 1.4em;
+  text-align: left;
+  margin-bottom: 0.6em;
+}
+// mutate/filter/pivot/ggplot demos share the same Emil-style stage geometry.
+// The JS animations hardcode pixel coordinates inside a 1100x560 stage; we keep
+// that internal coordinate system and scale the whole stage via CSS transform
+// to fit inside the slide (1050x700, minus title/badge/footer).
+#mu-stage, #pl-stage, #pw-stage, #gg-stage,
+#fp1-stage, #fp2-stage, #fp3-stage, #fp4-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  display: block;
+  transform: scale(0.82);
+  transform-origin: top center;
+}
+// All demos share identical row height, font size, and cell padding —
+// column widths are set per demo in JS via inline style
+.reveal section.pl-slide .fi-cell,
+.reveal section.pw-slide .fi-cell {
+  font-size: 22px;
+}
+
+// ---- dplyr / tidyr / ggplot2 demos — Emil-style cleanliness ----
+// All demos share these classes; only the stage id differs
+.reveal section.fi-slide,
+.reveal section.mu-slide,
+.reveal section.pl-slide,
+.reveal section.pw-slide,
+.reveal section.gg-slide,
+.reveal section.fp1-slide,
+.reveal section.fp2-slide,
+.reveal section.fp3-slide,
+.reveal section.fp4-slide {
+  display: block !important;
+  text-align: left !important;
+}
+.reveal section.fi-slide h1,
+.reveal section.mu-slide h1,
+.reveal section.pl-slide h1,
+.reveal section.pw-slide h1,
+.reveal section.gg-slide h1,
+.reveal section.fp1-slide h1,
+.reveal section.fp2-slide h1,
+.reveal section.fp3-slide h1,
+.reveal section.fp4-slide h1 {
+  font-size: 1.4em;
+  text-align: left;
+  margin-bottom: 0.4em;
+}
+// Buggy `:has()` in the previous rule (a section doesn't :has itself) — the
+// slide class IS on the section, so target it directly.
+.reveal section.fi-slide,
+.reveal section.mu-slide,
+.reveal section.pl-slide,
+.reveal section.pw-slide,
+.reveal section.gg-slide,
+.reveal section.fp1-slide,
+.reveal section.fp2-slide,
+.reveal section.fp3-slide,
+.reveal section.fp4-slide { overflow: hidden; }
+// Wrap collapses to the visual height of the scaled stage (560 * 0.82 ≈ 460)
+// so the slide's title/badge sit tight against it instead of leaving a gap
+// equal to the un-scaled 560px layout box.
+.fi-stage-wrap {
+  position: relative;
+  margin-top: 4px;
+  height: 460px;
+  overflow: visible;
+}
+#fi-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  transform: scale(0.82);
+  transform-origin: top center;
+}
+// Invisible gating fragments — Emil's convention
+.fi-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+// Title code line — no box, no border, just monospaced text with the
+// condition substrings absorbing the highlight
+.fi-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-family: $font-family-monospace;
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.fi-code-cond {
+  border-radius: 5px;
+  padding: 1px 4px;
+  background-color: rgba(50, 93, 136, 0);
+  will-change: background-color, color;
+}
+
+// Rows: NO borders, rounded row background for the passing-row highlight
+.fi-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  border-radius: 6px;
+  background-color: rgba(50, 93, 136, 0);
+  will-change: transform, opacity, background-color;
+}
+
+// Cells: NO borders, individual rounded backgrounds (become pill highlights)
+.fi-cell {
+  font-size: 24px;
+  color: var(--ink);
+  padding: 0 12px;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+}
+.fi-cell.fi-species {
+  width: 158px;
+  text-align: left;
+  border-radius: 8px;
+  background-color: rgba(50, 93, 136, 0);
+  will-change: background-color, color;
+}
+.fi-cell.fi-value {
+  width: 148px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  border-radius: 8px;
+  background-color: rgba(50, 93, 136, 0);
+  will-change: background-color, color;
+}
+
+// Header row — muted grey (not accent-navy — that's for highlights)
+.fi-row.fi-head .fi-cell {
+  font-size: 22px;
+  font-weight: 600;
+  color: #6B7280;
+  background: transparent;
+}
+
+// SVG arrows overlay
+.fi-arrows-svg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1100px; height: 560px;
+  pointer-events: none;
+  overflow: visible;
+}
+.fi-arrow {
+  fill: none;
+  stroke: var(--accent-1);
+  stroke-width: 1.3;
+  will-change: stroke-dashoffset, opacity;
+}
+
+// ---- ggplot2 deconstructed variant (tilt + explode 4 SVG planes) ----
+#gg-stage {
+  position: relative;
+}
+// Code panel (this slide only) — pure white surface, quiet border.
+// Scoped to `.reveal pre.gg-code` so it beats the deck's global `.reveal pre`
+// grey-panel style on specificity.
+.reveal pre.gg-code {
+  position: absolute;
+  left: 20px;
+  top: 100px;
+  width: 530px;
+  margin: 0;
+  padding: 14px 18px;
+  background: #FFFFFF;
+  border: none;
+  border-left: 3px solid var(--accent-1);
+  border-radius: 0 4px 4px 0;
+  box-shadow: none;
+  box-sizing: border-box;
+  font-family: $font-family-monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink);
+  white-space: pre;
+  overflow: visible;
+}
+.gg-code [data-blk] {
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+.gg-code [data-blk].gg-hot {
+  background: rgba(50, 93, 136, 0.18);
+  box-shadow: 0 0 0 4px rgba(50, 93, 136, 0.18);
+}
+.gg-fn  { color: #325D88; font-weight: 600; }
+.gg-arg { color: #6E7681; }
+.gg-num { color: #B5762A; }
+.gg-str { color: #7A8B4D; }
+
+// Right-side plot area — 4 SVG planes stack here
+#gg-plot {
+  position: absolute;
+  left: 470px;
+  top: 10px;
+  width: 640px;
+  height: 460px;
+}
+// gg-slide (slide 34) uses the same Emil-style code-panel treatment as fp1..4:
+// flush against the left edge, navy accent line, 19px monospace, no card fill.
+.reveal section.gg-slide pre.gg-code {
+  left: -70px;
+  top: 60px;
+  width: 520px;
+  padding: 0 0 0 16px;
+  background: transparent;
+  border-left: 3px solid var(--accent-1);
+  border-radius: 0;
+  font-size: 19px;
+  line-height: 1.65;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+// Outer plane: carries perspective for the tilt to project through
+.gg-plane {
+  perspective: 1600px;
+  will-change: transform;
+}
+// Inner: the element that actually rotates in 3D
+.gg-tilt {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+// Translucent card backing — invisible when flat, fades in on explode so
+// the planes read as physical cards floating apart
+.gg-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(160, 168, 184, 0.55);
+  border-radius: 6px;
+  box-shadow: 0 12px 30px rgba(20, 28, 45, 0.12);
+  opacity: 0;
+  will-change: opacity;
+}
+
+// ---- Module 2 first-plot animations (tidyquant fp1..fp4) ----
+// Layout modelled after Emil Hvitfeldt's tidy-animations slides
+// (https://emilhvitfeldt.github.io/tidy-animations/examples/ggplot2-deconstructed-2.html):
+//   landscape plot on the right (600x380 in Emil's 1200x600 stage), code panel
+//   as flat monospaced text on the left with NO card background — the "hot"
+//   block gets highlighted by the existing .fp-hot rule instead. Positions
+//   below are scaled to our 1100x560 stage (≈91% of Emil's).
+.fp-plot {
+  position: absolute;
+  left: 470px;
+  top: 10px;
+  width: 640px;
+  height: 460px;
+}
+.reveal section.fp1-slide pre.gg-code,
+.reveal section.fp2-slide pre.gg-code,
+.reveal section.fp3-slide pre.gg-code,
+.reveal section.fp4-slide pre.gg-code {
+  left: -70px;
+  top: 60px;
+  width: 520px;
+  padding: 0 0 0 16px;
+  background: transparent;
+  border-left: 3px solid var(--accent-1);
+  border-radius: 0;
+  font-size: 19px;
+  line-height: 1.65;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+// Code block state — highlight the layer whose visual just appeared,
+// dim earlier layers, keep upcoming layers as ghosts.
+.gg-code [data-blk] {
+  transition: color 0.35s ease, opacity 0.35s ease;
+}
+.gg-code [data-blk].fp-future { opacity: 0.28; }
+.gg-code [data-blk].fp-past   { opacity: 0.55; }
+.gg-code [data-blk].fp-hot {
+  background: rgba(50, 93, 136, 0.18);
+  box-shadow: 0 0 0 4px rgba(50, 93, 136, 0.18);
+  border-radius: 4px;
+}
+// theme_minimal swap — coord plane background changes from ggplot's grey
+// canvas to white, and gridlines thin out to a soft neutral. Because the
+// class is toggled on every plane div, the geom/labs planes also apply it,
+// but their SVGs don't contain .fp-bg / .fp-grid-* elements so those rules
+// no-op there.
+.fp-plane {
+  transition: opacity 0.55s ease;
+}
+.fp-plane .fp-bg          { transition: fill 0.4s ease; }
+.fp-plane .fp-grid-major,
+.fp-plane .fp-grid-minor  { transition: stroke 0.4s ease, stroke-width 0.4s ease; }
+.fp-theme-minimal .fp-bg           { fill: #FFFFFF; }
+.fp-theme-minimal .fp-grid-major   { stroke: #E5E7EB; stroke-width: 1; }
+.fp-theme-minimal .fp-grid-minor   { stroke: #F0F2F5; stroke-width: 0.6; }
+.fp-theme-minimal .fp-leg-swatch   { fill: transparent; }

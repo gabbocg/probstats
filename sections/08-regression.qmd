@@ -1,0 +1,79 @@
+# Correlation and regression {.hero #s08-regression}
+
+::: {.sem-mark data-sem="8"}
+Seminar 8 · OLS and what it hides
+:::
+
+"Least squares" is not a metaphor.
+
+::: {.lede}
+The formulas on the worksheet fall out of one instruction: draw a square on every residual, then pick the line that makes the total area as small as possible. Everything else — $R^2$, the slope's standard error — is bookkeeping on top of that.
+:::
+
+## The squares in least squares {.stage-slide #ls-intuition}
+
+::: {.stage-wrap .stage-wrap-400}
+<div id="ls-stage"></div>
+:::
+
+[]{.fragment .fi-frag id="ls-frag-1"}
+[]{.fragment .fi-frag id="ls-frag-2"}
+
+::: {.slide-footer}
+Squares, not distances — which is why one far-off point can drag the whole line toward it. Doubling a residual quadruples its say in where the line goes.
+:::
+
+## Your formula, and `lm()` {.sim-slide #ols-sim}
+
+::: {.slide-kicker}
+Seminar 8 · $\hat\beta_1 = S_{xy}/S_{xx}$
+:::
+
+::: {.sim-card .sim-text}
+```{webr-r}
+x <- 1:9
+y <- c(3.1,4.4,4.2,6.1,6.6,8.3,8.1,9.9,10.6)
+
+# the worksheet formula, by hand
+b1 <- sum((x - mean(x)) * (y - mean(y))) /
+      sum((x - mean(x))^2)
+b0 <- mean(y) - b1 * mean(x)
+
+rbind(by_hand = c(b0, b1),
+      lm      = coef(lm(y ~ x)))
+```
+:::
+
+::: {.try-this}
+Identical to the last decimal. `lm()` is not doing anything you cannot do by hand — it is doing exactly this, faster.
+:::
+
+## The variable you left out {.sim-slide #ovb-sim}
+
+::: {.slide-kicker}
+Seminar 8 · omitted variable bias
+:::
+
+::: {.lede-min}
+Here we *know* the truth: experience is worth exactly 0.3 per year. Schooling matters too, and the two are correlated. Watch what happens when schooling is dropped.
+:::
+
+::: {.sim-card .sim-text}
+```{webr-r}
+n <- 5000
+schooling  <- rnorm(n, 12, 3)
+experience <- 20 - 0.6*schooling + rnorm(n, 0, 3)
+wage <- 5 + 0.8*schooling + 0.3*experience + rnorm(n)
+
+full <- coef(lm(wage ~ schooling + experience))
+drop <- coef(lm(wage ~ experience))
+
+round(c(truth   = 0.3,
+        full    = full["experience"],
+        omitted = drop["experience"]), 3)
+```
+:::
+
+::: {.try-this}
+The omitted-variable estimate is not merely noisy — it is **wrong in a fixed direction**, and more data will not save it. Set the `-0.6` to `0` so schooling and experience are uncorrelated, and the bias disappears entirely. That is the condition the bias depends on.
+:::

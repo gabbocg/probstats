@@ -1,0 +1,283 @@
+<script>
+/*
+  Confidence-interval equation animation — slide #cieq-formula (Seminar 5).
+
+  The companion to #ciflip-formula. That slide shows the interval as a
+  fixed-width bracket slid off mu and onto xbar; this one reads the SAME
+  interval off the formula and brackets each component in turn, so the three
+  words the room keeps mixing up attach to a piece of algebra they have
+  already seen as a picture:
+
+    0. the bare equation
+    1. bracket the ESTIMATE       x̄       — the only random part
+    2. bracket the CONFIDENCE     z        — a choice, not a measurement
+    3. bracket the STANDARD ERROR σ/√n     — how much x̄ wobbles
+    4. bracket the HALF-WIDTH     z · σ/√n — the two of them multiplied out
+
+  Every number is DERIVED from the four inputs at the top, never typed, and
+  they are the same MU/SIGMA/N/XBAR the geometry slide uses, so the interval
+  quoted here is literally the bracket drawn there. The arithmetic line
+  assembles one step at a time alongside the brackets, and the code asserts
+  that the endpoints and the half-width agree rather than asking you to trust
+  two numbers that were computed by different routes.
+
+  Text is positioned arithmetically rather than measured: the deck's mono face
+  (JetBrains Mono) has a 0.6 em advance, so a character grid is exact and needs
+  no getComputedTextLength() pass that would depend on webfont load timing.
+
+  Fragment gating follows the deck convention: invisible .fi-frag spans on the
+  slide, listened to via Reveal's fragmentshown/fragmenthidden.
+*/
+(function () {
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var W = 1000, H = 400;
+  var INK = '#3E3F3A', SOFT = '#6E7681', RULE = '#E5E7EB';
+  var NAVY = '#325D88', OLIVE = '#93C54B', ORANGE = '#F47C3C', BRICK = '#B94A48';
+  var MONO = 'JetBrains Mono, monospace', SANS = 'Roboto, sans-serif';
+  var NS = 'http://www.w3.org/2000/svg';
+
+  // --- the only four inputs; everything else is computed ------------------
+  // These MUST stay in step with the geometry slide (#ciflip), which draws the
+  // same interval as a bracket rather than as algebra.
+  var SIGMA = 15, N = 25, XBAR = 103.2, Z = 1.959964;
+
+  var SE   = SIGMA / Math.sqrt(N);        // 3
+  var HALF = Z * SE;                      // 5.8799
+  var LO   = XBAR - HALF;                 // 97.32
+  var HI   = XBAR + HALF;                 // 109.08
+
+  // The whole point of the slide is that "z times the standard error" and the
+  // two endpoints are the same statement. If a future edit breaks that, say so
+  // loudly rather than drawing two different answers on one line.
+  if (Math.abs((HI - LO) - 2 * HALF) > 1e-9) {
+    console.error('[cieq] endpoints and half-width disagree:', HI - LO, 2 * HALF);
+  }
+
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function txt(attrs, s) { var t = el('text', attrs); t.textContent = s; return t; }
+
+  // --- character-grid layout ---------------------------------------------
+  var FS = 30, ADV = FS * 0.6;                 // JetBrains Mono advance
+  // SVG <text> collapses leading/trailing whitespace, so a separator token
+  // written as ' · ' renders one glyph wide while the character grid has
+  // already reserved three — every token after it lands short. Non-breaking
+  // spaces are real glyphs at the same mono advance, so the grid stays honest.
+  var NB = ' ';
+  var CX = W / 2, Y_EQ = 175;
+  var Y_ABOVE = 138, Y_BELOW = 205;            // bracket rails
+  var Y_BAR = Y_EQ - 20;                       // the x-bar overline
+
+  // A row is a list of {s, c} tokens laid on the character grid, centred on cx.
+  // Returns the token nodes plus each one's [x0, x1] so a bracket can span it.
+  function row(svg, tokens, cx, y) {
+    var chars = tokens.reduce(function (n, t) { return n + t.s.length; }, 0);
+    var x = cx - chars * ADV / 2;
+    return tokens.map(function (t) {
+      var x0 = x, x1 = x + t.s.length * ADV;
+      x = x1;
+      return {
+        node: svg.appendChild(txt({
+          x: x0, y: y, fill: t.c || INK, 'font-size': FS,
+          'font-family': MONO, 'letter-spacing': 0
+        }, t.s)),
+        x0: x0, x1: x1
+      };
+    });
+  }
+
+  // Bracket spanning [x0,x1]; `up` draws the ticks pointing down at the text
+  // above it, otherwise up at the text below.
+  function bracket(svg, x0, x1, y, up, colour) {
+    var t = up ? 6 : -6;
+    return svg.appendChild(el('path', {
+      d: 'M' + x0 + ' ' + (y + t) + ' V' + y + ' H' + x1 + ' V' + (y + t),
+      fill: 'none', stroke: colour, 'stroke-width': 2,
+      'stroke-linecap': 'round', opacity: 0
+    }));
+  }
+
+  // "3" not "3.00" where the value is exact — used inside prose, where a
+  // trailing pair of zeros reads as precision nobody claimed.
+  function trim(v) { return String(+v.toFixed(4)); }
+
+  var CAPTIONS = {
+    0: 'four parts, one interval',
+    1: 'the estimate',
+    2: 'the confidence you asked for',
+    3: 'the standard error',
+    4: 'the half-width, and the interval'
+  };
+
+  // Annotation under the equation: what the bracketed piece MEANS, in words,
+  // coloured to match the token it belongs to.
+  var NOTES = {
+    0: { t: '', c: SOFT },
+    1: { t: "your sample's centre — the only random part", c: NAVY },
+    2: { t: 'how many SEs wide — you choose this', c: ORANGE },
+    3: { t: 'the standard error — how much x̄ wobbles', c: OLIVE },
+    4: { t: 'the half-width: ' + Z.toFixed(2) + ' × ' + trim(SE) +
+           ' = ' + HALF.toFixed(2), c: BRICK }
+  };
+
+  // The arithmetic assembles a step at a time, mirroring the brackets. The
+  // combining macron is fine HERE — this line is centre-anchored as a whole,
+  // so an unreliable advance shifts nothing downstream of it.
+  var MATHS = {
+    0: '',
+    1: 'x̄ = ' + XBAR.toFixed(2),
+    2: 'z = ' + Z.toFixed(2) + NB + NB + '(for 95%)',
+    3: 'σ/√n = ' + SIGMA + '/√' + N + ' = ' + SE.toFixed(2),
+    4: XBAR.toFixed(2) + ' ± ' + HALF.toFixed(2) + NB + NB + '→' + NB + NB +
+       '(' + LO.toFixed(2) + ', ' + HI.toFixed(2) + ')'
+  };
+
+  function build(stage) {
+    stage.innerHTML = '';
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    stage.appendChild(svg);
+
+    var cap = txt({
+      x: 40, y: 34, fill: SOFT, 'font-size': 17, 'font-family': SANS,
+      class: 'cieq-caption'
+    }, CAPTIONS[0]);
+    svg.appendChild(cap);
+
+    // x̄  ±  z · σ/√n
+    // The estimate is emitted as a bare 'x' and the macron drawn below as a
+    // path: a combining U+0304 has no dependable advance across faces, and one
+    // wrong advance here would drag every token to its right off the grid.
+    var eq = row(svg, [
+      { s: 'x', c: NAVY },
+      { s: NB + NB + '±' + NB + NB },
+      { s: 'z', c: ORANGE },
+      { s: NB + '·' + NB },
+      { s: 'σ/√n', c: OLIVE }
+    ], CX, Y_EQ);
+
+    var xbar = eq[0], zed = eq[2], se = eq[4];
+
+    // Inset by 2 so the rule reads as a macron over the glyph rather than as a
+    // rule butted against its neighbours' cells.
+    svg.appendChild(el('line', {
+      x1: xbar.x0 + 2, y1: Y_BAR, x2: xbar.x1 - 2, y2: Y_BAR,
+      stroke: NAVY, 'stroke-width': 2, 'stroke-linecap': 'round'
+    }));
+
+    // The three parts go above; the product of the last two goes below, where
+    // it has the room to span them without colliding with their brackets.
+    var brackets = {
+      1: bracket(svg, xbar.x0, xbar.x1, Y_ABOVE, 1, NAVY),
+      2: bracket(svg, zed.x0, zed.x1, Y_ABOVE, 1, ORANGE),
+      3: bracket(svg, se.x0, se.x1, Y_ABOVE, 1, OLIVE),
+      4: bracket(svg, zed.x0, se.x1, Y_BELOW, 0, BRICK)
+    };
+
+    var note = txt({
+      x: CX, y: 275, 'text-anchor': 'middle', fill: SOFT,
+      'font-size': 19, 'font-family': SANS, opacity: 0
+    }, '');
+    svg.appendChild(note);
+
+    var sum = txt({
+      x: CX, y: 325, 'text-anchor': 'middle', fill: INK,
+      'font-size': 24, 'font-family': MONO, opacity: 0
+    }, '');
+    svg.appendChild(sum);
+
+    return { state: 0, cap: cap, brackets: brackets, note: note, sum: sum };
+  }
+
+  // A bracket is full strength only while it is the one being discussed;
+  // earlier ones stay on the slide but drop back so the eye is never asked
+  // which of four things it should be looking at.
+  function target(i, st) {
+    if (i > st) return 0;
+    return i === st ? 1 : 0.3;
+  }
+
+  function place(s, st, instant) {
+    s.state = st;
+    s.cap.textContent = CAPTIONS[st];
+    s.note.textContent = NOTES[st].t;
+    s.note.setAttribute('fill', NOTES[st].c);
+    s.sum.textContent = MATHS[st];
+
+    var live = typeof window.anime !== 'undefined' && window.anime.animate;
+    var fast = instant || REDUCE || !live;
+
+    var keys = [1, 2, 3, 4];
+    if (fast) {
+      keys.forEach(function (i) {
+        s.brackets[i].setAttribute('opacity', target(i, st));
+      });
+      s.note.setAttribute('opacity', NOTES[st].t ? 1 : 0);
+      s.sum.setAttribute('opacity', MATHS[st] ? 1 : 0);
+      return;
+    }
+
+    if (s.anim && s.anim.pause) s.anim.pause();
+    if (s.animText && s.animText.pause) s.animText.pause();
+
+    var A = window.anime;
+    s.anim = A.animate(keys.map(function (i) { return s.brackets[i]; }), {
+      opacity: function (n, i) { return target(keys[i], st); },
+      duration: 420, ease: 'outQuad'
+    });
+    s.animText = A.animate([s.note, s.sum], {
+      opacity: function (n, i) {
+        return (i === 0 ? NOTES[st].t : MATHS[st]) ? 1 : 0;
+      },
+      duration: 360, delay: 120, ease: 'outQuad'
+    });
+  }
+
+  var ORDER = ['cieq-frag-1', 'cieq-frag-2', 'cieq-frag-3', 'cieq-frag-4'];
+  var STATES = {
+    'cieq-frag-1': 1, 'cieq-frag-2': 2,
+    'cieq-frag-3': 3, 'cieq-frag-4': 4
+  };
+
+  // How many gating fragments Reveal currently has shown. Landing here via a
+  // #hash or stepping backwards from a later slide leaves fragments already
+  // marked .visible; without this the freshly built stage would show a bare
+  // equation while Reveal believes it is done.
+  function fragState(slide) {
+    var n = 0;
+    ORDER.forEach(function (id) {
+      var f = slide.querySelector('#' + id);
+      if (f && f.classList.contains('visible')) n++;
+    });
+    return n;
+  }
+
+  function init() {
+    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
+    var current = null;
+
+    function mount(slide) {
+      if (!slide) return;
+      var stage = slide.querySelector('#cieq-stage');
+      if (!stage) { current = null; return; }
+      current = build(stage);
+      place(current, fragState(slide), true);   // snap, don't animate, on entry
+    }
+    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
+    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
+
+    Reveal.on('fragmentshown', function (e) {
+      var st = STATES[e.fragment.id];
+      if (current && st !== undefined) place(current, st);
+    });
+    Reveal.on('fragmenthidden', function (e) {
+      var st = STATES[e.fragment.id];
+      if (current && st !== undefined) place(current, st - 1);
+    });
+  }
+  init();
+})();
+</script>

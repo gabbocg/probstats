@@ -1,0 +1,281 @@
+<script>
+/*
+  Pairing animation — slide #pair-intuition.
+
+  Teaching point: the SAME 15 firms are measured twice (cost of equity before
+  and after 2020). Seen as two independent clouds the groups overlap almost
+  perfectly and look identical — the between-firm spread (3% to 19%) swamps
+  everything. But firm by firm the move is always down, and always by about
+  the same 2 points. Pairing throws away the between-subject noise and what
+  is left is a tight cluster sitting clearly below zero.
+
+    0. two unpaired strips, wide and overlapping
+    1. connecting lines drawn in  — same firms, every line slopes down
+    2. the differences fly out to their own axis on the right
+
+  Fragment gating follows the deck convention: invisible .fi-frag spans on
+  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+*/
+(function () {
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // [before 2020, after 2020] cost of equity, %. Wide between-firm spread,
+  // consistent within-firm drop of ~2.
+  var PAIRS = [[3, 1], [15, 13], [8, 5], [19, 17], [5, 4],
+               [12, 9], [17, 16], [7, 4], [14, 12], [10, 7],
+               [6, 5], [16, 13], [9, 7], [13, 10], [11, 9]];
+
+  // Stage geometry — fixed 1000x400 space, scaled to the slide via CSS.
+  var W = 1000, H = 400, TOP = 60, BOT = 340;
+  var BEF_X = 210, AFT_X = 400, DIF_X = 800;      // strip centres
+  var L_AXIS = 140, R_AXIS = 720;                 // the two y-axes
+  var LMIN = 0, LMAX = 22;                        // level scale (left)
+  var DMIN = -6, DMAX = 2;                        // difference scale (right)
+  var DOT_R = 8, MEAN_HALF = 30, DODGE = 16;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  var INK_SOFT = '#6E7681', RULE = '#E5E7EB', GREY = '#B0B7C0';
+  var NAVY = '#325D88', OLIVE = '#93C54B', ORANGE = '#F47C3C', BRICK = '#B94A48';
+  var MONO = 'JetBrains Mono, monospace', SANS = 'Roboto, sans-serif';
+
+  function yL(v) { return BOT - (v - LMIN) * (BOT - TOP) / (LMAX - LMIN); }
+  function yD(v) { return BOT - (v - DMIN) * (BOT - TOP) / (DMAX - DMIN); }
+  function mean(a) {
+    return a.reduce(function (s, v) { return s + v; }, 0) / a.length;
+  }
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  // Ties would draw one circle exactly on top of another (five of the "after"
+  // values repeat), so equal values fan out sideways: 0, -1, +1, -2, +2, ...
+  // Deterministic, so the picture is identical in every run of the lecture.
+  function dodge(j) {
+    return (j % 2 ? -1 : 1) * Math.ceil(j / 2) * DODGE;
+  }
+  function lay(vals, cx, ymap) {
+    var seen = {};
+    return vals.map(function (v) {
+      var j = seen[v] || 0;
+      seen[v] = j + 1;
+      return { x: cx + dodge(j), y: ymap(v) };
+    });
+  }
+
+  var BEF = PAIRS.map(function (p) { return p[0]; });
+  var AFT = PAIRS.map(function (p) { return p[1]; });
+  var DIF = PAIRS.map(function (p) { return p[1] - p[0]; });
+  var M_BEF = mean(BEF), M_AFT = mean(AFT), M_DIF = mean(DIF);
+
+  function axis(svg, x, ticks, ymap) {
+    svg.appendChild(el('line', {
+      x1: x, y1: TOP, x2: x, y2: BOT, stroke: RULE, 'stroke-width': 1
+    }));
+    ticks.forEach(function (v) {
+      svg.appendChild(el('line', {
+        x1: x - 6, y1: ymap(v), x2: x, y2: ymap(v), stroke: GREY, 'stroke-width': 1
+      }));
+      var t = el('text', {
+        x: x - 12, y: ymap(v) + 5, 'text-anchor': 'end',
+        fill: INK_SOFT, 'font-size': 14, 'font-family': MONO
+      });
+      t.textContent = v;
+      svg.appendChild(t);
+    });
+  }
+
+  function stripLabel(svg, x, s) {
+    var t = el('text', {
+      x: x, y: 372, 'text-anchor': 'middle', fill: INK_SOFT,
+      'font-size': 15, 'font-family': SANS
+    });
+    t.textContent = s;
+    svg.appendChild(t);
+  }
+
+  function build(stage) {
+    stage.innerHTML = '';
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+
+    var bef = lay(BEF, BEF_X, yL);
+    var aft = lay(AFT, AFT_X, yL);
+    var dif = lay(DIF, DIF_X, yD);
+
+    // --- left region: the unpaired view -------------------------------------
+    axis(svg, L_AXIS, [0, 5, 10, 15, 20], yL);
+    stripLabel(svg, BEF_X, 'Before 2020');
+    stripLabel(svg, AFT_X, 'After 2020');
+
+    // Connecting lines go in first so the dots sit on top of them.
+    var links = PAIRS.map(function (p, i) {
+      return svg.appendChild(el('line', {
+        x1: bef[i].x, y1: bef[i].y, x2: aft[i].x, y2: aft[i].y,
+        stroke: INK_SOFT, 'stroke-width': 1.2, opacity: 0.7, class: 'pair-link'
+      }));
+    });
+
+    bef.forEach(function (p) {
+      svg.appendChild(el('circle', {
+        cx: p.x, cy: p.y, r: DOT_R, fill: NAVY, 'fill-opacity': 0.55
+      }));
+    });
+    aft.forEach(function (p) {
+      svg.appendChild(el('circle', {
+        cx: p.x, cy: p.y, r: DOT_R, fill: OLIVE, 'fill-opacity': 0.65
+      }));
+    });
+
+    // Group means — the two numbers a two-sample test would compare.
+    svg.appendChild(el('line', {
+      x1: BEF_X - MEAN_HALF, y1: yL(M_BEF), x2: BEF_X + MEAN_HALF, y2: yL(M_BEF),
+      stroke: NAVY, 'stroke-width': 2.5, 'stroke-linecap': 'round'
+    }));
+    svg.appendChild(el('line', {
+      x1: AFT_X - MEAN_HALF, y1: yL(M_AFT), x2: AFT_X + MEAN_HALF, y2: yL(M_AFT),
+      stroke: OLIVE, 'stroke-width': 2.5, 'stroke-linecap': 'round'
+    }));
+
+    // --- right region: the paired view --------------------------------------
+    var diffG = el('g', { class: 'pair-diff' });
+    diffG.style.opacity = 0;
+    svg.appendChild(diffG);
+
+    axis(diffG, R_AXIS, [-6, -4, -2, 0, 2], yD);
+    diffG.appendChild(el('line', {
+      x1: R_AXIS + 10, y1: yD(0), x2: DIF_X + 120, y2: yD(0),
+      stroke: GREY, 'stroke-width': 1.5, 'stroke-dasharray': '6 5'
+    }));
+    diffG.appendChild(el('line', {
+      x1: DIF_X - MEAN_HALF - 20, y1: yD(M_DIF), x2: DIF_X + MEAN_HALF + 20,
+      y2: yD(M_DIF), stroke: BRICK, 'stroke-width': 2.5, 'stroke-linecap': 'round'
+    }));
+    var mLab = el('text', {
+      x: DIF_X + MEAN_HALF + 28, y: yD(M_DIF) + 5, fill: BRICK,
+      'font-size': 14, 'font-weight': 700, 'font-family': MONO
+    });
+    mLab.textContent = 'mean ' + M_DIF.toFixed(1);
+    diffG.appendChild(mLab);
+
+    var t = el('text', {
+      x: DIF_X, y: 372, 'text-anchor': 'middle', fill: INK_SOFT,
+      'font-size': 15, 'font-family': SANS
+    });
+    t.textContent = 'after − before, per firm';
+    diffG.appendChild(t);
+
+    // Difference dots start life on top of their "after" dot and fly across.
+    var diffs = dif.map(function (p, i) {
+      return diffG.appendChild(el('circle', {
+        cx: aft[i].x, cy: aft[i].y, r: DOT_R, fill: ORANGE,
+        'fill-opacity': 0.7, class: 'pair-dif'
+      }));
+    });
+
+    var cap = el('text', {
+      x: 40, y: 34, fill: INK_SOFT, 'font-size': 17,
+      'font-family': SANS, class: 'pair-caption'
+    });
+    svg.appendChild(cap);
+
+    stage.appendChild(svg);
+
+    // getTotalLength() only answers once the node is in the document.
+    var lens = links.map(function (l) { return l.getTotalLength(); });
+    links.forEach(function (l, i) {
+      l.style.strokeDasharray = lens[i] + ' ' + lens[i];
+    });
+
+    return { links: links, lens: lens, diffG: diffG, diffs: diffs,
+             home: aft, away: dif, cap: cap };
+  }
+
+  var CAPTIONS = {
+    0: 'two clouds that overlap almost completely — no obvious difference',
+    1: 'but these are the SAME 15 firms — every line slopes down',
+    2: 'the differences are tight and clearly below zero — that is the signal pairing recovers'
+  };
+
+  function place(s, state, instant) {
+    s.cap.textContent = CAPTIONS[state];
+    var drawn = state >= 1;                 // connecting lines visible?
+    var paired = state >= 2;                // difference axis visible?
+    var pts = paired ? s.away : s.home;
+
+    if (instant || REDUCE ||
+        typeof window.anime === 'undefined' || !window.anime.animate) {
+      s.links.forEach(function (l, i) {
+        l.style.strokeDashoffset = drawn ? 0 : s.lens[i];
+      });
+      s.diffG.style.opacity = paired ? 1 : 0;
+      s.diffs.forEach(function (d, i) {
+        d.setAttribute('cx', pts[i].x); d.setAttribute('cy', pts[i].y);
+      });
+      return;
+    }
+
+    var A = window.anime;
+    A.animate(s.links, {
+      strokeDashoffset: function (el, i) { return drawn ? 0 : s.lens[i]; },
+      duration: 520,
+      delay: A.stagger(50),
+      ease: 'outQuad'
+    });
+    A.animate(s.diffG, {
+      opacity: paired ? 1 : 0,
+      duration: 300,
+      ease: 'outQuad'
+    });
+    A.animate(s.diffs, {
+      cx: function (el, i) { return pts[i].x; },
+      cy: function (el, i) { return pts[i].y; },
+      duration: 700,
+      delay: A.stagger(45, { start: paired ? 120 : 0 }),
+      ease: 'outCubic'
+    });
+  }
+
+  var ORDER = ['pair-frag-1', 'pair-frag-2'];
+  var STATES = { 'pair-frag-1': 1, 'pair-frag-2': 2 };
+
+  // How many gating fragments Reveal currently has shown. Landing on this
+  // slide via a #hash or by stepping backwards from a later slide leaves
+  // fragments already marked .visible; without this the freshly built stage
+  // would show two bare clouds while Reveal believes it is done, and the next
+  // arrow press would leave the slide with the animation never having run.
+  function fragState(slide) {
+    var n = 0;
+    ORDER.forEach(function (id) {
+      var f = slide.querySelector('#' + id);
+      if (f && f.classList.contains('visible')) n++;
+    });
+    return n;
+  }
+
+  function init() {
+    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
+    var current = null;
+
+    function mount(slide) {
+      if (!slide) return;
+      var stage = slide.querySelector('#pair-stage');
+      if (!stage) { current = null; return; }
+      current = build(stage);
+      place(current, fragState(slide), true);   // snap, don't animate, on entry
+    }
+    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
+    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
+
+    Reveal.on('fragmentshown', function (e) {
+      var s = STATES[e.fragment.id];
+      if (current && s !== undefined) place(current, s);
+    });
+    Reveal.on('fragmenthidden', function (e) {
+      var s = STATES[e.fragment.id];
+      if (current && s !== undefined) place(current, s - 1);
+    });
+  }
+  init();
+})();
+</script>
