@@ -1,1 +1,135 @@
-<script>/* stage-kit placeholder, replaced in Task 2 */</script>
+<script>
+/*
+  StageKit — the shared runtime for the deck's SVG stage animations.
+
+  Every *-anim.html used to carry its own copy of: the palette as hex
+  literals, the two font strings, an `el()` helper, and forty lines of
+  Reveal wiring (mount on slide change, snap to the right state when the
+  slide is entered via a #hash or by stepping backwards, forward/backward
+  fragment handling). This file owns all of that once.
+
+  Contract for a stage file:
+    StageKit.register({
+      stage: 'clt-stage',                       // id of the stage div
+      frags: ['clt-frag-1', 'clt-frag-2'],      // in order; state k = k visible
+      build: function (stageEl) { ... return handle; },   // draws state 0
+      place: function (handle, state, instant) { ... },   // moves to `state`
+      stop:  function (handle) { ... }          // optional: cancel timers/tweens
+    });
+  `place` is called with instant=true on mount (always, including state 0),
+  and with instant=false on fragment changes. A stage with no fragments
+  registers frags: [] and may omit place.
+
+  Type roles (canvas units; the stage is shown at scale(1.05)):
+    tick 18 · label 20 · caption 24 · readout 30
+  Nothing drawn inside a stage may be smaller than `tick`.
+*/
+(function () {
+  var NS = 'http://www.w3.org/2000/svg';
+
+  var PAL = {
+    navy:    '#325D88',   // the hypothesis, the deck's voice
+    olive:   '#93C54B',   // output / success
+    orange:  '#F47C3C',   // attention, the student's turn, the evidence
+    brick:   '#B94A48',   // the posterior, misses, the null's tail
+    ink:     '#3E3F3A',
+    inkSoft: '#6E7681',
+    dim:     '#B0B7C0',
+    rule:    '#E5E7EB',
+    white:   '#FFFFFF'
+  };
+  var FONT = { mono: 'JetBrains Mono, monospace', sans: 'Roboto, sans-serif' };
+  var TYPE = { tick: 18, label: 20, caption: 24, readout: 30 };
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function animeReady() {
+    return typeof window.anime !== 'undefined' &&
+           typeof window.anime.animate === 'function';
+  }
+
+  function el(name, attrs) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) {
+      if (attrs[k] !== undefined && attrs[k] !== null) e.setAttribute(k, attrs[k]);
+    }
+    return e;
+  }
+
+  // txt(x, y, 'string', { size: 'tick'|'label'|'caption'|'readout',
+  //                       face: 'mono'|'sans', fill: PAL name or hex,
+  //                       anchor: 'start'|'middle'|'end', weight: 700, cls: '' })
+  function txt(x, y, str, o) {
+    o = o || {};
+    var t = el('text', {
+      x: x, y: y,
+      fill: PAL[o.fill] || o.fill || PAL.inkSoft,
+      'font-size': TYPE[o.size] || o.size || TYPE.label,
+      'font-family': FONT[o.face] || FONT.sans,
+      'text-anchor': o.anchor || 'start',
+      'font-weight': o.weight,
+      'class': o.cls
+    });
+    t.textContent = str;
+    return t;
+  }
+
+  function canvas(stage, W, H) {
+    stage.innerHTML = '';
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    stage.appendChild(svg);
+    return svg;
+  }
+
+  var registry = {};
+
+  function register(spec) {
+    var frags = spec.frags || [];
+    registry[spec.stage] = { frags: frags.slice() };
+    var index = {};
+    frags.forEach(function (id, i) { index[id] = i; });
+    var current = null;
+
+    // How many gating fragments Reveal currently shows on this slide. Landing
+    // via a #hash or stepping backwards leaves fragments already .visible.
+    function fragState(slide) {
+      var n = 0;
+      frags.forEach(function (id) {
+        var f = slide.querySelector('#' + id);
+        if (f && f.classList.contains('visible')) n++;
+      });
+      return n;
+    }
+
+    function mount(slide) {
+      if (current && spec.stop) spec.stop(current);
+      current = null;
+      if (!slide) return;
+      var stageEl = slide.querySelector('#' + spec.stage);
+      if (!stageEl) return;
+      current = spec.build(stageEl);
+      if (spec.place) spec.place(current, fragState(slide), true);
+    }
+
+    function init() {
+      if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
+      Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
+      Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
+      Reveal.on('fragmentshown', function (e) {
+        var i = index[e.fragment.id];
+        if (current && i !== undefined && spec.place) spec.place(current, i + 1, false);
+      });
+      Reveal.on('fragmenthidden', function (e) {
+        var i = index[e.fragment.id];
+        if (current && i !== undefined && spec.place) spec.place(current, i, false);
+      });
+    }
+    init();
+  }
+
+  window.StageKit = {
+    PAL: PAL, FONT: FONT, TYPE: TYPE, REDUCE: REDUCE,
+    animeReady: animeReady, el: el, txt: txt, canvas: canvas,
+    register: register, registry: registry
+  };
+})();
+</script>
