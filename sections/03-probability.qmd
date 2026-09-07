@@ -22,7 +22,7 @@ Every tree diagram and every "given that" on the worksheet is one move: discard 
 []{.fragment .fi-frag id="bayes-frag-4"}
 
 ::: {.slide-footer}
-Almost everyone says librarian. The description *does* fit librarians four times better — and Steve is still far more likely to be a farmer, because there are nineteen times as many of them. Both facts are in the picture at once.
+Almost everyone says librarian. The description *does* fit librarians four times better, and Steve is still far more likely to be a farmer — nineteen times as many. Both facts hold at once.
 :::
 
 ## The formula is just that picture {.stage-slide #bayeq-formula}
@@ -37,7 +37,7 @@ Almost everyone says librarian. The description *does* fit librarians four times
 []{.fragment .fi-frag id="bayeq-frag-4"}
 
 ::: {.slide-footer}
-Nothing is derived here that the grid did not already show. The numerator is one block, the denominator is every block that survived the evidence, and dividing them is the re-scaling you watched happen — which is why $0.020/0.115$ and $4/23$ are not merely close, they are the same number.
+Nothing here goes beyond the grid: numerator one block, denominator every surviving block. Dividing is the rescaling you watched — why $0.020/0.115$ and $4/23$ match.
 :::
 
 ## Move the prior, watch the answer move {.sim-slide #bayes-sim}
