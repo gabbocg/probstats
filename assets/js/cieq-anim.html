@@ -25,17 +25,16 @@
   (JetBrains Mono) has a 0.6 em advance, so a character grid is exact and needs
   no getComputedTextLength() pass that would depend on webfont load timing.
 
-  Fragment gating follows the deck convention: invisible .fi-frag spans on the
-  slide, listened to via Reveal's fragmentshown/fragmenthidden.
+  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
+  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
 */
 (function () {
-  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var K = window.StageKit;
 
-  var W = 1000, H = 400;
-  var INK = '#3E3F3A', SOFT = '#6E7681', RULE = '#E5E7EB';
-  var NAVY = '#325D88', OLIVE = '#93C54B', ORANGE = '#F47C3C', BRICK = '#B94A48';
-  var MONO = 'JetBrains Mono, monospace', SANS = 'Roboto, sans-serif';
-  var NS = 'http://www.w3.org/2000/svg';
+  var W = 1000, H = 445;
+  var INK = K.PAL.ink, SOFT = K.PAL.inkSoft, RULE = K.PAL.rule;
+  var NAVY = K.PAL.navy, OLIVE = K.PAL.olive, ORANGE = K.PAL.orange, BRICK = K.PAL.brick;
+  var MONO = K.FONT.mono, SANS = K.FONT.sans;
 
   // --- the only four inputs; everything else is computed ------------------
   // These MUST stay in step with the geometry slide (#ciflip), which draws the
@@ -54,22 +53,20 @@
     console.error('[cieq] endpoints and half-width disagree:', HI - LO, 2 * HALF);
   }
 
-  function el(name, attrs) {
-    var e = document.createElementNS(NS, name);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
-  function txt(attrs, s) { var t = el('text', attrs); t.textContent = s; return t; }
+  // Character-grid text needs raw attrs (letter-spacing, a literal
+  // font-size) that K.txt's role-based options can't express, so this thin
+  // wrapper stays, routed through K.el rather than a local element helper.
+  function txt(attrs, s) { var t = K.el('text', attrs); t.textContent = s; return t; }
 
   // --- character-grid layout ---------------------------------------------
-  var FS = 30, ADV = FS * 0.6;                 // JetBrains Mono advance
+  var FS = K.TYPE.readout, ADV = FS * 0.6;     // JetBrains Mono advance
   // SVG <text> collapses leading/trailing whitespace, so a separator token
   // written as ' · ' renders one glyph wide while the character grid has
   // already reserved three — every token after it lands short. Non-breaking
   // spaces are real glyphs at the same mono advance, so the grid stays honest.
   var NB = ' ';
-  var CX = W / 2, Y_EQ = 175;
-  var Y_ABOVE = 138, Y_BELOW = 205;            // bracket rails
+  var CX = W / 2, Y_EQ = 195;
+  var Y_ABOVE = 154, Y_BELOW = 228;            // bracket rails
   var Y_BAR = Y_EQ - 20;                       // the x-bar overline
 
   // A row is a list of {s, c} tokens laid on the character grid, centred on cx.
@@ -94,7 +91,7 @@
   // above it, otherwise up at the text below.
   function bracket(svg, x0, x1, y, up, colour) {
     var t = up ? 6 : -6;
-    return svg.appendChild(el('path', {
+    return svg.appendChild(K.el('path', {
       d: 'M' + x0 + ' ' + (y + t) + ' V' + y + ' H' + x1 + ' V' + (y + t),
       fill: 'none', stroke: colour, 'stroke-width': 2,
       'stroke-linecap': 'round', opacity: 0
@@ -137,14 +134,9 @@
   };
 
   function build(stage) {
-    stage.innerHTML = '';
-    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
-    stage.appendChild(svg);
+    var svg = K.canvas(stage, W, H);
 
-    var cap = txt({
-      x: 40, y: 34, fill: SOFT, 'font-size': 17, 'font-family': SANS,
-      class: 'cieq-caption'
-    }, CAPTIONS[0]);
+    var cap = K.txt(40, 28, CAPTIONS[0], { size: 'caption', cls: 'cieq-caption' });
     svg.appendChild(cap);
 
     // x̄  ±  z · σ/√n
@@ -163,7 +155,7 @@
 
     // Inset by 2 so the rule reads as a macron over the glyph rather than as a
     // rule butted against its neighbours' cells.
-    svg.appendChild(el('line', {
+    svg.appendChild(K.el('line', {
       x1: xbar.x0 + 2, y1: Y_BAR, x2: xbar.x1 - 2, y2: Y_BAR,
       stroke: NAVY, 'stroke-width': 2, 'stroke-linecap': 'round'
     }));
@@ -177,16 +169,14 @@
       4: bracket(svg, zed.x0, se.x1, Y_BELOW, 0, BRICK)
     };
 
-    var note = txt({
-      x: CX, y: 275, 'text-anchor': 'middle', fill: SOFT,
-      'font-size': 19, 'font-family': SANS, opacity: 0
-    }, '');
+    var note = K.txt(CX, 306, '',
+      { size: 'label', face: 'sans', fill: SOFT, anchor: 'middle' });
+    note.setAttribute('opacity', 0);
     svg.appendChild(note);
 
-    var sum = txt({
-      x: CX, y: 325, 'text-anchor': 'middle', fill: INK,
-      'font-size': 24, 'font-family': MONO, opacity: 0
-    }, '');
+    var sum = K.txt(CX, 362, '',
+      { size: 'label', face: 'mono', fill: INK, anchor: 'middle' });
+    sum.setAttribute('opacity', 0);
     svg.appendChild(sum);
 
     return { state: 0, cap: cap, brackets: brackets, note: note, sum: sum };
@@ -207,8 +197,7 @@
     s.note.setAttribute('fill', NOTES[st].c);
     s.sum.textContent = MATHS[st];
 
-    var live = typeof window.anime !== 'undefined' && window.anime.animate;
-    var fast = instant || REDUCE || !live;
+    var fast = instant || K.REDUCE || !K.animeReady();
 
     var keys = [1, 2, 3, 4];
     if (fast) {
@@ -236,48 +225,11 @@
     });
   }
 
-  var ORDER = ['cieq-frag-1', 'cieq-frag-2', 'cieq-frag-3', 'cieq-frag-4'];
-  var STATES = {
-    'cieq-frag-1': 1, 'cieq-frag-2': 2,
-    'cieq-frag-3': 3, 'cieq-frag-4': 4
-  };
-
-  // How many gating fragments Reveal currently has shown. Landing here via a
-  // #hash or stepping backwards from a later slide leaves fragments already
-  // marked .visible; without this the freshly built stage would show a bare
-  // equation while Reveal believes it is done.
-  function fragState(slide) {
-    var n = 0;
-    ORDER.forEach(function (id) {
-      var f = slide.querySelector('#' + id);
-      if (f && f.classList.contains('visible')) n++;
-    });
-    return n;
-  }
-
-  function init() {
-    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
-    var current = null;
-
-    function mount(slide) {
-      if (!slide) return;
-      var stage = slide.querySelector('#cieq-stage');
-      if (!stage) { current = null; return; }
-      current = build(stage);
-      place(current, fragState(slide), true);   // snap, don't animate, on entry
-    }
-    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
-    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
-
-    Reveal.on('fragmentshown', function (e) {
-      var st = STATES[e.fragment.id];
-      if (current && st !== undefined) place(current, st);
-    });
-    Reveal.on('fragmenthidden', function (e) {
-      var st = STATES[e.fragment.id];
-      if (current && st !== undefined) place(current, st - 1);
-    });
-  }
-  init();
+  K.register({
+    stage: 'cieq-stage',
+    frags: ['cieq-frag-1', 'cieq-frag-2', 'cieq-frag-3', 'cieq-frag-4'],
+    build: build,
+    place: place
+  });
 })();
 </script>

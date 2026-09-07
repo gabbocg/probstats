@@ -36,7 +36,7 @@ Nothing new is constructed at the flip — the bracket is the *same width*, slid
 []{.fragment .fi-frag id="cieq-frag-4"}
 
 ::: {.slide-footer}
-Only $\bar x$ came from your sample. $z$ you chose, $\sigma$ and $n$ you knew — so the half-width 5.88 was fixed *before you collected anything*. That is why every interval on the next slide is exactly the same length.
+Only $\bar x$ came from your sample; $z$ you chose, $\sigma$ and $n$ you knew, so the half-width 5.88 was fixed *before you collected anything*: every interval on the next slide has the same length.
 :::
 
 ## What is actually random here? {.stage-slide #ci-intuition}
