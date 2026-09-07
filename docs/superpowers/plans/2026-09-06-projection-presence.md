@@ -1540,7 +1540,7 @@ Note: the kit calls `place(handle, state, true)` on mount for **every** state, i
 | `#B94A48` | `brick` | `#E5E7EB` | `rule` |
 | `#FFFFFF` | `white` | | |
 
-**R3. Type roles.** Replace every `'font-size': N` (or size argument to a local text helper) by role, never by nearest number: axis numbers and tick labels → `K.TYPE.tick` (18); panel titles, small annotations, legends, footnote lines → `K.TYPE.label` (20); the state caption at the top left (the node with class `*-caption`, drawn at about (40, 34)) → `K.TYPE.caption` (24) and move it to y = 28; the one headline number or formula (bold, mono) → `K.TYPE.readout` (30). Nothing stays below 18.
+**R3. Type roles.** Replace every `'font-size': N` (or size argument to a local text helper) by role, never by nearest number: axis numbers and tick labels → `K.TYPE.tick` (18); panel titles, small annotations, legends, footnote lines → `K.TYPE.label` (20); the state caption at the top left (the node with class `*-caption`, drawn at about (40, 34)) → `K.TYPE.caption` (24) and move it to y = 28; the one headline number or formula (bold, mono) → `K.TYPE.readout` (30). Nothing stays below 18. Omit `fill` only for tick and caption text (the kit default is `inkSoft`); every readout or accent-coloured label must pass `fill` explicitly (`fill: 'orange'`, `fill: 'navy'`, …), otherwise it silently renders grey. The state index passed to `place` is simply the count of visible fragments; `bins` happens to reuse it as the bin width, other files map it to their own state tables.
 
 **R4. Height.** Set `H = 445`. Multiply every vertical constant and every literal `y`, `y1`, `y2`, `cy` in `build`/`place` by **1.1125** (445/400) and round, except the caption (y = 28) and any text baseline that must stay above 440. Heights of bars/panels (`HMAX`, `SQ_H`, `PY` density scale, `UNIT` plot scale) scale by the same factor so the drawing uses the new height. Horizontal constants do not change.
 
@@ -1550,9 +1550,9 @@ Note: the kit calls `place(handle, state, true)` on mount for **every** state, i
 ```bash
 quarto render 2>&1 | tail -1 && bash scripts/check-render.sh | tail -1
 ```
-Browser: open the slide, paste the probe, `deckProbe.here()` → `minFont >= 18`; walk every fragment forward and back; reload with all fragments shown to confirm the snap-on-entry; screenshot the final state and look for overlaps and for anything clipped at the bottom of the 468px band. Console must show no errors.
+Browser: open the slide, paste the probe, `deckProbe.here()` → `minFont >= 18` and `height <= 700`; walk every fragment forward and back, waiting for each tween to finish (duration plus the longest stagger, about a second) before judging the result, and judge positions from a screenshot or `getBoundingClientRect()`, not `getAttribute` (anime drives SVG geometry through computed style, so attributes read stale mid-tween); confirm snap-on-entry by stepping to the next slide and back with all fragments shown (a page reload always resets to fragment 0 because the deck sets `fragmentInURL: false`); screenshot the final state and look for overlaps and for anything clipped at the bottom of the 468px band; run `deckProbe.all()` and confirm the stage is no longer listed in `frags` and its slide is not in `tall`. If `footers` lists the slide (takeaway running to three lines at 24px), shorten the `.slide-footer` text in the slide's qmd to two lines without changing its claim, and stage that qmd file with the commit. Console must show no errors.
 
-**R7. Commit** with `refactor(deck): <name> stage on StageKit, 445 canvas, projection type` and the two trailers.
+**R7. Commit** with `refactor(deck): <name> stage on StageKit, 445 canvas, projection type` and the two trailers; `git add` only the animation file (and the slide's qmd if its footer was shortened).
 
 Per-file notes follow. Line numbers are as of the baseline commit.
 
