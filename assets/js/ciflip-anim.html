@@ -71,6 +71,7 @@
   var LANE_B = { br: 352, lab: 376 };            // the interval around XBAR_HIT
   var LANE_C = { br: 396, lab: 421 };            // the interval around XBAR_MISS
   var TICK = 7;                                  // bracket end-tick length
+                                                  // stroke lengths, deliberately not scaled by 1.1125
 
   function px(v) { return X0 + (v - VMIN) * SCALE; }
   function py(d) { return BASE - d * PY; }
@@ -139,8 +140,8 @@
   // the mono grid (0.6 em advance) makes the overline's span exact.
   function meanLabel(parent, cx, y, value, colour) {
     // The overline sits above the glyph in proportion to the label role's
-    // size, same 0.767 ratio the 15px original used, scaled up to 20px.
-    var ADV = K.TYPE.label * 0.6, OVER = K.TYPE.label * 0.767;
+    // size, the old 11.5-at-15px ratio the 15px original used, scaled up to 20px.
+    var ADV = K.TYPE.label * 0.6, OVER = K.TYPE.label * (11.5 / 15);
     var str = 'x = ' + value.toFixed(1);
     var x0 = cx - str.length * ADV / 2;
     parent.appendChild(K.txt(x0, y, str, { size: 'label', face: 'mono', fill: colour }));
@@ -174,6 +175,7 @@
     }));
     [90, 95, 100, 105, 110].forEach(function (v) {
       svg.appendChild(K.el('line', {
+        // stroke lengths, deliberately not scaled by 1.1125
         x1: px(v), y1: BASE, x2: px(v), y2: BASE + 6,
         stroke: GREY, 'stroke-width': 1
       }));

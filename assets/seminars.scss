@@ -9,6 +9,7 @@
 // ---- Slide grid (spec §4) ----
 // Title band 0–80: pull the accent bar up. Must out-rank theme.scss's
 // `.reveal section > h2::after` (0,1,3), hence the full selector.
+// The same tightening applies to sim slides, whose line budget (§4.3) assumes an 80px title band.
 .reveal section.stage-slide > h2::after,
 .reveal section.sim-slide > h2::after { margin-top: 0.4em; }
 
@@ -102,6 +103,7 @@
   display: block !important;
   text-align: left !important;
 }
+// Deck-wide (every slide type uses .slide-kicker), not only sim slides; do not scope it.
 .slide-kicker { font-size: 17px; }
 .reveal section.sim-slide .slide-kicker { margin: 0.2em 0 0.4em; }
 .reveal section.sim-slide .lede-min {
@@ -150,8 +152,9 @@
 .sim-card .qwebr-output-code-area pre,
 .sim-card pre.qwebr-output-code {
   line-height: 1.25;
-  // theme.scss gives every .reveal pre a block margin and 90% width; inside
-  // the output box that is dead space.
+  // Quarto's reveal theme gives every .reveal pre a block margin and 90%
+  // width (`.reveal pre { width: 90%; margin: var(--r-block-margin) auto }`);
+  // inside the output box that is dead space.
   margin: 0;
   width: 100%;
   padding-top: 8px;
@@ -207,7 +210,7 @@
   // Bottom margin dropped to 0 (Task 5b step a): the enlarged hero (numeral
   // 4.4em, tagline 1.3em) still ran 26-30px over 700 after the line-height
   // and lede fixes, so this squeezes the remaining slack above the h1.
-  margin: 0 0 0;
+  margin: 0;
   color: var(--accent-1);
 }
 .sem-mark::before {
@@ -219,9 +222,9 @@
   // still), and still dominates the small uppercase label beside it.
   font-size: 4em;
   font-weight: 700;
-  // Digits have no descenders, so the line box (158px at 4.4em) is mostly
-  // dead space below the glyph; 0.8 tightens that box to ~126px without
-  // shrinking the glyph itself, buying back ~32px of hero height.
+  // Digits have no descenders, so the line box (144px at 4em: 36px * 4) is
+  // mostly dead space below the glyph; 0.8 tightens that box to ~115px
+  // without shrinking the glyph itself, buying back ~29px of hero height.
   line-height: 0.8;
   color: rgba(50, 93, 136, 0.18);
 }

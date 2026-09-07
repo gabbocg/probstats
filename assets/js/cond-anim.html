@@ -35,7 +35,6 @@
 
   var INK = K.PAL.ink, SOFT = K.PAL.inkSoft, RULE = K.PAL.rule;
   var NAVY = K.PAL.navy, ORANGE = K.PAL.orange, GREY = K.PAL.dim;
-  var MONO = K.FONT.mono, SANS = K.FONT.sans;
 
   function merge(a, b) {
     var o = {}, k;
@@ -48,7 +47,8 @@
   // Keep these SHORT. The caption is left-anchored at x=40, y=28; once the
   // columns subdivide the "Buy"/"No buy" headers rise to y=51 centred on
   // x=450 and x=700. A caption much past ~40 characters at 24px Roboto
-  // (~12px per character) can run toward the Buy header — checked in build().
+  // (~12px per character) can run toward the Buy header — kept under ~40
+  // characters for the current captions below (nothing enforces this).
   var CAPTIONS = {
     0: '100% of managers, split by buying',
     1: 'each column splits by upgrading',
