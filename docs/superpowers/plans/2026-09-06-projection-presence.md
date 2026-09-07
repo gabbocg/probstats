@@ -1544,7 +1544,7 @@ Note: the kit calls `place(handle, state, true)` on mount for **every** state, i
 
 **R4. Height.** Set `H = 445`. Multiply every vertical constant and every literal `y`, `y1`, `y2`, `cy` in `build`/`place` by **1.1125** (445/400) and round, except the caption (y = 28) and any text baseline that must stay above 440. Heights of bars/panels (`HMAX`, `SQ_H`, `PY` density scale, `UNIT` plot scale) scale by the same factor so the drawing uses the new height. Horizontal constants do not change.
 
-**R5. Collisions.** Larger labels can collide with neighbours. Fix by moving elements or splitting a caption onto its own line; never by shrinking text. Captions are limited to about 40 characters at 24 units when a readout shares the top band; if a caption is longer, put the readout at the right edge (`anchor: 'end'` at x = 960) or drop the caption to a second line.
+**R5. Collisions.** Larger labels can collide with neighbours. Fix by moving elements or splitting a caption onto its own line; never by shrinking text. Captions are limited to about 40 characters at 24 units when a readout shares the top band; if a caption is longer, put the readout at the right edge (`anchor: 'end'` at x = 960) or drop the caption to a second line. A per-fragment caption that overflows the canvas on its own (more than about 65 characters at 24px Roboto from x = 40) may be shortened, keeping its claim, since `K.txt` has no multi-line support and the footer cannot carry per-state text; add a one-line code comment saying it was shortened and why (as `pair-anim.html` should).
 
 **R6. Verify (every file).**
 ```bash
