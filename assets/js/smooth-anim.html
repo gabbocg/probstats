@@ -136,8 +136,14 @@
         x: bx(k) - bw / 2, y: BASE_Y - h, width: bw, height: h,
         fill: K.PAL.navy, opacity: 0.6, class: 'smooth-bar'
       }));
-      svg.appendChild(K.txt(bx(k), BASE_Y + 22, 't-' + k,
-        { size: 'tick', face: 'mono', anchor: 'middle' }));
+      // A 't-N' label at tick size is ~32 canvas units wide and the bars are
+      // only 32.5 apart, so labelling all eight runs them together with no
+      // gap at all. Every other bar keeps the lag notation legible while
+      // still spanning the full k = 0..7 range.
+      if (k % 2 === 0) {
+        svg.appendChild(K.txt(bx(k), BASE_Y + 22, 't-' + k,
+          { size: 'tick', face: 'mono', anchor: 'middle' }));
+      }
       return r;
     });
 
