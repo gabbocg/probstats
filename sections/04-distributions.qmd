@@ -35,7 +35,7 @@ The count discards *which* trials succeeded, so all 120 orderings of three succe
 []{.fragment .fi-frag id="seller-frag-3"}
 
 ::: {.slide-footer}
-Same formula as the last slide, turned around: there we fixed the rate and asked which counts were likely; here we fix the count we saw and ask which rates are. More reviews narrow the curve — but narrow is not the same as good, and the 93% seller is merely *precisely* mediocre. Below $s=0.5$ every curve is flat against zero, which is why the axis starts there.
+Same formula, turned around: there we fixed the rate; here we fix the count. More reviews narrow the curve, but narrow is not good: the 93% seller is merely *precisely* mediocre.
 :::
 
 ## Ten out of ten is weak evidence {.sim-slide #seller-sim}

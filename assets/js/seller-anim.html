@@ -36,17 +36,17 @@
       That makes the heights meaningless across sellers and the shapes the
       entire message, so the y-axis label says so out loud.
 
-  Fragment gating follows the deck convention: invisible .fi-frag spans on
-  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
+  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
 */
 (function () {
-  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var K = window.StageKit;
 
   // --- the three sellers ---------------------------------------------------
   var SELLERS = [
-    { id: 'A', k: 10,  n: 10,  colour: '#325D88' },
-    { id: 'B', k: 48,  n: 50,  colour: '#93C54B' },
-    { id: 'C', k: 186, n: 200, colour: '#B94A48' }
+    { id: 'A', k: 10,  n: 10,  colour: K.PAL.navy },
+    { id: 'B', k: 48,  n: 50,  colour: K.PAL.olive },
+    { id: 'C', k: 186, n: 200, colour: K.PAL.brick }
   ];
 
   var THRESH = 0.10;      // "plausible" = relative likelihood at least this
@@ -98,34 +98,27 @@
   }
   var S = SELLERS.map(analyse);
 
-  // --- stage geometry — fixed 1000x400 space, scaled to the slide via CSS ---
-  var W = 1000, H = 400;
+  // --- stage geometry — fixed 1000x445 space, scaled to the slide via CSS ---
+  var W = 1000, H = 445;
   var X0 = 90, X1 = 700, SMIN = 0.5, SMAX = 1.0;
-  var BASE = 280, PEAK_Y = 80;             // baseline, and where rel = 1 lands
+  var BASE = 312, PEAK_Y = 89;             // baseline, and where rel = 1 lands
   var NPT = 320;                           // samples along each curve
   var TICK = 7;                            // bracket end-tick length
 
-  var SOFT = '#6E7681', RULE = '#E5E7EB', GREY = '#B0B7C0';
-  var MONO = 'JetBrains Mono, monospace', SANS = 'Roboto, sans-serif';
-  var NS = 'http://www.w3.org/2000/svg';
-  var NB = ' ';    // SVG <text> eats runs of ordinary spaces; this one survives
+  var SOFT = K.PAL.inkSoft, RULE = K.PAL.rule, GREY = K.PAL.dim;
+  var MONO = K.FONT.mono, SANS = K.FONT.sans;
+  var NB = ' ';    // SVG <text> eats runs of ordinary spaces; this one survives
 
   // The brackets stack under the axis, one lane per seller, in reveal order.
-  var LANE_Y = [322, 346, 370];
+  var LANE_Y = [358, 385, 412];
 
-  // The readout on the right. Two lines per seller, 34px apart, with a wider
-  // gap between blocks so each record reads with its own probability.
-  var RD_X = 740, RD_Y = 110, RD_LINE = 34, RD_BLOCK = 78;
+  // The readout on the right. Two lines per seller, 26px apart (label role,
+  // 20px) with a 44px gap after the second line so each record reads as its
+  // own group; RD_BLOCK is RD_LINE plus that 44px gap.
+  var RD_X = 740, RD_Y = 122, RD_LINE = 26, RD_BLOCK = 70;
 
   function px(s) { return X0 + (s - SMIN) * (X1 - X0) / (SMAX - SMIN); }
   function py(r) { return BASE - r * (BASE - PEAK_Y); }
-
-  function el(name, attrs) {
-    var e = document.createElementNS(NS, name);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
-  function txt(attrs, s) { var t = el('text', attrs); t.textContent = s; return t; }
 
   // Left-pad with non-breaking spaces so the three records line up on their
   // slashes: "10 / 10" and "186 / 200" are different widths otherwise.
@@ -157,34 +150,29 @@
   }
 
   function build(stage) {
-    stage.innerHTML = '';
-    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    var svg = K.canvas(stage, W, H);
     var i;
 
-    var cap = svg.appendChild(txt({
-      x: 40, y: 34, fill: SOFT, 'font-size': 17, 'font-family': SANS,
-      class: 'seller-caption'
-    }, CAPTIONS[0]));
+    var cap = svg.appendChild(K.txt(40, 28, CAPTIONS[0],
+      { size: 'caption', cls: 'seller-caption' }));
 
     // --- what the vertical axis is, and the caveat that comes with it ---
-    svg.appendChild(txt({
-      x: X0, y: 64, fill: SOFT, 'font-size': 14, 'font-family': SANS
-    }, 'relative likelihood (each curve scaled to its own peak)'));
+    svg.appendChild(K.txt(X0, 71,
+      'relative likelihood (each curve scaled to its own peak)',
+      { size: 'label', fill: SOFT }));
 
     // --- the s axis ---
-    svg.appendChild(el('line', {
+    svg.appendChild(K.el('line', {
       x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: RULE, 'stroke-width': 1
     }));
     for (i = 0; i <= 5; i++) {
       var v = 0.5 + i * 0.1;
-      svg.appendChild(el('line', {
+      svg.appendChild(K.el('line', {
         x1: px(v), y1: BASE, x2: px(v), y2: BASE + 6,
         stroke: GREY, 'stroke-width': 1
       }));
-      svg.appendChild(txt({
-        x: px(v), y: 302, 'text-anchor': 'middle', fill: SOFT,
-        'font-size': 14, 'font-family': MONO
-      }, v.toFixed(1)));
+      svg.appendChild(K.txt(px(v), 336, v.toFixed(1),
+        { size: 'tick', face: 'mono', anchor: 'middle' }));
     }
     // Left-anchored, and broken over two short lines rather than set on one
     // long one. Every bracket sits on the right half of the axis, so the
@@ -192,16 +180,14 @@
     // and a centred — or single 40-character — title runs straight through
     // seller A's range label, which is right-anchored at x = 439. The
     // truncation has to be admitted somewhere, so it gets the second line.
-    svg.appendChild(txt({
-      x: X0, y: 333, fill: SOFT, 'font-size': 14, 'font-family': SANS
-    }, 'true success rate s'));
-    svg.appendChild(txt({
-      x: X0, y: 353, fill: SOFT, 'font-size': 14, 'font-family': SANS
-    }, '(axis truncated below 0.5)'));
+    svg.appendChild(K.txt(X0, 370, 'true success rate s',
+      { size: 'label', fill: SOFT }));
+    svg.appendChild(K.txt(X0, 393, '(axis truncated below 0.5)',
+      { size: 'label', fill: SOFT }));
 
     // --- one curve, one bracket lane and one readout block per seller ---
     var lanes = S.map(function (a, idx) {
-      var path = svg.appendChild(el('path', {
+      var path = svg.appendChild(K.el('path', {
         d: curvePath(a), fill: 'none', stroke: a.colour, 'stroke-width': 2.5,
         'stroke-linejoin': 'round', 'stroke-linecap': 'round',
         opacity: 0, class: 'seller-curve'
@@ -209,36 +195,32 @@
 
       // Bracket, its numeric range, and the readout share one group so a
       // seller arrives (and leaves) as a single object.
-      var side = svg.appendChild(el('g', {
+      var side = svg.appendChild(K.el('g', {
         opacity: 0, class: 'seller-side'
       }));
-      side.appendChild(el('path', {
+      side.appendChild(K.el('path', {
         d: bracket(a, LANE_Y[idx]), fill: 'none', stroke: a.colour,
         'stroke-width': 2
       }));
       // The range sits to the LEFT of its bracket: to the right is the
       // readout column, and seller A's bracket already reaches x = 700.
-      side.appendChild(txt({
-        x: px(a.lo) - 10, y: LANE_Y[idx] + 5, 'text-anchor': 'end',
-        fill: a.colour, 'font-size': 13, 'font-family': MONO
-      }, a.id + NB + '[' + a.lo.toFixed(3) + ', ' + a.hi.toFixed(3) + ']'));
+      side.appendChild(K.txt(px(a.lo) - 10, LANE_Y[idx] + 5,
+        a.id + NB + '[' + a.lo.toFixed(3) + ', ' + a.hi.toFixed(3) + ']',
+        { size: 'tick', face: 'mono', anchor: 'end', fill: a.colour }));
 
       var y = RD_Y + idx * RD_BLOCK;
-      side.appendChild(txt({
-        x: RD_X, y: y, fill: a.colour, 'font-size': 17, 'font-family': MONO
-      }, a.id + NB + NB + pad(a.k, 3) + ' / ' + pad(a.n, 3)));
-      side.appendChild(txt({
-        x: RD_X, y: y + RD_LINE, fill: SOFT, 'font-size': 14,
-        'font-family': SANS
-      }, 'P(s > ' + GOOD.toFixed(2) + ') = ' + a.ptail.toFixed(2)));
+      side.appendChild(K.txt(RD_X, y,
+        a.id + NB + NB + pad(a.k, 3) + ' / ' + pad(a.n, 3),
+        { size: 'label', face: 'mono', fill: a.colour }));
+      side.appendChild(K.txt(RD_X, y + RD_LINE,
+        'P(s > ' + GOOD.toFixed(2) + ') = ' + a.ptail.toFixed(2),
+        { size: 'label', fill: SOFT }));
 
       return { path: path, side: side, len: 0, on: false };
     });
 
-    stage.appendChild(svg);
-
-    // Path lengths are only measurable once the svg is in the document, so
-    // the dash setup happens after the append rather than at creation.
+    // Path lengths are only measurable once the svg is in the document
+    // (K.canvas already appended it), so the dash setup happens here.
     lanes.forEach(function (ln) {
       var len = 0;
       try { len = ln.path.getTotalLength(); } catch (e) { len = 0; }
@@ -250,19 +232,15 @@
     return { state: 0, cap: cap, lanes: lanes, anims: [] };
   }
 
-  // Keep these SHORT. The caption is left-anchored at x=40, y=34 and the
-  // readout column starts at x=740; at 17px Roboto (~8.4px per character)
-  // anything much past ~46 characters runs under it.
+  // Keep these SHORT. The caption is left-anchored at x=40, y=28; at 24px
+  // Roboto (~12px per character) anything much past ~40 characters runs
+  // under the right-hand furniture.
   var CAPTIONS = [
     'same formula, now s varies not k',
     '10 of 10 — but only ten',
     '48 of 50 — narrower already',
     '186 of 200 — narrowest, and lowest'
   ];
-
-  function live() {
-    return typeof window.anime !== 'undefined' && !!window.anime.animate;
-  }
 
   // Cancel everything still in flight before the next beat. A curve draw runs
   // for the best part of a second; a presenter arrowing back during it would
@@ -277,7 +255,7 @@
     stop(s);
     s.state = st;
     s.cap.textContent = CAPTIONS[st];
-    var fast = instant || REDUCE || !live();
+    var fast = instant || K.REDUCE || !K.animeReady();
     var A = window.anime;
 
     s.lanes.forEach(function (ln, idx) {
@@ -325,49 +303,12 @@
     });
   }
 
-  var ORDER = ['seller-frag-1', 'seller-frag-2', 'seller-frag-3'];
-  var STATES = {
-    'seller-frag-1': 1, 'seller-frag-2': 2, 'seller-frag-3': 3
-  };
-
-  // How many gating fragments Reveal currently has shown. Landing on this
-  // slide via a #hash or by stepping backwards from a later slide leaves
-  // fragments already marked .visible; without this the freshly built stage
-  // would show an empty plot while Reveal believes it is done, and the next
-  // arrow press would leave the slide with the animation never having run.
-  function fragState(slide) {
-    var n = 0;
-    ORDER.forEach(function (id) {
-      var f = slide.querySelector('#' + id);
-      if (f && f.classList.contains('visible')) n++;
-    });
-    return n;
-  }
-
-  function init() {
-    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
-    var current = null;
-
-    function mount(slide) {
-      if (current) stop(current);
-      if (!slide) return;
-      var stage = slide.querySelector('#seller-stage');
-      if (!stage) { current = null; return; }
-      current = build(stage);
-      render(current, fragState(slide), true);   // snap, don't animate, on entry
-    }
-    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
-    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
-
-    Reveal.on('fragmentshown', function (e) {
-      var st = STATES[e.fragment.id];
-      if (current && st !== undefined) render(current, st);
-    });
-    Reveal.on('fragmenthidden', function (e) {
-      var st = STATES[e.fragment.id];
-      if (current && st !== undefined) render(current, st - 1);
-    });
-  }
-  init();
+  K.register({
+    stage: 'seller-stage',
+    frags: ['seller-frag-1', 'seller-frag-2', 'seller-frag-3'],
+    build: build,
+    place: render,
+    stop: stop
+  });
 })();
 </script>
