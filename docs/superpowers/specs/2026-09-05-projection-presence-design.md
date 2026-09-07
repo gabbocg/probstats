@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-05
 **Deck:** `bman10750-slides/` ("Statistics, Simulated", Quarto Reveal.js, 46 slides, nine seminars)
-**Status:** implemented 2026-09-07 on branch deck/presence (plan 2026-09-06-projection-presence.md); browser verification in Task 25b
+**Status:** implemented 2026-09-07 on branch deck/presence (plan 2026-09-06-projection-presence.md); browser-verified 2026-09-07 (see plan Task 25)
 
 ## 1. Goal
 
