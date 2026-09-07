@@ -16,27 +16,21 @@
   brick curve is drawn once at state 2 and never moves again, so the only
   thing that changes is the histogram — and it comes back to the same place.
 
-  Fragment gating follows the deck convention: invisible .fi-frag spans on
-  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
+  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
 */
 (function () {
-  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var NS = 'http://www.w3.org/2000/svg';
+  var K = window.StageKit;
 
-  // Stage geometry — fixed 1000x400 space, scaled to the slide via CSS.
-  var W = 1000, H = 400;
-  var TX0 = 60, TX1 = 940, TMAX = 40, AXIS_Y = 110;   // the timeline
-  var TICK_H = 22, BRACK_Y = 152;
-  var PX0 = 300, PX1 = 800, BASE = 340, HMAX = 170;   // the histogram panel
-  var TITLE_Y = 186;
+  // Stage geometry — 1000x445 canvas, shown at scale(1.05).
+  var W = 1000, H = 445;
+  var TX0 = 60, TX1 = 940, TMAX = 40, AXIS_Y = 122;   // the timeline
+  var TICK_H = 24, BRACK_Y = 169;
+  var PX0 = 300, PX1 = 800, BASE = 378, HMAX = 189;   // the histogram panel
+  var TITLE_Y = 207;
 
   var RATE = 1;
 
-  function el(name, attrs) {
-    var e = document.createElementNS(NS, name);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
   // Opacity is driven through style throughout, never through the attribute:
   // anime resolves `opacity` as a CSS property, so a tweened inline style
   // would silently outrank any attribute we set on the instant path.
@@ -207,18 +201,16 @@
   }
 
   function label(x, y, s, size, fill, family, anchor) {
-    var t = el('text', {
+    var t = K.el('text', {
       x: x, y: y, fill: fill, 'font-size': size,
       'font-family': family, 'text-anchor': anchor || 'middle'
     });
     t.textContent = s;
     return t;
   }
-  var MONO = 'JetBrains Mono, monospace', SANS = 'Roboto, sans-serif';
 
   function build(stage) {
-    stage.innerHTML = '';
-    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    var svg = K.canvas(stage, W, H);
     var i, k;
 
     /* ---- the timeline: one stream of events, always on screen ---- */
@@ -226,48 +218,48 @@
     // Unit-window separators, drawn first so the event marks sit on top.
     var seps = [];
     for (i = 0; i <= TMAX; i++) {
-      seps.push(svg.appendChild(el('line', {
-        x1: tx(i), y1: AXIS_Y - TICK_H - 6, x2: tx(i), y2: AXIS_Y + 10,
-        stroke: '#E5E7EB', 'stroke-width': 1, class: 'expo-sep'
+      seps.push(svg.appendChild(K.el('line', {
+        x1: tx(i), y1: AXIS_Y - TICK_H - 7, x2: tx(i), y2: AXIS_Y + 11,
+        stroke: K.PAL.rule, 'stroke-width': 1, class: 'expo-sep'
       })));
     }
     seps.forEach(function (s) { op(s, 0); });
 
-    svg.appendChild(el('line', {
+    svg.appendChild(K.el('line', {
       x1: TX0, y1: AXIS_Y, x2: TX1, y2: AXIS_Y,
-      stroke: '#E5E7EB', 'stroke-width': 1
+      stroke: K.PAL.rule, 'stroke-width': 1
     }));
     for (i = 0; i <= TMAX; i += 10) {
-      svg.appendChild(el('line', {
-        x1: tx(i), y1: AXIS_Y, x2: tx(i), y2: AXIS_Y + 6,
-        stroke: '#B0B7C0', 'stroke-width': 1
+      svg.appendChild(K.el('line', {
+        x1: tx(i), y1: AXIS_Y, x2: tx(i), y2: AXIS_Y + 7,
+        stroke: K.PAL.dim, 'stroke-width': 1
       }));
-      svg.appendChild(label(tx(i), AXIS_Y + 24, i, 15, '#6E7681', MONO));
+      svg.appendChild(label(tx(i), AXIS_Y + 27, i, K.TYPE.tick, K.PAL.inkSoft, K.FONT.mono));
     }
 
     EVENTS.forEach(function (t) {
-      svg.appendChild(el('line', {
+      svg.appendChild(K.el('line', {
         x1: tx(t), y1: AXIS_Y - TICK_H, x2: tx(t), y2: AXIS_Y,
-        stroke: '#B94A48', 'stroke-width': 2, class: 'expo-event'
+        stroke: K.PAL.brick, 'stroke-width': 2, class: 'expo-event'
       }));
     });
 
     // The gaps, as little end-capped brackets slung under the axis. One per
     // consecutive pair, so short waits genuinely look crowded.
-    var brack = el('g', { class: 'expo-brackets' });
+    var brack = K.el('g', { class: 'expo-brackets' });
     for (i = 1; i < EVENTS.length; i++) {
       var a = tx(EVENTS[i - 1]), b = tx(EVENTS[i]);
-      brack.appendChild(el('line', {
+      brack.appendChild(K.el('line', {
         x1: a, y1: BRACK_Y, x2: b, y2: BRACK_Y,
-        stroke: '#93C54B', 'stroke-width': 1.5
+        stroke: K.PAL.olive, 'stroke-width': 1.5
       }));
-      brack.appendChild(el('line', {
+      brack.appendChild(K.el('line', {
         x1: a, y1: BRACK_Y - 4, x2: a, y2: BRACK_Y + 4,
-        stroke: '#93C54B', 'stroke-width': 1.5
+        stroke: K.PAL.olive, 'stroke-width': 1.5
       }));
-      brack.appendChild(el('line', {
+      brack.appendChild(K.el('line', {
         x1: b, y1: BRACK_Y - 4, x2: b, y2: BRACK_Y + 4,
-        stroke: '#93C54B', 'stroke-width': 1.5
+        stroke: K.PAL.olive, 'stroke-width': 1.5
       }));
     }
     op(brack, 0);
@@ -277,72 +269,71 @@
 
     var cbars = [], gbars = [];
     for (k = 0; k < NK; k++) {
-      cbars.push(svg.appendChild(el('rect', {
+      cbars.push(svg.appendChild(K.el('rect', {
         x: cx(k), y: BASE, width: CBW, height: 0,
-        fill: '#325D88', class: 'expo-cbar'
+        fill: K.PAL.navy, class: 'expo-cbar'
       })));
     }
     for (i = 0; i < NBIN; i++) {
-      gbars.push(svg.appendChild(el('rect', {
+      gbars.push(svg.appendChild(K.el('rect', {
         x: gx(i), y: BASE, width: GBW, height: 0,
-        fill: '#93C54B', class: 'expo-gbar'
+        fill: K.PAL.olive, class: 'expo-gbar'
       })));
     }
     cbars.concat(gbars).forEach(function (b) { op(b, 0); });
 
-    var pois = svg.appendChild(el('polyline', {
-      points: stepPoints(POIS), fill: 'none', stroke: '#B94A48',
+    var pois = svg.appendChild(K.el('polyline', {
+      points: stepPoints(POIS), fill: 'none', stroke: K.PAL.brick,
       'stroke-width': 2, 'stroke-linejoin': 'round', class: 'expo-pois'
     }));
-    var expo = svg.appendChild(el('polyline', {
-      points: pdfPoints(), fill: 'none', stroke: '#B94A48',
+    var expo = svg.appendChild(K.el('polyline', {
+      points: pdfPoints(), fill: 'none', stroke: K.PAL.brick,
       'stroke-width': 2, 'stroke-linejoin': 'round', class: 'expo-pdf'
     }));
     op(pois, 0); op(expo, 0);
 
-    svg.appendChild(el('line', {
-      x1: PX0, y1: BASE, x2: PX1, y2: BASE, stroke: '#E5E7EB', 'stroke-width': 1
+    svg.appendChild(K.el('line', {
+      x1: PX0, y1: BASE, x2: PX1, y2: BASE, stroke: K.PAL.rule, 'stroke-width': 1
     }));
 
     // Two sets of x labels — k = 0,1,2,… for counts, 0…5 for gap lengths —
     // swapped by opacity, because the axis means something different in each.
-    var clab = el('g', {});
-    for (k = 0; k < NK; k++) clab.appendChild(label(cx(k) + CBW / 2, BASE + 24, k, 15, '#6E7681', MONO));
-    var glab = el('g', {});
-    for (i = 0; i <= NBIN * BINW; i++) glab.appendChild(label(PX0 + i * (GSLOT / BINW), BASE + 24, i, 15, '#6E7681', MONO));
+    var clab = K.el('g', {});
+    for (k = 0; k < NK; k++) clab.appendChild(label(cx(k) + CBW / 2, BASE + 27, k, K.TYPE.tick, K.PAL.inkSoft, K.FONT.mono));
+    var glab = K.el('g', {});
+    for (i = 0; i <= NBIN * BINW; i++) glab.appendChild(label(PX0 + i * (GSLOT / BINW), BASE + 27, i, K.TYPE.tick, K.PAL.inkSoft, K.FONT.mono));
     op(clab, 0); op(glab, 0);
     svg.appendChild(clab); svg.appendChild(glab);
 
     // Conditioning marker: everything left of it is a wait that already ended.
-    var mark = el('g', {});
-    mark.appendChild(el('line', {
-      x1: PX0 + GSHIFT, y1: BASE, x2: PX0 + GSHIFT, y2: 250,
-      stroke: '#F47C3C', 'stroke-width': 1.5, 'stroke-dasharray': '4 4'
+    var mark = K.el('g', {});
+    mark.appendChild(K.el('line', {
+      x1: PX0 + GSHIFT, y1: BASE, x2: PX0 + GSHIFT, y2: 278,
+      stroke: K.PAL.orange, 'stroke-width': 1.5, 'stroke-dasharray': '4 4'
     }));
-    mark.appendChild(label(PX0 + GSHIFT + 8, 244, 'already waited 1.0', 14, '#F47C3C', SANS, 'start'));
+    mark.appendChild(label(PX0 + GSHIFT + 8, 271, 'already waited 1.0', K.TYPE.label, K.PAL.orange, K.FONT.sans, 'start'));
     op(mark, 0);
     svg.appendChild(mark);
 
     var ident = svg.appendChild(
-      label((PX0 + PX1) / 2, 392, 'P(X > 1+t | X > 1) = P(X > t)', 16, '#3E3F3A', MONO));
+      label((PX0 + PX1) / 2, 436, 'P(X > 1+t | X > 1) = P(X > t)', K.TYPE.label, K.PAL.ink, K.FONT.mono));
     op(ident, 0);
 
-    var title = svg.appendChild(label(PX1, TITLE_Y, '', 15, '#6E7681', SANS, 'end'));
+    var title = svg.appendChild(label(PX1, TITLE_Y, '', K.TYPE.label, K.PAL.inkSoft, K.FONT.sans, 'end'));
     op(title, 0);
 
-    var cap = svg.appendChild(label(40, 34, CAPTIONS[0], 17, '#6E7681', SANS, 'start'));
+    var cap = svg.appendChild(label(40, 28, CAPTIONS[0], K.TYPE.caption, K.PAL.inkSoft, K.FONT.sans, 'start'));
 
     // Legend for the brick theory line — it names what the bars are chasing.
-    var legend = el('g', {});
-    legend.appendChild(el('line', {
-      x1: 782, y1: 58, x2: 818, y2: 58, stroke: '#B94A48', 'stroke-width': 2
+    var legend = K.el('g', {});
+    legend.appendChild(K.el('line', {
+      x1: 782, y1: 65, x2: 818, y2: 65, stroke: K.PAL.brick, 'stroke-width': 2
     }));
-    var legText = label(826, 63, '', 15, '#6E7681', SANS, 'start');
+    var legText = label(826, 70, '', K.TYPE.label, K.PAL.inkSoft, K.FONT.sans, 'start');
     legend.appendChild(legText);
     op(legend, 0);
     svg.appendChild(legend);
 
-    stage.appendChild(svg);
     return {
       seps: seps, brack: brack, cbars: cbars, gbars: gbars, pois: pois,
       expo: expo, clab: clab, glab: glab, mark: mark, ident: ident,
@@ -364,8 +355,7 @@
     var fadeTo = [f.brack, f.pois, f.expo, f.clab, f.glab,
                   f.mark, f.ident, f.title, f.legend];
 
-    if (instant || REDUCE ||
-        typeof window.anime === 'undefined' || !window.anime.animate) {
+    if (instant || K.REDUCE || !K.animeReady()) {
       s.seps.forEach(function (e) { op(e, f.seps); });
       fades.forEach(function (e, i) { op(e, fadeTo[i]); });
       s.cbars.forEach(function (b, k) {
@@ -410,47 +400,11 @@
     });
   }
 
-  var ORDER = ['expo-frag-1', 'expo-frag-2', 'expo-frag-3'];
-  var STATES = { 'expo-frag-1': 1, 'expo-frag-2': 2, 'expo-frag-3': 3 };
-
-  // How many gating fragments Reveal currently has shown. Landing on this
-  // slide via a #hash or by stepping backwards from a later slide leaves
-  // fragments already marked .visible; without this the freshly built stage
-  // would show the bare timeline while Reveal believes it is done, and the
-  // next arrow press would leave the slide with the animation never run.
-  function fragState(slide) {
-    var n = 0;
-    ORDER.forEach(function (id) {
-      var f = slide.querySelector('#' + id);
-      if (f && f.classList.contains('visible')) n++;
-    });
-    return n;
-  }
-
-  function init() {
-    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
-    var current = null;
-
-    function mount(slide) {
-      if (!slide) return;
-      var stage = slide.querySelector('#expo-stage');
-      if (!stage) { current = null; return; }
-      current = build(stage);
-      var s = fragState(slide);
-      if (s) place(current, s, true);   // snap, don't animate, on entry
-    }
-    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
-    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
-
-    Reveal.on('fragmentshown', function (e) {
-      var s = STATES[e.fragment.id];
-      if (current && s !== undefined) place(current, s);
-    });
-    Reveal.on('fragmenthidden', function (e) {
-      var s = STATES[e.fragment.id];
-      if (current && s !== undefined) place(current, s - 1);
-    });
-  }
-  init();
+  K.register({
+    stage: 'expo-stage',
+    frags: ['expo-frag-1', 'expo-frag-2', 'expo-frag-3'],
+    build: build,
+    place: place
+  });
 })();
 </script>

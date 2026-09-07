@@ -93,7 +93,7 @@ Watch what is lost: at $n = 1000$ you can no longer recover $n$ or $p$ from the 
 []{.fragment .fi-frag id="expo-frag-3"}
 
 ::: {.slide-footer}
-One timeline, two distributions. Count per interval and you get Poisson; measure the gaps and you get exponential. The last step is the exponential's defining property — the re-normalised remaining waits land back on the *same* curve.
+One timeline, two distributions: count per interval for Poisson, measure the gaps for exponential. Memorylessness: re-normalised remaining waits land back on the *same* curve.
 :::
 
 ## Memorylessness is not a figure of speech {.sim-slide #memory-sim}
