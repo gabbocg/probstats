@@ -111,20 +111,21 @@
 
     // --- the verdict, right-aligned over the shaded tail so it clears both
     //     the observed-z label above it and the vertical line to its left.
-    //     At 30px mono a "5/200 =" prefix runs the string back across the
-    //     observed-z line, so the readout states the ratio only — the count
-    //     itself is what the lit dots below are counting. Anchored at 970,
-    //     not the usual 950: measured in-browser, the longest annotation
-    //     ("the share of the null world") left-edges at x 725 when anchored
-    //     at 950 — exactly the observed-z line — so the block sits 20 units
-    //     further right to clear it. ---
+    //     The single-line "p = 5/200 = 0.025" at 30px spanned x 647-950 at
+    //     anchor 950 and crossed the observed-z line at 725, so the readout
+    //     is split into two lines and the block is right-anchored at 960,
+    //     keeping the count visible. ---
     var res = K.el('g', { class: 'pval-res', opacity: 0 });
-    var p = K.txt(970, 111, 'p = ' + (tail.length / N).toFixed(3),
+    var ratio = tail.length / N;
+    var count = K.txt(960, 111, tail.length + ' / ' + N,
+      { size: 'readout', face: 'mono', fill: 'brick', weight: 700, anchor: 'end' });
+    res.appendChild(count);
+    var p = K.txt(960, 147, 'p = ' + ratio.toFixed(3),
       { size: 'readout', face: 'mono', fill: 'brick', weight: 700, anchor: 'end' });
     res.appendChild(p);
     ['the share of the null world', 'at least this extreme'].forEach(
       function (line, i) {
-        res.appendChild(K.txt(970, 138 + i * 20, line,
+        res.appendChild(K.txt(960, 176 + i * 20, line,
           { size: 'label', fill: 'inkSoft', anchor: 'end' }));
       });
     svg.appendChild(res);
