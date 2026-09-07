@@ -15,32 +15,28 @@
   the readout are all recomputed from it and therefore always agree with one
   another. The number on screen is the true sum of squares of the picture.
 
-  Fragment gating follows the deck convention: invisible .fi-frag spans on
-  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
+  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
 */
 (function () {
-  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var K = window.StageKit;
 
   var DATA = [[1, 3.1], [2, 4.4], [3, 4.2], [4, 6.1], [5, 6.6],
               [6, 8.3], [7, 8.1], [8, 9.9], [9, 10.6]];
 
-  // Stage geometry — fixed 1000x400 space, scaled to the slide via CSS.
-  // UNIT is px per DATA unit and is deliberately shared by both axes: a
-  // residual of r data units must be r*UNIT px tall AND r*UNIT px wide or
-  // the "squares" would render as rectangles and the whole point is lost.
-  var W = 1000, H = 400, UNIT = 34;
-  var X0 = 120, Y0 = 366;                  // pixel origin: data (0, YMIN)
+  // Stage geometry — 1000x445 canvas, shown at scale(1.05). UNIT is px per
+  // DATA unit and is deliberately shared by both axes: a residual of r data
+  // units must be r*UNIT px tall AND r*UNIT px wide or the "squares" would
+  // render as rectangles and the whole point is lost. Widening UNIT still
+  // leaves the plot (out to PX(9.5) = 481) well clear of the readout at
+  // x = 700, so one shared UNIT covers both axes — no separate UNIT_Y needed.
+  var W = 1000, H = 445, UNIT = 38;
+  var X0 = 120, Y0 = 407;                  // pixel origin: data (0, YMIN)
   var XMAX = 10, YMIN = 2.5, YMAX = 11.5;  // data extent of the plot box
   var LX0 = 0.5, LX1 = 9.5;                // where the candidate line is drawn
-  var NS = 'http://www.w3.org/2000/svg';
 
   function PX(x) { return X0 + x * UNIT; }
   function PY(y) { return Y0 - (y - YMIN) * UNIT; }
-  function el(name, attrs) {
-    var e = document.createElementNS(NS, name);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
 
   // Ordinary least squares, computed from DATA so the third state is the
   // real answer rather than a number someone typed in and hoped was right.
@@ -73,38 +69,25 @@
   };
 
   function build(stage) {
-    stage.innerHTML = '';
-    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    var svg = K.canvas(stage, W, H);
 
     // --- axes ---
-    svg.appendChild(el('line', {
-      x1: X0, y1: Y0, x2: PX(XMAX), y2: Y0, stroke: '#E5E7EB', 'stroke-width': 1
+    svg.appendChild(K.el('line', {
+      x1: X0, y1: Y0, x2: PX(XMAX), y2: Y0, stroke: K.PAL.rule, 'stroke-width': 1
     }));
-    svg.appendChild(el('line', {
-      x1: X0, y1: Y0, x2: X0, y2: PY(YMAX), stroke: '#E5E7EB', 'stroke-width': 1
+    svg.appendChild(K.el('line', {
+      x1: X0, y1: Y0, x2: X0, y2: PY(YMAX), stroke: K.PAL.rule, 'stroke-width': 1
     }));
     [0, 2, 4, 6, 8, 10].forEach(function (v) {
-      var t = el('text', {
-        x: PX(v), y: Y0 + 24, 'text-anchor': 'middle', fill: '#6E7681',
-        'font-size': 14, 'font-family': 'JetBrains Mono, monospace'
-      });
-      t.textContent = v;
-      svg.appendChild(t);
+      svg.appendChild(K.txt(PX(v), Y0 + 24, v,
+        { size: 'tick', face: 'mono', anchor: 'middle' }));
     });
     [4, 6, 8, 10].forEach(function (v) {
-      var t = el('text', {
-        x: X0 - 12, y: PY(v) + 5, 'text-anchor': 'end', fill: '#6E7681',
-        'font-size': 14, 'font-family': 'JetBrains Mono, monospace'
-      });
-      t.textContent = v;
-      svg.appendChild(t);
+      svg.appendChild(K.txt(X0 - 12, PY(v) + 5, v,
+        { size: 'tick', face: 'mono', anchor: 'end' }));
     });
 
-    var cap = el('text', {
-      x: 40, y: 34, fill: '#6E7681', 'font-size': 17,
-      'font-family': 'Roboto, sans-serif', class: 'ls-caption'
-    });
-    cap.textContent = CAPTIONS[0];
+    var cap = K.txt(40, 28, CAPTIONS[0], { size: 'caption', cls: 'ls-caption' });
     svg.appendChild(cap);
 
     // --- squares, then residuals, then line, then points ---
@@ -112,64 +95,50 @@
     // nine of them read as one uniform construction; hanging them left would
     // push the x = 1 square straight through the y axis.
     var sq = DATA.map(function () {
-      return svg.appendChild(el('rect', {
-        x: 0, y: 0, width: 0, height: 0, fill: '#B94A48', 'fill-opacity': 0.13,
-        stroke: '#B94A48', 'stroke-opacity': 0.5, 'stroke-width': 1,
+      return svg.appendChild(K.el('rect', {
+        x: 0, y: 0, width: 0, height: 0, fill: K.PAL.brick, 'fill-opacity': 0.13,
+        stroke: K.PAL.brick, 'stroke-opacity': 0.5, 'stroke-width': 1,
         class: 'ls-sq'
       }));
     });
     var res = DATA.map(function (p) {
-      return svg.appendChild(el('line', {
+      return svg.appendChild(K.el('line', {
         x1: PX(p[0]), y1: PY(p[1]), x2: PX(p[0]), y2: PY(p[1]),
-        stroke: '#B94A48', 'stroke-width': 1.5, class: 'ls-res'
+        stroke: K.PAL.brick, 'stroke-width': 1.5, class: 'ls-res'
       }));
     });
 
-    var line = el('line', {
+    var line = K.el('line', {
       x1: PX(LX0), y1: PY(YMIN), x2: PX(LX1), y2: PY(YMIN),
-      stroke: '#325D88', 'stroke-width': 2.5, 'stroke-linecap': 'round',
+      stroke: K.PAL.navy, 'stroke-width': 2.5, 'stroke-linecap': 'round',
       class: 'ls-line'
     });
     svg.appendChild(line);
 
     DATA.forEach(function (p) {
-      svg.appendChild(el('circle', {
-        cx: PX(p[0]), cy: PY(p[1]), r: 6, fill: '#325D88'
+      svg.appendChild(K.el('circle', {
+        cx: PX(p[0]), cy: PY(p[1]), r: 6, fill: K.PAL.navy
       }));
     });
 
     // --- fitted equation, revealed with the OLS state ---
-    var eq = el('text', {
-      x: PX(LX1) + 8, y: PY(FIT.a + FIT.b * LX1) + 26, fill: '#325D88',
-      'font-size': 15, 'font-family': 'JetBrains Mono, monospace',
-      class: 'ls-eq', opacity: 0
-    });
-    eq.textContent = 'y = ' + FIT.a.toFixed(2) + ' + ' + FIT.b.toFixed(2) + 'x';
+    var eq = K.txt(PX(LX1) + 8, PY(FIT.a + FIT.b * LX1) + 29,
+      'y = ' + FIT.a.toFixed(2) + ' + ' + FIT.b.toFixed(2) + 'x',
+      { size: 'label', face: 'mono', fill: 'navy', cls: 'ls-eq' });
+    eq.setAttribute('opacity', 0);
     svg.appendChild(eq);
 
     // --- readout ---
-    var lab = el('text', {
-      x: 700, y: 110, fill: '#6E7681', 'font-size': 15,
-      'font-family': 'Roboto, sans-serif'
-    });
-    lab.textContent = 'sum of squares';
+    var lab = K.txt(700, 122, 'sum of squares', { size: 'label', fill: 'inkSoft' });
     svg.appendChild(lab);
 
-    var sum = el('text', {
-      x: 700, y: 148, fill: '#B94A48', 'font-size': 30, 'font-weight': 700,
-      'font-family': 'JetBrains Mono, monospace', class: 'ls-sum'
-    });
-    sum.textContent = '0.00';
+    var sum = K.txt(700, 165, '0.00',
+      { size: 'readout', face: 'mono', fill: 'brick', weight: 700, cls: 'ls-sum' });
     svg.appendChild(sum);
 
-    var note = el('text', {
-      x: 700, y: 172, fill: '#6E7681', 'font-size': 13,
-      'font-family': 'JetBrains Mono, monospace'
-    });
-    note.textContent = 'Σ (y − ŷ)²';
+    var note = K.txt(700, 191, 'Σ (y − ŷ)²', { size: 'tick', face: 'mono' });
     svg.appendChild(note);
 
-    stage.appendChild(svg);
     return { sq: sq, res: res, line: line, eq: eq, sum: sum, cap: cap,
              cur: { a: LINES[0].a, b: LINES[0].b }, anim: null };
   }
@@ -199,8 +168,7 @@
     s.cap.textContent = CAPTIONS[state];
     if (s.anim && s.anim.pause) s.anim.pause();
 
-    if (instant || REDUCE ||
-        typeof window.anime === 'undefined' || !window.anime.animate) {
+    if (instant || K.REDUCE || !K.animeReady()) {
       s.cur.a = tgt.a; s.cur.b = tgt.b;
       draw(s, s.cur.a, s.cur.b);
       s.eq.setAttribute('opacity', state === 2 ? 1 : 0);
@@ -223,46 +191,11 @@
     });
   }
 
-  var ORDER = ['ls-frag-1', 'ls-frag-2'];
-  var STATES = { 'ls-frag-1': 1, 'ls-frag-2': 2 };
-
-  // How many gating fragments Reveal currently has shown. Landing on this
-  // slide via a #hash or by stepping backwards from a later slide leaves
-  // fragments already marked .visible; without this the freshly built stage
-  // would show the flat line while Reveal believes it is done, and the next
-  // arrow press would leave the slide with the animation never having run.
-  function fragState(slide) {
-    var n = 0;
-    ORDER.forEach(function (id) {
-      var f = slide.querySelector('#' + id);
-      if (f && f.classList.contains('visible')) n++;
-    });
-    return n;
-  }
-
-  function init() {
-    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
-    var current = null;
-
-    function mount(slide) {
-      if (!slide) return;
-      var stage = slide.querySelector('#ls-stage');
-      if (!stage) { current = null; return; }
-      current = build(stage);
-      place(current, fragState(slide), true);  // snap, don't animate, on entry
-    }
-    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
-    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
-
-    Reveal.on('fragmentshown', function (e) {
-      var st = STATES[e.fragment.id];
-      if (current && st !== undefined) place(current, st);
-    });
-    Reveal.on('fragmenthidden', function (e) {
-      var st = STATES[e.fragment.id];
-      if (current && st !== undefined) place(current, st - 1);
-    });
-  }
-  init();
+  K.register({
+    stage: 'ls-stage',
+    frags: ['ls-frag-1', 'ls-frag-2'],
+    build: build,
+    place: place
+  });
 })();
 </script>
