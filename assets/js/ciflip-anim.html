@@ -27,11 +27,11 @@
   means are the only hardcoded inputs, so the picture is identical in every
   rehearsal and in the room — no RNG.
 
-  Fragment gating follows the deck convention: invisible .fi-frag spans on
-  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
+  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
 */
 (function () {
-  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var K = window.StageKit;
 
   // --- the statistics ------------------------------------------------------
   var MU = 100, SIGMA = 15, N = 25, CONF = 0.95, Z = 1.959964;
@@ -52,25 +52,24 @@
   // Trailing zeros are noise on a round number: SE prints as "3", not "3.00".
   function tidy(v) { return String(Math.round(v * 100) / 100); }
 
-  // --- stage geometry — fixed 1000x400 space, scaled to the slide via CSS ---
-  var W = 1000, H = 400;
+  // --- stage geometry — fixed 1000x445 space, scaled to the slide via CSS ---
+  var W = 1000, H = 445;
   var X0 = 90, X1 = 910, VMIN = 88, VMAX = 112;
   var SCALE = (X1 - X0) / (VMAX - VMIN);         // 34.1667 px per unit
-  var BASE = 210, PEAK_Y = 78;                   // baseline and apex of xbar
+  var BASE = 234, PEAK_Y = 87;                   // baseline and apex of xbar
   var NPT = 200, NSHADE = 120;                   // curve / shading samples
 
-  var INK = '#3E3F3A', SOFT = '#6E7681', RULE = '#E5E7EB';
-  var NAVY = '#325D88', OLIVE = '#93C54B', BRICK = '#B94A48', GREY = '#B0B7C0';
-  var MONO = 'JetBrains Mono, monospace', SANS = 'Roboto, sans-serif';
-  var NS = 'http://www.w3.org/2000/svg';
+  var INK = K.PAL.ink, SOFT = K.PAL.inkSoft, RULE = K.PAL.rule;
+  var NAVY = K.PAL.navy, OLIVE = K.PAL.olive, BRICK = K.PAL.brick, GREY = K.PAL.dim;
+  var MONO = K.FONT.mono, SANS = K.FONT.sans;
 
   // The three lanes below the axis. Each is a bracket plus a label under it;
   // the mu rule runs down through all of them so any lane can be read against
   // it by eye — "does this bracket contain the dashed line?" is the question
   // the whole slide is asking.
-  var LANE_A = { br: 262, lab: 284 };            // the band around mu
-  var LANE_B = { br: 316, lab: 338 };            // the interval around XBAR_HIT
-  var LANE_C = { br: 356, lab: 378 };            // the interval around XBAR_MISS
+  var LANE_A = { br: 291, lab: 316 };            // the band around mu
+  var LANE_B = { br: 352, lab: 376 };            // the interval around XBAR_HIT
+  var LANE_C = { br: 396, lab: 421 };            // the interval around XBAR_MISS
   var TICK = 7;                                  // bracket end-tick length
 
   function px(v) { return X0 + (v - VMIN) * SCALE; }
@@ -84,13 +83,6 @@
     return Math.exp(-0.5 * z * z) / (SE * Math.sqrt(2 * Math.PI));
   }
   var PY = (BASE - PEAK_Y) / dens(MU);
-
-  function el(name, attrs) {
-    var e = document.createElementNS(NS, name);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
-  function txt(attrs, s) { var t = el('text', attrs); t.textContent = s; return t; }
 
   // Sampled across the whole ruler, which is mu +/- 4 SE, so the curve meets
   // the baseline at both ends and needs no clipping.
@@ -132,8 +124,8 @@
   var SHIFT_X = px(XBAR_HIT) - px(MU);
   var SHIFT_Y = LANE_B.br - LANE_A.br;
 
-  // Keep these SHORT. The caption is left-anchored at x=40, y=34; at 17px
-  // Roboto (~8.4px per character) anything much past ~46 characters runs
+  // Keep these SHORT. The caption is left-anchored at x=40, y=28; at 24px
+  // Roboto (~12px per character) anything much past ~40 characters runs
   // under the right-hand furniture.
   var CAPTIONS = {
     0: 'where sample means land',
@@ -146,45 +138,42 @@
   // with a stray macron beside it. Emit a bare "x" and draw the bar instead —
   // the mono grid (0.6 em advance) makes the overline's span exact.
   function meanLabel(parent, cx, y, value, colour) {
-    var FS = 15, ADV = FS * 0.6;
+    // The overline sits above the glyph in proportion to the label role's
+    // size, same 0.767 ratio the 15px original used, scaled up to 20px.
+    var ADV = K.TYPE.label * 0.6, OVER = K.TYPE.label * 0.767;
     var str = 'x = ' + value.toFixed(1);
     var x0 = cx - str.length * ADV / 2;
-    parent.appendChild(txt({
-      x: x0, y: y, fill: colour, 'font-size': FS, 'font-family': MONO
-    }, str));
-    parent.appendChild(el('line', {
-      x1: x0 + ADV * 0.12, y1: y - 11.5, x2: x0 + ADV * 0.88, y2: y - 11.5,
+    parent.appendChild(K.txt(x0, y, str, { size: 'label', face: 'mono', fill: colour }));
+    parent.appendChild(K.el('line', {
+      x1: x0 + ADV * 0.12, y1: y - OVER, x2: x0 + ADV * 0.88, y2: y - OVER,
       stroke: colour, 'stroke-width': 1.6, 'stroke-linecap': 'round'
     }));
   }
 
   function build(stage) {
-    stage.innerHTML = '';
-    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    var svg = K.canvas(stage, W, H);
 
-    var cap = svg.appendChild(txt({
-      x: 40, y: 34, fill: SOFT, 'font-size': 17, 'font-family': SANS,
-      class: 'ciflip-caption'
-    }, CAPTIONS[0]));
+    var cap = svg.appendChild(K.txt(40, 28, CAPTIONS[0],
+      { size: 'caption', cls: 'ciflip-caption' }));
 
     // --- the shaded band, under the stroke so the outline stays crisp ---
-    var band = svg.appendChild(el('path', {
+    var band = svg.appendChild(K.el('path', {
       d: bandPath(), fill: NAVY, 'fill-opacity': 0.16, stroke: 'none',
       opacity: 0, class: 'ciflip-band'
     }));
 
     // --- the sampling distribution of xbar ---
-    svg.appendChild(el('path', {
+    svg.appendChild(K.el('path', {
       d: curvePath(), fill: 'none', stroke: NAVY, 'stroke-width': 2.5,
       'stroke-linejoin': 'round', class: 'ciflip-curve'
     }));
 
     // --- the ruler ---
-    svg.appendChild(el('line', {
+    svg.appendChild(K.el('line', {
       x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: RULE, 'stroke-width': 1
     }));
     [90, 95, 100, 105, 110].forEach(function (v) {
-      svg.appendChild(el('line', {
+      svg.appendChild(K.el('line', {
         x1: px(v), y1: BASE, x2: px(v), y2: BASE + 6,
         stroke: GREY, 'stroke-width': 1
       }));
@@ -193,80 +182,72 @@
     // --- mu: one dashed rule the whole picture is read against ---
     // Drawn before the tick labels and the lane labels so that where it
     // crosses type, the type wins.
-    svg.appendChild(el('line', {
-      x1: px(MU), y1: PEAK_Y, x2: px(MU), y2: 380,
+    svg.appendChild(K.el('line', {
+      x1: px(MU), y1: PEAK_Y, x2: px(MU), y2: 423,
       stroke: NAVY, 'stroke-width': 1.5, 'stroke-dasharray': '5 5',
       opacity: 0.75
     }));
 
     [90, 95, 100, 105, 110].forEach(function (v) {
-      svg.appendChild(txt({
-        x: px(v), y: 232, 'text-anchor': 'middle', fill: SOFT,
-        'font-size': 15, 'font-family': MONO
-      }, String(v)));
+      svg.appendChild(K.txt(px(v), 258, String(v),
+        { size: 'tick', face: 'mono', anchor: 'middle' }));
     });
 
-    svg.appendChild(txt({
-      x: px(MU) + 12, y: 70, fill: NAVY, 'font-size': 17, 'font-family': MONO
-    }, 'μ = ' + MU));
+    svg.appendChild(K.txt(px(MU) + 12, 78, 'μ = ' + MU,
+      { size: 'label', face: 'mono', fill: NAVY }));
 
     // The one number the students have to carry into every other slide, put
     // where the right shoulder leaves room for it.
-    svg.appendChild(txt({
-      x: 720, y: 150, fill: SOFT, 'font-size': 15, 'font-family': MONO
-    }, 'SE = σ/√n = ' + tidy(SE)));
+    svg.appendChild(K.txt(720, 167, 'SE = σ/√n = ' + tidy(SE),
+      { size: 'label', face: 'mono', fill: SOFT }));
 
     // --- lane A: the band around mu ---
-    var gA = svg.appendChild(el('g', { opacity: 0, class: 'ciflip-lane-a' }));
-    gA.appendChild(el('path', {
+    var gA = svg.appendChild(K.el('g', { opacity: 0, class: 'ciflip-lane-a' }));
+    gA.appendChild(K.el('path', {
       d: bracket(MU, LANE_A.br), fill: 'none', stroke: NAVY, 'stroke-width': 2
     }));
-    gA.appendChild(txt({
-      x: mid(MU), y: LANE_A.lab, 'text-anchor': 'middle', fill: NAVY,
-      'font-size': 15, 'font-family': SANS
-    }, PCT + '% of x̄ land within ' + HALF.toFixed(2) + ' of μ'));
+    gA.appendChild(K.txt(mid(MU), LANE_A.lab,
+      PCT + '% of x̄ land within ' + HALF.toFixed(2) + ' of μ',
+      { size: 'label', anchor: 'middle', fill: NAVY }));
 
     // --- lane C: the interval that misses (drawn under the dots) ---
-    var gC = svg.appendChild(el('g', { opacity: 0, class: 'ciflip-lane-c' }));
-    gC.appendChild(el('path', {
+    var gC = svg.appendChild(K.el('g', { opacity: 0, class: 'ciflip-lane-c' }));
+    gC.appendChild(K.el('path', {
       d: bracket(XBAR_MISS, LANE_C.br), fill: 'none', stroke: BRICK,
       'stroke-width': 2
     }));
-    gC.appendChild(txt({
-      x: mid(XBAR_MISS), y: LANE_C.lab, 'text-anchor': 'middle', fill: BRICK,
-      'font-size': 15, 'font-family': SANS
-    }, 'x̄ fell ' + (covers(XBAR_MISS) ? 'inside' : 'outside') +
-       ' the band — μ is ' + (covers(XBAR_MISS) ? 'in it' : 'not in it')));
+    gC.appendChild(K.txt(mid(XBAR_MISS), LANE_C.lab,
+      'x̄ fell ' + (covers(XBAR_MISS) ? 'inside' : 'outside') +
+      ' the band — μ is ' + (covers(XBAR_MISS) ? 'in it' : 'not in it'),
+      { size: 'label', anchor: 'middle', fill: BRICK }));
 
     // --- lane B: the flip. The bracket lives in its own group so it can be
     // translated as a rigid body; its label is a separate node that stays put
     // and fades in on arrival, because a label riding along would land on top
     // of lane A's label for the first half of the journey. ---
-    var gB = svg.appendChild(el('g', { opacity: 0, class: 'ciflip-lane-b' }));
-    var brB = gB.appendChild(el('path', {
+    var gB = svg.appendChild(K.el('g', { opacity: 0, class: 'ciflip-lane-b' }));
+    var brB = gB.appendChild(K.el('path', {
       d: bracket(XBAR_HIT, LANE_B.br), fill: 'none', stroke: OLIVE,
       'stroke-width': 2
     }));
-    var labB = svg.appendChild(txt({
-      x: mid(XBAR_HIT), y: LANE_B.lab, 'text-anchor': 'middle', fill: OLIVE,
-      'font-size': 15, 'font-family': SANS, opacity: 0
-    }, 'same width, now centred on x̄ — μ is ' +
-       (covers(XBAR_HIT) ? 'inside' : 'outside')));
+    var labB = svg.appendChild(K.txt(mid(XBAR_HIT), LANE_B.lab,
+      'same width, now centred on x̄ — μ is ' +
+      (covers(XBAR_HIT) ? 'inside' : 'outside'),
+      { size: 'label', anchor: 'middle', fill: OLIVE }));
+    labB.setAttribute('opacity', 0);
 
     // --- the two samples, on top of everything ---
-    var gHit = svg.appendChild(el('g', { opacity: 0, class: 'ciflip-hit' }));
-    gHit.appendChild(el('circle', {
+    var gHit = svg.appendChild(K.el('g', { opacity: 0, class: 'ciflip-hit' }));
+    gHit.appendChild(K.el('circle', {
       cx: px(XBAR_HIT), cy: BASE, r: 6, fill: NAVY
     }));
-    meanLabel(gHit, px(XBAR_HIT), 194, XBAR_HIT, INK);
+    meanLabel(gHit, px(XBAR_HIT), 216, XBAR_HIT, INK);
 
-    var gMiss = svg.appendChild(el('g', { opacity: 0, class: 'ciflip-miss' }));
-    gMiss.appendChild(el('circle', {
+    var gMiss = svg.appendChild(K.el('g', { opacity: 0, class: 'ciflip-miss' }));
+    gMiss.appendChild(K.el('circle', {
       cx: px(XBAR_MISS), cy: BASE, r: 6, fill: BRICK
     }));
-    meanLabel(gMiss, px(XBAR_MISS), 194, XBAR_MISS, BRICK);
-
-    stage.appendChild(svg);
+    meanLabel(gMiss, px(XBAR_MISS), 216, XBAR_MISS, BRICK);
 
     return {
       state: 0, cap: cap, band: band, gA: gA, gB: gB, brB: brB, labB: labB,
@@ -311,8 +292,7 @@
     if (s.animLab && s.animLab.pause) s.animLab.pause();
     if (s.animStroke && s.animStroke.pause) s.animStroke.pause();
 
-    if (instant || REDUCE ||
-        typeof window.anime === 'undefined' || !window.anime.animate) {
+    if (instant || K.REDUCE || !K.animeReady()) {
       s.band.setAttribute('opacity', O.band);
       s.gA.setAttribute('opacity', O.gA);
       s.gB.setAttribute('opacity', O.gB);
@@ -394,48 +374,11 @@
     }
   }
 
-  var ORDER = ['ciflip-frag-1', 'ciflip-frag-2', 'ciflip-frag-3'];
-  var STATES = {
-    'ciflip-frag-1': 1, 'ciflip-frag-2': 2, 'ciflip-frag-3': 3
-  };
-
-  // How many gating fragments Reveal currently has shown. Landing on this
-  // slide via a #hash or by stepping backwards from a later slide leaves
-  // fragments already marked .visible; without this the freshly built stage
-  // would show a bare curve while Reveal believes it is done, and the next
-  // arrow press would leave the slide with the animation never having run.
-  function fragState(slide) {
-    var n = 0;
-    ORDER.forEach(function (id) {
-      var f = slide.querySelector('#' + id);
-      if (f && f.classList.contains('visible')) n++;
-    });
-    return n;
-  }
-
-  function init() {
-    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
-    var current = null;
-
-    function mount(slide) {
-      if (!slide) return;
-      var stage = slide.querySelector('#ciflip-stage');
-      if (!stage) { current = null; return; }
-      current = build(stage);
-      render(current, fragState(slide), true);   // snap, don't animate, on entry
-    }
-    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
-    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
-
-    Reveal.on('fragmentshown', function (e) {
-      var st = STATES[e.fragment.id];
-      if (current && st !== undefined) render(current, st);
-    });
-    Reveal.on('fragmenthidden', function (e) {
-      var st = STATES[e.fragment.id];
-      if (current && st !== undefined) render(current, st - 1);
-    });
-  }
-  init();
+  K.register({
+    stage: 'ciflip-stage',
+    frags: ['ciflip-frag-1', 'ciflip-frag-2', 'ciflip-frag-3'],
+    build: build,
+    place: render
+  });
 })();
 </script>

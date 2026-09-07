@@ -21,7 +21,7 @@ The formula $\bar x \pm z\,\sigma/\sqrt n$ looks like it was handed down. It was
 []{.fragment .fi-frag id="ciflip-frag-3"}
 
 ::: {.slide-footer}
-Nothing new is constructed at the flip — the bracket is the *same width*, slid from $\mu$ to $\bar x$. So "$\bar x$ is within 5.88 of $\mu$" and "$\mu$ is within 5.88 of $\bar x$" are the same statement, and the second one is the interval.
+Nothing new is built at the flip: the bracket is the *same width*, slid from $\mu$ to $\bar x$, so "$\bar x$ within 5.88 of $\mu$" and "$\mu$ within 5.88 of $\bar x$" are one statement, and the second is the interval.
 :::
 
 ## Four parts, one interval {.stage-slide #cieq-formula}
