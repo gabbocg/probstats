@@ -159,6 +159,14 @@
   width: 100%;
   padding-top: 8px;
   padding-bottom: 8px;
+  // A separate, less specific `.reveal pre` rule (Quarto's theme) sets
+  // padding: .5em .9em, so this element inherits ~19.8px of left/right
+  // padding at 22px font that this rule never overrides. With the default
+  // content-box model that padding sat OUTSIDE the 100% width, overflowing
+  // the card by ~40px and forcing a permanent horizontal scrollbar even for
+  // a one-line result. border-box folds that inherited padding back inside
+  // the 100%.
+  box-sizing: border-box;
 }
 
 // --- .sim-plot: code on the left, the figure on the right ---
