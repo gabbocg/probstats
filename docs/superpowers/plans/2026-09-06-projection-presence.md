@@ -1259,7 +1259,7 @@ se   <- sigma / sqrt(n)
 half <- qnorm(1 - (1 - conf)/2) * se
 xbar <- replicate(reps, mean(rnorm(n,mu,sigma)))
 hit  <- abs(xbar - mu) <= half
-plot(NA, ylim=c(1,reps), xlim=mu+c(-4,4)*se,
+plot(NA, ylim = c(1, reps), xlim=mu+c(-4,4)*se,
      xlab = "interval", ylab = "sample", las=1)
 abline(v = mu, lty = 2, lwd=2, col = "#325D88")
 segments(xbar-half, 1:reps, xbar+half, 1:reps,
