@@ -1,2 +1,4 @@
 /.quarto/
 **/*.quarto_ipynb
+# Quarto HTML render artifacts of a single section (never wanted; the deck renders from index.qmd)
+**/*_files/
