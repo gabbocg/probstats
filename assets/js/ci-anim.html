@@ -10,72 +10,57 @@
   Sample means are hardcoded rather than drawn live so the picture is the
   same in every run of the lecture — the live version is the webR slide
   that follows.
+
+  Built on StageKit. Canvas 1000x330 (the .claim-pair sits beneath it),
+  shown at scale(1.05). No fragments: the rain plays on slide entry.
 */
 (function () {
-  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var K = window.StageKit;
 
   var MU = 100, HALF = 5.88;
   var MEANS = [101.2, 98.4, 103.1, 99.6, 96.9, 100.8, 104.2, 97.5, 102.3, 94.0,
                100.1, 105.4, 98.9, 101.7, 97.1, 103.6, 99.2, 100.5, 96.3, 102.8];
 
-  // Stage geometry — fixed 1000x470 space, scaled to the slide via CSS.
-  var W = 1000, H = 470, X0 = 50, X1 = 950, VMIN = 88, VMAX = 112;
-  // MU_TOP sits below the two-line mu label so the dashed line does not
-  // strike through the "unknown, but fixed" caption.
-  var AXIS_Y = 432, MU_TOP = 60, ROW_TOP = 74, ROW_STEP = 17;
-  var NS = 'http://www.w3.org/2000/svg';
+  var W = 1000, H = 330, X0 = 50, X1 = 950, VMIN = 88, VMAX = 112;
+  // Top band 0-50 holds the mu label (two lines) and the counter; the rows
+  // run 62..290 at a 12-unit step (row 20 = 62 + 19*12 = 290), ten units
+  // clear of the axis at 300; tick labels sit at 324, inside the 330 canvas.
+  var AXIS_Y = 300, MU_TOP = 54, ROW_TOP = 62, ROW_STEP = 12;
 
   function px(v) { return X0 + (v - VMIN) * (X1 - X0) / (VMAX - VMIN); }
-  function el(name, attrs) {
-    var e = document.createElementNS(NS, name);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
 
   function build(stage) {
-    stage.innerHTML = '';
-    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    var svg = K.canvas(stage, W, H);
 
     // --- axis ---
-    svg.appendChild(el('line', {
-      x1: X0, y1: AXIS_Y, x2: X1, y2: AXIS_Y, stroke: '#E5E7EB', 'stroke-width': 1
+    svg.appendChild(K.el('line', {
+      x1: X0, y1: AXIS_Y, x2: X1, y2: AXIS_Y, stroke: K.PAL.rule, 'stroke-width': 1
     }));
     [90, 95, 100, 105, 110].forEach(function (v) {
-      svg.appendChild(el('line', {
+      svg.appendChild(K.el('line', {
         x1: px(v), y1: AXIS_Y, x2: px(v), y2: AXIS_Y + 6,
-        stroke: '#B0B7C0', 'stroke-width': 1
+        stroke: K.PAL.dim, 'stroke-width': 1
       }));
-      var t = el('text', {
-        x: px(v), y: AXIS_Y + 24, 'text-anchor': 'middle',
-        fill: '#6E7681', 'font-size': 15,
-        'font-family': 'JetBrains Mono, monospace'
-      });
-      t.textContent = v;
-      svg.appendChild(t);
+      svg.appendChild(K.txt(px(v), AXIS_Y + 24, v,
+        { size: 'tick', face: 'mono', anchor: 'middle' }));
     });
 
     // --- mu line: the thing that does NOT move ---
-    var muLine = el('line', {
+    var muLine = K.el('line', {
       x1: px(MU), y1: MU_TOP, x2: px(MU), y2: AXIS_Y,
-      stroke: '#325D88', 'stroke-width': 2, 'stroke-dasharray': '6 5',
+      stroke: K.PAL.navy, 'stroke-width': 2, 'stroke-dasharray': '6 5',
       class: 'ci-mu', opacity: 0
     });
     svg.appendChild(muLine);
 
-    var muLab = el('text', {
-      x: px(MU), y: 30, 'text-anchor': 'middle', fill: '#325D88',
-      'font-size': 19, 'font-weight': 700,
-      'font-family': 'JetBrains Mono, monospace', class: 'ci-mu-lab', opacity: 0
-    });
-    muLab.textContent = 'μ = 100';
+    var muLab = K.txt(px(MU), 24, 'μ = 100',
+      { size: 'label', face: 'mono', fill: 'navy', weight: 700, anchor: 'middle', cls: 'ci-mu-lab' });
+    muLab.setAttribute('opacity', 0);
     svg.appendChild(muLab);
 
-    var muSub = el('text', {
-      x: px(MU), y: 50, 'text-anchor': 'middle', fill: '#6E7681',
-      'font-size': 13, 'font-family': 'Roboto, sans-serif',
-      class: 'ci-mu-lab', opacity: 0
-    });
-    muSub.textContent = 'unknown, but fixed';
+    var muSub = K.txt(px(MU), 46, 'unknown, but fixed',
+      { size: 'tick', anchor: 'middle', cls: 'ci-mu-lab' });
+    muSub.setAttribute('opacity', 0);
     svg.appendChild(muSub);
 
     // --- intervals ---
@@ -84,45 +69,41 @@
       var covers = (m - HALF) <= MU && MU <= (m + HALF);
       if (covers) hits++;
       var y = ROW_TOP + i * ROW_STEP;
-      var colour = covers ? '#325D88' : '#B94A48';
+      var colour = covers ? K.PAL.navy : K.PAL.brick;
 
-      var g = el('g', { class: 'ci-int', opacity: 0 });
+      var g = K.el('g', { class: 'ci-int', opacity: 0 });
       g.style.transformBox = 'fill-box';
       g.style.transformOrigin = 'center';
-      g.appendChild(el('line', {
+      g.appendChild(K.el('line', {
         x1: px(m - HALF), y1: y, x2: px(m + HALF), y2: y,
-        stroke: colour, 'stroke-width': covers ? 2.4 : 3.2,
+        stroke: colour, 'stroke-width': covers ? 2.6 : 3.4,
         'stroke-linecap': 'round', opacity: covers ? 0.55 : 1
       }));
-      g.appendChild(el('circle', {
-        cx: px(m), cy: y, r: covers ? 2.8 : 3.6,
+      g.appendChild(K.el('circle', {
+        cx: px(m), cy: y, r: covers ? 3 : 3.8,
         fill: colour, opacity: covers ? 0.75 : 1
       }));
       svg.appendChild(g);
     });
 
     // --- running counter ---
-    var cnt = el('text', {
-      x: X1, y: 30, 'text-anchor': 'end', fill: '#3E3F3A',
-      'font-size': 20, 'font-weight': 700,
-      'font-family': 'JetBrains Mono, monospace', class: 'ci-count', opacity: 0
-    });
-    cnt.textContent = '0 / 20 cover μ';
+    var cnt = K.txt(X1, 30, '0 / 20 cover μ',
+      { size: 'readout', face: 'mono', fill: 'ink', weight: 700, anchor: 'end', cls: 'ci-count' });
+    cnt.setAttribute('opacity', 0);
     svg.appendChild(cnt);
 
-    stage.appendChild(svg);
-    return { muParts: svg.querySelectorAll('.ci-mu, .ci-mu-lab'),
-             ints: svg.querySelectorAll('.ci-int'), cnt: cnt, hits: hits };
+    var s = { muParts: svg.querySelectorAll('.ci-mu, .ci-mu-lab'),
+              ints: svg.querySelectorAll('.ci-int'), cnt: cnt, hits: hits };
+    run(s);
+    return s;
   }
 
   function show(nodes) {
     Array.prototype.forEach.call(nodes, function (n) { n.setAttribute('opacity', 1); });
   }
 
-  function run(stage) {
-    var s = build(stage);
-
-    if (REDUCE || typeof window.anime === 'undefined' || !window.anime.animate) {
+  function run(s) {
+    if (K.REDUCE || !K.animeReady()) {
       show(s.muParts); show(s.ints);
       s.cnt.setAttribute('opacity', 1);
       s.cnt.textContent = s.hits + ' / 20 cover μ';
@@ -158,16 +139,6 @@
     });
   }
 
-  function init() {
-    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
-    function maybe(slide) {
-      if (!slide) return;
-      var stage = slide.querySelector('#ci-stage');
-      if (stage) run(stage);
-    }
-    Reveal.on('slidechanged', function (e) { maybe(e.currentSlide); });
-    Reveal.on('ready', function () { maybe(Reveal.getCurrentSlide()); });
-  }
-  init();
+  K.register({ stage: 'ci-stage', frags: [], build: build });
 })();
 </script>
