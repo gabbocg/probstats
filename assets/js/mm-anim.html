@@ -11,11 +11,11 @@
     2. a second value walks out to 92 — the mean moves again, the median
        has still not moved a pixel
 
-  Fragment gating follows the deck convention: invisible .fi-frag spans on
-  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
+  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
 */
 (function () {
-  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var K = window.StageKit;
 
   var BASE = [38, 42, 45, 47, 49, 50, 52, 54, 56, 59, 62];
 
@@ -33,20 +33,14 @@
     'two outliers — the median has still not moved'
   ];
 
-  // Stage geometry — fixed 1000x380 space, scaled to the slide via CSS.
-  var W = 1000, H = 380, X0 = 60, X1 = 940, VMIN = 0, VMAX = 100;
-  var AXIS_Y = 300, ROW_Y = 210, DOT_R = 9;
+  // Stage geometry — 1000x445 canvas, shown at scale(1.05).
+  var W = 1000, H = 445, X0 = 60, X1 = 940, VMIN = 0, VMAX = 100;
+  var AXIS_Y = 351, ROW_Y = 246, DOT_R = 10;
   // The two markers are stacked, never side by side: in state 0 they land
   // on almost the same value, and horizontal labels would collide there.
-  var MEAN_TOP = 306, MEDIAN_TOP = 340, TRI_H = 12, TRI_W = 8, LAB_DROP = 27;
-  var NS = 'http://www.w3.org/2000/svg';
+  var MEAN_TOP = 358, MEDIAN_TOP = 398, TRI_H = 14, TRI_W = 8, LAB_DROP = 32;
 
   function px(v) { return X0 + (v - VMIN) * (X1 - X0) / (VMAX - VMIN); }
-  function el(name, attrs) {
-    var e = document.createElementNS(NS, name);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
 
   function mean(vals) {
     var s = 0;
@@ -63,23 +57,17 @@
   // a single number drives the triangle, the label and the readout at once
   // — they cannot drift apart.
   function marker(svg, name, colour, top) {
-    var g = el('g', { transform: 'translate(0,0)' });
-    g.appendChild(el('polygon', {
+    var g = K.el('g', { transform: 'translate(0,0)' });
+    g.appendChild(K.el('polygon', {
       points: '0,' + top + ' ' + (-TRI_W) + ',' + (top + TRI_H) +
               ' ' + TRI_W + ',' + (top + TRI_H),
-      fill: colour
+      fill: K.PAL[colour]
     }));
-    var lab = el('text', {
-      x: -5, y: top + LAB_DROP, 'text-anchor': 'end', fill: colour,
-      'font-size': 15, 'font-family': 'Roboto, sans-serif'
-    });
-    lab.textContent = name;
+    var lab = K.txt(-5, top + LAB_DROP, name,
+      { size: 'label', face: 'sans', fill: colour, anchor: 'end' });
     g.appendChild(lab);
-    var num = el('text', {
-      x: 5, y: top + LAB_DROP, 'text-anchor': 'start', fill: colour,
-      'font-size': 15, 'font-weight': 700,
-      'font-family': 'JetBrains Mono, monospace'
-    });
+    var num = K.txt(5, top + LAB_DROP, '',
+      { size: 'readout', face: 'mono', fill: colour, weight: 700, anchor: 'start' });
     g.appendChild(num);
     svg.appendChild(g);
 
@@ -92,49 +80,36 @@
   }
 
   function build(stage) {
-    stage.innerHTML = '';
-    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    var svg = K.canvas(stage, W, H);
 
     // --- axis ---
-    svg.appendChild(el('line', {
-      x1: X0, y1: AXIS_Y, x2: X1, y2: AXIS_Y, stroke: '#E5E7EB', 'stroke-width': 1
+    svg.appendChild(K.el('line', {
+      x1: X0, y1: AXIS_Y, x2: X1, y2: AXIS_Y, stroke: K.PAL.rule, 'stroke-width': 1
     }));
     [0, 20, 40, 60, 80, 100].forEach(function (v) {
-      svg.appendChild(el('line', {
-        x1: px(v), y1: AXIS_Y, x2: px(v), y2: AXIS_Y + 6,
-        stroke: '#B0B7C0', 'stroke-width': 1
+      svg.appendChild(K.el('line', {
+        x1: px(v), y1: AXIS_Y, x2: px(v), y2: AXIS_Y + 7,
+        stroke: K.PAL.dim, 'stroke-width': 1
       }));
-      var t = el('text', {
-        x: px(v), y: AXIS_Y - 12, 'text-anchor': 'middle',
-        fill: '#6E7681', 'font-size': 15,
-        'font-family': 'JetBrains Mono, monospace'
-      });
-      t.textContent = v;
-      svg.appendChild(t);
+      svg.appendChild(K.txt(px(v), AXIS_Y - 14, v,
+        { size: 'tick', face: 'mono', anchor: 'middle' }));
     });
 
-    var cap = el('text', {
-      x: X0, y: 34, fill: '#6E7681', 'font-size': 17,
-      'font-family': 'Roboto, sans-serif', class: 'mm-caption'
-    });
-    cap.textContent = CAPTIONS[0];
+    var cap = K.txt(X0, 28, CAPTIONS[0], { size: 'caption', cls: 'mm-caption' });
     svg.appendChild(cap);
 
     // --- the sample ---
     var dots = BASE.map(function (v) {
-      return svg.appendChild(el('circle', {
+      return svg.appendChild(K.el('circle', {
         cx: px(v), cy: ROW_Y, r: DOT_R,
-        fill: '#325D88', opacity: 0.5, class: 'mm-dot'
+        fill: K.PAL.navy, opacity: 0.5, class: 'mm-dot'
       }));
     });
 
-    var mMean = marker(svg, 'mean', '#B94A48', MEAN_TOP);
-    var mMed = marker(svg, 'median', '#93C54B', MEDIAN_TOP);
+    var mMean = marker(svg, 'mean', 'brick', MEAN_TOP);
+    var mMed = marker(svg, 'median', 'olive', MEDIAN_TOP);
 
-    stage.appendChild(svg);
-    var s = { dots: dots, cap: cap, mean: mMean, median: mMed, at: 0 };
-    snap(s, 0);
-    return s;
+    return { dots: dots, cap: cap, mean: mMean, median: mMed, at: 0 };
   }
 
   function snap(s, state) {
@@ -152,8 +127,7 @@
     s.cap.textContent = CAPTIONS[state];
     s.at = state;
 
-    if (instant || REDUCE ||
-        typeof window.anime === 'undefined' || !window.anime.animate) {
+    if (instant || K.REDUCE || !K.animeReady()) {
       snap(s, state);
       return;
     }
@@ -181,47 +155,11 @@
     });
   }
 
-  var ORDER = ['mm-frag-1', 'mm-frag-2'];
-  var STATES = { 'mm-frag-1': 1, 'mm-frag-2': 2 };
-
-  // How many gating fragments Reveal currently has shown. Landing on this
-  // slide via a #hash or by stepping backwards from a later slide leaves
-  // fragments already marked .visible; without this the freshly built stage
-  // would show the symmetric sample while Reveal believes it is done, and
-  // the next arrow press would leave the slide with nothing ever having moved.
-  function fragState(slide) {
-    var n = 0;
-    ORDER.forEach(function (id) {
-      var f = slide.querySelector('#' + id);
-      if (f && f.classList.contains('visible')) n++;
-    });
-    return n;
-  }
-
-  function init() {
-    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
-    var current = null;
-
-    function mount(slide) {
-      if (!slide) return;
-      var stage = slide.querySelector('#mm-stage');
-      if (!stage) { current = null; return; }
-      current = build(stage);
-      var s = fragState(slide);
-      if (s) place(current, s, true);   // snap, don't animate, on entry
-    }
-    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
-    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
-
-    Reveal.on('fragmentshown', function (e) {
-      var n = STATES[e.fragment.id];
-      if (current && n !== undefined) place(current, n);
-    });
-    Reveal.on('fragmenthidden', function (e) {
-      var n = STATES[e.fragment.id];
-      if (current && n !== undefined) place(current, n - 1);
-    });
-  }
-  init();
+  K.register({
+    stage: 'mm-stage',
+    frags: ['mm-frag-1', 'mm-frag-2'],
+    build: build,
+    place: place
+  });
 })();
 </script>
