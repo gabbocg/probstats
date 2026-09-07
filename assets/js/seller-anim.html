@@ -175,14 +175,14 @@
         { size: 'tick', face: 'mono', anchor: 'middle' }));
     }
     // Left-anchored, and broken over two short lines rather than set on one
-    // long one. Every bracket sits on the right half of the axis, so the
-    // strip from x = 90 to about x = 310 is the only clear space under it,
-    // and a centred — or single 40-character — title runs straight through
-    // seller A's range label, which is right-anchored at x = 439. The
-    // truncation has to be admitted somewhere, so it gets the second line.
-    svg.appendChild(K.txt(X0, 370, 'true success rate s',
+    // long one. Seller A's range label sits right-anchored at x = 439 on
+    // LANE_Y[0]'s row, so pinning this caption to that same row collides
+    // with it; B's and C's labels don't start until x ~= 344, so the two
+    // lines instead ride LANE_Y[1] and LANE_Y[2] — the strip from x = 90 to
+    // about x = 320 stays clear under those two rows.
+    svg.appendChild(K.txt(X0, LANE_Y[1] + 5, 'true success rate s',
       { size: 'label', fill: SOFT }));
-    svg.appendChild(K.txt(X0, 393, '(axis truncated below 0.5)',
+    svg.appendChild(K.txt(X0, LANE_Y[2] + 5, '(axis truncated below 0.5)',
       { size: 'label', fill: SOFT }));
 
     // --- one curve, one bracket lane and one readout block per seller ---
