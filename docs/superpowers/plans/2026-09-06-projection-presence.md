@@ -474,6 +474,7 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
 // ---- Slide grid (spec §4) ----
 // Title band 0–80: pull the accent bar up. Must out-rank theme.scss's
 // `.reveal section > h2::after` (0,1,3), hence the full selector.
+// The same tightening applies to sim slides, whose line budget (§4.3) assumes an 80px title band.
 .reveal section.stage-slide > h2::after,
 .reveal section.sim-slide > h2::after { margin-top: 0.4em; }
 
@@ -524,7 +525,11 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
 // Orange (accent-3) rather than navy: navy is the deck's voice, orange is
 // the student's turn to act. One per interactive slide, never more.
 .try-this {
-  margin: 0.35em 0 0.2em;
+  // The gap above this box is the LARGER of this margin-top and .sim-card's
+  // own margin-bottom (adjacent margins collapse); trimmed alongside that
+  // margin (Task 25b) to close a 12px overflow measured live on the
+  // tallest cell (a plot with a two-line result and this two-line box).
+  margin: 0.1em 0 0.2em;
   padding: 8px 16px 8px 46px;
   background: rgba(244, 124, 60, 0.07);
   border: 1px solid rgba(244, 124, 60, 0.22);
@@ -567,6 +572,7 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
   display: block !important;
   text-align: left !important;
 }
+// Deck-wide (every slide type uses .slide-kicker), not only sim slides; do not scope it.
 .slide-kicker { font-size: 17px; }
 .reveal section.sim-slide .slide-kicker { margin: 0.2em 0 0.4em; }
 .reveal section.sim-slide .lede-min {
@@ -579,14 +585,19 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
 // output pane is tall enough for a base-graphics plot.
 // Padding is tight on purpose: a 12-line plot cell with a two-line printed
 // result and a two-line prompt is the tallest sim slide and must fit 700px.
+// That budget was never checked against a live run (the static check only
+// counts code lines): run in the browser (Task 25b) it actually came to
+// 712px. margin and padding trimmed below to close the gap; the collapsed
+// margin above .try-this is whichever of this margin-bottom and .try-this's
+// own margin-top is larger, so both had to shrink together.
 .sim-card {
-  padding: 10px 18px 10px;
+  padding: 8px 18px 8px;
   background: var(--bg-elev);
   border: 1px solid var(--rule);
   border-top: 3px solid var(--accent-1);
   border-radius: 8px;
   box-shadow: 0 1px 2px rgba(20, 28, 45, 0.03);
-  margin: 0.25em 0 0.15em;
+  margin: 0.1em 0 0.05em;
   min-width: 0;
 }
 // qwebr's real DOM (verified in the browser, not assumed):
@@ -615,12 +626,21 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
 .sim-card .qwebr-output-code-area pre,
 .sim-card pre.qwebr-output-code {
   line-height: 1.25;
-  // theme.scss gives every .reveal pre a block margin and 90% width; inside
-  // the output box that is dead space.
+  // Quarto's reveal theme gives every .reveal pre a block margin and 90%
+  // width (`.reveal pre { width: 90%; margin: var(--r-block-margin) auto }`);
+  // inside the output box that is dead space.
   margin: 0;
   width: 100%;
   padding-top: 8px;
   padding-bottom: 8px;
+  // A separate, less specific `.reveal pre` rule (Quarto's theme) sets
+  // padding: .5em .9em, so this element inherits ~19.8px of left/right
+  // padding at 22px font that this rule never overrides. With the default
+  // content-box model that padding sat OUTSIDE the 100% width, overflowing
+  // the card by ~40px and forcing a permanent horizontal scrollbar even for
+  // a one-line result. border-box folds that inherited padding back inside
+  // the 100%.
+  box-sizing: border-box;
 }
 
 // --- .sim-plot: code on the left, the figure on the right ---
@@ -672,7 +692,7 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
   // Bottom margin dropped to 0 (Task 5b step a): the enlarged hero (numeral
   // 4.4em, tagline 1.3em) still ran 26-30px over 700 after the line-height
   // and lede fixes, so this squeezes the remaining slack above the h1.
-  margin: 0 0 0;
+  margin: 0;
   color: var(--accent-1);
 }
 .sem-mark::before {
@@ -684,9 +704,9 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
   // still), and still dominates the small uppercase label beside it.
   font-size: 4em;
   font-weight: 700;
-  // Digits have no descenders, so the line box (158px at 4.4em) is mostly
-  // dead space below the glyph; 0.8 tightens that box to ~126px without
-  // shrinking the glyph itself, buying back ~32px of hero height.
+  // Digits have no descenders, so the line box (144px at 4em: 36px * 4) is
+  // mostly dead space below the glyph; 0.8 tightens that box to ~115px
+  // without shrinking the glyph itself, buying back ~29px of hero height.
   line-height: 0.8;
   color: rgba(50, 93, 136, 0.18);
 }
@@ -772,7 +792,7 @@ Claude-Session: https://claude.ai/code/session_014GtmXtXJWTbQRMLyEWRH3L"
 .claim-wrong .claim-tag { background: rgba(185, 74, 72, 0.14); color: #8A3937; }
 .claim-right .claim-tag { background: rgba(147, 197, 75, 0.18); color: #4E6B33; }
 ```
-Note: this block is the file as it stands after Tasks 5b and 8 (hero fit, plot-cell 1.5fr column, output `pre` margin/padding, card padding), which amended the original Task 4 content; the Task 4 commit itself carried the earlier values.
+Note: this block is the file as it stands at the end of the project (after Tasks 5b, 8, 25a and 25b: hero fit, plot-cell 1.5fr column, output `pre` margin/padding/box-sizing, card and prompt margins), which amended the original Task 4 content; the Task 4 commit itself carried the earlier values.
 
 - [ ] **Step 2: Add `class="stage"` to the 18 stage divs and rename the wrap classes**
 
