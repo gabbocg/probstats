@@ -20,7 +20,7 @@ The worksheet gives you two-sample tests and paired tests as separate recipes. T
 []{.fragment .fi-frag id="pair-frag-2"}
 
 ::: {.slide-footer}
-The left picture is honest and useless: firms differ hugely from each other, and that between-firm spread drowns the effect. Pairing subtracts it away — every firm becomes its own control.
+The left picture is honest and useless: firms differ hugely, and that between-firm spread drowns the effect. Pairing subtracts it away; every firm becomes its own control.
 :::
 
 ## Watch the signal appear {.sim-slide #pair-sim}
