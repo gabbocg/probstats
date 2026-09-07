@@ -206,7 +206,7 @@
       // readout column, and seller A's bracket already reaches x = 700.
       side.appendChild(K.txt(px(a.lo) - 10, LANE_Y[idx] + 5,
         a.id + NB + '[' + a.lo.toFixed(3) + ', ' + a.hi.toFixed(3) + ']',
-        { size: 'tick', face: 'mono', anchor: 'end', fill: a.colour }));
+        { size: 'label', face: 'mono', anchor: 'end', fill: a.colour }));
 
       var y = RD_Y + idx * RD_BLOCK;
       side.appendChild(K.txt(RD_X, y,
