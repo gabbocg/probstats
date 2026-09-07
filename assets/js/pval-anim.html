@@ -15,28 +15,22 @@
   table — with this seed 5 of the 200 land beyond z = 2, so p = 0.025 (the
   theoretical value is 0.023; the gap is the point of a simulation).
 
-  Fragment gating follows the deck convention: invisible .fi-frag spans on
-  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
+  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
 */
 (function () {
-  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var K = window.StageKit;
 
   var N = 200, ZOBS = 2.0, BINW = 0.4;
-  var NAVY = '#325D88', BRICK = '#B94A48';
+  var NAVY = K.PAL.navy, BRICK = K.PAL.brick;
 
-  // Stage geometry — fixed 1000x400 space, scaled to the slide via CSS.
-  var W = 1000, H = 400, X0 = 80, X1 = 940, ZMIN = -4, ZMAX = 4;
-  var BASE = 320, TOP = 60;            // baseline, and the ceiling of the tail
+  // Stage geometry — 1000x445 canvas, shown at scale(1.05).
+  var W = 1000, H = 445, X0 = 80, X1 = 940, ZMIN = -4, ZMAX = 4;
+  var BASE = 356, TOP = 67;            // baseline, and the ceiling of the tail
   var SIDE = 9, STEP = 9.5;            // dot size, and stack pitch
   var DOT_OP = 0.5, SHADE_OP = 0.1, SKY = -30;   // SKY = where dots wait
-  var NS = 'http://www.w3.org/2000/svg';
 
   function px(z) { return X0 + (z - ZMIN) * (X1 - X0) / (ZMAX - ZMIN); }
-  function el(name, attrs) {
-    var e = document.createElementNS(NS, name);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
 
   // Seeded LCG (glibc constants, kept exact with imul + a 31-bit mask so the
   // multiply cannot drift past 2^53) fed through Box-Muller.
@@ -69,44 +63,35 @@
   }
 
   function build(stage) {
-    stage.innerHTML = '';
-    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    var svg = K.canvas(stage, W, H);
 
     // --- shaded tail: behind the dots, so the dots stay legible ---
-    var shade = el('rect', {
+    var shade = svg.appendChild(K.el('rect', {
       x: px(ZOBS), y: TOP, width: X1 - px(ZOBS), height: BASE - TOP,
       fill: BRICK, opacity: 0, class: 'pval-shade'
-    });
-    svg.appendChild(shade);
+    }));
 
     // --- axis ---
-    svg.appendChild(el('line', {
-      x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: '#E5E7EB', 'stroke-width': 1
+    svg.appendChild(K.el('line', {
+      x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: K.PAL.rule, 'stroke-width': 1
     }));
     [-3, -2, -1, 0, 1, 2, 3].forEach(function (z) {
-      svg.appendChild(el('line', {
+      svg.appendChild(K.el('line', {
         x1: px(z), y1: BASE, x2: px(z), y2: BASE + 6,
-        stroke: '#B0B7C0', 'stroke-width': 1
+        stroke: K.PAL.dim, 'stroke-width': 1
       }));
-      var t = el('text', {
-        x: px(z), y: BASE + 25, 'text-anchor': 'middle', fill: '#6E7681',
-        'font-size': 15, 'font-family': 'JetBrains Mono, monospace'
-      });
-      t.textContent = z;
-      svg.appendChild(t);
+      svg.appendChild(K.txt(px(z), BASE + 25, z,
+        { size: 'tick', face: 'mono', anchor: 'middle' }));
     });
 
-    var cap = el('text', {
-      x: 40, y: 34, fill: '#6E7681', 'font-size': 17,
-      'font-family': 'Roboto, sans-serif', class: 'pval-caption'
-    });
+    var cap = K.txt(40, 28, '', { size: 'caption', cls: 'pval-caption' });
     svg.appendChild(cap);
 
     // --- the 200 draws, parked above the stage until they are called for ---
     var pts = layout(), tail = [], rest = [];
     var dots = DRAWS.map(function (v, i) {
       rest.push(pts[i].y);
-      var d = svg.appendChild(el('rect', {
+      var d = svg.appendChild(K.el('rect', {
         x: pts[i].x, y: SKY, width: SIDE, height: SIDE, rx: 1.5,
         fill: NAVY, opacity: 0, class: 'pval-dot'
       }));
@@ -115,42 +100,35 @@
     });
 
     // --- observed statistic: drawn over the dots ---
-    var obs = el('g', { class: 'pval-obs', opacity: 0 });
-    obs.appendChild(el('line', {
+    var obs = K.el('g', { class: 'pval-obs', opacity: 0 });
+    obs.appendChild(K.el('line', {
       x1: px(ZOBS), y1: TOP, x2: px(ZOBS), y2: BASE,
       stroke: BRICK, 'stroke-width': 2.5
     }));
-    var obsLab = el('text', {
-      x: px(ZOBS), y: TOP - 12, 'text-anchor': 'middle', fill: BRICK,
-      'font-size': 17, 'font-weight': 700,
-      'font-family': 'JetBrains Mono, monospace'
-    });
-    obsLab.textContent = 'observed z = ' + ZOBS.toFixed(1);
-    obs.appendChild(obsLab);
+    obs.appendChild(K.txt(px(ZOBS), TOP - 12, 'observed z = ' + ZOBS.toFixed(1),
+      { size: 'label', face: 'mono', fill: 'brick', weight: 700, anchor: 'middle' }));
     svg.appendChild(obs);
 
     // --- the verdict, right-aligned over the shaded tail so it clears both
-    //     the observed-z label above it and the vertical line to its left ---
-    var res = el('g', { class: 'pval-res', opacity: 0 });
-    var p = el('text', {
-      x: X1, y: 100, 'text-anchor': 'end', fill: BRICK, 'font-size': 18,
-      'font-weight': 700, 'font-family': 'JetBrains Mono, monospace'
-    });
-    p.textContent = 'p = ' + tail.length + '/' + N + ' = ' +
-                    (tail.length / N).toFixed(3);
+    //     the observed-z label above it and the vertical line to its left.
+    //     At 30px mono a "5/200 =" prefix runs the string back across the
+    //     observed-z line, so the readout states the ratio only — the count
+    //     itself is what the lit dots below are counting. Anchored at 970,
+    //     not the usual 950: measured in-browser, the longest annotation
+    //     ("the share of the null world") left-edges at x 725 when anchored
+    //     at 950 — exactly the observed-z line — so the block sits 20 units
+    //     further right to clear it. ---
+    var res = K.el('g', { class: 'pval-res', opacity: 0 });
+    var p = K.txt(970, 111, 'p = ' + (tail.length / N).toFixed(3),
+      { size: 'readout', face: 'mono', fill: 'brick', weight: 700, anchor: 'end' });
     res.appendChild(p);
     ['the share of the null world', 'at least this extreme'].forEach(
       function (line, i) {
-        var t = el('text', {
-          x: X1, y: 124 + i * 18, 'text-anchor': 'end', fill: '#6E7681',
-          'font-size': 14, 'font-family': 'Roboto, sans-serif'
-        });
-        t.textContent = line;
-        res.appendChild(t);
+        res.appendChild(K.txt(970, 138 + i * 20, line,
+          { size: 'label', fill: 'inkSoft', anchor: 'end' }));
       });
     svg.appendChild(res);
 
-    stage.appendChild(svg);
     return { dots: dots, tail: tail, rest: rest, shade: shade,
              obs: obs, res: res, cap: cap, state: 0 };
   }
@@ -232,9 +210,7 @@
   }
 
   function place(s, n, instant) {
-    var A = (instant || REDUCE ||
-             typeof window.anime === 'undefined' || !window.anime.animate)
-            ? null : window.anime;
+    var A = (instant || K.REDUCE || !K.animeReady()) ? null : window.anime;
     var prev = s.state;
     s.state = n;
     s.cap.textContent = CAPTIONS[n];
@@ -243,46 +219,11 @@
     verdict(s, n, prev, A);
   }
 
-  var ORDER = ['pval-frag-1', 'pval-frag-2', 'pval-frag-3'];
-  var STATES = { 'pval-frag-1': 1, 'pval-frag-2': 2, 'pval-frag-3': 3 };
-
-  // How many gating fragments Reveal currently has shown. Landing on this
-  // slide via a #hash or by stepping backwards from a later slide leaves
-  // fragments already marked .visible; without this the freshly built stage
-  // would show an empty axis while Reveal believes it is done, and the next
-  // arrow press would leave the slide with the animation never having run.
-  function fragState(slide) {
-    var n = 0;
-    ORDER.forEach(function (id) {
-      var f = slide.querySelector('#' + id);
-      if (f && f.classList.contains('visible')) n++;
-    });
-    return n;
-  }
-
-  function init() {
-    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
-    var current = null;
-
-    function mount(slide) {
-      if (!slide) return;
-      var stage = slide.querySelector('#pval-stage');
-      if (!stage) { current = null; return; }
-      current = build(stage);
-      place(current, fragState(slide), true);   // snap, don't animate, on entry
-    }
-    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
-    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
-
-    Reveal.on('fragmentshown', function (e) {
-      var n = STATES[e.fragment.id];
-      if (current && n !== undefined) place(current, n);
-    });
-    Reveal.on('fragmenthidden', function (e) {
-      var n = STATES[e.fragment.id];
-      if (current && n !== undefined) place(current, n - 1);
-    });
-  }
-  init();
+  K.register({
+    stage: 'pval-stage',
+    frags: ['pval-frag-1', 'pval-frag-2', 'pval-frag-3'],
+    build: build,
+    place: place
+  });
 })();
 </script>
