@@ -79,7 +79,7 @@ round(c(A = good(10, 10), B = good(48, 50),
 []{.fragment .fi-frag id="pois-frag-3"}
 
 ::: {.slide-footer}
-Watch what is lost: at $n = 1000$ you can no longer recover $n$ or $p$ from the shape — only their product. That is why the Poisson has *one* parameter, and why it suits events with no natural "number of trials" at all.
+Watch what is lost: at $n = 1000$ the shape no longer reveals $n$ or $p$, only their product. That is why the Poisson has *one* parameter, and suits events with no natural number of trials.
 :::
 
 ## The same events, a different question {.stage-slide #expo-intuition}

@@ -15,11 +15,11 @@
   Every state has n * p = 3, which is the whole point and is printed on the
   stage so nobody thinks the shape is drifting because the mean changed.
 
-  Fragment gating follows the deck convention: invisible .fi-frag spans on
-  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
+  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
 */
 (function () {
-  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var K = window.StageKit;
 
   var LAMBDA = 3, KMAX = 12, NK = KMAX + 1;
 
@@ -31,20 +31,14 @@
     { n: 1000, p: 0.003, cap: 'n = 1000, p = 0.003 — indistinguishable from Poisson' }
   ];
 
-  // Stage geometry — fixed 1000x400 space, scaled to the slide via CSS.
-  var W = 1000, H = 400, X0 = 90, X1 = 950;
-  var BASE = 330, PMAX = 0.25, HMAX = 250;      // P = 0.25 reaches the full 250px
+  // Stage geometry — 1000x445 canvas, shown at scale(1.05).
+  var W = 1000, H = 445, X0 = 90, X1 = 950;
+  var BASE = 367, PMAX = 0.25, HMAX = 278;      // P = 0.25 reaches the full height
   var SLOT = (X1 - X0) / NK, BW = 52;           // ~66.2 per slot, 52 of it inked
-  var NS = 'http://www.w3.org/2000/svg';
 
   // Left edge of bar k. The bar is centred inside its slot.
   function bx(k) { return X0 + k * SLOT + (SLOT - BW) / 2; }
   function ht(P) { return P * (HMAX / PMAX); }
-  function el(name, attrs) {
-    var e = document.createElementNS(NS, name);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
 
   // Binomial pmf by recurrence. choose(n,k) blows past Number.MAX_VALUE well
   // before n = 1000, so start from P(0) = exp(n*log(1-p)) and climb with
@@ -85,68 +79,49 @@
   }
 
   function build(stage) {
-    stage.innerHTML = '';
-    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    var svg = K.canvas(stage, W, H);
 
     // --- bars: start at state 0 ---
     var bars = PMF[0].map(function (P, k) {
       var h = ht(P);
-      return svg.appendChild(el('rect', {
+      return svg.appendChild(K.el('rect', {
         x: bx(k), y: BASE - h, width: BW, height: h,
-        fill: '#325D88', opacity: 0.55, class: 'pois-bar'
+        fill: K.PAL.navy, opacity: 0.55, class: 'pois-bar'
       }));
     });
 
     // --- the target: Poisson(3), drawn once and never touched again ---
-    svg.appendChild(el('polyline', {
+    svg.appendChild(K.el('polyline', {
       points: stepPoints(POIS), fill: 'none',
-      stroke: '#B94A48', 'stroke-width': 2, 'stroke-linejoin': 'round',
+      stroke: K.PAL.brick, 'stroke-width': 2, 'stroke-linejoin': 'round',
       opacity: 0.75, class: 'pois-ghost'
     }));
 
     // --- axis and k labels ---
-    svg.appendChild(el('line', {
-      x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: '#E5E7EB', 'stroke-width': 1
+    svg.appendChild(K.el('line', {
+      x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: K.PAL.rule, 'stroke-width': 1
     }));
     for (var k = 0; k < NK; k++) {
-      var t = el('text', {
-        x: bx(k) + BW / 2, y: BASE + 24, 'text-anchor': 'middle',
-        fill: '#6E7681', 'font-size': 15,
-        'font-family': 'JetBrains Mono, monospace'
-      });
-      t.textContent = k;
-      svg.appendChild(t);
+      svg.appendChild(K.txt(bx(k) + BW / 2, BASE + 27, k,
+        { size: 'tick', face: 'mono', anchor: 'middle' }));
     }
 
     // --- caption: which (n, p) we are looking at ---
-    var cap = el('text', {
-      x: 40, y: 34, fill: '#6E7681', 'font-size': 17,
-      'font-family': 'Roboto, sans-serif', class: 'pois-caption'
-    });
-    cap.textContent = STAGES[0].cap;
+    var cap = K.txt(40, 28, STAGES[0].cap, { size: 'caption', cls: 'pois-caption' });
     svg.appendChild(cap);
 
     // --- the invariant, stated in mono so it reads as a constraint ---
-    var fixed = el('text', {
-      x: 40, y: 58, fill: '#3E3F3A', 'font-size': 16,
-      'font-family': 'JetBrains Mono, monospace'
-    });
-    fixed.textContent = 'n × p = 3';
+    var fixed = K.txt(40, 65, 'n × p = 3', { size: 'label', face: 'mono', fill: 'ink' });
     svg.appendChild(fixed);
 
     // --- legend for the outline ---
-    svg.appendChild(el('line', {
-      x1: 812, y1: 30, x2: 848, y2: 30,
-      stroke: '#B94A48', 'stroke-width': 2, opacity: 0.75
+    svg.appendChild(K.el('line', {
+      x1: 812, y1: 33, x2: 848, y2: 33,
+      stroke: K.PAL.brick, 'stroke-width': 2, opacity: 0.75
     }));
-    var leg = el('text', {
-      x: 856, y: 35, fill: '#6E7681', 'font-size': 15,
-      'font-family': 'Roboto, sans-serif'
-    });
-    leg.textContent = 'Poisson(3)';
+    var leg = K.txt(856, 39, 'Poisson(3)', { size: 'label', fill: 'inkSoft' });
     svg.appendChild(leg);
 
-    stage.appendChild(svg);
     return { bars: bars, cap: cap };
   }
 
@@ -154,8 +129,7 @@
     var pmf = PMF[state];
     s.cap.textContent = STAGES[state].cap;
 
-    if (instant || REDUCE ||
-        typeof window.anime === 'undefined' || !window.anime.animate) {
+    if (instant || K.REDUCE || !K.animeReady()) {
       s.bars.forEach(function (b, k) {
         var h = ht(pmf[k]);
         b.setAttribute('height', h);
@@ -174,47 +148,11 @@
     });
   }
 
-  var ORDER = ['pois-frag-1', 'pois-frag-2', 'pois-frag-3'];
-  var STATES = { 'pois-frag-1': 1, 'pois-frag-2': 2, 'pois-frag-3': 3 };
-
-  // How many gating fragments Reveal currently has shown. Landing on this
-  // slide via a #hash or by stepping backwards from a later slide leaves
-  // fragments already marked .visible; without this the freshly built stage
-  // would show the n = 10 bars while Reveal believes it is done, and the next
-  // arrow press would leave the slide with the animation never having run.
-  function fragState(slide) {
-    var n = 0;
-    ORDER.forEach(function (id) {
-      var f = slide.querySelector('#' + id);
-      if (f && f.classList.contains('visible')) n++;
-    });
-    return n;
-  }
-
-  function init() {
-    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
-    var current = null;
-
-    function mount(slide) {
-      if (!slide) return;
-      var stage = slide.querySelector('#pois-stage');
-      if (!stage) { current = null; return; }
-      current = build(stage);
-      var s = fragState(slide);
-      if (s) place(current, s, true);   // snap, don't animate, on entry
-    }
-    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
-    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
-
-    Reveal.on('fragmentshown', function (e) {
-      var s = STATES[e.fragment.id];
-      if (current && s !== undefined) place(current, s);
-    });
-    Reveal.on('fragmenthidden', function (e) {
-      var s = STATES[e.fragment.id];
-      if (current && s !== undefined) place(current, s - 1);
-    });
-  }
-  init();
+  K.register({
+    stage: 'pois-stage',
+    frags: ['pois-frag-1', 'pois-frag-2', 'pois-frag-3'],
+    build: build,
+    place: place
+  });
 })();
 </script>
