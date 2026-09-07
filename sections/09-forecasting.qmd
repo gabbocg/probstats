@@ -48,5 +48,5 @@ for (a in c(0.2, 0.4, 0.6, 0.8)) {
 :::
 
 ::: {.try-this}
-Both metrics fall as $\alpha$ rises — the method is straining to keep up with a trend it was never built for. Every error is *positive*: it is late, every single month. **Persistent one-signed errors are the diagnostic that you need a trend model, not a better $\alpha$.**
+Both metrics fall as $\alpha$ rises — the method is straining to keep up with a trend it was never built for. After the first month every error is *positive*: the forecast is late as soon as the trend takes hold. **Persistent one-signed errors are the diagnostic that you need a trend model, not a better $\alpha$.**
 :::
