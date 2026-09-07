@@ -18,42 +18,36 @@
   The payoff is that the weight bars collapse onto the first bar at exactly
   the moment the forecast line snaps onto the series.
 
-  Fragment gating follows the deck convention: invisible .fi-frag spans on
-  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
+  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
 */
 (function () {
-  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var K = window.StageKit;
 
   // A noisy, trendless series — hardcoded so the lecture picture never moves.
   var DATA = [23, 39, 36, 26, 36, 12, 26, 30, 42, 35, 36, 28];
   var SEED = 40;                                  // F(2), the usual naive start
 
-  // Stage geometry — fixed 1000x400 space, scaled to the slide via CSS.
-  var W = 1000, H = 400;
+  // Stage geometry — 1000x445 canvas, shown at scale(1.05).
+  var W = 1000, H = 445;
   var LX0 = 80, LX1 = 600;                        // left panel: series + forecast
   var RX0 = 690, RX1 = 950;                       // right panel: weight profile
-  var BASE_Y = 320, TOP_V = 50, AXIS_Y = 336;     // value 0 sits on BASE_Y
-  var NKEEP = 8, BAR_MAX = 210, W_FULL = 0.85;    // weight 0.85 fills a bar
-  var NS = 'http://www.w3.org/2000/svg';
+  var BASE_Y = 356, TOP_V = 56, AXIS_Y = 374;     // value 0 sits on BASE_Y
+  var NKEEP = 8, BAR_MAX = 234, W_FULL = 0.85;    // weight 0.85 fills a bar
 
   var ALPHAS = [0.2, 0.5, 0.8];
   var CAPTIONS = [
-    // Keep these SHORT, and do NOT repeat the alpha value: the big orange
-    // readout is right-anchored at x=600, y=38, so a caption past roughly
-    // 46 characters (17px Roboto, ~8.4px each) collides with it.
+    // Keep these SHORT: at 24px Roboto from x = 40 they stay clear of the
+    // right panel (x = 690); the orange alpha readout has moved to the right
+    // edge (x = 950, right-aligned) so it no longer competes with the caption.
     'a long memory — smooth, sluggish forecast',
     'half the weight on the last observation',
     'almost no memory; it chases the last point'
   ];
 
   function ox(i) { return LX0 + i * (LX1 - LX0) / (DATA.length - 1); }
-  function oy(v) { return BASE_Y - v * (BASE_Y - 70) / TOP_V; }
+  function oy(v) { return BASE_Y - v * (BASE_Y - 78) / TOP_V; }
   function bx(k) { return RX0 + (k + 0.5) * (RX1 - RX0) / NKEEP; }
-  function el(name, attrs) {
-    var e = document.createElementNS(NS, name);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
 
   // The recursion itself. F(0) has no forecast; F(1) is seeded; everything
   // after that is the one-step-ahead forecast the students will draw by hand.
@@ -78,103 +72,81 @@
   }
 
   function build(stage) {
-    stage.innerHTML = '';
-    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    var svg = K.canvas(stage, W, H);
 
     // --- caption ---
-    var cap = el('text', {
-      x: 40, y: 34, fill: '#6E7681', 'font-size': 17,
-      'font-family': 'Roboto, sans-serif', class: 'smooth-caption'
-    });
-    cap.textContent = CAPTIONS[0];
+    var cap = K.txt(40, 28, CAPTIONS[0], { size: 'caption', cls: 'smooth-caption' });
     svg.appendChild(cap);
 
     // --- left panel: time axis ---
-    svg.appendChild(el('line', {
+    svg.appendChild(K.el('line', {
       x1: LX0, y1: AXIS_Y, x2: LX1, y2: AXIS_Y,
-      stroke: '#E5E7EB', 'stroke-width': 1
+      stroke: K.PAL.rule, 'stroke-width': 1
     }));
     [0, 3, 6, 9, 11].forEach(function (i) {
-      svg.appendChild(el('line', {
-        x1: ox(i), y1: AXIS_Y, x2: ox(i), y2: AXIS_Y + 6,
-        stroke: '#B0B7C0', 'stroke-width': 1
+      svg.appendChild(K.el('line', {
+        x1: ox(i), y1: AXIS_Y, x2: ox(i), y2: AXIS_Y + 7,
+        stroke: K.PAL.dim, 'stroke-width': 1
       }));
-      var t = el('text', {
-        x: ox(i), y: AXIS_Y + 22, 'text-anchor': 'middle', fill: '#6E7681',
-        'font-size': 13, 'font-family': 'JetBrains Mono, monospace'
-      });
-      t.textContent = i + 1;
-      svg.appendChild(t);
+      svg.appendChild(K.txt(ox(i), AXIS_Y + 24, i + 1,
+        { size: 'tick', face: 'mono', anchor: 'middle' }));
     });
 
     // --- left panel: the data, drawn once and never touched again ---
-    svg.appendChild(el('polyline', {
+    svg.appendChild(K.el('polyline', {
       points: DATA.map(function (v, i) { return ox(i) + ',' + oy(v); }).join(' '),
-      fill: 'none', stroke: '#B0B7C0', 'stroke-width': 1
+      fill: 'none', stroke: K.PAL.dim, 'stroke-width': 1
     }));
 
     // --- left panel: the forecast, redrawn on every alpha ---
     var fy = forecast(ALPHAS[0]);
-    var line = el('polyline', {
-      points: poly(fy, 1), fill: 'none', stroke: '#F47C3C',
+    var line = svg.appendChild(K.el('polyline', {
+      points: poly(fy, 1), fill: 'none', stroke: K.PAL.orange,
       'stroke-width': 2.5, 'stroke-linejoin': 'round', class: 'smooth-line'
-    });
-    svg.appendChild(line);
+    }));
 
     DATA.forEach(function (v, i) {
-      svg.appendChild(el('circle', {
-        cx: ox(i), cy: oy(v), r: 5, fill: '#325D88', opacity: 0.55
+      svg.appendChild(K.el('circle', {
+        cx: ox(i), cy: oy(v), r: 5, fill: K.PAL.navy, opacity: 0.55
       }));
     });
 
-    var ltitle = el('text', {
-      x: LX0, y: 380, fill: '#6E7681', 'font-size': 15,
-      'font-family': 'Roboto, sans-serif'
-    });
-    ltitle.textContent = 'the series and its forecast';
+    var ltitle = K.txt(LX0, 423, 'the series and its forecast',
+      { size: 'label', fill: 'inkSoft' });
     svg.appendChild(ltitle);
 
-    // --- the alpha readout, the one number the whole slide is about ---
-    var read = el('text', {
-      x: LX1, y: 38, 'text-anchor': 'end', fill: '#F47C3C',
-      'font-size': 22, 'font-weight': 700,
-      'font-family': 'JetBrains Mono, monospace', class: 'smooth-alpha'
-    });
-    read.textContent = 'alpha = ' + ALPHAS[0].toFixed(1);
+    // --- the alpha readout, the one number the whole slide is about — right
+    //     edge of the canvas, clear of the caption band ---
+    var read = K.txt(950, 42, 'alpha = ' + ALPHAS[0].toFixed(1),
+      { size: 'readout', face: 'mono', fill: 'orange', weight: 700,
+        anchor: 'end', cls: 'smooth-alpha' });
     svg.appendChild(read);
 
     // --- right panel: weight profile, k = 0 (most recent) on the left ---
-    svg.appendChild(el('line', {
+    svg.appendChild(K.el('line', {
       x1: RX0, y1: BASE_Y, x2: RX1, y2: BASE_Y,
-      stroke: '#E5E7EB', 'stroke-width': 1
+      stroke: K.PAL.rule, 'stroke-width': 1
     }));
 
     var w0 = weights(ALPHAS[0]);
     var bw = 0.62 * (RX1 - RX0) / NKEEP;
     var bars = w0.map(function (w, k) {
       var h = w / W_FULL * BAR_MAX;
-      var r = el('rect', {
+      var r = svg.appendChild(K.el('rect', {
         x: bx(k) - bw / 2, y: BASE_Y - h, width: bw, height: h,
-        fill: '#325D88', opacity: 0.6, class: 'smooth-bar'
-      });
-      svg.appendChild(r);
-      var t = el('text', {
-        x: bx(k), y: BASE_Y + 20, 'text-anchor': 'middle', fill: '#6E7681',
-        'font-size': 12, 'font-family': 'JetBrains Mono, monospace'
-      });
-      t.textContent = 't-' + k;
-      svg.appendChild(t);
+        fill: K.PAL.navy, opacity: 0.6, class: 'smooth-bar'
+      }));
+      svg.appendChild(K.txt(bx(k), BASE_Y + 22, 't-' + k,
+        { size: 'tick', face: 'mono', anchor: 'middle' }));
       return r;
     });
 
-    var rtitle = el('text', {
-      x: RX0, y: 380, fill: '#6E7681', 'font-size': 15,
-      'font-family': 'Roboto, sans-serif'
-    });
-    rtitle.textContent = 'how much each past observation counts';
+    // 'point' not 'observation': at 20px label size the longer word runs the
+    // title past x = 1000 and the SVG clips it — same claim, shorter word.
+    var rtitle = K.txt(RX0, 423, 'how much each past point counts',
+      { size: 'label', fill: 'inkSoft' });
     svg.appendChild(rtitle);
 
-    stage.appendChild(svg);
     return { cap: cap, read: read, line: line, bars: bars, fy: fy };
   }
 
@@ -187,8 +159,7 @@
     s.cap.textContent = CAPTIONS[i];
     s.read.textContent = 'alpha = ' + alpha.toFixed(1);
 
-    if (instant || REDUCE ||
-        typeof window.anime === 'undefined' || !window.anime.animate) {
+    if (instant || K.REDUCE || !K.animeReady()) {
       s.line.setAttribute('points', poly(fy, 1));
       s.bars.forEach(function (r, k) {
         var h = ws[k] / W_FULL * BAR_MAX;
@@ -226,47 +197,11 @@
     s.fy = fy;
   }
 
-  var ORDER = ['smooth-frag-1', 'smooth-frag-2'];
-  var STATES = { 'smooth-frag-1': 1, 'smooth-frag-2': 2 };
-
-  // How many gating fragments Reveal currently has shown. Landing on this
-  // slide via a #hash or by stepping backwards from a later slide leaves
-  // fragments already marked .visible; without this the freshly built stage
-  // would sit at alpha = 0.2 while Reveal believes it is done, and the next
-  // arrow press would leave the slide with the animation never having run.
-  function fragState(slide) {
-    var n = 0;
-    ORDER.forEach(function (id) {
-      var f = slide.querySelector('#' + id);
-      if (f && f.classList.contains('visible')) n++;
-    });
-    return n;
-  }
-
-  function init() {
-    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
-    var current = null;
-
-    function mount(slide) {
-      if (!slide) return;
-      var stage = slide.querySelector('#smooth-stage');
-      if (!stage) { current = null; return; }
-      current = build(stage);
-      var s = fragState(slide);
-      if (s) place(current, s, true);   // snap, don't animate, on entry
-    }
-    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
-    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
-
-    Reveal.on('fragmentshown', function (e) {
-      var i = STATES[e.fragment.id];
-      if (current && i !== undefined) place(current, i);
-    });
-    Reveal.on('fragmenthidden', function (e) {
-      var i = STATES[e.fragment.id];
-      if (current && i !== undefined) place(current, i - 1);
-    });
-  }
-  init();
+  K.register({
+    stage: 'smooth-stage',
+    frags: ['smooth-frag-1', 'smooth-frag-2'],
+    build: build,
+    place: place
+  });
 })();
 </script>
