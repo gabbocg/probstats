@@ -28,8 +28,9 @@
   // DATA unit and is deliberately shared by both axes: a residual of r data
   // units must be r*UNIT px tall AND r*UNIT px wide or the "squares" would
   // render as rectangles and the whole point is lost. Widening UNIT still
-  // leaves the plot (out to PX(9.5) = 481) well clear of the readout at
-  // x = 700, so one shared UNIT covers both axes — no separate UNIT_Y needed.
+  // leaves room: the widest element is the x = 9 residual square, whose
+  // right edge lands around 548px, at least 150px clear of the readout
+  // block at x = 700 — so one shared UNIT covers both axes, no UNIT_Y needed.
   var W = 1000, H = 445, UNIT = 38;
   var X0 = 120, Y0 = 407;                  // pixel origin: data (0, YMIN)
   var XMAX = 10, YMIN = 2.5, YMAX = 11.5;  // data extent of the plot box
@@ -136,7 +137,8 @@
       { size: 'readout', face: 'mono', fill: 'brick', weight: 700, cls: 'ls-sum' });
     svg.appendChild(sum);
 
-    var note = K.txt(700, 191, 'Σ (y − ŷ)²', { size: 'tick', face: 'mono' });
+    var note = K.txt(700, 191, 'Σ (y − ŷ)²',
+      { size: 'label', face: 'mono', fill: 'inkSoft' });
     svg.appendChild(note);
 
     return { sq: sq, res: res, line: line, eq: eq, sum: sum, cap: cap,
