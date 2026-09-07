@@ -147,7 +147,7 @@ The population on the left never changes and never becomes normal; the **mean** 
 []{.fragment .fi-frag id="zstd-frag-2"}
 
 ::: {.slide-footer}
-Subtracting $\mu$ moves the curve; dividing by $\sigma$ squeezes it — and a squeezed density must grow *taller*, because the area underneath is always 1. The shaded probability never moves. Standardising changes the ruler, not the answer.
+Subtracting $\mu$ moves the curve; dividing by $\sigma$ squeezes it, so it grows *taller* — area is always 1. The shaded probability never moves: standardising changes the ruler, not the answer.
 :::
 
 ## Check the approximation {.sim-slide #pois-sim}

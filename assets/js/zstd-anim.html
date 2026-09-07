@@ -25,26 +25,26 @@
   to fit it. Both end states are exactly as specified; only the camera move
   in between is a choice.
 
-  Fragment gating follows the deck convention: invisible .fi-frag spans on
-  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
+  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
 */
 (function () {
-  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var K = window.StageKit;
 
   // The cutoff is always the SAME number of standard deviations out. Deriving
   // it from (mu, sigma) instead of hardcoding three values is what keeps the
   // shaded area invariant on every intermediate frame, not just at rest.
   var ZSTAR = 4 / 3;                              // 120 = 100 + (4/3)*15
 
-  // Stage geometry — fixed 1000x400 space, scaled to the slide via CSS.
-  var W = 1000, H = 400, X0 = 90, X1 = 910;
-  var BASE = 330, PY = 640;                       // 640 px per unit of density
+  // Stage geometry — 1000x445 canvas, shown at scale(1.05).
+  var W = 1000, H = 445, X0 = 90, X1 = 910;
+  var BASE = 367, PY = 712;                       // 712 px per unit of density
   var NPT = 400, NQ = 600;                        // curve samples / quadrature
-  var NS = 'http://www.w3.org/2000/svg';
 
-  // PY is the single scale the whole slide hangs on. The tallest thing ever
-  // drawn is the standard normal peak, 0.39894 * 640 = 255px, which puts the
-  // apex at y = 75 — just inside the headroom above the plot.
+  // PY is the single scale the whole slide hangs on — the density-to-pixel
+  // scale, so the curve grows with the canvas. The tallest thing ever drawn
+  // is the standard normal peak, 0.39894 * 712 = 284px, which puts the apex
+  // at y = 83 — just inside the headroom above the plot.
 
   var STATES = [
     { mu: 100, sigma: 15, axMin:  40, axMax: 160,
@@ -58,11 +58,6 @@
       vline: 'Z ~ N(0, 1)', clab: 'z = 1.33' }
   ];
 
-  function el(name, attrs) {
-    var e = document.createElementNS(NS, name);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
   function lerp(a, b, t) { return a + (b - a) * t; }
 
   // The density itself. Everything visual is downstream of this one line.
@@ -149,74 +144,58 @@
   }
 
   function build(stage) {
-    stage.innerHTML = '';
-    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    var svg = K.canvas(stage, W, H);
 
     // --- caption: what move we just made ---
-    var cap = el('text', {
-      x: 40, y: 34, fill: '#6E7681', 'font-size': 17,
-      'font-family': 'Roboto, sans-serif', class: 'zstd-caption'
-    });
+    var cap = K.txt(40, 28, '', { size: 'caption', cls: 'zstd-caption' });
     svg.appendChild(cap);
 
     // --- the shaded tail, under the stroke so the outline stays crisp ---
-    var tail = svg.appendChild(el('path', {
-      d: '', fill: '#B94A48', 'fill-opacity': 0.18, stroke: 'none',
+    var tail = svg.appendChild(K.el('path', {
+      d: '', fill: K.PAL.brick, 'fill-opacity': 0.18, stroke: 'none',
       class: 'zstd-tail'
     }));
 
     // --- the density ---
-    var curve = svg.appendChild(el('path', {
-      d: '', fill: 'none', stroke: '#325D88', 'stroke-width': 2.5,
+    var curve = svg.appendChild(K.el('path', {
+      d: '', fill: 'none', stroke: K.PAL.navy, 'stroke-width': 2.5,
       'stroke-linejoin': 'round', class: 'zstd-curve'
     }));
 
     // --- baseline, then a group the ruler is rebuilt into each frame ---
-    svg.appendChild(el('line', {
-      x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: '#E5E7EB', 'stroke-width': 1
+    svg.appendChild(K.el('line', {
+      x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: K.PAL.rule, 'stroke-width': 1
     }));
-    var axis = svg.appendChild(el('g', { class: 'zstd-axis' }));
+    var axis = svg.appendChild(K.el('g', { class: 'zstd-axis' }));
 
     // --- the cutoff: one vertical rule, always the same z, and its label ---
-    var cutline = svg.appendChild(el('line', {
-      x1: 0, y1: BASE, x2: 0, y2: 158,
-      stroke: '#B94A48', 'stroke-width': 1.5, opacity: 0.85
+    var cutline = svg.appendChild(K.el('line', {
+      x1: 0, y1: BASE, x2: 0, y2: 176,
+      stroke: K.PAL.brick, 'stroke-width': 1.5, opacity: 0.85
     }));
-    var cutlab = el('text', {
-      x: 0, y: 148, 'text-anchor': 'middle', fill: '#B94A48', 'font-size': 15,
-      'font-family': 'JetBrains Mono, monospace'
-    });
+    var cutlab = K.txt(0, 165, '',
+      { size: 'label', face: 'mono', fill: 'brick', anchor: 'middle' });
     svg.appendChild(cutlab);
 
     // --- the readout. The big number is the invariant; the small one moves. ---
-    var alab = el('text', {
-      x: 900, y: 68, 'text-anchor': 'end', fill: '#6E7681', 'font-size': 14,
-      'font-family': 'Roboto, sans-serif'
-    });
-    alab.textContent = 'shaded area';
+    var alab = K.txt(900, 76, 'shaded area',
+      { size: 'label', fill: 'inkSoft', anchor: 'end' });
     svg.appendChild(alab);
 
-    var aval = el('text', {
-      x: 900, y: 98, 'text-anchor': 'end', fill: '#B94A48', 'font-size': 26,
-      'font-weight': 700, 'font-family': 'JetBrains Mono, monospace',
-      class: 'zstd-area'
-    });
+    var aval = K.txt(900, 109, '',
+      { size: 'readout', face: 'mono', fill: 'brick', weight: 700,
+        anchor: 'end', cls: 'zstd-area' });
     svg.appendChild(aval);
 
-    var peak = el('text', {
-      x: 900, y: 122, 'text-anchor': 'end', fill: '#6E7681', 'font-size': 14,
-      'font-family': 'JetBrains Mono, monospace', class: 'zstd-peak'
-    });
+    var peak = K.txt(900, 136, '',
+      { size: 'label', face: 'mono', fill: 'inkSoft', anchor: 'end',
+        cls: 'zstd-peak' });
     svg.appendChild(peak);
 
     // --- which variable we are looking at, in mono so it reads as notation ---
-    var vline = el('text', {
-      x: X0, y: 386, fill: '#3E3F3A', 'font-size': 17,
-      'font-family': 'JetBrains Mono, monospace'
-    });
+    var vline = K.txt(X0, 429, '', { size: 'label', face: 'mono', fill: 'ink' });
     svg.appendChild(vline);
 
-    stage.appendChild(svg);
     return { svg: svg, cap: cap, tail: tail, curve: curve, axis: axis,
              cutline: cutline, cutlab: cutlab, aval: aval, peak: peak,
              vline: vline, state: 0 };
@@ -239,16 +218,12 @@
 
     while (s.axis.firstChild) s.axis.removeChild(s.axis.firstChild);
     ticks(f).forEach(function (t) {
-      s.axis.appendChild(el('line', {
+      s.axis.appendChild(K.el('line', {
         x1: t.x, y1: BASE, x2: t.x, y2: BASE + 6,
-        stroke: '#B0B7C0', 'stroke-width': 1
+        stroke: K.PAL.dim, 'stroke-width': 1
       }));
-      var lab = el('text', {
-        x: t.x, y: BASE + 24, 'text-anchor': 'middle', fill: '#6E7681',
-        'font-size': 14, 'font-family': 'JetBrains Mono, monospace'
-      });
-      lab.textContent = t.t;
-      s.axis.appendChild(lab);
+      s.axis.appendChild(K.txt(t.x, BASE + 24, t.t,
+        { size: 'tick', face: 'mono', anchor: 'middle' }));
     });
   }
 
@@ -268,8 +243,7 @@
     // Reveal only ever fires one fragment event at a time, so a two-step jump
     // means something else moved us. The staged tween below assumes adjacent
     // states, so snap instead of easing through geometry it was not built for.
-    if (instant || REDUCE || Math.abs(i - s.state) > 1 ||
-        typeof window.anime === 'undefined' || !window.anime.animate) {
+    if (instant || K.REDUCE || Math.abs(i - s.state) > 1 || !K.animeReady()) {
       render(s, B);
       s.state = i;
       return;
@@ -299,46 +273,11 @@
     s.state = i;
   }
 
-  var ORDER = ['zstd-frag-1', 'zstd-frag-2'];
-  var FRAGS = { 'zstd-frag-1': 1, 'zstd-frag-2': 2 };
-
-  // How many gating fragments Reveal currently has shown. Landing on this
-  // slide via a #hash or by stepping backwards from a later slide leaves
-  // fragments already marked .visible; without this the freshly built stage
-  // would sit at N(100, 15^2) while Reveal believes it is done, and the next
-  // arrow press would leave the slide with the animation never having run.
-  function fragState(slide) {
-    var n = 0;
-    ORDER.forEach(function (id) {
-      var f = slide.querySelector('#' + id);
-      if (f && f.classList.contains('visible')) n++;
-    });
-    return n;
-  }
-
-  function init() {
-    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
-    var current = null;
-
-    function mount(slide) {
-      if (!slide) return;
-      var stage = slide.querySelector('#zstd-stage');
-      if (!stage) { current = null; return; }
-      current = build(stage);
-      place(current, fragState(slide), true);   // snap, don't animate, on entry
-    }
-    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
-    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
-
-    Reveal.on('fragmentshown', function (e) {
-      var i = FRAGS[e.fragment.id];
-      if (current && i !== undefined) place(current, i);
-    });
-    Reveal.on('fragmenthidden', function (e) {
-      var i = FRAGS[e.fragment.id];
-      if (current && i !== undefined) place(current, i - 1);
-    });
-  }
-  init();
+  K.register({
+    stage: 'zstd-stage',
+    frags: ['zstd-frag-1', 'zstd-frag-2'],
+    build: build,
+    place: place
+  });
 })();
 </script>
