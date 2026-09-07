@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-05
 **Deck:** `bman10750-slides/` ("Statistics, Simulated", Quarto Reveal.js, 46 slides, nine seminars)
-**Status:** design approved in conversation; spec reviewer approved after three rounds; awaiting user review
+**Status:** implemented 2026-09-07 on branch deck/presence (plan 2026-09-06-projection-presence.md); browser verification in Task 25b
 
 ## 1. Goal
 
@@ -115,7 +115,7 @@ Monaco options that CSS cannot reach are set from a new `assets/js/sim-tune.html
 
 | element | today | proposed |
 |---|---|---|
-| `.sem-mark::before` numeral | 2.6em at 22% navy | 4.4em (about 160px) at 18% navy, same position |
+| `.sem-mark::before` numeral | 2.6em at 22% navy | 4em with line-height 0.8 (about 144px glyph, 115px box) at 18% navy, same position; tightened hero margins (Task 5b) so every hero fits 700px |
 | tagline (`section.hero > p`) | 1.15em | 1.3em |
 | `.lede` | italic, `--ink-soft` | italic, `--ink` |
 
