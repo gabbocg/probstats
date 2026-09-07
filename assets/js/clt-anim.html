@@ -26,18 +26,17 @@
   n = 1 it is a low wide arc nowhere near the spikes, which is correct — the
   population is not normal and the curve is not pretending otherwise.
 
-  Fragment gating follows the deck convention: invisible .fi-frag spans on
-  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
+  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
 */
 (function () {
-  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var K = window.StageKit;
 
-  // Stage geometry — fixed 1000x400 space, scaled to the slide via CSS.
-  var W = 1000, H = 400;
+  // Stage geometry — 1000x445 canvas, shown at scale(1.05).
+  var W = 1000, H = 445;
   var LX0 = 70, LX1 = 420;                        // left panel: the population
   var RX0 = 560, RX1 = 950;                       // right panel: the sample mean
-  var BASE = 320, HMAX = 190, AXIS_Y = 345, FOOT_Y = 374;
-  var NS = 'http://www.w3.org/2000/svg';
+  var BASE = 356, HMAX = 211, AXIS_Y = 384, FOOT_Y = 416;
 
   // --- the population: relative frequency exp(-RATE * v) on v = 0 .. VMAX ---
   var RATE = 0.55, VMAX = 9, NV = VMAX + 1;
@@ -54,19 +53,15 @@
   var NCURVE = 160;                               // segments in the normal overlay
 
   var STAGES = [
-    // Captions stay under ~46 characters: at 17px Roboto from x = 40 anything
-    // longer runs into the orange readout that starts at x = 560.
+    // Captions stay under ~46 characters at 24px Roboto from x = 40, so they
+    // land well clear of the panel divide at x = 490; the orange n = ...
+    // readout has moved to the right edge (x = 950, right-aligned) so it no
+    // longer competes with the caption band.
     { n: 1,  cap: 'n = 1 — the mean IS one observation' },
     { n: 2,  cap: 'n = 2 — already less skewed' },
     { n: 5,  cap: 'n = 5 — nearly symmetric' },
     { n: 30, cap: 'n = 30 — normal, and much narrower' }
   ];
-
-  function el(name, attrs) {
-    var e = document.createElementNS(NS, name);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
 
   // --- population weights, and the two numbers that drive everything else ---
   var P = [], tot = 0, v;
@@ -178,120 +173,92 @@
   var RSLOT = (RX1 - RX0) / NBIN, RBW = RSLOT - 2;  // 15.6 per bin, 13.6 inked
 
   function build(stage) {
-    stage.innerHTML = '';
-    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
-    var i, t;
+    var svg = K.canvas(stage, W, H);
+    var i;
 
     // --- the divider, so the two panels read as two claims, not one chart ---
-    svg.appendChild(el('line', {
-      x1: 490, y1: 60, x2: 490, y2: 350, stroke: '#E5E7EB', 'stroke-width': 1
+    svg.appendChild(K.el('line', {
+      x1: 490, y1: 67, x2: 490, y2: 389, stroke: K.PAL.rule, 'stroke-width': 1
     }));
 
     // --- LEFT: the population. Built once, animated never. ---
     for (i = 0; i < NV; i++) {
       var h = P[i] / P[0] * HMAX;                  // P(0) is the mode, so it fills
-      svg.appendChild(el('rect', {
+      svg.appendChild(K.el('rect', {
         x: lbx(i) + (LSLOT - LBW) / 2, y: BASE - h, width: LBW, height: h,
-        fill: '#325D88', opacity: 0.55, class: 'clt-pop'
+        fill: K.PAL.navy, opacity: 0.55, class: 'clt-pop'
       }));
     }
-    svg.appendChild(el('line', {
-      x1: LX0, y1: BASE, x2: LX1, y2: BASE, stroke: '#E5E7EB', 'stroke-width': 1
+    svg.appendChild(K.el('line', {
+      x1: LX0, y1: BASE, x2: LX1, y2: BASE, stroke: K.PAL.rule, 'stroke-width': 1
     }));
     for (i = 0; i < NV; i++) {
-      t = el('text', {
-        x: lbx(i) + LSLOT / 2, y: AXIS_Y, 'text-anchor': 'middle',
-        fill: '#6E7681', 'font-size': 15,
-        'font-family': 'JetBrains Mono, monospace'
-      });
-      t.textContent = i;
-      svg.appendChild(t);
+      svg.appendChild(K.txt(lbx(i) + LSLOT / 2, AXIS_Y, i,
+        { size: 'tick', face: 'mono', anchor: 'middle' }));
     }
 
     // --- RIGHT: the sample mean. Bars first, overlay on top of them. ---
     var bars = ST[0].hs.map(function (h, b) {
-      return svg.appendChild(el('rect', {
+      return svg.appendChild(K.el('rect', {
         x: rbx(b) + 1, y: BASE - h, width: RBW, height: h,
-        fill: '#93C54B', opacity: 0.6, class: 'clt-bar'
+        fill: K.PAL.olive, opacity: 0.6, class: 'clt-bar'
       }));
     });
-    var curve = svg.appendChild(el('polyline', {
+    var curve = svg.appendChild(K.el('polyline', {
       points: poly(ST[0].cy), fill: 'none',
-      stroke: '#B94A48', 'stroke-width': 2, 'stroke-linejoin': 'round',
+      stroke: K.PAL.brick, 'stroke-width': 2, 'stroke-linejoin': 'round',
       opacity: 0.8, class: 'clt-normal'
     }));
-    svg.appendChild(el('line', {
-      x1: RX0, y1: BASE, x2: RX1, y2: BASE, stroke: '#E5E7EB', 'stroke-width': 1
+    svg.appendChild(K.el('line', {
+      x1: RX0, y1: BASE, x2: RX1, y2: BASE, stroke: K.PAL.rule, 'stroke-width': 1
     }));
     // 0..9, matching the population panel's labels exactly.
     for (i = 0; i <= 9; i++) {
-      t = el('text', {
-        x: rvx(i), y: AXIS_Y, 'text-anchor': 'middle',
-        fill: '#6E7681', 'font-size': 15,
-        'font-family': 'JetBrains Mono, monospace'
-      });
-      t.textContent = i;
-      svg.appendChild(t);
+      svg.appendChild(K.txt(rvx(i), AXIS_Y, i,
+        { size: 'tick', face: 'mono', anchor: 'middle' }));
     }
 
     // --- the population mean, marked in both panels: the centre never moves,
     //     only the spread does, and side by side that is hard to miss ---
     [rvx(POP_MEAN), LX0 + (POP_MEAN + 0.5) * LSLOT].forEach(function (x) {
-      svg.appendChild(el('line', {
-        x1: x, y1: 134, x2: x, y2: BASE, stroke: '#B0B7C0',
+      svg.appendChild(K.el('line', {
+        x1: x, y1: 149, x2: x, y2: BASE, stroke: K.PAL.dim,
         'stroke-width': 1, 'stroke-dasharray': '3 5', opacity: 0.8
       }));
     });
 
     // --- caption: which n we are looking at, in words ---
-    var cap = el('text', {
-      x: 40, y: 34, fill: '#6E7681', 'font-size': 17,
-      'font-family': 'Roboto, sans-serif', class: 'clt-caption'
-    });
-    cap.textContent = STAGES[0].cap;
+    var cap = K.txt(40, 28, STAGES[0].cap, { size: 'caption', cls: 'clt-caption' });
     svg.appendChild(cap);
 
-    // --- and the same n as a number, over the panel it governs ---
-    var read = el('text', {
-      x: RX0, y: 78, fill: '#F47C3C',
-      'font-size': 22, 'font-weight': 700,
-      'font-family': 'JetBrains Mono, monospace', class: 'clt-n'
-    });
-    read.textContent = 'n = ' + STAGES[0].n;
+    // --- and the same n as a number, at the right edge of the panel it
+    //     governs — the right edge because a 24px caption at x = 40 now
+    //     runs long enough to pass underneath x = 560 ---
+    var read = K.txt(950, 87, 'n = ' + STAGES[0].n,
+      { size: 'readout', face: 'mono', fill: 'orange', weight: 700,
+        anchor: 'end', cls: 'clt-n' });
     svg.appendChild(read);
 
     // --- panel titles ---
-    var ltitle = el('text', {
-      x: LX0, y: 104, fill: '#6E7681', 'font-size': 15,
-      'font-family': 'Roboto, sans-serif'
-    });
-    ltitle.textContent = 'the population — never changes';
+    var ltitle = K.txt(LX0, 116, 'the population — never changes',
+      { size: 'label', fill: 'inkSoft' });
     svg.appendChild(ltitle);
 
-    var rtitle = el('text', {
-      x: RX0, y: 104, fill: '#6E7681', 'font-size': 15,
-      'font-family': 'Roboto, sans-serif'
-    });
-    rtitle.textContent = 'the mean of n draws';
+    var rtitle = K.txt(RX0, 116, 'the mean of n draws',
+      { size: 'label', fill: 'inkSoft' });
     svg.appendChild(rtitle);
 
     // --- the population's own two numbers, stated once and left alone ---
-    var lfoot = el('text', {
-      x: LX0, y: FOOT_Y, fill: '#3E3F3A', 'font-size': 15,
-      'font-family': 'JetBrains Mono, monospace'
-    });
-    lfoot.textContent = 'mean ' + POP_MEAN.toFixed(2) + '   SD ' + POP_SD.toFixed(2);
+    var lfoot = K.txt(LX0, FOOT_Y,
+      'mean ' + POP_MEAN.toFixed(2) + '   SD ' + POP_SD.toFixed(2),
+      { size: 'label', face: 'mono', fill: 'ink' });
     svg.appendChild(lfoot);
 
     // --- the payoff line: what we measured, next to what theory predicted ---
-    var rfoot = el('text', {
-      x: RX0, y: FOOT_Y, fill: '#6E7681', 'font-size': 15,
-      'font-family': 'JetBrains Mono, monospace', class: 'clt-sd'
-    });
-    rfoot.textContent = ST[0].foot;
+    var rfoot = K.txt(RX0, FOOT_Y, ST[0].foot,
+      { size: 'label', face: 'mono', fill: 'inkSoft', cls: 'clt-sd' });
     svg.appendChild(rfoot);
 
-    stage.appendChild(svg);
     return { cap: cap, read: read, foot: rfoot, bars: bars, curve: curve,
              cy: ST[0].cy };
   }
@@ -303,8 +270,7 @@
     s.read.textContent = 'n = ' + st.n;
     s.foot.textContent = st.foot;
 
-    if (instant || REDUCE ||
-        typeof window.anime === 'undefined' || !window.anime.animate) {
+    if (instant || K.REDUCE || !K.animeReady()) {
       s.bars.forEach(function (r, b) {
         r.setAttribute('y', BASE - st.hs[b]);
         r.setAttribute('height', st.hs[b]);
@@ -344,47 +310,11 @@
     s.cy = st.cy;
   }
 
-  var ORDER = ['clt-frag-1', 'clt-frag-2', 'clt-frag-3'];
-  var STATES = { 'clt-frag-1': 1, 'clt-frag-2': 2, 'clt-frag-3': 3 };
-
-  // How many gating fragments Reveal currently has shown. Landing on this
-  // slide via a #hash or by stepping backwards from a later slide leaves
-  // fragments already marked .visible; without this the freshly built stage
-  // would show the n = 1 spikes while Reveal believes it is done, and the next
-  // arrow press would leave the slide with the animation never having run.
-  function fragState(slide) {
-    var n = 0;
-    ORDER.forEach(function (id) {
-      var f = slide.querySelector('#' + id);
-      if (f && f.classList.contains('visible')) n++;
-    });
-    return n;
-  }
-
-  function init() {
-    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
-    var current = null;
-
-    function mount(slide) {
-      if (!slide) return;
-      var stage = slide.querySelector('#clt-stage');
-      if (!stage) { current = null; return; }
-      current = build(stage);
-      var s = fragState(slide);
-      if (s) place(current, s, true);   // snap, don't animate, on entry
-    }
-    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
-    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
-
-    Reveal.on('fragmentshown', function (e) {
-      var s = STATES[e.fragment.id];
-      if (current && s !== undefined) place(current, s);
-    });
-    Reveal.on('fragmenthidden', function (e) {
-      var s = STATES[e.fragment.id];
-      if (current && s !== undefined) place(current, s - 1);
-    });
-  }
-  init();
+  K.register({
+    stage: 'clt-stage',
+    frags: ['clt-frag-1', 'clt-frag-2', 'clt-frag-3'],
+    build: build,
+    place: place
+  });
 })();
 </script>

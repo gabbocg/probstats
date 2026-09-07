@@ -134,7 +134,7 @@ Both land on 0.607. A brand-new machine and a 10-year-old one have the *same* ch
 []{.fragment .fi-frag id="clt-frag-3"}
 
 ::: {.slide-footer}
-The population on the left never changes and never becomes normal. It is the **mean** that does — and it also narrows, at the rate $\sigma/\sqrt{n}$. Both panels share one axis so the narrowing is real, not an artefact of rescaling.
+The population on the left never changes and never becomes normal; the **mean** does, and it narrows at the rate $\sigma/\sqrt{n}$. Both panels share one axis, so the narrowing is real, not a rescaling.
 :::
 
 ## One table for every normal {.stage-slide #zstd-intuition}
