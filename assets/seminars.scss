@@ -60,7 +60,11 @@
 // Orange (accent-3) rather than navy: navy is the deck's voice, orange is
 // the student's turn to act. One per interactive slide, never more.
 .try-this {
-  margin: 0.35em 0 0.2em;
+  // The gap above this box is the LARGER of this margin-top and .sim-card's
+  // own margin-bottom (adjacent margins collapse); trimmed alongside that
+  // margin (Task 25b) to close a 12px overflow measured live on the
+  // tallest cell (a plot with a two-line result and this two-line box).
+  margin: 0.1em 0 0.2em;
   padding: 8px 16px 8px 46px;
   background: rgba(244, 124, 60, 0.07);
   border: 1px solid rgba(244, 124, 60, 0.22);
@@ -116,14 +120,19 @@
 // output pane is tall enough for a base-graphics plot.
 // Padding is tight on purpose: a 12-line plot cell with a two-line printed
 // result and a two-line prompt is the tallest sim slide and must fit 700px.
+// That budget was never checked against a live run (the static check only
+// counts code lines): run in the browser (Task 25b) it actually came to
+// 712px. margin and padding trimmed below to close the gap; the collapsed
+// margin above .try-this is whichever of this margin-bottom and .try-this's
+// own margin-top is larger, so both had to shrink together.
 .sim-card {
-  padding: 10px 18px 10px;
+  padding: 8px 18px 8px;
   background: var(--bg-elev);
   border: 1px solid var(--rule);
   border-top: 3px solid var(--accent-1);
   border-radius: 8px;
   box-shadow: 0 1px 2px rgba(20, 28, 45, 0.03);
-  margin: 0.25em 0 0.15em;
+  margin: 0.1em 0 0.05em;
   min-width: 0;
 }
 // qwebr's real DOM (verified in the browser, not assumed):
