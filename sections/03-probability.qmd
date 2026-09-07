@@ -75,7 +75,7 @@ The evidence is identical every time — only the prior changes. At `0.05` you g
 []{.fragment .fi-frag id="cond-frag-3"}
 
 ::: {.slide-footer}
-This is your worksheet's tree diagram, drawn as area instead of branches: 80% would buy, 40% of those would also upgrade. Counting people or splitting a unit square — same operation, and the answer is again a ratio of what survived.
+The worksheet's tree diagram drawn as area: 80% would buy, 40% of those would upgrade. Counting people or splitting a unit square is one operation — again a ratio of what survived.
 :::
 
 ## Count the managers instead {.sim-slide #cond-sim}

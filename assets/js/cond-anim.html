@@ -14,15 +14,15 @@
   orange regions stretch to full height is what makes "same evidence, new
   denominator" visible rather than asserted.
 
-  Fragment gating follows the deck convention: invisible .fi-frag spans on
-  the slide, listened to via Reveal's fragmentshown/fragmenthidden.
+  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
+  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
 */
 (function () {
-  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var K = window.StageKit;
 
-  // Stage geometry — fixed 1000x400 space, scaled to the slide via CSS.
-  var W = 1000, H = 400;
-  var SQ_X = 250, SQ_Y = 70, SQ_W = 500, SQ_H = 270;
+  // Stage geometry — fixed 1000x445 space, scaled to the slide via CSS.
+  var W = 1000, H = 445;
+  var SQ_X = 250, SQ_Y = 78, SQ_W = 500, SQ_H = 300;
 
   // Column split: P(buy) = 0.8 of the WIDTH.
   var BUY_W = SQ_W * 0.80;              // 400
@@ -30,20 +30,13 @@
   var NB_X  = SQ_X + BUY_W;             // 650
 
   // Row split inside each column: P(upgrade | column) of that column's HEIGHT.
-  var BUY_UP_H = SQ_H * 0.40;           // 108  -> 32% of the square
-  var NB_UP_H  = SQ_H * 0.10;           //  27  ->  2% of the square
+  var BUY_UP_H = SQ_H * 0.40;           // 120  -> 32% of the square
+  var NB_UP_H  = SQ_H * 0.10;           //  30  ->  2% of the square
 
-  var INK = '#3E3F3A', SOFT = '#6E7681', RULE = '#E5E7EB';
-  var NAVY = '#325D88', ORANGE = '#F47C3C', GREY = '#B0B7C0';
-  var MONO = 'JetBrains Mono, monospace', SANS = 'Roboto, sans-serif';
-  var NS = 'http://www.w3.org/2000/svg';
+  var INK = K.PAL.ink, SOFT = K.PAL.inkSoft, RULE = K.PAL.rule;
+  var NAVY = K.PAL.navy, ORANGE = K.PAL.orange, GREY = K.PAL.dim;
+  var MONO = K.FONT.mono, SANS = K.FONT.sans;
 
-  function el(name, attrs) {
-    var e = document.createElementNS(NS, name);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
-    return e;
-  }
-  function txt(attrs, s) { var t = el('text', attrs); t.textContent = s; return t; }
   function merge(a, b) {
     var o = {}, k;
     for (k in a) o[k] = a[k];
@@ -52,10 +45,10 @@
   }
   function setAttrs(n, p) { for (var k in p) n.setAttribute(k, p[k]); }
 
-  // Keep these SHORT. The caption is left-anchored at x=40, y=34; once the
-  // columns subdivide the "Buy"/"No buy" headers rise to y=46 centred on
-  // x=450 and x=700. A caption much past ~44 characters runs straight under
-  // the Buy header at 17px Roboto (~8.4px per character).
+  // Keep these SHORT. The caption is left-anchored at x=40, y=28; once the
+  // columns subdivide the "Buy"/"No buy" headers rise to y=51 centred on
+  // x=450 and x=700. A caption much past ~40 characters at 24px Roboto
+  // (~12px per character) can run toward the Buy header — checked in build().
   var CAPTIONS = {
     0: '100% of managers, split by buying',
     1: 'each column splits by upgrading',
@@ -64,14 +57,10 @@
   };
 
   function build(stage) {
-    stage.innerHTML = '';
-    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
+    var svg = K.canvas(stage, W, H);
 
-    var cap = txt({
-      x: 40, y: 34, fill: SOFT, 'font-size': 17, 'font-family': SANS,
-      class: 'cond-caption'
-    }, CAPTIONS[0]);
-    svg.appendChild(cap);
+    var cap = svg.appendChild(K.txt(40, 28, CAPTIONS[0],
+      { size: 'caption', cls: 'cond-caption' }));
 
     // --- fill layer -------------------------------------------------------
     // Regions carry fill only; the column outlines below own the strokes, so
@@ -81,7 +70,7 @@
     // and an orange one on top. State 1 cross-fades between them, which avoids
     // tweening navy -> orange through a muddy midpoint.
     function region(x, y, w, h, fill, op) {
-      return svg.appendChild(el('rect', {
+      return svg.appendChild(K.el('rect', {
         x: x, y: y, width: w, height: h, fill: fill, 'fill-opacity': op
       }));
     }
@@ -95,7 +84,7 @@
     var nbUpPale  = region(NB_X, SQ_Y, NB_W,  NB_UP_H,  GREY, 0.18);
 
     function orange(x, w, h) {
-      return svg.appendChild(el('rect', {
+      return svg.appendChild(K.el('rect', {
         x: x, y: SQ_Y, width: w, height: h,
         fill: ORANGE, 'fill-opacity': 0,
         stroke: ORANGE, 'stroke-width': 1.5, 'stroke-opacity': 0
@@ -105,18 +94,18 @@
     var nbUpOr  = orange(NB_X,  NB_W,  NB_UP_H);
 
     // --- column outlines --------------------------------------------------
-    svg.appendChild(el('rect', {
+    svg.appendChild(K.el('rect', {
       x: SQ_X, y: SQ_Y, width: BUY_W, height: SQ_H,
       fill: 'none', stroke: NAVY, 'stroke-width': 1.5
     }));
-    svg.appendChild(el('rect', {
+    svg.appendChild(K.el('rect', {
       x: NB_X, y: SQ_Y, width: NB_W, height: SQ_H,
       fill: 'none', stroke: GREY, 'stroke-width': 1.5
     }));
 
     // --- horizontal dividers, drawn in by dashoffset ----------------------
     function divider(x, y, len, colour) {
-      return svg.appendChild(el('line', {
+      return svg.appendChild(K.el('line', {
         x1: x, y1: y, x2: x + len, y2: y,
         stroke: colour, 'stroke-width': 1.5,
         'stroke-dasharray': len, 'stroke-dashoffset': len, opacity: 1
@@ -130,14 +119,10 @@
     // the columns are subdivided, otherwise they collide with the row labels.
     function colLab(x, title, pct, colour) {
       return {
-        t: svg.appendChild(txt({
-          x: x, y: 198, 'text-anchor': 'middle', fill: colour,
-          'font-size': 20, 'font-family': SANS
-        }, title)),
-        p: svg.appendChild(txt({
-          x: x, y: 224, 'text-anchor': 'middle', fill: colour,
-          'font-size': 17, 'font-family': MONO
-        }, pct))
+        t: svg.appendChild(K.txt(x, 220, title,
+          { size: 'label', anchor: 'middle', fill: colour })),
+        p: svg.appendChild(K.txt(x, 249, pct,
+          { size: 'label', face: 'mono', anchor: 'middle', fill: colour }))
       };
     }
     var buyLab = colLab(SQ_X + BUY_W / 2, 'Buy', '80%', NAVY);
@@ -145,34 +130,32 @@
 
     // --- region labels ----------------------------------------------------
     function pctLab(x, y, s, colour, weight) {
-      return svg.appendChild(txt({
-        x: x, y: y, 'text-anchor': 'middle', fill: colour,
-        'font-size': 15, 'font-weight': weight, 'font-family': MONO, opacity: 0
-      }, s));
+      var t = svg.appendChild(K.txt(x, y, s,
+        { size: 'label', face: 'mono', anchor: 'middle', fill: colour, weight: weight }));
+      t.setAttribute('opacity', 0);
+      return t;
     }
-    var lBuyUp = pctLab(SQ_X + BUY_W / 2, 129, '32%', INK, 700);
-    var lBuyNo = pctLab(SQ_X + BUY_W / 2, 264, '48%', SOFT, 400);
-    var lNbNo  = pctLab(NB_X + NB_W / 2, 223, '18%', SOFT, 400);
-    // The NoBuy&Upgrade sliver is only 27px tall, so its label lives outside
+    var lBuyUp = pctLab(SQ_X + BUY_W / 2, 144, '32%', INK, 700);
+    var lBuyNo = pctLab(SQ_X + BUY_W / 2, 294, '48%', SOFT, 400);
+    var lNbNo  = pctLab(NB_X + NB_W / 2, 248, '18%', SOFT, 400);
+    // The NoBuy&Upgrade sliver is only 30px tall, so its label lives outside
     // on a leader until state 3 grows the region enough to hold it.
-    var lNbUp  = pctLab(788, 88, '2%', INK, 700);
-    var leader = svg.appendChild(el('line', {
+    var lNbUp  = pctLab(788, 98, '2%', INK, 700);
+    var leader = svg.appendChild(K.el('line', {
       x1: NB_X + NB_W + 4, y1: SQ_Y + NB_UP_H / 2,
       x2: 770, y2: SQ_Y + NB_UP_H / 2,
       stroke: GREY, 'stroke-width': 1, opacity: 0
     }));
 
     // --- result -----------------------------------------------------------
-    svg.appendChild(el('line', {
-      x1: SQ_X, y1: 356, x2: SQ_X + SQ_W, y2: 356,
+    svg.appendChild(K.el('line', {
+      x1: SQ_X, y1: 396, x2: SQ_X + SQ_W, y2: 396,
       stroke: RULE, 'stroke-width': 1
     }));
-    var result = svg.appendChild(txt({
-      x: SQ_X + SQ_W / 2, y: 383, 'text-anchor': 'middle', fill: NAVY,
-      'font-size': 20, 'font-weight': 700, 'font-family': MONO, opacity: 0
-    }, 'P(buy | upgrade) = 32 / 34 = 0.94'));
-
-    stage.appendChild(svg);
+    var result = svg.appendChild(K.txt(SQ_X + SQ_W / 2, 426,
+      'P(buy | upgrade) = 32 / 34 = 0.94',
+      { size: 'readout', face: 'mono', anchor: 'middle', fill: NAVY, weight: 700 }));
+    result.setAttribute('opacity', 0);
 
     return {
       state: 0, cap: cap,
@@ -217,17 +200,17 @@
       { n: [s.divNb],  p: { 'stroke-dashoffset': split ? 0 : NB_W,
                             opacity: grown ? 0 : 1 } },
 
-      { n: [s.buyLab.t, s.nbLab.t], p: { y: headY ? 46 : 198 }, stagger: 60 },
-      // 68, not 64: at 64 the percentage's ascender box runs into the
+      { n: [s.buyLab.t, s.nbLab.t], p: { y: headY ? 51 : 220 }, stagger: 60 },
+      // 76, not 71: at 71 the percentage's ascender box runs into the
       // descender box of the title above it. No ink overlaps, but the pair
       // reads cramped as a header.
-      { n: [s.buyLab.p, s.nbLab.p], p: { y: headY ? 68 : 224 }, stagger: 60 },
+      { n: [s.buyLab.p, s.nbLab.p], p: { y: headY ? 76 : 249 }, stagger: 60 },
 
       // Row labels: the two no-upgrade shares only exist while state === 1.
       { n: [s.lBuyNo, s.lNbNo], p: { opacity: st === 1 ? 1 : 0 }, stagger: 70 },
-      { n: [s.lBuyUp], p: { opacity: rowOp, y: grown ? 210 : 129 } },
+      { n: [s.lBuyUp], p: { opacity: rowOp, y: grown ? 234 : 144 } },
       { n: [s.lNbUp],  p: { opacity: rowOp, x: grown ? NB_X + NB_W / 2 : 788,
-                            y: grown ? 210 : 88 } },
+                            y: grown ? 234 : 98 } },
       { n: [s.leader], p: { opacity: (st >= 1 && st <= 2) ? 1 : 0 } },
 
       { n: [s.result], p: { opacity: grown ? 1 : 0 } }
@@ -247,8 +230,7 @@
     var dur = (st === 3 || s.state === 3) ? 700 : 460;
     s.state = st;
 
-    if (instant || REDUCE ||
-        typeof window.anime === 'undefined' || !window.anime.animate) {
+    if (instant || K.REDUCE || !K.animeReady()) {
       groups.forEach(function (g) {
         g.n.forEach(function (n) { setAttrs(n, g.p); });
       });
@@ -277,47 +259,11 @@
     }
   }
 
-  var ORDER = ['cond-frag-1', 'cond-frag-2', 'cond-frag-3'];
-  var STATES = { 'cond-frag-1': 1, 'cond-frag-2': 2, 'cond-frag-3': 3 };
-
-  // How many gating fragments Reveal currently has shown. Landing on this
-  // slide via a #hash or by stepping backwards from a later slide leaves
-  // fragments already marked .visible; without this the freshly built stage
-  // would show the un-split square while Reveal believes it is done, and the
-  // next arrow press would leave the slide with the animation never run.
-  function fragState(slide) {
-    var n = 0;
-    ORDER.forEach(function (id) {
-      var f = slide.querySelector('#' + id);
-      if (f && f.classList.contains('visible')) n++;
-    });
-    return n;
-  }
-
-  function init() {
-    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
-    var current = null;
-
-    function mount(slide) {
-      if (!slide) return;
-      var stage = slide.querySelector('#cond-stage');
-      if (!stage) { current = null; return; }
-      current = build(stage);
-      var s = fragState(slide);
-      if (s) render(current, s, true);   // snap, don't animate, on entry
-    }
-    Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
-    Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
-
-    Reveal.on('fragmentshown', function (e) {
-      var st = STATES[e.fragment.id];
-      if (current && st !== undefined) render(current, st);
-    });
-    Reveal.on('fragmenthidden', function (e) {
-      var st = STATES[e.fragment.id];
-      if (current && st !== undefined) render(current, st - 1);
-    });
-  }
-  init();
+  K.register({
+    stage: 'cond-stage',
+    frags: ['cond-frag-1', 'cond-frag-2', 'cond-frag-3'],
+    build: build,
+    place: render
+  });
 })();
 </script>
