@@ -107,7 +107,7 @@ echo "── sim-cell budgets (spec §4.3) ────────────�
 # 8 on power-sim (claim pair above the card). 48 characters max everywhere.
 # `#|` option lines never count; a `#| context: setup` cell is exempt.
 budget_out=$(awk '
-  /^## / { id=$0; sub(/.*#/,"",id); sub(/\}.*/,"",id); lede=0; plot=0 }
+  !inchunk && /^## / { id=$0; sub(/.*#/,"",id); sub(/\}.*/,"",id); lede=0; plot=0 }
   /\.lede-min/ { lede=1 }
   /\.sim-plot/ { plot=1 }
   /^```\{webr-r\}/ { inchunk=1; n=0; mx=0; setup=0; next }
