@@ -21,7 +21,7 @@ The worksheet presents these as four separate recipes with four separate tables.
 []{.fragment .fi-frag id="binom-frag-3"}
 
 ::: {.slide-footer}
-The binomial coefficient is not decoration. Because the count discards *which* trials succeeded, all 120 orderings of three successes collapse into one bar — and $\binom{n}{k}$ is exactly how many collapsed.
+The count discards *which* trials succeeded, so all 120 orderings of three successes collapse into one bar — C(n,k) is exactly how many collapsed.
 :::
 
 ## Which seller do you trust? {.stage-slide #seller-intuition}
