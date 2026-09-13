@@ -1,6 +1,6 @@
 ---
-title: "Statistics, Simulated"
-subtitle: "BMAN10750 · seminar intuitions you can run"
+title: "Quantitative Methods"
+subtitle: "BMAN10750"
 author:
   - name: "Gabriel Cabrera^‡^"
     url: "https://gcabrerag.rbind.io"

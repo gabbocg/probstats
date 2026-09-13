@@ -1,0 +1,116 @@
+<script>
+/*
+  Prior-bar animation — slide #bayes-hook (Seminar 3).
+
+  Teaching point: Steve's description is fixed. What you conclude from it is
+  not, because the conclusion also needs a number the description never
+  mentions — how many librarians and farmers there were to begin with. The
+  bar is that number and nothing else, so the presenter can move it three
+  times while the words above it stay put:
+    0. 50 / 50   — the split most people reason from without noticing
+    1. 90 / 10   — a world of librarians
+    2. 10 / 90   — a world of farmers
+
+  No posterior is drawn here. That is the next slide's job; this one only
+  has to make the prior visible as a quantity you have to supply.
+
+  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
+  Reveal fragment wiring live there. Canvas 1000x300 (short: the description
+  sits above it), shown at scale(1.05).
+*/
+(function () {
+  var K = window.StageKit;
+
+  // Librarian share, in percent, one entry per fragment state.
+  var LIB = [50, 90, 10];
+
+  var CAPTIONS = [
+    'Suppose librarians and farmers were equally common',
+    'Suppose the world were nine-tenths librarians',
+    'Suppose farmers outnumbered librarians nine to one'
+  ];
+
+  var W = 1000, H = 300;
+  var X0 = 60, BW = 880;                 // bar spans x 60..940
+  var BY = 132, BH = 100;                // bar top / height
+  var PCT_Y = 112, LEG_Y = 272;
+
+  // The percentages ride above their own segment, centred. The narrowest a
+  // segment ever gets is 10% = 88 units; "90%" at readout 30 mono is about
+  // 54 units, so the two readings can never overlap or leave their block.
+  function build(stage) {
+    var svg = K.canvas(stage, W, H);
+
+    var cap = K.txt(X0, 36, CAPTIONS[0], { size: 'caption' });
+    svg.appendChild(cap);
+
+    var lib = svg.appendChild(K.el('rect', {
+      x: X0, y: BY, width: BW / 2, height: BH, fill: K.PAL.navy
+    }));
+    var farm = svg.appendChild(K.el('rect', {
+      x: X0 + BW / 2, y: BY, width: BW / 2, height: BH, fill: K.PAL.dim
+    }));
+    svg.appendChild(K.el('rect', {
+      x: X0, y: BY, width: BW, height: BH,
+      fill: 'none', stroke: K.PAL.rule, 'stroke-width': 1
+    }));
+
+    var pctLib = K.txt(0, PCT_Y, '', {
+      size: 'readout', face: 'mono', fill: 'navy', weight: 700, anchor: 'middle'
+    });
+    var pctFarm = K.txt(0, PCT_Y, '', {
+      size: 'readout', face: 'mono', fill: 'inkSoft', weight: 700, anchor: 'middle'
+    });
+    svg.appendChild(pctLib);
+    svg.appendChild(pctFarm);
+
+    // Legend anchored to the bar's ends, not to the segments: at 10% a
+    // centred word would not fit inside its own block.
+    svg.appendChild(K.txt(X0, LEG_Y, 'Librarians',
+      { size: 'label', fill: 'navy' }));
+    svg.appendChild(K.txt(X0 + BW, LEG_Y, 'Farmers',
+      { size: 'label', anchor: 'end' }));
+
+    var s = {
+      cap: cap, lib: lib, farm: farm,
+      pctLib: pctLib, pctFarm: pctFarm, at: 0
+    };
+    set(s, LIB[0]);
+    return s;
+  }
+
+  // One scalar drives the two rects and both readouts, so the picture and
+  // its numbers cannot disagree part-way through a tween.
+  function set(s, p) {
+    var w = BW * p / 100;
+    s.lib.setAttribute('width', w);
+    s.farm.setAttribute('x', X0 + w);
+    s.farm.setAttribute('width', BW - w);
+    s.pctLib.setAttribute('x', X0 + w / 2);
+    s.pctFarm.setAttribute('x', X0 + w + (BW - w) / 2);
+    s.pctLib.textContent = Math.round(p) + '%';
+    s.pctFarm.textContent = Math.round(100 - p) + '%';
+  }
+
+  function place(s, state, instant) {
+    var from = LIB[s.at], to = LIB[state];
+    s.cap.textContent = CAPTIONS[state];
+    s.at = state;
+
+    if (instant || K.REDUCE || !K.animeReady()) { set(s, to); return; }
+
+    var v = { p: from };
+    window.anime.animate(v, {
+      p: to, duration: 700, ease: 'outCubic',
+      onUpdate: function () { set(s, v.p); }
+    });
+  }
+
+  K.register({
+    stage: 'prior-stage',
+    frags: ['prior-frag-1', 'prior-frag-2'],
+    build: build,
+    place: place
+  });
+})();
+</script>

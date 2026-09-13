@@ -4,15 +4,26 @@
 Seminar 3 · Conditional probability and Bayes
 :::
 
-Evidence updates a belief. It does not replace it.
+## Librarian or Farmer? {.stage-slide #bayes-hook}
 
-::: {.lede}
-Every tree diagram and every "given that" on the worksheet is one move: discard the part of the world you now know did not happen, then rescale what is left. Do it with areas and Bayes' theorem stops being a formula to memorise.
+::: {.lede-min}
+Steve is very shy and withdrawn, invariably helpful but with very little interest in people or in the world of reality. A meek and tidy soul, he has a need for order and structure, and a passion for detail.
 :::
 
-## Steve is meek, tidy, loves detail {.stage-slide #bayes-intuition}
+::: {.stage-wrap .stage-wrap-prior}
+<div id="prior-stage" class="stage"></div>
+:::
 
-::: {.stage-wrap .stage-wrap-std}
+[]{.fragment .fi-frag id="prior-frag-1"}
+[]{.fragment .fi-frag id="prior-frag-2"}
+
+::: {.slide-footer}
+The description never changes; the answer does — because of a number that is not in it. That number is the base rate, and the next slide goes and counts it.
+:::
+
+## Twenty Farmers for Every Librarian {.stage-slide #bayes-intuition}
+
+::: {.stage-wrap .stage-wrap-bayes}
 <div id="bayes-stage" class="stage"></div>
 :::
 
@@ -22,10 +33,10 @@ Every tree diagram and every "given that" on the worksheet is one move: discard 
 []{.fragment .fi-frag id="bayes-frag-4"}
 
 ::: {.slide-footer}
-Almost everyone says librarian. The description *does* fit librarians four times better, and Steve is still far more likely to be a farmer — nineteen times as many. Both facts hold at once.
+The base rate is how common each job is, before you read a word about Steve. His description fits librarians four times better. But there are twenty times more farmers, so he is still five times more likely to be one.
 :::
 
-## The formula is just that picture {.stage-slide #bayeq-formula}
+## The Formula is Just That Picture {.stage-slide #bayeq-formula}
 
 ::: {.stage-wrap .stage-wrap-std}
 <div id="bayeq-stage" class="stage"></div>
@@ -36,10 +47,6 @@ Almost everyone says librarian. The description *does* fit librarians four times
 []{.fragment .fi-frag id="bayeq-frag-3"}
 []{.fragment .fi-frag id="bayeq-frag-4"}
 
-::: {.slide-footer}
-Nothing here goes beyond the grid: numerator one block, denominator every surviving block. Dividing is the rescaling you watched — why $0.020/0.115$ and $4/23$ match.
-:::
-
 ## Move the prior, watch the answer move {.sim-slide #bayes-sim}
 
 ::: {.slide-kicker}
@@ -48,21 +55,39 @@ Seminar 3 · the base rate does the work
 
 ::: {.sim-card .sim-text}
 ```{webr-r}
-prior <- 0.05   # <-- P(librarian)
+prior <- 1 / 21 # <-- P(librarian)
 n <- 300000
 
 lib  <- runif(n) < prior
+
 # fits 40% of librarians, 10% of farmers
 fits <- runif(n) < ifelse(lib, 0.40, 0.10)
 
-round(c(prior     = prior,
-        posterior = mean(lib[fits])), 4)
+c("P(H)" = prior, "P(H|E)" = mean(lib[fits]))
 ```
 :::
 
 ::: {.try-this}
-The evidence is identical every time — only the prior changes. At `0.05` you get 0.17; at `0.50` you get 0.80. **The description never had an opinion about how common librarians are, so the base rate has to supply it.**
+The evidence is identical every time — only the prior changes. `1/21` is the real ratio, one librarian for every twenty farmers; at `0.50` you get 0.80. **The description never had an opinion about how common librarians are, so the base rate has to supply it.**
 :::
+
+## Monty Hall Problem {.stage-slide #monty}
+
+::: {.lede-min}
+A car sits behind one of three doors and a goat behind each of the others. You pick door 1. The host, who knows where the car is, opens door 3 on a goat and offers you the swap. Do you take it?
+:::
+
+::: {.stage-wrap .stage-wrap-monty}
+<div id="monty-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="monty-frag-1"}
+[]{.fragment .fi-frag id="monty-frag-2"}
+[]{.fragment .fi-frag id="monty-frag-3"}
+[]{.fragment .fi-frag id="monty-frag-4"}
+[]{.fragment .fi-frag id="monty-frag-5"}
+[]{.fragment .fi-frag id="monty-frag-6"}
+
 
 ## The same move, in pure proportions {.stage-slide #cond-intuition}
 

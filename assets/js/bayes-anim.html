@@ -5,19 +5,19 @@
   Teaching point: Bayes' theorem is not a formula to memorise, it is a RATIO
   OF AREAS. Steve is meek, tidy and loves detail; everyone says "librarian"
   and quietly forgets how few librarians there are. Advancing the fragments
-  walks the natural-frequency story over 200 people:
-    0. 200 people, one cell each                     (Steve is one of them)
-    1. the PRIOR — 10 librarians, 190 farmers
-    2. the LIKELIHOOD — 40% of librarians fit (4), 10% of farmers fit (19)
-    3. RESTRICT — throw away everyone who does not fit; 23 remain
-    4. the POSTERIOR — the 23 survivors gather into one row: 4 / 23 = 17%
+  walks the natural-frequency story over 210 people:
+    0. 210 people, one cell each                     (Steve is one of them)
+    1. the PRIOR — 10 librarians, 200 farmers (20 farmers per librarian)
+    2. the LIKELIHOOD — 40% of librarians fit (4), 10% of farmers fit (20)
+    3. RESTRICT — throw away everyone who does not fit; 24 remain
+    4. the POSTERIOR — the 24 survivors gather into one row: 4 / 24 = 17%
 
   Step 4 is the whole animation. Watching the 4 navy cells travel across the
-  grid and land next to 19 grey ones is what makes "the answer is a ratio"
+  grid and land next to 20 grey ones is what makes "the answer is a ratio"
   visible rather than asserted; the arithmetic underneath is a caption.
 
   The counts are chosen so nothing rounds: 40% of 10 = 4 exactly, and 10% of
-  each 10-cell farmer column = 1 exactly across 19 columns = 19.
+  each 10-cell farmer column = 1 exactly across 20 columns = 20.
 
   Profession is carried by FILL (navy = librarian, grey = farmer) and never
   changes. "Fits the description" is carried by a STROKE, so a cell can say
@@ -29,12 +29,17 @@
 (function () {
   var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Stage geometry — fixed 1000x400 space, scaled to the slide via CSS.
-  var W = 1000, H = 400;
+  // Stage geometry — fixed 1000x358 space, scaled to the slide via CSS.
+  // 358 is the tallest thing this stage ever draws (the 10-row grid bottoms
+  // out at 351) plus a little air. The old 400 left a band of empty canvas
+  // under the drawing, which the .stage-wrap height then padded further.
+  var W = 1000, H = 358;
 
   // The population grid: 20 columns x 10 rows = one cell per person.
-  var COLS = 20, ROWS = 10, CELL = 24, GAP = 3, PITCH = CELL + GAP;  // 27
-  var X0 = 150, Y0 = 84;
+  var COLS = 21, ROWS = 10, CELL = 24, GAP = 3, PITCH = CELL + GAP;  // 27
+  // X0 keeps the grid's RIGHT edge at 687, 43 units clear of the readout
+  // panel at x = 730; the 21st column grew the grid leftwards, not into it.
+  var X0 = 123, Y0 = 84;
 
   var INK = '#3E3F3A', SOFT = '#6E7681', RULE = '#E5E7EB';
   var NAVY = '#325D88', ORANGE = '#F47C3C', GREY = '#B0B7C0';
@@ -51,9 +56,9 @@
 
   // Who fits the description — deterministic, no RNG, so the picture is the
   // same in every rehearsal and in the room.
-  //   librarian column: 4 of 10  = 40%
-  //   each farmer column: 1 of 10 = 10%, at a row that walks by 3 so the
-  //   marked farmers do not read as a ruled line across the grid.
+  //   librarian column: 4 of 10   = 40%
+  //   each of the 20 farmer columns: 1 of 10 = 10%, at a row that walks by
+  //   3 so the marked farmers do not read as a ruled line across the grid.
   var LIB_FITS = [1, 3, 6, 8];
   function fits(c, r) {
     if (c === 0) return LIB_FITS.indexOf(r) >= 0;
@@ -97,17 +102,6 @@
     return a;
   })();
 
-  // Keep these SHORT. The caption is left-anchored at x=40, y=34 and the
-  // readout panel starts at x=730; at 17px Roboto (~8.4px per character) a
-  // caption much past ~44 characters runs straight under the readout.
-  var CAPTIONS = {
-    0: '200 people. Steve is one of them.',
-    1: 'the prior — librarians are rare',
-    2: 'who fits the description?',
-    3: 'keep only the ones who fit',
-    4: 'the answer is a ratio of areas'
-  };
-
   // Every number below is COUNTED off the grid that is actually drawn, never
   // typed. The picture and its labels cannot drift apart: change LIB_FITS or
   // fits() and these follow automatically. (Hardcoding them would have left
@@ -119,22 +113,52 @@
   var FIT_FARM= PEOPLE.filter(function (p) { return !p.lib && p.fit; }).length;
   var N_FIT   = FIT_LIB + FIT_FARM;
 
+  var RATIO   = Math.round(N_FARM / N_LIB);
+
+  // Keep these SHORT. The caption is left-anchored at x=40, y=34 and the
+  // readout panel starts at x=730; at 17px Roboto (~8.4px per character) a
+  // caption much past ~44 characters runs straight under the readout.
+  var CAPTIONS = {
+    0: N_TOTAL + ' people. Steve is one of them.',
+    1: 'The prior: the population Steve came from',
+    2: 'Who fits the description?',
+    3: 'Keep only the ones who fit',
+    4: 'The answer is a ratio of areas'
+  };
+
   function pct(a, b) { return Math.round(100 * a / b) + '%'; }
 
   // Readout panel content, one array of tokens per line. `m` marks a mono
   // number, everything else is a Roboto label, so a line can lead with either
   // ("librarians 10" vs "23 people fit"). State 4 has none: the big equation
   // under the row says it, and the panel would sit over the row's right end.
+  // CASE RULE. Capitalise the first word of every line. Mid-line, Librarian
+  // and Farmer take a capital ONLY where the two are named as the competing
+  // options ("Librarian or Farmer?"). Used as ordinary nouns they stay
+  // lowercase — "Farmers per librarian", "4 librarians" — which is what
+  // makes them match "24 people fit the description" sitting beside them.
+  // Inside P(...) everything is lowercase: that is notation, not prose.
+  //
+  // Every line is also LABEL then VALUE, so every line
+  // opens with a capitalised word and closes with a mono number. Some lines
+  // used to lead with the number instead ("24 people fit", "20 farmers per
+  // librarian"), which made the panel change shape from step to step and
+  // put the same words in two different cases a line apart. The only text
+  // in this stage that still opens with a numeral is the pair of bracket
+  // labels under the gathered row, where the line genuinely is a count.
   var READOUT = {
-    0: [[{ t: 'meek, tidy, loves detail' }],
-        [{ t: 'librarian or farmer?' }]],
-    1: [[{ t: 'librarians' }, { t: String(N_LIB), m: 1 }],
-        [{ t: 'farmers' }, { t: String(N_FARM), m: 1 }],
-        [{ t: 'P(librarian) =' }, { t: pct(N_LIB, N_TOTAL), m: 1 }]],
-    2: [[{ t: pct(FIT_LIB, N_LIB) + ' of librarians →' }, { t: String(FIT_LIB), m: 1 }],
-        [{ t: pct(FIT_FARM, N_FARM) + ' of farmers →' }, { t: String(FIT_FARM), m: 1 }]],
-    3: [[{ t: String(N_FIT), m: 1 }, { t: 'people fit' }],
-        [{ t: String(FIT_LIB), m: 1 }, { t: 'of them are librarians' }]],
+    0: [[{ t: 'Meek, tidy, loves detail' }],
+        [{ t: 'Librarian or Farmer?' }]],
+    1: [[{ t: 'Librarians' }, { t: String(N_LIB), m: 1 }],
+        [{ t: 'Farmers' }, { t: String(N_FARM), m: 1 }],
+        [{ t: 'Farmers per librarian' }, { t: String(RATIO), m: 1 }],
+        [{ t: 'P(librarian)' }, { t: pct(N_LIB, N_TOTAL), m: 1 }]],
+    2: [[{ t: 'Librarians who fit' },
+         { t: pct(FIT_LIB, N_LIB) + ' → ' + FIT_LIB, m: 1 }],
+        [{ t: 'Farmers who fit' },
+         { t: pct(FIT_FARM, N_FARM) + ' → ' + FIT_FARM, m: 1 }]],
+    3: [[{ t: 'People who fit' }, { t: String(N_FIT), m: 1 }],
+        [{ t: 'Librarians among them' }, { t: String(FIT_LIB), m: 1 }]],
     4: []
   };
 

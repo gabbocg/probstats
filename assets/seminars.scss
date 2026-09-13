@@ -10,8 +10,17 @@
 // Title band 0–80: pull the accent bar up. Must out-rank theme.scss's
 // `.reveal section > h2::after` (0,1,3), hence the full selector.
 // The same tightening applies to sim slides, whose line budget (§4.3) assumes an 80px title band.
+// The bar read as floating: the margin hangs off the LINE BOX, not the
+// baseline, so several px of half-leading sit in the gap before the margin
+// even starts. What limits how far it comes up is NOT the title's
+// descenders in general — the bar is only 48/56px wide and flush left, so
+// it passes under the first three or four characters and nothing else.
+// A title starting with a p/g/y is the case to re-check by eye. The hero
+// floor is set by "Hypothesis testing", whose 'y' IS the second character:
+// at 0.07em its tail clears the bar, at 0.04em the bar runs through it.
 .reveal section.stage-slide > h2::after,
-.reveal section.sim-slide > h2::after { margin-top: 0.4em; }
+.reveal section.sim-slide > h2::after { margin-top: 0.15em; }
+.reveal section.hero h1::after { margin-top: 0.07em; }
 
 // ---- Animation stages ----
 // Every stage is authored in a fixed 1000-wide pixel space (445 tall by
@@ -30,6 +39,33 @@
 }
 .stage-wrap-std { height: 468px; }   // 445 * 1.05
 .stage-wrap-ci  { height: 347px; }   // 330 * 1.05 — leaves room for .claim-pair
+.stage-wrap-prior { height: 315px; }  // 300 * 1.05 — leaves room for .lede-min above
+.stage-wrap-monty {
+  height: 435px;      // 414 * 1.05
+}
+// #bayeq-formula is the one stage slide with no .slide-footer, so its 595px
+// of space below the title is all stage. At the shared 8px top margin the
+// drawing sat 31px under the title with 200px of white beneath it. Optically
+// centred rather than arithmetically: dead centre put it low on the slide,
+// so it sits above the midpoint. Remove this rule if the slide gains a footer.
+#bayeq-formula .stage-wrap { margin-top: 62px; }
+
+.stage-wrap-bayes { height: 424px; }  // 358 * 1.05 = 376 of drawing + 48 of breathing room
+
+// Steve's description above the prior bar. The deck's 780px .lede-min width
+// would run it to five lines and push the stage off the bottom of the slide.
+.reveal section.stage-slide .lede-min {
+  font-size: 26px;
+  max-width: 980px;
+  // 24px, not the theme's 0.25em: a .lede-min on a stage slide is what
+  // follows the title, so it carries the gap under it. Deck-wide on
+  // purpose — scoped to one slide it left the other visibly tighter.
+  margin: 24px 0 0.5em;
+  // Justified because this one is a quoted description read as a block, not
+  // a caption. Hyphenation keeps the word gaps from opening up at 26px.
+  text-align: justify;
+  hyphens: auto;
+}
 
 .stage {
   position: relative;
@@ -48,6 +84,11 @@
   max-width: 980px;
   margin-top: 0.45em;
 }
+
+// Slide 12's takeaway is set as a justified block, matching the description
+// on slide 11. Scoped to the one slide on purpose: every other stage footer
+// in the deck stays ragged-right. Drop the id to flip them all.
+#bayes-intuition .slide-footer { text-align: justify; hyphens: auto; }
 
 // Invisible fragments used purely to gate animation steps.
 .fi-frag {
@@ -110,6 +151,15 @@
 // Deck-wide (every slide type uses .slide-kicker), not only sim slides; do not scope it.
 .slide-kicker { font-size: 17px; }
 .reveal section.sim-slide .slide-kicker { margin: 0.2em 0 0.4em; }
+
+// #bayes-sim only: 24px under the title (matching the stage slides' .lede-min)
+// and 24px above the prompt, so the orange box reads as separate from the
+// card rather than stuck to it. NOT deck-wide, and not because of the usual
+// scoping laziness — measured, this slide has 119px of headroom while
+// cond-sim and pois-sim have under 4px, so the same rule on .sim-slide would
+// push those two past 700. Re-measure before widening it.
+#bayes-sim .slide-kicker { margin-top: 24px; }
+#bayes-sim .try-this { margin-top: 24px; }
 .reveal section.sim-slide .lede-min {
   font-size: 26px;
   margin: 0.25em 0 0.4em;
@@ -227,7 +277,14 @@
   // Bottom margin dropped to 0 (Task 5b step a): the enlarged hero (numeral
   // 4.4em, tagline 1.3em) still ran 26-30px over 700 after the line-height
   // and lede fixes, so this squeezes the remaining slack above the h1.
-  margin: 0;
+  //
+  // The top margin makes the accent bar read as a RULE: title above it,
+  // numeral and label below it. At 0 the numeral's ink starts ~5px under
+  // the bar and the two merge into one shape (they share a left edge);
+  // this opens that to ~10px, which is the smallest gap that still reads
+  // as a break. Judge it by eye in the browser, not by measuring line
+  // boxes — canvas text metrics do not match how the webfont paints.
+  margin: 0.5em 0 0;
   color: var(--accent-1);
 }
 .sem-mark::before {

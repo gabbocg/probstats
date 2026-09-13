@@ -45,8 +45,10 @@ format:
       - file: assets/animations.html
       - file: assets/js/bins-anim.html
       - file: assets/js/mm-anim.html
+      - file: assets/js/prior-anim.html
       - file: assets/js/bayes-anim.html
       - file: assets/js/bayeq-anim.html
+      - file: assets/js/monty-anim.html
       - file: assets/js/cond-anim.html
       - file: assets/js/binom-anim.html
       - file: assets/js/seller-anim.html

@@ -1,0 +1,203 @@
+<script>
+/*
+  Monty Hall animation — slide #monty (Seminar 3).
+
+  Teaching point: Monty Hall is slide 13's equation with different letters.
+  H is "the car is behind door k", E is "the host opened door 3", and the
+  whole puzzle lives in P(E|H) — what the HOST was free to do, not what the
+  contestant knows. The table works the theorem one row at a time and the
+  bars under the doors carry the answer, so the room sees the number and the
+  length say the same thing:
+    0. the SETUP       three doors, three equal bars, nothing chosen yet
+    1. the CHOICE      you pick door 1
+    2. the PRIOR       1/3 each, now that there is a door to be right about
+    3. the EVIDENCE    the host opens door 3, a goat
+    4. the LIKELIHOOD  1/2, 1, 0 — could he have opened door 3 in each world?
+    5. MULTIPLY        1/6, 1/3, 0 — and their total is P(E) = 1/2
+    6. DIVIDE          1/3, 2/3, 0 — the bars move, door 2 ends twice yours
+
+  The table starts EMPTY and no door is chosen, and the choice and the prior
+  are separate presses. Opening on a labelled "Prior P(H)" row asks the room
+  to read notation before it has a question; opening on a highlighted door
+  answers "which one did you take?" before anyone has been asked. Step 0 is
+  the setup, step 1 is the decision, and only then does the notation start.
+  The bars say "equally likely" from the beginning without needing a label.
+
+  Row 2 is the whole slide. If the car is behind YOUR door he could have
+  opened either of the other two, so opening 3 was a coin flip; if it is
+  behind door 2 he had no choice at all; if it is behind door 3 he could not
+  have opened it. Twice as likely under door 2 is exactly the 2/3.
+
+  Fractions are written, not computed: 1/3 is the reading a student copies
+  down, 0.333 is not. The bar widths ARE computed, off the same table, so a
+  bar can never disagree with the number under its column.
+
+  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
+  Reveal fragment wiring live there. Canvas 1000x414, shown at scale(1.05).
+  It is the shortest stage in the deck because a three-line statement of the
+  puzzle sits above it; every gap here was measured against a 700px slide.
+
+  Every line of text a viewer reads starts with a capital, matching the other
+  Seminar 3 stages. The exception is a fragment that continues a line already
+  begun, which this stage has none of.
+*/
+(function () {
+  var K = window.StageKit;
+
+  var W = 1000, H = 414;
+  // DOOR_Y is 40 below the caption's baseline, not 26: the caption is a
+  // sentence about the doors, and it needs to read as a line above them
+  // rather than as a label stuck to the first one.
+  var DOOR_W = 130, DOOR_H = 110, DOOR_Y = 70;
+  var DOOR_X = [300, 480, 660];
+  var MID = DOOR_X.map(function (x) { return x + DOOR_W / 2; });
+
+  // The pick label sits INSIDE its door: an annotation floating above the
+  // row read as a caption for the whole stage rather than for door 1.
+  var Y_PICK = DOOR_Y + 30, Y_NUM = 206;
+  var BAR_Y = 222, BAR_H = 26;
+  // One step for every row: the slide is a table, and a table whose rows
+  // drift is a table nobody trusts.
+  var ROW_Y = 282, ROW_STEP = 38;
+
+  // A row appears at `from` and never leaves. `v` is what the room writes
+  // down; `p`, where present, is what the bars are drawn from.
+  var ROWS = [
+    { lab: 'Prior  P(H)',        v: ['1/3', '1/3', '1/3'], from: 2,
+      p: [1 / 3, 1 / 3, 1 / 3] },
+    { lab: 'Likelihood  P(E|H)', v: ['1/2', '1',   '0'  ], from: 4 },
+    { lab: 'P(H) · P(E|H)',      v: ['1/6', '1/3', '0'  ], from: 5,
+      note: '→  P(E) = 1/2' },
+    { lab: 'Posterior  P(H|E)',  v: ['1/3', '2/3', '0'  ], from: 6,
+      p: [1 / 3, 2 / 3, 0] }
+  ];
+  var PRIOR_ROW = 0, POST_ROW = 3;
+
+  var CAPTIONS = [
+    'Three doors. The car is behind one of them.',
+    'You pick door 1.',
+    'Every door is equally likely: one chance in three.',
+    'The host opens door 3, and it is a goat.',
+    'Could he have opened door 3, in each world?',
+    'Multiply, then add them up: that total is P(E).',
+    'Divide by it. Door 2 doubles, yours does not move.'
+  ];
+
+  // The winning cell, coloured so the answer is a place on the table rather
+  // than a sentence underneath it.
+  var WIN_COL = 1;
+
+  function build(stage) {
+    var svg = K.canvas(stage, W, H);
+
+    var cap = K.txt(40, 30, CAPTIONS[0], { size: 'caption' });
+    svg.appendChild(cap);
+
+    var doors = DOOR_X.map(function (x) {
+      return svg.appendChild(K.el('rect', {
+        x: x, y: DOOR_Y, width: DOOR_W, height: DOOR_H, rx: 4,
+        fill: K.PAL.rule, stroke: K.PAL.dim, 'stroke-width': 1.5
+      }));
+    });
+
+    // Door 3 carries its goat from the start at zero opacity: fading one in
+    // beats swapping the node, and the door's geometry never moves.
+    var pick = svg.appendChild(K.txt(MID[0], Y_PICK, 'Your pick',
+      { size: 'tick', fill: 'orange', anchor: 'middle' }));
+    pick.setAttribute('opacity', 0);
+
+    var goat = svg.appendChild(K.txt(MID[2], DOOR_Y + DOOR_H / 2 + 7, 'Goat',
+      { size: 'label', fill: 'inkSoft', anchor: 'middle' }));
+    goat.setAttribute('opacity', 0);
+
+    MID.forEach(function (x, i) {
+      svg.appendChild(K.txt(x, Y_NUM, String(i + 1),
+        { size: 'label', face: 'mono', anchor: 'middle' }));
+    });
+
+    // Track then fill, so an empty bar still reads as a quantity that is zero
+    // rather than as a missing element.
+    var bars = DOOR_X.map(function (x) {
+      svg.appendChild(K.el('rect', {
+        x: x, y: BAR_Y, width: DOOR_W, height: BAR_H, rx: 3,
+        fill: K.PAL.rule
+      }));
+      return svg.appendChild(K.el('rect', {
+        x: x, y: BAR_Y, width: DOOR_W * ROWS[PRIOR_ROW].p[0], height: BAR_H,
+        rx: 3, fill: K.PAL.navy
+      }));
+    });
+
+    var rows = ROWS.map(function (r, ri) {
+      var y = ROW_Y + ri * ROW_STEP;
+      var g = svg.appendChild(K.el('g', { opacity: 0 }));
+      g.appendChild(K.txt(40, y, r.lab, { size: 'label' }));
+      r.v.forEach(function (v, ci) {
+        var win = ri === POST_ROW && ci === WIN_COL;
+        g.appendChild(K.txt(MID[ci], y, v, {
+          size: 'caption', face: 'mono', anchor: 'middle',
+          fill: win ? 'navy' : 'ink', weight: win ? 700 : undefined
+        }));
+      });
+      // The running total sits on the row it totals, where slide 13 put its
+      // underbrace: same idea, same place in the argument.
+      if (r.note) {
+        g.appendChild(K.txt(820, y, r.note,
+          { size: 'label', face: 'mono', fill: 'inkSoft' }));
+      }
+      return g;
+    });
+
+    return { cap: cap, doors: doors, pick: pick, goat: goat,
+             bars: bars, rows: rows };
+  }
+
+  function place(s, state, instant) {
+    s.cap.textContent = CAPTIONS[state];
+
+    var open = state >= 3 ? 1 : 0;
+    var chosen = state >= 1 ? 1 : 0;
+
+    // The chosen door is marked by its stroke, which is a swap rather than a
+    // tween: a colour fade on a 3px border reads as a rendering glitch.
+    s.doors[0].setAttribute('stroke', chosen ? K.PAL.orange : K.PAL.dim);
+    s.doors[0].setAttribute('stroke-width', chosen ? 3 : 1.5);
+    var shown = ROWS.map(function (r) { return state >= r.from ? 1 : 0; });
+    // The bars show the posterior once it is on the table, the prior before.
+    var src = state >= ROWS[POST_ROW].from ? POST_ROW : PRIOR_ROW;
+    var w = ROWS[src].p.map(function (p) { return DOOR_W * p; });
+
+    s.doors[2].setAttribute('fill', open ? K.PAL.white : K.PAL.rule);
+
+    if (instant || K.REDUCE || !K.animeReady()) {
+      s.goat.setAttribute('opacity', open);
+      s.pick.setAttribute('opacity', chosen);
+      s.bars.forEach(function (b, i) { b.setAttribute('width', w[i]); });
+      s.rows.forEach(function (g, i) { g.setAttribute('opacity', shown[i]); });
+      return;
+    }
+
+    var A = window.anime;
+    A.animate([s.goat], { opacity: open, duration: 420, ease: 'outCubic' });
+    A.animate([s.pick], { opacity: chosen, duration: 420, ease: 'outCubic' });
+    A.animate(s.rows, {
+      opacity: function (n, i) { return shown[i]; },
+      duration: 420, ease: 'outCubic'
+    });
+    // One tween for all three bars: the transfer only reads as a transfer if
+    // door 3 empties while door 2 fills, not one after the other.
+    A.animate(s.bars, {
+      width: function (n, i) { return w[i]; },
+      duration: 700, ease: 'outCubic'
+    });
+  }
+
+  K.register({
+    stage: 'monty-stage',
+    frags: ['monty-frag-1', 'monty-frag-2', 'monty-frag-3', 'monty-frag-4',
+            'monty-frag-5', 'monty-frag-6'],
+    build: build,
+    place: place
+  });
+})();
+</script>

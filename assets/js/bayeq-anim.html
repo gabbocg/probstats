@@ -8,14 +8,23 @@
   of algebra the room has already seen as a picture:
 
     0. the bare equation
-    1. bracket the PRIOR        P(L)     — the width of the navy column
-    2. bracket the LIKELIHOOD   P(D|L)   — the fraction ringed inside it
-    3. bracket the EVIDENCE     P(D)     — everyone ringed, either profession
-    4. bracket the POSTERIOR    P(L|D)   — the navy share of those
+    1. bracket the PRIOR        P(H)     — the width of the navy column
+    2. bracket the LIKELIHOOD   P(E|H)   — the fraction ringed inside it
+    3. bracket the EVIDENCE     P(E)     — everyone ringed, either profession
+       and label that bracket P(E), because the denominator IS P(E): the
+       equation never hands you P(E) separately, you build it from the two
+       branches under the brace
+    4. bracket the POSTERIOR    P(H|E)   — the navy share of those
+
+  Lettered H and E — hypothesis and evidence — rather than L and D for
+  librarian and description, so the algebra the room copies down is the one
+  they will meet again on any other problem. The complement is written ¬H
+  because "farmer" is only this example's name for "not a librarian".
+  State 0's note carries the key so the letters are never bare.
 
   Every number is DERIVED from the four inputs at the top, never typed, and the
   arithmetic line assembles one step at a time alongside the brackets. The
-  closing identity 0.020 / 0.115 = 4/23 is exact, not a rounding coincidence,
+  closing identity 0.019 / 0.114 = 4/24 is exact, not a rounding coincidence,
   and the code asserts it rather than asking you to trust it.
 
   Text is positioned arithmetically rather than measured: the deck's mono face
@@ -35,16 +44,16 @@
   var NS = 'http://www.w3.org/2000/svg';
 
   // --- the only four inputs; everything else is computed ------------------
-  var N_LIB = 10, N_FARM = 190, P_FIT_LIB = 0.40, P_FIT_FARM = 0.10;
+  var N_LIB = 10, N_FARM = 200, P_FIT_LIB = 0.40, P_FIT_FARM = 0.10;
 
-  var N_TOTAL  = N_LIB + N_FARM;                       // 200
-  var PRIOR    = N_LIB / N_TOTAL;                      // 0.05
+  var N_TOTAL  = N_LIB + N_FARM;                       // 210
+  var PRIOR    = N_LIB / N_TOTAL;                      // 1/21 = 0.0476
   var FIT_LIB  = Math.round(N_LIB * P_FIT_LIB);        // 4
-  var FIT_FARM = Math.round(N_FARM * P_FIT_FARM);      // 19
-  var N_FIT    = FIT_LIB + FIT_FARM;                   // 23
-  var NUM      = PRIOR * P_FIT_LIB;                    // 0.020
-  var DEN      = NUM + (1 - PRIOR) * P_FIT_FARM;       // 0.115
-  var POST     = NUM / DEN;                            // 0.173913...
+  var FIT_FARM = Math.round(N_FARM * P_FIT_FARM);      // 20
+  var N_FIT    = FIT_LIB + FIT_FARM;                   // 24
+  var NUM      = PRIOR * P_FIT_LIB;                    // 0.019
+  var DEN      = NUM + (1 - PRIOR) * P_FIT_FARM;       // 0.114
+  var POST     = NUM / DEN;                            // 0.166666...
 
   // The whole point of the slide is that the algebra and the count agree
   // exactly. If a future edit breaks that, say so loudly rather than drawing
@@ -67,8 +76,31 @@
   // already reserved three — every token after it lands short. Non-breaking
   // spaces are real glyphs at the same mono advance, so the grid stays honest.
   var NB = '\u00a0';
-  var LHS_X = 150, EQ_X = 285, CX = 630;       // fraction centre
+  // Centred as one assembly, not three placed parts. Measured, the block
+  // runs 161 to 839 — dead centre of the 1000 canvas — with the same 42
+  // units of air on both sides of the '='. It used to sit 11 right of
+  // centre with an 88-unit hole between the '=' and the fraction, which
+  // read as the whole equation having drifted.
+  var LHS_X = 161, EQ_X = 297, CX = 597;       // fraction centre
   var Y_NUM = 170, Y_BAR = 190, Y_DEN = 228, Y_LHS = 199;
+
+  // Brace offsets, measured from the BASELINE of the row a brace annotates,
+  // so all four sit the same distance off their text instead of each being
+  // eyeballed. A brace's near edge is 6 units from its rule (see bracket()),
+  // and at FS 26 a paren reaches 19.5 above the baseline and 6.5 below, so
+  // -28 above and +15 below both leave the same 2.5-unit gap off the ink.
+  var BR_OVER = -28, BR_UNDER = 15;
+
+  // Everything below the fraction is one stack, but the steps are NOT equal
+  // and must not be "tidied" into one number. Two reasons: the middle line is
+  // Roboto 18 between two mono 22s, so an equal BASELINE step leaves unequal
+  // WHITE; and the first line ("= P(E)") belongs to the brace above it while
+  // the note below is commentary, so the note gets a wider gap that groups
+  // the label with its brace rather than with the sentence.
+  //   underbrace -> "= P(E)"   ~14 units of white
+  //   "= P(E)"   -> the note   ~28
+  //   the note   -> the sum    ~14
+  var Y_STACK = 280, STEP_TO_NOTE = 51, STEP_TO_SUM = 41;
 
   // A row is a list of {s, c} tokens laid on the character grid, centred on cx.
   // Returns the token nodes plus each one's [x0, x1] so a bracket can span it.
@@ -102,21 +134,22 @@
   function f3(v) { return v.toFixed(3); }
 
   var CAPTIONS = {
-    0: 'one equation, four moving parts',
-    1: 'the prior',
-    2: 'the likelihood',
-    3: 'the evidence',
-    4: 'the posterior'
+    0: 'One equation, four moving parts',
+    1: 'The prior',
+    2: 'The likelihood',
+    3: 'The evidence',
+    4: 'The posterior'
   };
 
   // Annotation under the equation: what the bracketed piece MEANS, in counts.
   var NOTES = {
-    0: { t: '', c: SOFT },
-    1: { t: 'how common librarians are — ' + N_LIB + ' of ' + N_TOTAL, c: NAVY },
-    2: { t: 'how well Steve fits one — ' + FIT_LIB + ' of those ' + N_LIB, c: ORANGE },
-    3: { t: 'everyone who fits, either way — ' + FIT_LIB + ' + ' + FIT_FARM +
-           ' = ' + N_FIT, c: INK },
-    4: { t: 'the navy share of those ' + N_FIT, c: BRICK }
+    0: { t: 'H = the hypothesis, Steve is a librarian  ·  E = the evidence, his description', c: SOFT },
+    1: { t: 'How common librarians are: ' + N_LIB + ' of ' + N_TOTAL +
+           ', one per ' + Math.round(N_FARM / N_LIB) + ' farmers', c: NAVY },
+    2: { t: 'How well Steve fits one: ' + FIT_LIB + ' of those ' + N_LIB, c: ORANGE },
+    3: { t: 'P(E) is everyone who fits, either way: ' + FIT_LIB + ' + ' +
+           FIT_FARM + ' = ' + N_FIT, c: INK },
+    4: { t: 'The navy share of those ' + N_FIT, c: BRICK }
   };
 
   // The arithmetic assembles a step at a time, mirroring the brackets.
@@ -140,28 +173,28 @@
     }, CAPTIONS[0]);
     svg.appendChild(cap);
 
-    // P(L|D)  =
-    var lhs = row(svg, [{ s: 'P(L|D)', c: BRICK }], LHS_X + 3 * ADV, Y_LHS);
+    // P(H|E)  =
+    var lhs = row(svg, [{ s: 'P(H|E)', c: BRICK }], LHS_X + 3 * ADV, Y_LHS);
     svg.appendChild(txt({
       x: EQ_X, y: Y_LHS, fill: INK, 'font-size': FS, 'font-family': MONO
     }, '='));
 
-    // numerator: P(L) · P(D|L)
+    // numerator: P(H) · P(E|H)
     var num = row(svg, [
-      { s: 'P(L)', c: NAVY },
+      { s: 'P(H)', c: NAVY },
       { s: NB + '·' + NB },
-      { s: 'P(D|L)', c: ORANGE }
+      { s: 'P(E|H)', c: ORANGE }
     ], CX, Y_NUM);
 
-    // denominator: P(L)·P(D|L) + P(F)·P(D|F)
+    // denominator: P(H)·P(E|H) + P(¬H)·P(E|¬H)
     var den = row(svg, [
-      { s: 'P(L)', c: NAVY },
+      { s: 'P(H)', c: NAVY },
       { s: '·' },
-      { s: 'P(D|L)', c: ORANGE },
+      { s: 'P(E|H)', c: ORANGE },
       { s: NB + NB + '+' + NB + NB },
-      { s: 'P(F)' },
+      { s: 'P(\u00acH)' },
       { s: '·' },
-      { s: 'P(D|F)' }
+      { s: 'P(E|\u00acH)' }
     ], CX, Y_DEN);
 
     var barX0 = den[0].x0 - 16, barX1 = den[den.length - 1].x1 + 16;
@@ -173,25 +206,40 @@
     // Brackets: prior and likelihood sit above the numerator, the evidence
     // under the whole denominator, the posterior above the left-hand side.
     var brackets = {
-      1: bracket(svg, num[0].x0, num[0].x1, 142, 1, NAVY),
-      2: bracket(svg, num[2].x0, num[2].x1, 142, 1, ORANGE),
-      3: bracket(svg, barX0, barX1, 250, 0, INK),
-      4: bracket(svg, lhs[0].x0, lhs[0].x1, 160, 1, BRICK)
+      1: bracket(svg, num[0].x0, num[0].x1, Y_NUM + BR_OVER, 1, NAVY),
+      2: bracket(svg, num[2].x0, num[2].x1, Y_NUM + BR_OVER, 1, ORANGE),
+      // Spans the denominator TEXT, not the fraction bar. The bar overhangs
+      // by 16 either side (it is a rule, it should); a brace drawn to the
+      // bar inherited that overhang and was the only one of the four not
+      // ending flush with what it annotates.
+      3: bracket(svg, den[0].x0, den[den.length - 1].x1,
+                 Y_DEN + BR_UNDER, 0, INK),
+      4: bracket(svg, lhs[0].x0, lhs[0].x1, Y_LHS + BR_OVER, 1, BRICK)
     };
 
+    // The denominator is P(E). Naming it under its own brace is the whole
+    // point of state 3: nobody is given P(E), you compute it by adding the
+    // two branches, and the brace shows exactly which sum that is.
+    var denLab = txt({
+      x: CX, y: Y_STACK, 'text-anchor': 'middle', fill: INK,
+      'font-size': 22, 'font-family': MONO, opacity: 0
+    }, '= P(E)');
+    svg.appendChild(denLab);
+
     var note = txt({
-      x: W / 2, y: 305, 'text-anchor': 'middle', fill: SOFT,
+      x: W / 2, y: Y_STACK + STEP_TO_NOTE, 'text-anchor': 'middle', fill: SOFT,
       'font-size': 18, 'font-family': SANS, opacity: 0
     }, '');
     svg.appendChild(note);
 
     var sum = txt({
-      x: W / 2, y: 352, 'text-anchor': 'middle', fill: INK,
+      x: W / 2, y: Y_STACK + STEP_TO_NOTE + STEP_TO_SUM, 'text-anchor': 'middle', fill: INK,
       'font-size': 22, 'font-family': MONO, opacity: 0
     }, '');
     svg.appendChild(sum);
 
-    return { state: 0, cap: cap, brackets: brackets, note: note, sum: sum };
+    return { state: 0, cap: cap, brackets: brackets, denLab: denLab,
+             note: note, sum: sum };
   }
 
   // A bracket is full strength only while it is the one being discussed;
@@ -212,10 +260,15 @@
     var live = typeof window.anime !== 'undefined' && window.anime.animate;
     var fast = instant || REDUCE || !live;
 
+    // The P(E) label lives and dies with bracket 3 — it names what that
+    // bracket encloses, so the two are one object as far as fading goes.
     var keys = [1, 2, 3, 4];
+    var fades = [s.brackets[1], s.brackets[2], s.brackets[3], s.brackets[4],
+                 s.denLab];
+    var fadeKeys = [1, 2, 3, 4, 3];
     if (fast) {
-      keys.forEach(function (i) {
-        s.brackets[i].setAttribute('opacity', target(i, st));
+      fades.forEach(function (n, i) {
+        n.setAttribute('opacity', target(fadeKeys[i], st));
       });
       s.note.setAttribute('opacity', NOTES[st].t ? 1 : 0);
       s.sum.setAttribute('opacity', MATHS[st] ? 1 : 0);
@@ -226,8 +279,8 @@
     if (s.animText && s.animText.pause) s.animText.pause();
 
     var A = window.anime;
-    s.anim = A.animate(keys.map(function (i) { return s.brackets[i]; }), {
-      opacity: function (n, i) { return target(keys[i], st); },
+    s.anim = A.animate(fades, {
+      opacity: function (n, i) { return target(fadeKeys[i], st); },
       duration: 420, ease: 'outQuad'
     });
     s.animText = A.animate([s.note, s.sum], {

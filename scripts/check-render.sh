@@ -20,7 +20,7 @@ echo "── slides ────────────────────
 for id in s00-how-to-use s00-webr \
           s01-visualisation bins-intuition bins-sim \
           s02-descriptives mm-intuition cheb-sim \
-          s03-probability bayes-intuition bayeq-formula bayes-sim \
+          s03-probability bayes-hook bayes-intuition bayeq-formula monty bayes-sim \
           cond-intuition cond-sim \
           s04-distributions binom-intuition seller-intuition seller-sim \
           pois-intuition expo-intuition \
@@ -35,7 +35,7 @@ for id in s00-how-to-use s00-webr \
 done
 
 echo "── animation stages ───────────────────────────────"
-STAGES="bins mm bayes bayeq ciflip cieq cond binom seller pois expo clt zstd ci pval pair ls smooth"
+STAGES="bins mm prior bayes bayeq monty ciflip cieq cond binom seller pois expo clt zstd ci pval pair ls smooth"
 for s in $STAGES; do
   need "id=\"$s-stage\"" "stage #$s-stage"
 done
@@ -50,9 +50,12 @@ need "deck-sim-tune" "sim-tune included"
 echo "── gating fragments ───────────────────────────────"
 # Each stage's JS listens for these ids; losing one silently freezes a step.
 for f in bins-frag-w1 bins-frag-w2 \
+         prior-frag-1 prior-frag-2 \
          mm-frag-1 mm-frag-2 \
          bayes-frag-1 bayes-frag-2 bayes-frag-3 bayes-frag-4 \
          bayeq-frag-1 bayeq-frag-2 bayeq-frag-3 bayeq-frag-4 \
+         monty-frag-1 monty-frag-2 monty-frag-3 \
+         monty-frag-4 monty-frag-5 monty-frag-6 \
          cond-frag-1 cond-frag-2 cond-frag-3 \
          binom-frag-1 binom-frag-2 binom-frag-3 \
          seller-frag-1 seller-frag-2 seller-frag-3 \
