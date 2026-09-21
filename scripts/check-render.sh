@@ -17,14 +17,17 @@ need() {  # need <needle> <label>
 }
 
 echo "── slides ─────────────────────────────────────────"
-for id in s00-how-to-use s00-webr \
-          s01-visualisation bins-intuition bins-sim \
+for id in s00b-me s00b-about s00-how-to-use s00-webr \
+          s01-visualisation chart-choice bins-intuition bins-sim \
           s02-descriptives mm-intuition cheb-sim \
           s03-probability bayes-hook bayes-intuition bayeq-formula monty bayes-sim \
-          cond-intuition cond-sim \
-          s04-distributions binom-intuition seller-intuition seller-sim \
-          pois-intuition expo-intuition \
-          memory-sim clt-intuition zstd-intuition pois-sim clt-sim \
+          space-intuition setops-intuition venn-intuition set-formal \
+          cond-intuition \
+          s04-distributions binom-intuition seller-intuition laplace-intuition \
+          pois-intuition pois-formal \
+          likelihood-live binom-formal \
+          pois-intuition expo-intuition expo-formal dist-questions \
+          normal-intuition clt-intuition zstd-intuition funcrv pois-sim clt-sim \
           s05-estimation ciflip-intuition cieq-formula \
           ci-intuition ci-sim ci-t-vs-z \
           s06-testing pval-intuition alpha-sim power-sim \
@@ -35,7 +38,9 @@ for id in s00-how-to-use s00-webr \
 done
 
 echo "── animation stages ───────────────────────────────"
-STAGES="bins mm prior bayes bayeq monty ciflip cieq cond binom seller pois expo clt zstd ci pval pair ls smooth"
+# pois and expo dropped: #pois-intuition and #expo-intuition are {ojs}
+# slides now, not stages.
+STAGES="about bins mm space setops venn prior bayes bayeq monty ciflip cieq cond binom seller laplace clt zstd ci pval pair ls smooth"
 for s in $STAGES; do
   need "id=\"$s-stage\"" "stage #$s-stage"
 done
@@ -44,7 +49,39 @@ done
 WANT_STAGES=$(wc -w <<< "$STAGES" | tr -d ' ')
 STAGE_DIVS=$( { grep -oE '<div id="[a-z0-9]+-stage" class="stage">' "$OUT" || true; } | wc -l | tr -d ' ')
 if [[ "$STAGE_DIVS" -eq "$WANT_STAGES" ]]; then echo "OK:   $WANT_STAGES .stage divs"; else echo "FAIL: $STAGE_DIVS .stage divs (want $WANT_STAGES)"; fail=1; fi
+# A stage div with no registered animation is a blank slide. The div comes from
+# the .qmd but the JS comes from an include-after-body file, and Quarto has been
+# seen to silently drop a NEWLY ADDED include on an incremental render — the
+# render still reports success and every other check here still passes, so the
+# first sign is a stage that draws nothing in the lecture. If this fails, run
+# `rm -rf .quarto _site && quarto render`.
+# Counted rather than pattern-matched on the registration call, because
+# bayes-anim.html and bayeq-anim.html predate StageKit and wire themselves up.
+# One mention is the <div> from the .qmd alone, which means the JS is missing.
+for s in $STAGES; do
+  n=$( { grep -o "$s-stage" "$OUT" || true; } | wc -l | tr -d ' ')
+  if [[ "$n" -ge 2 ]]; then
+    echo "OK:   animation JS reached the page for #$s-stage"
+  else
+    echo "FAIL: #$s-stage has its div but no animation JS ($n mention) — stale include, run 'rm -rf .quarto _site && quarto render'"
+    fail=1
+  fi
+done
 need "window.StageKit = " "StageKit included"
+
+# ...and that each one survives being LOADED. A stage file that throws on the
+# way in passes every check above — the JS is in the page and the div is in the
+# .qmd — but dies before K.register(), so the slide draws nothing.
+if command -v node >/dev/null 2>&1; then
+  if node "$(dirname "$0")/check-anims.js" | grep -q '^FAIL'; then
+    node "$(dirname "$0")/check-anims.js" | grep '^FAIL'
+    fail=1
+  else
+    echo "OK:   every *-anim.html loads without throwing"
+  fi
+else
+  echo "SKIP: node not found, cannot load-test the animations"
+fi
 need "deck-sim-tune" "sim-tune included"
 
 echo "── gating fragments ───────────────────────────────"
@@ -57,10 +94,12 @@ for f in bins-frag-w1 bins-frag-w2 \
          monty-frag-1 monty-frag-2 monty-frag-3 \
          monty-frag-4 monty-frag-5 monty-frag-6 \
          cond-frag-1 cond-frag-2 cond-frag-3 \
+         space-frag-1 space-frag-2 space-frag-3 \
+         setops-frag-1 setops-frag-2 setops-frag-3 \
+         venn-frag-1 venn-frag-2 venn-frag-3 \
          binom-frag-1 binom-frag-2 binom-frag-3 \
          seller-frag-1 seller-frag-2 seller-frag-3 \
-         pois-frag-1 pois-frag-2 pois-frag-3 \
-         expo-frag-1 expo-frag-2 expo-frag-3 \
+         laplace-frag-1 laplace-frag-2 laplace-frag-3 \
          clt-frag-1 clt-frag-2 clt-frag-3 \
          zstd-frag-1 zstd-frag-2 \
          ciflip-frag-1 ciflip-frag-2 ciflip-frag-3 \
@@ -92,6 +131,22 @@ if [[ "$got" -eq "$want" ]]; then
   echo "OK:   $got webR cells (matches $want in sections/)"
 else
   echo "FAIL: $got webR cells rendered but $want in sections/ — stale render?"; fail=1
+fi
+
+# Monaco must come from assets/vendor, never the CDN. Upstream quarto-webr
+# hardcodes a jsdelivr URL in qwebr-monaco-editor-init.html; a `quarto update`
+# of the extension silently restores it, and then the {webr-r} cells render as
+# empty boxes on any machine with slow or blocked network. See
+# assets/vendor/monaco/README.md.
+if grep -qF 'jsdelivr.net/npm/monaco-editor' "$OUT"; then
+  echo "FAIL: Monaco is being loaded from the CDN — re-apply the local path in _extensions/coatless/webr/qwebr-monaco-editor-init.html"; fail=1
+else
+  echo "OK:   Monaco loaded locally, not from a CDN"
+fi
+if [[ -f assets/vendor/monaco/vs/loader.js ]]; then
+  echo "OK:   vendored Monaco present"
+else
+  echo "FAIL: assets/vendor/monaco/vs/loader.js missing — see assets/vendor/monaco/README.md"; fail=1
 fi
 
 if grep -qE '^\s*editor-font-scale:\s*1\s*$' _quarto.yml; then

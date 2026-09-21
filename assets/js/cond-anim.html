@@ -45,15 +45,17 @@
   function setAttrs(n, p) { for (var k in p) n.setAttribute(k, p[k]); }
 
   // Keep these SHORT. The caption is left-anchored at x=40, y=28; once the
-  // columns subdivide the "Buy"/"No buy" headers rise to y=51 centred on
-  // x=450 and x=700. A caption much past ~40 characters at 24px Roboto
-  // (~12px per character) can run toward the Buy header — kept under ~40
-  // characters for the current captions below (nothing enforces this).
+  // columns subdivide, the "Buy"/"No buy" headers rise to y=36 centred on
+  // x=450 and x=700, so the Buy header's left edge is around x=435. At 24px
+  // Roboto (~12px per character) a caption over ~32 characters reaches it,
+  // and since the two now share a line they overlap outright rather than
+  // merely crowding. Nothing enforces this; the 33-character one below is
+  // the longest that fits.
   var CAPTIONS = {
     0: '100% of managers, split by buying',
-    1: 'each column splits by upgrading',
-    2: 'we observed “would upgrade”',
-    3: 're-normalise to the new denominator'
+    1: 'Each column splits by upgrading',
+    2: 'We observed “would upgrade”',
+    3: 'Re-normalise the denominator'
   };
 
   function build(stage) {
@@ -148,11 +150,11 @@
     }));
 
     // --- result -----------------------------------------------------------
-    svg.appendChild(K.el('line', {
-      x1: SQ_X, y1: 396, x2: SQ_X + SQ_W, y2: 396,
-      stroke: RULE, 'stroke-width': 1
-    }));
-    var result = svg.appendChild(K.txt(SQ_X + SQ_W / 2, 426,
+    // No rule above the result. It was drawn across the square's width, 500
+    // units, while the result line sets about 594 — so the separator came out
+    // narrower than the thing it was separating and stuck out at both ends.
+    // The gap under the square does the job on its own.
+    var result = svg.appendChild(K.txt(SQ_X + SQ_W / 2, 414,
       'P(buy | upgrade) = 32 / 34 = 0.94',
       { size: 'readout', face: 'mono', anchor: 'middle', fill: NAVY, weight: 700 }));
     result.setAttribute('opacity', 0);
@@ -200,11 +202,11 @@
       { n: [s.divNb],  p: { 'stroke-dashoffset': split ? 0 : NB_W,
                             opacity: grown ? 0 : 1 } },
 
-      { n: [s.buyLab.t, s.nbLab.t], p: { y: headY ? 51 : 220 }, stagger: 60 },
+      { n: [s.buyLab.t, s.nbLab.t], p: { y: headY ? 36 : 220 }, stagger: 60 },
       // 76, not 71: at 71 the percentage's ascender box runs into the
       // descender box of the title above it. No ink overlaps, but the pair
       // reads cramped as a header.
-      { n: [s.buyLab.p, s.nbLab.p], p: { y: headY ? 76 : 249 }, stagger: 60 },
+      { n: [s.buyLab.p, s.nbLab.p], p: { y: headY ? 61 : 249 }, stagger: 60 },
 
       // Row labels: the two no-upgrade shares only exist while state === 1.
       { n: [s.lBuyNo, s.lNbNo], p: { opacity: st === 1 ? 1 : 0 }, stagger: 70 },

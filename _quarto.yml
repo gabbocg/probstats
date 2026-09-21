@@ -43,8 +43,10 @@ format:
       # stage-kit must precede every *-anim.html: they read window.StageKit at load.
       - file: assets/js/stage-kit.html
       - file: assets/animations.html
+      - file: assets/js/about-anim.html
       - file: assets/js/bins-anim.html
       - file: assets/js/mm-anim.html
+      - file: assets/js/sets-anim.html
       - file: assets/js/prior-anim.html
       - file: assets/js/bayes-anim.html
       - file: assets/js/bayeq-anim.html
@@ -52,6 +54,7 @@ format:
       - file: assets/js/cond-anim.html
       - file: assets/js/binom-anim.html
       - file: assets/js/seller-anim.html
+      - file: assets/js/laplace-anim.html
       - file: assets/js/pois-anim.html
       - file: assets/js/expo-anim.html
       - file: assets/js/clt-anim.html
@@ -63,6 +66,7 @@ format:
       - file: assets/js/pair-anim.html
       - file: assets/js/ls-anim.html
       - file: assets/js/smooth-anim.html
+      - file: assets/js/webr-layout.html
       # sim-tune polls for Monaco instances rather than depending on load order; last only for readability.
       - file: assets/js/sim-tune.html
     code-line-numbers: false

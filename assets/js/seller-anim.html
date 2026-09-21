@@ -1,305 +1,198 @@
 <script>
 /*
-  Three-sellers animation — slide #seller-intuition (Seminar 4).
-
-  Teaching point: this is #binom-intuition READ BACKWARDS. There the success
-  rate was fixed at p = 0.3 and the count k varied, and the answer was a
-  distribution over counts. Here the count is the thing you already saw — it
-  is data, it is finished — and the unknown is the rate s. Same expression,
-  s^k * (1-s)^(n-k), scanned along the other axis. Nothing new is being
-  taught; the formula is being turned round.
+  Three-sellers animation — slide #seller-intuition, the opener of Seminar 4.
 
   Three online sellers, all excellent on the face of it:
     A:  10 of 10   (100%)
     B:  48 of 50   (96%)
     C: 186 of 200  (93%)
-  The picture answers "which would you actually buy from?" and the answer is
-  B, which no single percentage on that list would have told you.
 
-  Advancing the fragments adds one seller at a time:
-    0. an empty plot over s — the axis of the question
-    1. A: a broad slab. Ten reviews barely narrow anything; s could be 0.80.
-    2. B: visibly tighter, and still sitting high.
-    3. C: a spike. Two hundred reviews pin s down precisely — precisely at a
-       mediocre value. Narrow is not the same as good, and that contrast
-       between A's slab and C's needle is the whole slide.
+  The slide is one gesture: put each percentage next to the reviews it was
+  computed from. A percentage is lossy compression — it throws n away — and
+  100 / 96 / 93 then ranks the sellers in exactly the wrong order. Drawn out,
+  n comes back as AREA: ten marks is a fifth of a row, two hundred is four
+  full ones. The ranking dissolves on sight, before any arithmetic. The
+  crosses carry what the ticks cannot: A has none, which is not evidence of
+  perfection but evidence of nobody having looked.
 
-  Every number is computed here, not typed: the curves, the plausible ranges
-  and the three tail probabilities all come out of the same likelihood. Two
-  things make that survivable in floating point:
-    - the likelihood is formed in LOGS and shifted by its own maximum before
-      exponentiating. 0.93^186 is about 1e-6 and the far tail is far worse;
-      exponentiating first would hand back a flat zero and the curve would
-      simply not be there.
-    - each curve is normalised to ITS OWN peak, which is the only way three
-      sellers with wildly different amounts of evidence can share one frame.
-      That makes the heights meaningless across sellers and the shapes the
-      entire message, so the y-axis label says so out loud.
+  Nothing is on screen at the start. The question is asked by the .lede-min
+  above the stage, and each seller then arrives as its own three-part beat:
+
+    the percentage   the claim, alone for a third of a second
+    the marks        the evidence, filling left to right
+    the count        the number that names what just filled
+
+  in that order, because a percentage shown next to its sample size is a fact
+  to be read, whereas a percentage shown and THEN undercut is an argument. The
+  three fragments are the three sellers; the takeaway under the stage is a
+  fourth, so the verdict cannot be read ahead of the evidence.
+
+  The maths is not done here. #binom-intuition builds the machinery two slides
+  on, and #seller-sim comes back and settles it in R. This slide only has to
+  make the percentages stop being persuasive.
+
+  The crosses are scattered through each block, not swept to the end: a run of
+  ticks followed by a run of crosses reads as a sorted artefact rather than a
+  review history. The scatter comes from a seeded shuffle so it is identical
+  on every render — a presenter who points at "that cross there" finds it in
+  the same place next year — and it plants what #binom-intuition picks up: a
+  block in order is one SEQUENCE; the count throws the order away, and C(n,k)
+  is how many sequences went with it.
 
   Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
-  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
+  Reveal fragment wiring live there. Canvas 1000x366 (the
+  .stage-wrap-seller height), shown at scale(1.05).
 */
 (function () {
   var K = window.StageKit;
 
-  // --- the three sellers ---------------------------------------------------
   var SELLERS = [
-    { id: 'A', k: 10,  n: 10,  colour: K.PAL.navy },
-    { id: 'B', k: 48,  n: 50,  colour: K.PAL.olive },
-    { id: 'C', k: 186, n: 200, colour: K.PAL.brick }
+    { k: 10,  n: 10  },
+    { k: 48,  n: 50  },
+    { k: 186, n: 200 }
   ];
 
-  var THRESH = 0.10;      // "plausible" = relative likelihood at least this
-  var GOOD = 0.95;        // the bar a seller has to clear to be worth it
-  var NGRID = 20001;      // integration/scan grid on [0,1]; 0.95 lands on it
-
-  // log of s^k * (1-s)^(n-k). The guards are not paranoia: seller A has
-  // n - k = 0, so the second term is 0 * log(0) = NaN at s = 1 — exactly the
-  // point where A's curve peaks — unless a zero exponent short-circuits to 0.
-  function logLik(k, n, s) {
-    var a = k > 0 ? k * Math.log(s) : 0;
-    var b = (n - k) > 0 ? (n - k) * Math.log(1 - s) : 0;
-    return a + b;
-  }
-
-  // Everything the slide prints about one seller, derived once at load.
-  // rel(s) is the likelihood divided by its own maximum, so rel(peak) = 1 by
-  // construction and no exponential ever leaves the range [0, 1].
-  function analyse(sl) {
-    var k = sl.k, n = sl.n;
-    var peak = k / n;                       // the MLE, and the shift constant
-    var top = logLik(k, n, peak);
-
-    function rel(s) {
-      var v = Math.exp(logLik(k, n, s) - top);
-      return isFinite(v) ? v : 0;
-    }
-
-    // One pass over the grid does both jobs: the ends of the plausible range
-    // and the trapezoid integral, with the tail above 0.95 accumulated from
-    // the same segments so the two can never disagree.
-    var lo = 1, hi = 0, tot = 0, tail = 0, prevR = null, prevS = 0, i, s, r, w;
-    for (i = 0; i < NGRID; i++) {
-      s = i / (NGRID - 1);
-      r = rel(s);
-      if (r >= THRESH) { if (s < lo) lo = s; if (s > hi) hi = s; }
-      if (prevR !== null) {
-        w = (s - prevS) * (r + prevR) / 2;
-        tot += w;
-        if (prevS >= GOOD) tail += w;
-      }
-      prevR = r; prevS = s;
-    }
-
+  var S = SELLERS.map(function (sl, i) {
     return {
-      id: sl.id, k: k, n: n, colour: sl.colour, rel: rel,
-      peak: peak, lo: lo, hi: hi, ptail: tail / tot
+      k: sl.k, n: sl.n,
+      pct: Math.round(100 * sl.k / sl.n) + '%',
+      miss: K.missSet(sl.n, sl.n - sl.k, 7919 + i)  // distinct seed per seller
     };
-  }
-  var S = SELLERS.map(analyse);
+  });
 
-  // --- stage geometry — fixed 1000x445 space, scaled to the slide via CSS ---
-  var W = 1000, H = 445;
-  var X0 = 90, X1 = 700, SMIN = 0.5, SMAX = 1.0;
-  var BASE = 312, PEAK_Y = 89;             // baseline, and where rel = 1 lands
-  var NPT = 320;                           // samples along each curve
-  var TICK = 7;                            // bracket end-tick length
+  // --- stage geometry — fixed 1000x300 space, scaled to the slide via CSS ---
+  // Shorter than the deck's usual 445 because this slide carries a .lede-min
+  // above the stage and a takeaway below it; at 445 the slide ran past the
+  // 700px projection line.
+  var W = 1000, H = 366;   // shared with #laplace-intuition
 
-  var SOFT = K.PAL.inkSoft, RULE = K.PAL.rule, GREY = K.PAL.dim;
-  var MONO = K.FONT.mono, SANS = K.FONT.sans;
-  var NB = ' ';    // SVG <text> eats runs of ordinary spaces; this one survives
+  // On StageKit's shared lattice (50 marks per row) A is a fifth of a row, B
+  // is exactly one and C is four. Blocks are pre-positioned and never
+  // reflowed, so nothing already on screen moves when the next seller
+  // arrives — and #laplace-intuition draws them at these same coordinates.
+  var GX = 47;
+  // Headline baseline, then first row centre. The 24 units of extra air
+  // between one seller and the next are what make three blocks read as three
+  // separate claims rather than one striped field.
+  var BLOCK = [
+    { ly: 46,  ry: 74  },
+    { ly: 142, ry: 170 },
+    { ly: 238, ry: 266 }
+  ];
 
-  // The brackets stack under the axis, one lane per seller, in reveal order.
-  var LANE_Y = [358, 385, 412];
+  // Both sit on the block's own left edge (the first mark is centred at GX,
+  // so its ink starts ~7px earlier), because a headline indented from the
+  // evidence it labels reads as a caption rather than a claim.
+  var PCT_X = GX - 7, CNT_X = 122;
 
-  // The readout on the right. Two lines per seller, 26px apart (label role,
-  // 20px) with a 44px gap after the second line so each record reads as its
-  // own group; RD_BLOCK is RD_LINE plus that 44px gap.
-  var RD_X = 740, RD_Y = 122, RD_LINE = 26, RD_BLOCK = 70;
+  var INK = K.PAL.ink, GREY = K.PAL.dim;
+  var HIT = K.PAL.olive, MISS = K.PAL.brick;
 
-  function px(s) { return X0 + (s - SMIN) * (X1 - X0) / (SMAX - SMIN); }
-  function py(r) { return BASE - r * (BASE - PEAK_Y); }
-
-  // Left-pad with non-breaking spaces so the three records line up on their
-  // slashes: "10 / 10" and "186 / 200" are different widths otherwise.
-  function pad(v, w) {
-    var s = String(v);
-    while (s.length < w) s = NB + s;
-    return s;
-  }
-
-  // The visible half of the curve. s below 0.5 is dead space for all three
-  // sellers — nobody with 93% of two hundred reviews is a coin flip — so the
-  // plot is truncated there and the axis label admits it.
-  function curvePath(a) {
-    var d = '', i, s;
-    for (i = 0; i <= NPT; i++) {
-      s = SMIN + (SMAX - SMIN) * i / NPT;
-      d += (i ? 'L' : 'M') + px(s).toFixed(2) + ' ' + py(a.rel(s)).toFixed(2);
-    }
-    return d;
-  }
-
-  // A bracket in s-space with end ticks pointing down, same shape as the
-  // confidence-interval lanes on #ciflip-intuition so the two slides read as
-  // the same gesture: "this is the range the data will tolerate".
-  function bracket(a, y) {
-    var x0 = px(a.lo), x1 = px(a.hi);
-    return 'M' + x0.toFixed(2) + ' ' + y + 'V' + (y + TICK) +
-           'H' + x1.toFixed(2) + 'V' + y;
+  // Everything on this stage starts hidden, so one helper does every element:
+  // set the attribute AND clear any inline opacity anime left behind, or the
+  // style would keep winning over the attribute on a later instant snap.
+  function show(el, on) {
+    el.setAttribute('opacity', on ? 1 : 0);
+    el.style.opacity = '';
   }
 
   function build(stage) {
     var svg = K.canvas(stage, W, H);
-    var i;
 
-    var cap = svg.appendChild(K.txt(40, 28, CAPTIONS[0],
-      { size: 'caption', cls: 'seller-caption' }));
-
-    // --- what the vertical axis is, and the caveat that comes with it ---
-    svg.appendChild(K.txt(X0, 71,
-      'relative likelihood (each curve scaled to its own peak)',
-      { size: 'label', fill: SOFT }));
-
-    // --- the s axis ---
-    svg.appendChild(K.el('line', {
-      x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: RULE, 'stroke-width': 1
-    }));
-    for (i = 0; i <= 5; i++) {
-      var v = 0.5 + i * 0.1;
-      svg.appendChild(K.el('line', {
-        x1: px(v), y1: BASE, x2: px(v), y2: BASE + 6,
-        stroke: GREY, 'stroke-width': 1
-      }));
-      svg.appendChild(K.txt(px(v), 336, v.toFixed(1),
-        { size: 'tick', face: 'mono', anchor: 'middle' }));
-    }
-    // Left-anchored, and broken over two short lines rather than set on one
-    // long one. Seller A's range label sits right-anchored at x = 439 on
-    // LANE_Y[0]'s row, so pinning this caption to that same row collides
-    // with it; B's and C's labels don't start until x ~= 344, so the two
-    // lines instead ride LANE_Y[1] and LANE_Y[2] — the strip from x = 90 to
-    // about x = 320 stays clear under those two rows.
-    svg.appendChild(K.txt(X0, LANE_Y[1] + 5, 'true success rate s',
-      { size: 'label', fill: SOFT }));
-    svg.appendChild(K.txt(X0, LANE_Y[2] + 5, '(axis truncated below 0.5)',
-      { size: 'label', fill: SOFT }));
-
-    // --- one curve, one bracket lane and one readout block per seller ---
     var lanes = S.map(function (a, idx) {
-      var path = svg.appendChild(K.el('path', {
-        d: curvePath(a), fill: 'none', stroke: a.colour, 'stroke-width': 2.5,
-        'stroke-linejoin': 'round', 'stroke-linecap': 'round',
-        opacity: 0, class: 'seller-curve'
-      }));
+      var B = BLOCK[idx];
 
-      // Bracket, its numeric range, and the readout share one group so a
-      // seller arrives (and leaves) as a single object.
-      var side = svg.appendChild(K.el('g', {
-        opacity: 0, class: 'seller-side'
-      }));
-      side.appendChild(K.el('path', {
-        d: bracket(a, LANE_Y[idx]), fill: 'none', stroke: a.colour,
-        'stroke-width': 2
-      }));
-      // The range sits to the LEFT of its bracket: to the right is the
-      // readout column, and seller A's bracket already reaches x = 700.
-      side.appendChild(K.txt(px(a.lo) - 10, LANE_Y[idx] + 5,
-        a.id + NB + '[' + a.lo.toFixed(3) + ', ' + a.hi.toFixed(3) + ']',
-        { size: 'label', face: 'mono', anchor: 'end', fill: a.colour }));
+      var pct = svg.appendChild(K.txt(PCT_X, B.ly, a.pct,
+        { size: 'readout', face: 'mono', fill: INK }));
+      var count = svg.appendChild(K.txt(CNT_X, B.ly, a.n + ' reviews',
+        { size: 'label', fill: GREY }));
 
-      var y = RD_Y + idx * RD_BLOCK;
-      side.appendChild(K.txt(RD_X, y,
-        a.id + NB + NB + pad(a.k, 3) + ' / ' + pad(a.n, 3),
-        { size: 'label', face: 'mono', fill: a.colour }));
-      side.appendChild(K.txt(RD_X, y + RD_LINE,
-        'P(s > ' + GOOD.toFixed(2) + ') = ' + a.ptail.toFixed(2),
-        { size: 'label', fill: SOFT }));
+      // Marks come back in reveal order so the arrival tween can light them
+      // left to right, row by row, like reviews coming in.
+      var g = svg.appendChild(K.el('g', { class: 'seller-block' }));
+      var marks = K.block(g, a.n, a.miss, GX, B.ry);
 
-      return { path: path, side: side, len: 0, on: false };
+      show(pct, false); show(count, false);
+      return { pct: pct, count: count, marks: marks, on: false };
     });
 
-    // Path lengths are only measurable once the svg is in the document
-    // (K.canvas already appended it), so the dash setup happens here.
-    lanes.forEach(function (ln) {
-      var len = 0;
-      try { len = ln.path.getTotalLength(); } catch (e) { len = 0; }
-      ln.len = len;
-      ln.path.setAttribute('stroke-dasharray', len);
-      ln.path.setAttribute('stroke-dashoffset', len);
-    });
-
-    return { state: 0, cap: cap, lanes: lanes, anims: [] };
+    return { state: 0, lanes: lanes, anims: [] };
   }
 
-  // Keep these SHORT. The caption is left-anchored at x=40, y=28; at 24px
-  // Roboto (~12px per character) anything much past ~40 characters runs
-  // under the right-hand furniture.
-  var CAPTIONS = [
-    'same formula, now s varies not k',
-    '10 of 10 — but only ten',
-    '48 of 50 — narrower already',
-    '186 of 200 — narrowest, and lowest'
-  ];
-
-  // Cancel everything still in flight before the next beat. A curve draw runs
-  // for the best part of a second; a presenter arrowing back during it would
-  // otherwise have the old tween keep writing its own dashoffset over a state
-  // that no longer contains that seller.
+  // Cancel everything still in flight before the next beat. A beat runs for
+  // the best part of a second; a presenter arrowing back during it would
+  // otherwise have the old tween keep writing opacities over a state that no
+  // longer contains that seller.
   function stop(s) {
     s.anims.forEach(function (a) { if (a && a.pause) a.pause(); });
     s.anims = [];
   }
 
+  function setMarks(ln, upto) {
+    for (var i = 0; i < ln.marks.length; i++) {
+      ln.marks[i].setAttribute('opacity', i < upto ? 1 : 0);
+    }
+  }
+
+  // The static truth for a state, written on EVERY render before any tween
+  // starts. Motion is the unreliable part: stop() pauses whatever is in
+  // flight, a presenter clicking faster than the 620ms fill cancels the
+  // previous lane part-way, and a backgrounded tab freezes the frame clock
+  // outright. When the finished opacities are only ever written from inside a
+  // tween, any of those leaves a seller half-drawn — or the whole stage
+  // blank — with nothing to put it right. Writing them up front means the
+  // tween only ever supplies the movement, never the result.
+  function snap(s, st) {
+    s.lanes.forEach(function (ln, idx) {
+      var on = st >= idx + 1;
+      show(ln.pct, on);
+      show(ln.count, on);
+      setMarks(ln, on ? ln.marks.length : 0);
+      ln.on = on;
+    });
+  }
+
+  // Fades by tweening a plain scalar and writing the ATTRIBUTE, rather than
+  // letting anime set an inline style. snap() has to be able to overrule a
+  // fade that was cancelled half-way, and an inline opacity would outrank the
+  // attribute it writes.
+  function fadeTo(s, el, on, dur, delay) {
+    var p = { v: on ? 0 : 1 };
+    el.setAttribute('opacity', p.v);
+    s.anims.push(window.anime.animate(p, {
+      v: on ? 1 : 0, duration: dur, delay: delay || 0, ease: 'outQuad',
+      onUpdate: function () { el.setAttribute('opacity', p.v); }
+    }));
+  }
+
   function render(s, st, instant) {
+    var was = s.lanes.map(function (ln) { return ln.on; });
     stop(s);
     s.state = st;
-    s.cap.textContent = CAPTIONS[st];
-    var fast = instant || K.REDUCE || !K.animeReady();
-    var A = window.anime;
+    snap(s, st);
+    if (instant || K.REDUCE || !K.animeReady()) return;
 
     s.lanes.forEach(function (ln, idx) {
       var on = st >= idx + 1;
+      if (on === was[idx]) return;          // this lane is not the one moving
 
-      if (fast) {
-        ln.path.setAttribute('opacity', on ? 1 : 0);
-        ln.path.setAttribute('stroke-dashoffset', on ? 0 : ln.len);
-        ln.side.setAttribute('opacity', on ? 1 : 0);
-        ln.on = on;
-        return;
-      }
-      if (on === ln.on) return;             // already where it should be
+      // Claim, evidence, name — and in reverse on the way out, fast, because
+      // stepping back is navigation rather than narration.
+      fadeTo(s, ln.pct, on, on ? 300 : 200, 0);
 
-      if (on) {
-        // The curve is drawn left to right, so the eye follows the rise and
-        // arrives at the peak; the bracket and the readout land just after,
-        // once there is a shape for them to describe.
-        ln.path.setAttribute('opacity', 1);
-        ln.path.setAttribute('stroke-dashoffset', ln.len);
-        var p = { u: 0 };
-        s.anims.push(A.animate(p, {
-          u: 1, duration: 900, ease: 'outCubic',
-          onUpdate: function () {
-            ln.path.setAttribute('stroke-dashoffset', (1 - p.u) * ln.len);
-          }
-        }));
-        s.anims.push(A.animate(ln.side, {
-          opacity: 1, duration: 380, delay: 560, ease: 'outQuad'
-        }));
-      } else {
-        // Rewind the dash on the way out, so stepping back and forward draws
-        // the curve again instead of blinking a finished one into place.
-        s.anims.push(A.animate(ln.path, {
-          opacity: 0, duration: 260, ease: 'outQuad',
-          onComplete: function () {
-            ln.path.setAttribute('stroke-dashoffset', ln.len);
-          }
-        }));
-        s.anims.push(A.animate(ln.side, {
-          opacity: 0, duration: 260, ease: 'outQuad'
-        }));
-      }
-      ln.on = on;
+      // One tween drives the whole block rather than 200 staggered ones —
+      // same effect, one object to cancel.
+      var p = { u: on ? 0 : 1 };
+      setMarks(ln, Math.round(p.u * ln.marks.length));
+      s.anims.push(window.anime.animate(p, {
+        u: on ? 1 : 0, duration: on ? 620 : 260, delay: on ? 250 : 0,
+        ease: 'outQuad',
+        onUpdate: function () {
+          setMarks(ln, Math.round(p.u * ln.marks.length));
+        }
+      }));
+
+      fadeTo(s, ln.count, on, on ? 300 : 200, on ? 820 : 0);
     });
   }
 

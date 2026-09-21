@@ -1,14 +1,106 @@
-# Describing data I {.hero #s01-visualisation}
+# Describing Data I {.hero #s01-visualisation}
 
 ::: {.sem-mark data-sem="1"}
 Seminar 1 · Data visualisation
 :::
 
-A histogram is a choice, not a fact.
+## Which Picture for Which Data? {.ojs-slide #chart-choice}
 
-::: {.lede}
-The worksheet asks which display suits which data. The harder question is what happens *after* you pick one — because the same thirty numbers can be made to tell two different stories.
+::: {.lede-min}
+Tick the display that suits each set of data. The reasoning appears underneath.
 :::
+
+```{ojs}
+//| echo: false
+// Short labels so all five fit on ONE line at 21px. The fuller names
+// (stem-and-leaf, pie) live in the reasoning underneath, where there is room.
+ccOpts = ["Bar or pie", "Histogram", "Scatter plot", "Time series", "Box plot"]
+
+// Exercise 1 of the beamer Seminar 1, answers and reasoning carried over.
+ccQ = [
+  {q: "The tax paid by a light engineering company and its annual profit, for 20 consecutive years.",
+   a: "Scatter plot",
+   why: "Two numerical measures, and the question is whether they move together. The twenty years supply the pairs, they are not the thing being plotted."},
+  {q: "The types of premises occupied by all the small businesses in a town: office, factory, warehouse, and so on.",
+   a: "Bar or pie",
+   why: "The variable is categorical. There is nothing to put on a number line, only counts in named boxes, so a bar chart or a pie chart."},
+  {q: "The salary of a trainee accountant in the first year of training, at 30 major accountancy firms.",
+   a: "Histogram",
+   why: "One numerical measure, and what you want to see is the shape of its spread. A stem-and-leaf does the same job by hand and keeps the digits."},
+  {q: "The number of trainee accountants enrolling for professional examinations each year since 1960.",
+   a: "Time series",
+   why: "One measure again, but it only means anything read against the year it belongs to."},
+  {q: "The years of experience and the current salary of a random sample of economists at a New York bank.",
+   a: "Scatter plot",
+   why: "Two numerical measures per person, so each economist is one point."}
+]
+```
+
+```{ojs}
+//| echo: false
+ccIcon = {
+  const NAVY = "#325D88";
+  const wrap = inner =>
+    `<svg width="42" height="26" viewBox="0 0 42 26" aria-hidden="true">${inner}</svg>`;
+  // Bars on a 40-wide strip sitting on a baseline at y = 22. A histogram's
+  // bars touch and a bar chart's do not, which is the one difference a
+  // student is meant to read off these thumbnails.
+  const bars = (hs, pitch, w) => hs.map((h, i) =>
+    `<rect x="${2 + i * pitch}" y="${22 - h}" width="${w}" height="${h}" fill="${NAVY}"/>`
+  ).join("");
+  const line = (x1, y1, x2, y2) =>
+    `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${NAVY}" stroke-width="1.6"/>`;
+  return ({
+    "Bar or pie": wrap(bars([16, 9, 13, 6], 10, 7)),
+    "Histogram": wrap(bars([5, 12, 18, 11, 5], 8, 8)),
+    "Scatter plot": wrap([[5,20],[11,16],[16,18],[21,13],[26,11],[32,8],[38,5]]
+      .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.1" fill="${NAVY}"/>`).join("")),
+    "Time series": wrap(
+      `<polyline points="3,20 10,12 17,16 24,7 31,11 39,4" fill="none"
+         stroke="${NAVY}" stroke-width="2" stroke-linejoin="round"/>`),
+    "Box plot": wrap(line(3, 13, 12, 13) + line(28, 13, 39, 13) +
+      `<rect x="12" y="7" width="16" height="12" fill="none" stroke="${NAVY}" stroke-width="1.6"/>` +
+      line(21, 7, 21, 19))
+  });
+}
+```
+
+```{ojs}
+//| echo: false
+viewof ccI = Inputs.radio([1, 2, 3, 4, 5], {value: 1, label: "Question"})
+```
+
+```{ojs}
+//| echo: false
+ccPrompt = html`<div class="quiz-q">${ccQ[ccI - 1].q}</div>`
+```
+
+```{ojs}
+//| echo: false
+viewof ccPick = {
+  ccI;   // naming it here rebuilds the input when the question changes, which
+         // is the only way to clear the previous answer's ticks
+  // html([...]) rather than html`...`: the sketch is a string of markup and
+  // the tagged form would escape it into visible angle brackets.
+  // radio, not checkbox: every question has exactly one right display, so
+  // letting the room tick three of them only invites a wrong kind of answer.
+  return Inputs.radio(ccOpts, {
+    label: "Suitable display",
+    format: v => html([`<span class="quiz-opt">${ccIcon[v]}<span>${v}</span></span>`])
+  });
+}
+```
+
+```{ojs}
+//| echo: false
+ccFeedback = {
+  const want = ccQ[ccI - 1].a;
+  if (!ccPick) return html`<div class="quiz-fb quiz-idle">Pick a display to see the reasoning.</div>`;
+  const ok = ccPick === want;
+  return html`<div class="quiz-fb ${ok ? "quiz-ok" : "quiz-no"}">
+    <b>${ok ? "Yes." : want + "."}</b> ${ccQ[ccI - 1].why}</div>`;
+}
+```
 
 ## The same 30 numbers, three ways {.stage-slide #bins-intuition}
 
@@ -20,7 +112,7 @@ The worksheet asks which display suits which data. The harder question is what h
 []{.fragment .fi-frag id="bins-frag-w2"}
 
 ::: {.slide-footer}
-Nothing was added or removed between the second and third views. Only the bin width changed — and with it, whether you would report a long right tail at all.
+Nothing was added or removed between the second and third views. Only the bin width changed, and with it whether the firm at 13.5% reads as an outlier or as part of the spread.
 :::
 
 ## Turn the knob yourself {.sim-slide #bins-sim}
@@ -34,11 +126,12 @@ Seminar 1 · binning
 #| fig-width: 5.7
 #| fig-height: 4.3
 #| out-width: "100%"
-set.seed(7)
-x <- round(rgamma(120, 2.2, 0.45) + 4, 1)
+x <- c(6.0, 10.4, 10.5, 9.0, 7.3, 6.6, 6.9,
+       8.2, 7.1, 8.1, 7.9, 6.8, 7.4, 9.5, 8.1,
+       13.5, 9.9, 6.9, 11.1, 8.2, 8.0, 7.7,
+       7.4, 6.5, 9.5, 8.2, 6.9, 7.2, 8.2, 6.7)
 bw <- 1   # <-- bin width
-brk <- seq(floor(min(x)),
-           ceiling(max(x)) + bw, bw)
+brk <- seq(6, 6 + ceiling(8 / bw) * bw, bw)
 hist(x, breaks = brk, col = "#CBD9E6",
      border = "white", las = 1,
      main = paste("bin width =", bw),
@@ -47,5 +140,5 @@ hist(x, breaks = brk, col = "#CBD9E6",
 :::
 
 ::: {.try-this}
-Run it with `bw <- 1`, then `0.5`, then `5`. At which width does the right tail stop being visible? That is the width an optimist would choose.
+Run it with `bw <- 1`, then `0.5`, then `2`. The worksheet asks how many of the thirty spend more than 9%. At which width can you still read the answer off the picture?
 :::

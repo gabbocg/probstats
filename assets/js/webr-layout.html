@@ -1,0 +1,45 @@
+<script>
+/*
+  Relayout the webR editor on the slide you just arrived at.
+
+  Monaco sizes itself to its container. Reveal keeps every slide that is not
+  current at `display: none`, so an editor created while its slide is hidden
+  measures a zero-width box and renders at 0x0 — at page load 15 of this
+  deck's 17 editors start that way. They usually recover on their own, but
+  "usually" is doing work there: arrive at a sim slide before Monaco notices
+  and the code is simply not on screen.
+
+  So force it. One layout() on the arriving slide's editor costs nothing and
+  removes the race. This does NOT address the other failure mode, where
+  Monaco never loads at all and no editors exist — that is why the bundle is
+  vendored in assets/vendor/monaco.
+*/
+(function () {
+  function relayout(slide) {
+    if (!slide) return;
+    (window.qwebrEditorInstances || []).forEach(function (ed) {
+      if (!ed || typeof ed.layout !== 'function' || !ed.getDomNode) return;
+      var node;
+      try { node = ed.getDomNode(); } catch (e) { return; }
+      // An editor on another slide is still hidden; laying it out there would
+      // just re-measure another zero-width box.
+      if (node && slide.contains(node)) {
+        try { ed.layout(); } catch (e) { /* editor torn down; nothing to do */ }
+      }
+    });
+  }
+
+  function init() {
+    if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
+    Reveal.on('slidechanged', function (e) { relayout(e.currentSlide); });
+    Reveal.on('ready', function () { relayout(Reveal.getCurrentSlide()); });
+    // Editors are created asynchronously, so the slide we land on may have no
+    // editor yet when 'ready' fires. A few late passes cover that without
+    // polling forever.
+    [600, 1500, 3000, 6000].forEach(function (t) {
+      setTimeout(function () { relayout(Reveal.getCurrentSlide()); }, t);
+    });
+  }
+  init();
+})();
+</script>

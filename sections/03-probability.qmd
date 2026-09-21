@@ -4,6 +4,110 @@
 Seminar 3 · Conditional probability and Bayes
 :::
 
+## Sample Spaces and Events {.stage-slide #space-intuition}
+
+::: {.lede-min}
+Roll two dice and every possible result is on the board. The sample space $\Omega$ is that whole board, and an **event** is any part of it you can point at.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="space-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="space-frag-1"}
+[]{.fragment .fi-frag id="space-frag-2"}
+[]{.fragment .fi-frag id="space-frag-3"}
+
+::: {.slide-footer}
+When every outcome is equally likely, a probability is a count. $P(\color{#93C54B}{A})$ is the cells in $\color{#93C54B}{A}$ over the cells in $\Omega$. Two fair dice earn that assumption, and most real problems do not.
+:::
+
+## Unions, Intersections and Complements {.stage-slide #setops-intuition}
+
+::: {.lede-min}
+Two events on the same board. $\color{#93C54B}{A} \cup \color{#325D88}{B}$ is "either", $\color{#93C54B}{A} \cap \color{#325D88}{B}$ is "both", and $\color{#93C54B}{A}^{c}$ is everything left over.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="setops-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="setops-frag-1"}
+[]{.fragment .fi-frag id="setops-frag-2"}
+[]{.fragment .fi-frag id="setops-frag-3"}
+
+::: {.slide-footer}
+Add 6 and 18 and you get 24, which is three too many. The cells that belong to both events were counted twice, so they have to come back off.
+:::
+
+## The Same Picture, Drawn as Circles {.stage-slide #venn-intuition}
+
+::: {.lede-min}
+A **Venn diagram** is the board with the grid rubbed out. The four counts are the ones you just read off it, and they still add to 36.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="venn-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="venn-frag-1"}
+[]{.fragment .fi-frag id="venn-frag-2"}
+[]{.fragment .fi-frag id="venn-frag-3"}
+
+::: {.slide-footer}
+These circles are drawn to scale, so $\color{#325D88}{B}$ really does cover three times the area of $\color{#93C54B}{A}$. Most are not, which is why the counts written on them matter more than the picture.
+:::
+
+## Set Notation for Probability {.formula-slide #set-formal}
+
+::: {.lede-min}
+Counting gives $P(\color{#93C54B}{A}) = |\color{#93C54B}{A}|/|\Omega|$ and $P(\color{#93C54B}{A}^{c}) = 1 - P(\color{#93C54B}{A})$. Two rules do the rest.
+:::
+
+:::: {.fragment}
+::: {.rule-label .rule-or}
+[Either]{.rw} · $\color{#93C54B}{A} \cup \color{#325D88}{B}$
+:::
+
+$$\begin{array}{@{}l@{\;\;}c@{\;\;}l@{}}
+P(\color{#93C54B}{A} \cup \color{#325D88}{B}) & = & P(\color{#93C54B}{A}) + P(\color{#325D88}{B}) - P(\color{#93C54B}{A} \cap \color{#325D88}{B})\\[4pt]
+\phantom{P(\color{#93C54B}{A} \cap \color{#325D88}{B})} & = & P(\color{#93C54B}{A}) + P(\color{#325D88}{B}) \qquad \color{#6E7681}{\text{if mutually exclusive}}
+\end{array}$$
+::::
+
+:::: {.fragment}
+::: {.rule-label .rule-and}
+[Both]{.rw} · $\color{#93C54B}{A} \cap \color{#325D88}{B}$
+:::
+
+$$\begin{array}{@{}l@{\;\;}c@{\;\;}l@{}}
+P(\color{#93C54B}{A} \cap \color{#325D88}{B}) & = & P(\color{#93C54B}{A}) \times P(\color{#325D88}{B} \mid \color{#93C54B}{A})\\[4pt]
+\phantom{P(\color{#93C54B}{A} \cap \color{#325D88}{B})} & = & P(\color{#93C54B}{A}) \times P(\color{#325D88}{B}) \qquad \color{#6E7681}{\text{if independent}}
+\end{array}$$
+::::
+
+::: {.slide-footer .fragment}
+Mutually exclusive means $\color{#93C54B}{A} \cap \color{#325D88}{B} = \varnothing$, so there is nothing to subtract. Independent means learning $\color{#93C54B}{A}$ tells you nothing about $\color{#325D88}{B}$, which the next slide makes precise.
+:::
+
+## Conditioning Narrows the Sample Space {.stage-slide #cond-intuition}
+
+::: {.lede-min}
+Eight in ten office managers would buy the software ($\color{#93C54B}{A}$), and four in ten of those would also upgrade ($\color{#325D88}{B}$). Of the rest, one in ten would. Given $\color{#325D88}{B}$, how likely is $\color{#93C54B}{A}$?
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="cond-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="cond-frag-1"}
+[]{.fragment .fi-frag id="cond-frag-2"}
+[]{.fragment .fi-frag id="cond-frag-3"}
+
+::: {.slide-footer}
+Learning $\color{#325D88}{B}$ throws the other 66% away, so $P(\color{#93C54B}{A} \mid \color{#325D88}{B}) = P(\color{#93C54B}{A} \cap \color{#325D88}{B})/P(\color{#325D88}{B})$.
+:::
+
 ## Librarian or Farmer? {.stage-slide #bayes-hook}
 
 ::: {.lede-min}
@@ -47,7 +151,7 @@ The base rate is how common each job is, before you read a word about Steve. His
 []{.fragment .fi-frag id="bayeq-frag-3"}
 []{.fragment .fi-frag id="bayeq-frag-4"}
 
-## Move the prior, watch the answer move {.sim-slide #bayes-sim}
+## Move the Prior, Watch the Answer Move {.sim-slide #bayes-sim}
 
 ::: {.slide-kicker}
 Seminar 3 · the base rate does the work
@@ -87,47 +191,3 @@ A car sits behind one of three doors and a goat behind each of the others. You p
 []{.fragment .fi-frag id="monty-frag-4"}
 []{.fragment .fi-frag id="monty-frag-5"}
 []{.fragment .fi-frag id="monty-frag-6"}
-
-
-## The same move, in pure proportions {.stage-slide #cond-intuition}
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="cond-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="cond-frag-1"}
-[]{.fragment .fi-frag id="cond-frag-2"}
-[]{.fragment .fi-frag id="cond-frag-3"}
-
-::: {.slide-footer}
-The worksheet's tree diagram drawn as area: 80% would buy, 40% of those would upgrade. Counting people or splitting a unit square is one operation — again a ratio of what survived.
-:::
-
-## Count the managers instead {.sim-slide #cond-sim}
-
-::: {.slide-kicker}
-Seminar 3 · Bayes without the formula
-:::
-
-::: {.lede-min}
-You never need the theorem if you are willing to simulate 200,000 managers and count the ones you care about.
-:::
-
-::: {.sim-card .sim-text}
-```{webr-r}
-n   <- 200000
-buy <- runif(n) < 0.80
-
-# upgrading depends on whether they bought
-p_up <- ifelse(buy, 0.40, 0.10)
-up   <- runif(n) < p_up
-
-# keep ONLY the managers who would upgrade,
-# then ask what fraction of those are buyers
-round(mean(buy[up]), 4)
-```
-:::
-
-::: {.try-this}
-`buy[up]` **is** the conditioning step — one line doing what the tree diagram does, and what the grid did to Steve. Drop the buy rate to `0.20` and the answer collapses, for exactly the reason Steve is probably a farmer.
-:::

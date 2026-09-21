@@ -1,16 +1,50 @@
-# Distributions {.hero #s04-distributions}
+# Probability Distributions {.hero #s04-distributions}
 
 ::: {.sem-mark data-sem="4"}
 Seminar 4 · Binomial, Poisson, exponential, normal
 :::
 
-Four names for one story.
+## Which Seller Do You Trust? {.stage-slide #seller-intuition}
 
-::: {.lede}
-The worksheet presents these as four separate recipes with four separate tables. They are not separate. Three of them are the *same stream of events* asked different questions, and the fourth shows up whenever you add things together.
+::: {.lede-min}
+Three sellers on the same marketplace, same item, same price. The only thing you have to go on is what previous buyers said about them. Which one do you buy from?
 :::
 
-## Where the binomial comes from {.stage-slide #binom-intuition}
+::: {.stage-wrap .stage-wrap-seller}
+<div id="seller-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="seller-frag-1"}
+[]{.fragment .fi-frag id="seller-frag-2"}
+[]{.fragment .fi-frag id="seller-frag-3"}
+
+::: {.slide-footer .fragment}
+What is the rational way to think about the trade-off between the confidence gained from more data versus the lower absolute percentage?
+:::
+
+## Laplace's Rule of Succession {.stage-slide #laplace-intuition}
+
+::: {.lede-min}
+In 1774 Laplace said not to rate a seller $k/n$. Credit one imaginary good review and one bad one, then rate them $(k+1)/(n+2)$.
+:::
+
+::: {.stage-wrap .stage-wrap-seller}
+<div id="laplace-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="laplace-frag-1"}
+[]{.fragment .fi-frag id="laplace-frag-2"}
+[]{.fragment .fi-frag id="laplace-frag-3"}
+
+::: {.slide-footer .fragment}
+What assumptions are underlying this and how changing either those assumptions can change the choice you make?
+:::
+
+## Where the Binomial Comes From {.stage-slide #binom-intuition}
+
+::: {.lede-min}
+Every review is an independent draw at one constant unknown rate $S$. We cannot work back to it, only forwards. Suppose $S$ and see what it predicts.
+:::
 
 ::: {.stage-wrap .stage-wrap-std}
 <div id="binom-stage" class="stage"></div>
@@ -20,107 +54,455 @@ The worksheet presents these as four separate recipes with four separate tables.
 []{.fragment .fi-frag id="binom-frag-2"}
 []{.fragment .fi-frag id="binom-frag-3"}
 
-::: {.slide-footer}
-The count discards *which* trials succeeded, so all 120 orderings of three successes collapse into one bar — C(n,k) is exactly how many collapsed.
+## What If the Rate Were Different? {.ojs-slide #likelihood-live}
+
+::: {.lede-min}
+One guess at $S$ gives one number. Turn the dial and the top plot reshapes, while the bottom traces that number against every $S$ it could be.
 :::
 
-## Which seller do you trust? {.stage-slide #seller-intuition}
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="seller-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="seller-frag-1"}
-[]{.fragment .fi-frag id="seller-frag-2"}
-[]{.fragment .fi-frag id="seller-frag-3"}
-
-::: {.slide-footer}
-Same formula, turned around: there we fixed the rate; here we fix the count. More reviews narrow the curve, but narrow is not good: the 93% seller is merely *precisely* mediocre.
-:::
-
-## Ten out of ten is weak evidence {.sim-slide #seller-sim}
-
-::: {.slide-kicker}
-Seminar 4 · likelihood, and a decision
-:::
-
-::: {.sim-card .sim-plot}
-```{webr-r}
-#| fig-width: 5.7
-#| fig-height: 4.3
-#| out-width: "100%"
-s <- seq(0.5, 1, length.out = 401)
-L   <- function(k, n) dbinom(k, n, s)
-rel <- function(k, n) L(k, n) / max(L(k, n))
-plot(s, rel(10, 10), type = "l", lwd = 2,
-     col = "#325D88", xlab = "true rate s",
-     ylab = "relative likelihood", las = 1)
-lines(s, rel(48, 50), lwd = 2, col = "#93C54B")
-lines(s, rel(186, 200), lwd=2, col="#B94A48")
-# flat prior: s ~ Beta(k + 1, n - k + 1)
-good <- function(k,n) 1 - pbeta(.95, k+1, n-k+1)
-round(c(A = good(10, 10), B = good(48, 50),
-        C = good(186, 200)), 4)
+```{ojs}
+//| echo: false
+viewof s = Inputs.range([0.50, 1.00], {value: 0.95, step: 0.01, label: "True success rate s"})
 ```
+
+```{ojs}
+//| echo: false
+n = 50
+k = 48
+
+// The deck's palette, so the plots match the hand-drawn stages either side.
+PAL = ({olive: "#93C54B", brick: "#B94A48", navy: "#325D88",
+        orange: "#F47C3C", soft: "#6E7681", dim: "#B0B7C0"})
+
+// Binomial pmf by recurrence: P(0) = (1-p)^n, then
+// P(j) = P(j-1) * (n-j+1)/j * p/(1-p). No factorial is ever formed, so
+// nothing overflows — the same route stage-kit.html uses.
+pmf = function (p) {
+  const q = 1 - p;
+  if (q <= 0) return Array.from({length: n + 1}, (_, i) => (i === n ? 1 : 0));
+  let v = Math.pow(q, n);
+  const out = [v];
+  for (let j = 1; j <= n; j++) { v = v * ((n - j + 1) / j) * (p / q); out.push(v); }
+  return out;
+}
+
+pk = pmf(s)
+value = pk[k]
+lik = d3.range(0, 1.0005, 0.004).map(sv => ({s: sv, p: pmf(sv)[k]}))
+
+PSTYLE = ({fontSize: "15px", fontFamily: "Roboto, sans-serif",
+           color: PAL.soft, background: "transparent"})
+```
+
+```{ojs}
+//| echo: false
+Plot.plot({
+  // marginTop 16, not 4: at 4 the 30% tick label has no room above the top
+  // gridline and reads as cut off. Height grows to match so the plotting
+  // area is unchanged.
+  width: 950, height: 154, marginLeft: 64, marginBottom: 24, marginTop: 16,
+  style: PSTYLE,
+  x: {domain: [-0.6, n + 0.6], ticks: d3.range(0, n + 1, 5), label: null, tickSize: 4},
+  // labelAnchor centre rotates the label down the axis; Plot's default puts
+  // it at the top, where it sits on the top tick.
+  // Both plots are pinned to 0-30% so the two heights read against the same
+  // scale. This one does exceed it once s passes about 0.97 — at s = 1 every
+  // draw is fifty ticks, so that bar is 100% — hence clip, which flattens it
+  // at the top of the frame instead of letting it paint over the equation.
+  y: {domain: [0, 0.30], ticks: [0.1, 0.2, 0.3], grid: true,
+      tickFormat: d => d3.format(".0%")(d), label: "P(k | s)",
+      labelAnchor: "center", labelOffset: 56},
+  marks: [
+    Plot.ruleX(d3.range(n + 1), {x: d => d, y2: d => pk[d], strokeWidth: 5,
+      stroke: d => (d === k ? PAL.olive : PAL.dim), clip: true}),
+    Plot.ruleY([0], {stroke: PAL.dim})
+  ]
+})
+```
+
+```{ojs}
+//| echo: false
+html`<div class="ojs-eq">P(<span class="hit">48&#10003;</span>, <span class="miss">2&#10007;</span> | s = <span class="rate">${s.toFixed(2)}</span>) = <b>${value.toFixed(4)}</b></div>`
+```
+
+```{ojs}
+//| echo: false
+Plot.plot({
+  // marginTop 16, not 4: at 4 the 30% tick label has no room above the top
+  // gridline and reads as cut off. Height grows to match so the plotting
+  // area is unchanged.
+  width: 950, height: 154, marginLeft: 64, marginBottom: 24, marginTop: 16,
+  style: PSTYLE,
+  x: {domain: [0, 1], ticks: [0, 0.2, 0.4, 0.6, 0.8, 1], label: null, tickSize: 4},
+  y: {domain: [0, 0.30], ticks: [0.1, 0.2, 0.3], grid: true,
+      tickFormat: d => d3.format(".0%")(d),
+      label: "P(data | s)", labelAnchor: "center", labelOffset: 56},
+  marks: [
+    Plot.line(lik, {x: "s", y: "p", stroke: PAL.navy, strokeWidth: 2.5}),
+    Plot.ruleX([s], {stroke: PAL.soft, strokeDasharray: "4 4"}),
+    Plot.dot([{s: s, p: value}], {x: "s", y: "p", fill: PAL.olive, r: 6,
+      stroke: "white", strokeWidth: 1.5}),
+    Plot.ruleY([0], {stroke: PAL.dim})
+  ]
+})
+```
+
+## The Binomial in Standard Notation {.formula-slide #binom-formal}
+
+::: {.lede-min}
+Everything so far, in the notation the worksheet uses. The rate we have been calling $S$ is written $\color{#F47C3C}{p}$; its complement is $\color{#B94A48}{q} = 1 - \color{#F47C3C}{p}$.
 :::
 
-::: {.try-this}
-10/10 gives only a **0.43** chance the true rate beats 95%; 48/50 gives **0.47** and wins. Try `good(100, 100)`: **it was never the percentage, but how much rested on it.**
+$$P(X = \color{#93C54B}{k}) \;=\; \binom{n}{\color{#93C54B}{k}}\; \color{#F47C3C}{p}^{\,\color{#93C54B}{k}}\; \color{#B94A48}{q}^{\,\color{#B94A48}{n-k}} \qquad X \sim \operatorname{Binomial}(n, \color{#F47C3C}{p})$$
+
+::: {.fragment .note}
+One review is a **Bernoulli trial**, a single attempt with two outcomes, scored $1$ for good and $0$ for bad.
 :::
 
-## Hold $np$ fixed and push $n$ up {.stage-slide #pois-intuition}
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="pois-stage" class="stage"></div>
+::: {.fragment}
+$$P(B_i = 1) = \color{#F47C3C}{p}, \quad P(B_i = 0) = \color{#B94A48}{q}, \quad \operatorname{E}[B_i] = \color{#F47C3C}{p}, \quad \operatorname{Var}(B_i) = \color{#F47C3C}{p}\color{#B94A48}{q}$$
 :::
 
-[]{.fragment .fi-frag id="pois-frag-1"}
-[]{.fragment .fi-frag id="pois-frag-2"}
-[]{.fragment .fi-frag id="pois-frag-3"}
+::: {.fragment}
+$$X \;=\; B_1 + B_2 + \cdots + B_n, \qquad B_i \sim \operatorname{Bernoulli}(\color{#F47C3C}{p})$$
+:::
+
+::: {.slide-footer .fragment}
+Each of seller B's fifty reviews was one $B_i$. The binomial is nothing more than their sum, which is why only the count survives.
+:::
+
+## The Rare Event Limit of a Binomial Distribution {.ojs-slide #pois-intuition}
+
+::: {.lede-min}
+Hold the average $\color{#F47C3C}{\lambda} = n\,\color{#F47C3C}{p}$ still and push $n$ up. Each trial gets rarer, but you expect the same number of events.
+:::
+
+```{ojs}
+//| echo: false
+viewof nTrials = Inputs.range([10, 400], {value: 10, step: 1, label: "Trials n"})
+// Floor of 10, not 5: lam runs to 8, and n < lam would ask for p > 1, which
+// the recurrence below happily turns into a 1971% gap. NB a comment must NOT
+// be the first line of an {ojs} cell: it shadows the '//|' directive and
+// Quarto then emits the whole slide as plain source, with no runtime and no
+// error anywhere.
+```
+
+```{ojs}
+//| echo: false
+viewof lam = Inputs.range([1, 8], {value: 3, step: 0.5, label: "Mean λ = np"})
+```
+
+```{ojs}
+//| echo: false
+PPAL = ({olive: "#93C54B", brick: "#B94A48", navy: "#325D88",
+         orange: "#F47C3C", soft: "#6E7681", dim: "#B0B7C0"})
+
+pp = lam / nTrials                       // the success rate, shrinking as nTrials grows
+KMAX = Math.max(12, Math.ceil(lam + 4 * Math.sqrt(lam)))
+ks = d3.range(0, KMAX + 1)
+
+// Binomial(nTrials, pp) by the same recurrence used everywhere else in this deck
+binom = {
+  const q = 1 - pp;
+  if (q <= 0) return ks.map(k => (k === nTrials ? 1 : 0));
+  let v = Math.pow(q, nTrials);
+  const out = [v];
+  const top = Math.min(nTrials, KMAX);   // KMAX <= 20; no point walking to 20,000
+  for (let j = 1; j <= top; j++) { v = v * ((nTrials - j + 1) / j) * (pp / q); out.push(v); }
+  return ks.map(k => (k <= nTrials ? out[k] : 0));
+}
+
+// Poisson(lam): P(0) = e^-lam, then P(k) = P(k-1) * lam / k
+pois = {
+  const out = []; let v = Math.exp(-lam);
+  for (let k = 0; k <= KMAX; k++) { out.push(v); v = v * lam / (k + 1); }
+  return out;
+}
+
+gap = d3.max(ks, k => Math.abs(binom[k] - pois[k]))
+YMAX = Math.max(d3.max(binom), d3.max(pois)) * 1.18
+```
+
+```{ojs}
+//| echo: false
+Plot.plot({
+  width: 950, height: 205, marginLeft: 64, marginBottom: 26, marginTop: 16,
+  style: {fontSize: "15px", fontFamily: "Roboto, sans-serif",
+          color: PPAL.soft, background: "transparent"},
+  x: {domain: [-0.6, KMAX + 0.6], label: null, tickSize: 4},
+  y: {domain: [0, YMAX], grid: true, tickFormat: d => d3.format(".0%")(d),
+      label: "P(k)", labelAnchor: "center", labelOffset: 56},
+  marks: [
+    Plot.ruleX(ks, {x: d => d, y2: d => binom[d], strokeWidth: 9,
+      stroke: PPAL.dim, clip: true}),
+    // "step" is Plot's midpoint step (d3.curveStep); "step-mid" is not a
+    // curve name and throws, taking the whole plot cell with it.
+    Plot.line(ks, {x: d => d, y: d => pois[d], stroke: PPAL.brick,
+      strokeWidth: 2, curve: "step", clip: true}),
+    Plot.dot(ks, {x: d => d, y: d => pois[d], fill: PPAL.brick, r: 3.2,
+      clip: true}),
+    Plot.ruleY([0], {stroke: PPAL.dim})
+  ]
+})
+```
+
+```{ojs}
+//| echo: false
+html`<div class="ojs-eq">Binomial(${nTrials}, <span class="rate">${pp.toFixed(4)}</span>) &nbsp;→&nbsp; <span class="miss">Poisson(${lam.toFixed(1)})</span> &nbsp;·&nbsp; gap <b>${(100*gap).toFixed(2)}%</b></div>`
+```
 
 ::: {.slide-footer}
-Watch what is lost: at $n = 1000$ the shape no longer reveals $n$ or $p$, only their product. That is why the Poisson has *one* parameter, and suits events with no natural number of trials.
+Watch what is lost. Push $n$ up and the shape stops revealing $n$ or $\color{#F47C3C}{p}$, only their product. That is why the Poisson has *one* parameter.
 :::
 
-## The same events, a different question {.stage-slide #expo-intuition}
+## The Poisson in Standard Notation {.formula-slide #pois-formal}
 
-::: {.stage-wrap .stage-wrap-std}
-<div id="expo-stage" class="stage"></div>
+::: {.lede-min}
+Put $\color{#F47C3C}{p} = \color{#F47C3C}{\lambda}/n$ into the binomial and let $n$ run away.
 :::
 
-[]{.fragment .fi-frag id="expo-frag-1"}
-[]{.fragment .fi-frag id="expo-frag-2"}
-[]{.fragment .fi-frag id="expo-frag-3"}
+$$P(X = \color{#93C54B}{k}) \;=\; \binom{n}{\color{#93C54B}{k}}\big(\tfrac{\color{#F47C3C}{\lambda}}{n}\big)^{\color{#93C54B}{k}}\big(1-\tfrac{\color{#F47C3C}{\lambda}}{n}\big)^{n-\color{#93C54B}{k}}$$
 
-::: {.slide-footer}
-One timeline, two distributions: count per interval for Poisson, measure the gaps for exponential. Memorylessness: re-normalised remaining waits land back on the *same* curve.
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Group the factors by whether they still mention $n$]{.deriv-note}
 :::
 
-## Memorylessness is not a figure of speech {.sim-slide #memory-sim}
+$$=\;\frac{\color{#F47C3C}{\lambda}^{\,\color{#93C54B}{k}}}{\color{#93C54B}{k}!}\;\cdot\;\frac{n(n-1)\cdots(n-\color{#93C54B}{k}+1)}{n^{\color{#93C54B}{k}}}\;\cdot\;\big(1-\tfrac{\color{#F47C3C}{\lambda}}{n}\big)^{n}\;\cdot\;\big(1-\tfrac{\color{#F47C3C}{\lambda}}{n}\big)^{-\color{#93C54B}{k}}$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [As $n \to \infty$ those three go to $1$, to $e^{-\color{#F47C3C}{\lambda}}$, and to $1$]{.deriv-note}
+:::
+
+$$P(X = \color{#93C54B}{k}) \;=\; \frac{\color{#F47C3C}{\lambda}^{\,\color{#93C54B}{k}}\, e^{-\color{#F47C3C}{\lambda}}}{\color{#93C54B}{k}!} \qquad X \sim \operatorname{Poisson}(\color{#F47C3C}{\lambda})$$
+
+::: {.slide-footer .fragment}
+Only the middle factor did any real work, since $(1-\lambda/n)^{n}$ *is* the definition of $e^{-\lambda}$. One parameter now does the job of two, and $\operatorname{E}[X] = \operatorname{Var}(X) = \color{#F47C3C}{\lambda}$.
+:::
+
+## Check the approximation {.sim-slide #pois-sim}
 
 ::: {.slide-kicker}
-Seminar 4 · the exponential's defining property
+Seminar 4 · exact vs approximate
 :::
 
 ::: {.lede-min}
-A machine has lasted 10 years. Is it now more likely to fail soon? If lifetimes are exponential, the answer is exactly no — and that is a strong, testable claim.
+Three mistakes per 10,000 transactions; 10,000 audited. What is the chance of four or more? Compute it both ways.
 :::
 
 ::: {.sim-card .sim-text}
 ```{webr-r}
-x <- rexp(500000, rate = 0.1)  # mean life 10y
-s <- 10                        # <-- survived
+n <- 10000
+p <- 0.0003   # <-- keep n * p = 3
 
-fresh <- mean(x > 5)
-used  <- mean(x > s + 5) / mean(x > s)
+binomial <- 1 - pbinom(3, n, p)
+poisson <- 1 - ppois(3, n * p)
 
-round(c(new_5_more  = fresh,
-        used_5_more = used), 4)
+c(binomial, poisson)
 ```
 :::
 
 ::: {.try-this}
-Both land on 0.607. A brand-new machine and a 10-year-old one have the *same* chance of surviving another five years. Change `s` to anything you like — it never matters. **This is also why the exponential is often the wrong model for physical wear.**
+Both read `0.3527681`, so every digit R prints agrees and the approximation costs you nothing here. Now set `n <- 20; p <- 0.15` (still $np = 3$) and watch it open up. **That** is what "large $n$, small $p$" is protecting you from.
+:::
+
+## Time Between Poisson Events {.ojs-slide #expo-intuition}
+
+::: {.lede-min}
+Count arrivals, or time the wait. The bridge is the $\color{#93C54B}{k = 0}$ bar.
+:::
+
+```{ojs}
+//| echo: false
+viewof lamE = Inputs.range([0.5, 4], {value: 2, step: 0.5, label: "Rate λ per minute"})
+```
+
+```{ojs}
+//| echo: false
+viewof winT = Inputs.range([0.1, 2.5], {value: 1, step: 0.05, label: "Window t minutes"})
+```
+
+```{ojs}
+//| echo: false
+muE = lamE * winT                     // arrivals expected in the window
+KMAXE = Math.max(8, Math.ceil(muE + 4 * Math.sqrt(muE)))
+ksE = d3.range(0, KMAXE + 1)
+
+// Poisson(muE) by the deck's usual recurrence: P(0) = e^-mu, P(k) = P(k-1) mu/k
+poisE = {
+  const out = []; let v = Math.exp(-muE);
+  for (let k = 0; k <= KMAXE; k++) { out.push(v); v = v * muE / (k + 1); }
+  return out;
+}
+
+// The whole point of the slide: the k = 0 bar IS the exponential's survival
+// curve. P(no arrival in [0, t]) = e^(-lambda t) = P(wait > t).
+p0E = Math.exp(-muE)
+TE = 3                                // minutes on the bottom axis
+densE = t => lamE * Math.exp(-lamE * t)
+gridE = d3.range(0, 241).map(i => TE * i / 240)
+tailE = d3.range(0, 161).map(i => winT + (TE - winT) * i / 160)
+YPOIS = d3.max(poisE) * 1.18
+YDENS = lamE * 1.12
+ESTYLE = ({fontSize: "15px", fontFamily: "Roboto, sans-serif",
+           color: PPAL.soft, background: "transparent"})
+```
+
+```{ojs}
+//| echo: false
+Plot.plot({
+  width: 950, height: 154, marginLeft: 64, marginBottom: 24, marginTop: 16,
+  style: ESTYLE,
+  x: {domain: [-0.6, KMAXE + 0.6], label: null, tickSize: 4},
+  y: {domain: [0, YPOIS], grid: true, tickFormat: d => d3.format(".0%")(d),
+      label: "P(k arrivals in t)", labelAnchor: "center", labelOffset: 56},
+  marks: [
+    Plot.ruleX(ksE, {x: d => d, y2: d => poisE[d], strokeWidth: 7,
+      stroke: d => (d === 0 ? PPAL.olive : PPAL.dim), clip: true}),
+    Plot.ruleY([0], {stroke: PPAL.dim})
+  ]
+})
+```
+
+```{ojs}
+//| echo: false
+html`<div class="ojs-eq">P(<span class="hit">0 arrivals</span> in ${winT.toFixed(2)} min) &nbsp;=&nbsp; <b>${p0E.toFixed(4)}</b> &nbsp;=&nbsp; P(<span class="hit">wait &gt; ${winT.toFixed(2)}</span>) &nbsp;·&nbsp; <span class="rate">λ = ${lamE.toFixed(1)}</span></div>`
+```
+
+```{ojs}
+//| echo: false
+Plot.plot({
+  width: 950, height: 154, marginLeft: 64, marginBottom: 24, marginTop: 16,
+  style: ESTYLE,
+  x: {domain: [0, TE], label: null, tickSize: 4},
+  y: {domain: [0, YDENS], grid: true, tickFormat: d => d3.format(".1f")(d),
+      label: "density of the wait", labelAnchor: "center", labelOffset: 56},
+  marks: [
+    // This olive area is the same number as the olive bar above it.
+    Plot.areaY(tailE, {x: t => t, y: densE, fill: PPAL.olive,
+      fillOpacity: 0.3, clip: true}),
+    Plot.line(gridE, {x: t => t, y: densE, stroke: PPAL.brick,
+      strokeWidth: 2.5, clip: true}),
+    Plot.ruleX([winT], {stroke: PPAL.soft, strokeDasharray: "4 4"}),
+    Plot.ruleY([0], {stroke: PPAL.dim})
+  ]
+})
+```
+
+## The Exponential in Standard Notation {.formula-slide #expo-formal}
+
+::: {.lede-min}
+The wait beats $t$ exactly when nothing arrives in $[0, t]$, so read the Poisson at $\color{#93C54B}{k = 0}$.
+:::
+
+$$P(T > t) \;=\; P\big(N(t) = \color{#93C54B}{0}\big), \qquad N(t) \sim \operatorname{Poisson}(\color{#F47C3C}{\lambda} t)$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Put $\color{#93C54B}{k = 0}$ into the Poisson formula]{.deriv-note}
+:::
+
+$$=\;\frac{(\color{#F47C3C}{\lambda} t)^{\color{#93C54B}{0}}\, e^{-\color{#F47C3C}{\lambda} t}}{\color{#93C54B}{0}!} \;=\; e^{-\color{#F47C3C}{\lambda} t}$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [That is the survival curve, so the density is the slope of $1 - e^{-\color{#F47C3C}{\lambda} t}$]{.deriv-note}
+:::
+
+$$f(t) \;=\; \color{#F47C3C}{\lambda}\, e^{-\color{#F47C3C}{\lambda} t} \qquad T \sim \operatorname{Exponential}(\color{#F47C3C}{\lambda})$$
+
+::: {.slide-footer .fragment}
+The same $\color{#F47C3C}{\lambda}$, read the other way round. $\operatorname{E}[T] = 1/\color{#F47C3C}{\lambda}$ is the average gap between arrivals.
+:::
+
+## Summary: Three Questions, Three Distributions {.qcard-slide #dist-questions}
+
+::: {.lede-min}
+Each one answers exactly one question.
+:::
+
+::: {.qcard .qcard-binom .fragment}
+[$\operatorname{Binomial}(n, p)$]{.qcard-name} [How many successes in a fixed number of attempts?]{.qcard-q}
+:::
+
+::: {.qcard .qcard-pois .fragment}
+[$\operatorname{Poisson}(\lambda)$]{.qcard-name} [How many events happen in a fixed amount of time?]{.qcard-q}
+:::
+
+::: {.qcard .qcard-expo .fragment}
+[$\operatorname{Exponential}(\lambda)$]{.qcard-name} [How long until the next event?]{.qcard-q}
+:::
+
+::: {.slide-footer .fragment}
+The first two count and the third measures, so only the third has no $n$ and no $k$ in it.
+:::
+
+## The Limit of a Binomial Distribution for Large n {.ojs-slide #normal-intuition}
+
+::: {.lede-min}
+Hold $\color{#F47C3C}{p}$ still and push $n$ up, and the bars settle onto a bell.
+:::
+
+```{ojs}
+//| echo: false
+viewof nBig = Inputs.range([5, 200], {value: 10, step: 1, label: "Trials n"})
+```
+
+```{ojs}
+//| echo: false
+viewof pBig = Inputs.range([0.05, 0.95], {value: 0.35, step: 0.05, label: "Success rate p"})
+```
+
+```{ojs}
+//| echo: false
+muB = nBig * pBig
+sdB = Math.sqrt(nBig * pBig * (1 - pBig))
+kLo = Math.max(0, Math.floor(muB - 4 * sdB))
+kHi = Math.min(nBig, Math.ceil(muB + 4 * sdB))
+ksB = d3.range(kLo, kHi + 1)
+
+// Binomial(nBig, pBig) by the deck's usual recurrence, walked only as far as
+// the plot shows: P(0) = (1-p)^n, P(j) = P(j-1) (n-j+1)/j p/(1-p).
+binomB = {
+  const q = 1 - pBig;
+  let v = Math.pow(q, nBig);
+  const out = [v];
+  for (let j = 1; j <= kHi; j++) { v = v * ((nBig - j + 1) / j) * (pBig / q); out.push(v); }
+  return out;
+}
+
+// De Moivre's curve: N(np, np(1-p)), read as a density at each whole k.
+normB = x => Math.exp(-((x - muB) ** 2) / (2 * sdB * sdB)) / (sdB * Math.sqrt(2 * Math.PI))
+gapB = d3.max(ksB, k => Math.abs(binomB[k] - normB(k)))
+YMAXB = d3.max(ksB, k => Math.max(binomB[k], normB(k))) * 1.18
+BWB = Math.max(1.5, Math.min(9, 880 / (kHi - kLo + 1) - 1))
+gridB = d3.range(0, 241).map(i => kLo + (kHi - kLo) * i / 240)
+BSTYLE = ({fontSize: "15px", fontFamily: "Roboto, sans-serif",
+           color: PPAL.soft, background: "transparent"})
+```
+
+```{ojs}
+//| echo: false
+Plot.plot({
+  width: 950, height: 205, marginLeft: 64, marginBottom: 26, marginTop: 16,
+  style: BSTYLE,
+  x: {domain: [kLo - 0.6, kHi + 0.6], label: null, tickSize: 4},
+  y: {domain: [0, YMAXB], grid: true, tickFormat: d => d3.format(".0%")(d),
+      label: "P(k)", labelAnchor: "center", labelOffset: 56},
+  marks: [
+    Plot.ruleX(ksB, {x: d => d, y2: d => binomB[d], strokeWidth: BWB,
+      stroke: PPAL.dim, clip: true}),
+    Plot.line(gridB, {x: d => d, y: normB, stroke: PPAL.navy,
+      strokeWidth: 2.5, clip: true}),
+    Plot.ruleY([0], {stroke: PPAL.dim})
+  ]
+})
+```
+
+```{ojs}
+//| echo: false
+html`<div class="ojs-eq">Binomial(${nBig}, <span class="rate">${pBig.toFixed(2)}</span>) &nbsp;→&nbsp; <span class="miss">N(${muB.toFixed(1)}, ${(sdB*sdB).toFixed(1)})</span> &nbsp;·&nbsp; gap <b>${(100*gapB).toFixed(2)}%</b></div>`
+```
+
+::: {.slide-footer}
+Two limits come out of one distribution. Rare events with $\color{#F47C3C}{\lambda} = n\color{#F47C3C}{p}$ held still give the Poisson, plenty of events with $\color{#F47C3C}{p}$ held still give the normal.
 :::
 
 ## Why the normal turns up at all {.stage-slide #clt-intuition}
@@ -137,6 +519,34 @@ Both land on 0.607. A brand-new machine and a 10-year-old one have the *same* ch
 The population on the left never changes and never becomes normal; the **mean** does, and it narrows at the rate $\sigma/\sqrt{n}$. Both panels share one axis, so the narrowing is real, not a rescaling.
 :::
 
+## Break the bell on purpose {.sim-slide #clt-sim}
+
+::: {.slide-kicker}
+Seminar 4 · the CLT, stress-tested
+:::
+
+::: {.sim-card .sim-plot}
+```{webr-r}
+#| fig-width: 5.7
+#| fig-height: 4.3
+#| out-width: "100%"
+n <- 5             # <-- draws per average
+pop <- function(k) rexp(k)^2   # no bell at all
+
+xbar <- replicate(4000, mean(pop(n)))
+hist(xbar, breaks = 40, col = "#CBD9E6",
+     border = "white", main = "",
+     xlab = paste("mean of", n, "draws"))
+
+round(c(sd_obs  = sd(xbar),
+        se_pred = sd(pop(1e5)) / sqrt(n)), 3)
+```
+:::
+
+::: {.try-this}
+`n <- 1` is the raw population, violently skewed; by `n <- 30` it is nearly symmetric and `sd_obs` tracks $\sigma/\sqrt{n}$. **The CLT is a claim about the mean, and it survives a parent this ugly.**
+:::
+
 ## One table for every normal {.stage-slide #zstd-intuition}
 
 ::: {.stage-wrap .stage-wrap-std}
@@ -150,60 +560,27 @@ The population on the left never changes and never becomes normal; the **mean** 
 Subtracting $\mu$ moves the curve; dividing by $\sigma$ squeezes it, so it grows *taller* — area is always 1. The shaded probability never moves: standardising changes the ruler, not the answer.
 :::
 
-## Check the approximation {.sim-slide #pois-sim}
-
-::: {.slide-kicker}
-Seminar 4 · exact vs approximate
-:::
+## Functions of a Random Variable {.formula-slide #funcrv}
 
 ::: {.lede-min}
-Three mistakes per 10,000 transactions; 10,000 audited. What is the chance of four or more? Compute it both ways.
+For $\color{#93C54B}{Y} = g(X)$, work through the *CDF* and never the density. Ask which values of $X$ make $\color{#93C54B}{Y}$ small enough.
 :::
 
-::: {.sim-card .sim-text}
-```{webr-r}
-n <- 10000; p <- 0.0003   # <-- keep n * p = 3
-mu <- n * p
+$$F_{\color{#93C54B}{Y}}(y) \;=\; P(a X + b \le y) \;=\; P\big(X \le \tfrac{y-b}{a}\big)$$
 
-# P(4 or more mistakes)
-exact  <- 1 - pbinom(3, n, p)
-approx <- 1 - ppois(3, mu)
-
-round(c(binomial = exact,
-        poisson  = approx,
-        gap      = exact - approx), 6)
-```
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [The right-hand side is just $X$'s own CDF, read at a shifted point]{.deriv-note}
 :::
 
-::: {.try-this}
-The gap rounds to zero at six decimal places — the approximation costs you nothing here. Now set `n <- 20; p <- 0.15` (still $np = 3$) and watch it open up. **That** is what "large $n$, small $p$" is protecting you from.
+$$F_{\color{#93C54B}{Y}}(y) \;=\; F_X\big(\tfrac{y-b}{a}\big)$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Differentiate in $y$; the chain rule brings down the $1/a$]{.deriv-note}
 :::
 
-## Break the bell on purpose {.sim-slide #clt-sim}
+$$f_{\color{#93C54B}{Y}}(y) \;=\; \tfrac{1}{|a|}\, f_X\big(\tfrac{y-b}{a}\big) \qquad\Longrightarrow\qquad \color{#93C54B}{Y} \sim \operatorname{N}\big(a\mu + b,\; a^{2}\sigma^{2}\big)$$
 
-::: {.slide-kicker}
-Seminar 4 · the CLT, stress-tested
+::: {.slide-footer .fragment}
+Standardising is this with $a = 1/\sigma$ and $b = -\mu/\sigma$, which is why one table serves every normal. A *non-linear* $g$ leaves the family, so $X \sim \operatorname{N}(0,1)$ makes $\color{#93C54B}{Y} = X^{2}$ chi-squared.
 :::
 
-::: {.sim-card .sim-plot}
-```{webr-r}
-#| fig-width: 5.7
-#| fig-height: 4.3
-#| out-width: "100%"
-n <- 5          # <-- draws per average
-reps <- 4000
-# a population with no bell shape at all
-pop <- function(k) rexp(k, rate = 1)^2
-sigma <- sd(pop(200000))
-xbar <- replicate(reps, mean(pop(n)))
-hist(xbar, breaks = 40, col = "#CBD9E6",
-     border = "white", las = 1, main = "",
-     xlab = paste("mean of", n, "draws"))
-round(c(sd_obs  = sd(xbar),
-        se_pred = sigma/sqrt(n)), 3)
-```
-:::
-
-::: {.try-this}
-`n <- 1` is the raw population, violently skewed; by `n <- 30` it is nearly symmetric and `sd_obs` tracks $\sigma/\sqrt{n}$. **The CLT is a claim about the mean, and it survives a parent this ugly.**
-:::

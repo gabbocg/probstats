@@ -1,10 +1,16 @@
-<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs/loader.js"></script>
+<!-- LOCAL Monaco, not the CDN. See assets/vendor/monaco/README.md.
+     Upstream ships this file pointing at cdn.jsdelivr.net; on a slow or
+     absent network the loader never resolves, window.monaco stays undefined
+     and NO editors are created, so every {webr-r} cell renders empty. A
+     `quarto update` of this extension will restore the CDN URLs —
+     scripts/check-render.sh asserts they are gone. -->
+<script src="assets/vendor/monaco/vs/loader.js"></script>
 <script type="module" id="qwebr-monaco-editor-init">
 
   // Configure the Monaco Editor's loader
   require.config({
     paths: {
-      'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.47.0/min/vs'
+      'vs': 'assets/vendor/monaco/vs'
     }
   });
 </script>

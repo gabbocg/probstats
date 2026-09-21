@@ -1,4 +1,4 @@
-# Hypothesis testing {.hero #s06-testing}
+# Hypothesis Testing {.hero #s06-testing}
 
 ::: {.sem-mark data-sem="6"}
 Seminar 6 · p-values and error rates

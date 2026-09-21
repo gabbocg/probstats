@@ -42,9 +42,17 @@
   var TYPE = { tick: 18, label: 20, caption: 24, readout: 30 };
   var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // "Can I animate?", not merely "is the library loaded?". document.hidden is
+  // not paranoia: anime drives everything from requestAnimationFrame, which a
+  // background tab does not run, so a tween started there never advances and
+  // never lands. Every stage uses this to choose between animating and
+  // snapping, and snapping is always the safe answer — a slide that arrives
+  // without its motion is a nuisance, a slide that arrives blank is a hole in
+  // the lecture.
   function animeReady() {
     return typeof window.anime !== 'undefined' &&
-           typeof window.anime.animate === 'function';
+           typeof window.anime.animate === 'function' &&
+           !document.hidden;
   }
 
   function el(name, attrs) {
@@ -78,6 +86,67 @@
     var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
     stage.appendChild(svg);
     return svg;
+  }
+
+  // ---- review marks -------------------------------------------------------
+  // The tick/cross lattice shared by #seller-intuition and #laplace-intuition.
+  // Both slides draw the SAME blocks, mark for mark, so that stepping from one
+  // to the next adds two marks rather than redrawing the picture — which means
+  // the geometry, the glyph shapes and the seeded miss scatter have to live in
+  // one place. A copy in each file would drift and quietly break that.
+  var MARK = {
+    PER: 50, GP: 19,                    // 50 marks per row, on a 19px lattice
+    TICK:  'M-6 0L-2 5.5L7.5 -6',       // both drawn on a 14px box, centred
+    CROSS: 'M-5.5 -5.5L5.5 5.5M5.5 -5.5L-5.5 5.5'
+  };
+
+  // Which of n reviews are the misses, as a set of indices. A seeded
+  // Fisher-Yates, so the scatter is fixed for the life of the deck — a
+  // presenter who points at "that cross there" finds it in the same place
+  // next year, and on both slides. Math.imul keeps the LCG in 32-bit integer
+  // maths; a plain multiply would leave the 53-bit float range and the low
+  // bits, which are the ones being used, would rot.
+  function missSet(n, m, seed) {
+    var idx = [], i, j, t, r = seed | 0, set = {};
+    for (i = 0; i < n; i++) idx.push(i);
+    for (i = n - 1; i > 0; i--) {
+      r = (Math.imul(r, 1103515245) + 12345) | 0;
+      j = Math.abs(r) % (i + 1);
+      t = idx[i]; idx[i] = idx[j]; idx[j] = t;
+    }
+    for (i = 0; i < m; i++) set[idx[i]] = 1;
+    return set;
+  }
+
+  // One mark, centred on (x, y) and starting hidden. Text glyphs were the
+  // obvious alternative and the wrong one: a tick and a cross set in the
+  // deck's fonts are two characters of wildly different weight, and the whole
+  // point is that a block of them reads as an even texture.
+  function mark(x, y, isMiss) {
+    return el('path', {
+      d: isMiss ? MARK.CROSS : MARK.TICK,
+      transform: 'translate(' + x + ' ' + y + ')',
+      fill: 'none', stroke: isMiss ? PAL.brick : PAL.olive,
+      'stroke-width': 2.6, 'stroke-linecap': 'round',
+      'stroke-linejoin': 'round', opacity: 0
+    });
+  }
+
+  // `count` marks laid into `parent` on the lattice, the first centred at
+  // (x0, y0), returned in reveal order. `miss` is a set from missSet(), and
+  // `from` offsets the flow index — which is how the rule-of-succession slide
+  // appends its two imaginary reviews to the end of a block it did not draw.
+  function block(parent, count, miss, x0, y0, from) {
+    var marks = [], j, i;
+    from = from || 0;
+    for (j = 0; j < count; j++) {
+      i = from + j;
+      marks.push(parent.appendChild(mark(
+        x0 + (i % MARK.PER) * MARK.GP,
+        y0 + Math.floor(i / MARK.PER) * MARK.GP,
+        miss[i])));
+    }
+    return marks;
   }
 
   var registry = {};
@@ -127,8 +196,9 @@
   }
 
   window.StageKit = {
-    PAL: PAL, FONT: FONT, TYPE: TYPE, REDUCE: REDUCE,
+    PAL: PAL, FONT: FONT, TYPE: TYPE, REDUCE: REDUCE, MARK: MARK,
     animeReady: animeReady, el: el, txt: txt, canvas: canvas,
+    missSet: missSet, mark: mark, block: block,
     register: register, registry: registry
   };
 })();

@@ -16,7 +16,7 @@
   stage so nobody thinks the shape is drifting because the mean changed.
 
   Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
-  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
+  Reveal fragment wiring live there. Canvas 1000x408, shown at scale(1.05).
 */
 (function () {
   var K = window.StageKit;
@@ -32,7 +32,7 @@
   ];
 
   // Stage geometry — 1000x445 canvas, shown at scale(1.05).
-  var W = 1000, H = 445, X0 = 90, X1 = 950;
+  var W = 1000, H = 408, X0 = 90, X1 = 950;   // drawing ends at y = 399
   var BASE = 367, PMAX = 0.25, HMAX = 278;      // P = 0.25 reaches the full height
   var SLOT = (X1 - X0) / NK, BW = 52;           // ~66.2 per slot, 52 of it inked
 

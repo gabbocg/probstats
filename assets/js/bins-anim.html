@@ -14,11 +14,15 @@
 (function () {
   var K = window.StageKit;
 
-  var DATA = [6.1, 6.3, 6.4, 6.7, 6.9, 7.0, 7.1, 7.2, 7.4, 7.6,
-              7.8, 7.9, 8.1, 8.3, 8.4, 8.6, 8.9, 9.2, 9.4, 9.7,
-              10.1, 10.4, 10.9, 11.3, 11.8, 12.2, 12.7, 13.1, 13.8, 14.2];
+  // The real thirty, in the order the worksheet lists them: Exercise 3 of the
+  // beamer Seminar 1, R&D spend as a percentage of revenue at 30 computer
+  // firms. An invented set sat here first and made the same point, but the
+  // seminar works the exercise afterwards and the numbers have to agree.
+  var DATA = [6.0, 10.4, 10.5, 9.0, 7.3, 6.6, 6.9, 8.2, 7.1, 8.1,
+              7.9, 6.8, 7.4, 9.5, 8.1, 13.5, 9.9, 6.9, 11.1, 8.2,
+              8.0, 7.7, 7.4, 6.5, 9.5, 8.2, 6.9, 7.2, 8.2, 6.7];
 
-  var W = 1000, H = 445, X0 = 60, VMIN = 5.5, VMAX = 15.5, SCALE = 88;
+  var W = 1000, H = 445, X0 = 60, VMIN = 5.5, VMAX = 14.5, SCALE = 100;
   var AXIS_Y = 412, STRIP_Y = 120, DOT_R = 8, GAP = 19, FLOOR = AXIS_Y - 16;
 
   function px(v) { return X0 + (v - VMIN) * SCALE; }
@@ -30,7 +34,13 @@
     }
     var counts = {};
     return DATA.map(function (v) {
-      var b = Math.floor((v - 6) / width);          // bins start at 6
+      // Right-closed bins — (6,7], (7,8], … — with the lowest value pulled
+      // into the first one. That is R's hist() default and it is what the
+      // worksheet's frequency table counted, so the stack heights here and
+      // the numbers the seminar works through afterwards agree. Left-closed
+      // (Math.floor) put 8.0 one bin higher and read 8, 7, 8 against the
+      // table's 8, 8, 7.
+      var b = Math.max(0, Math.ceil((v - 6) / width) - 1);
       var j = counts[b] || 0;
       counts[b] = j + 1;
       var centre = 6 + b * width + width / 2;
@@ -38,10 +48,13 @@
     });
   }
 
+  // Captions describe THIS data. At width 1 the 12s are empty and one firm
+  // stands alone at 13.5; at width 2 that hole closes and the outlier is
+  // absorbed into a bar, which is the whole argument of the slide.
   var CAPTIONS = {
-    0: '30 numbers, no bins yet',
-    1: 'bin width 1 — a long right tail',
-    2: 'bin width 2 — the tail all but disappears'
+    0: 'Thirty firms, no bins yet',
+    1: 'Bin width 1 · nothing at 12, and one firm out at 13.5',
+    2: 'Bin width 2 · the gap closes and the outlier joins a bar'
   };
 
   function build(stage) {
@@ -51,7 +64,7 @@
       x1: X0, y1: AXIS_Y, x2: px(VMAX), y2: AXIS_Y,
       stroke: K.PAL.rule, 'stroke-width': 1
     }));
-    for (var v = 6; v <= 15; v++) {
+    for (var v = 6; v <= 14; v++) {
       svg.appendChild(K.el('line', {
         x1: px(v), y1: AXIS_Y, x2: px(v), y2: AXIS_Y + 6,
         stroke: K.PAL.dim, 'stroke-width': 1

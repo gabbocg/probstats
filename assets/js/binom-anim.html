@@ -2,50 +2,100 @@
 /*
   Binomial construction animation — slide #binom-intuition.
 
-  Teaching point: the Binomial is not a shape you memorise, it is a COUNT.
-  Fix n = 10 independent trials with p = 0.3, run the strip, and tally how
-  many came up. The presenter advances fragments:
-    0. one empty strip of 10 trials  (the experiment, not yet run)
-    1. 80 rounds accumulate into a histogram of the count
-    2. the exact pmf is laid over the tally  (it was there all along)
-    3. why the coefficient exists — three different arrangements, same count
+  Built to mirror the frame from 3Blue1Brown's "Binomial distributions |
+  Probabilities of probabilities, part 1", and deliberately on SELLER B's
+  reviews — 48 good out of 50 — rather than an invented example. The strip
+  across the top is literally B's block from #seller-intuition: same shared
+  lattice, same seed, so the two crosses sit in the same two places they sat
+  two slides ago. The slide is the seller question run FORWARDS.
 
-  Fragment 3 is the payload. C(10,3) is not decoration: every arrangement of
-  3 successes carries the same probability 0.3^3 * 0.7^7, and the count is
-  blind to which positions they landed in, so the 120 of them add up.
+  The model, stated in the lede, is what licenses all of it: one constant
+  unknown rate S behind every review. We cannot work back to S, so we suppose
+  a value and ask how probable these exact reviews would be under it.
 
-  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
-  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
+    state 0  B's fifty reviews, as they were, and a supposed rate
+    frag 1   SAMPLE. If s really were 0.95, what counts would fifty reviews
+             give? Twenty thousand times over: the strip re-rolls, the counter
+             climbs, and the histogram builds itself out of the draws
+    frag 2   the count we actually care about, k = 48, picked out — with the
+             level it settled at read off the axis
+    frag 3   and the closed form that produces that same number without
+             sampling anything:
+               P(48 ✓, 2 ✗ | s = 0.95) = C(50,48) (0.95)^48 (1-0.95)^2
+             the coefficient braced and named, because at n = 50 it can only
+             be written, never enumerated — there are 1,225 orders
+
+  Simulating first is the whole point of the ordering: the formula is not a
+  definition handed down, it is the answer to a question the room has already
+  watched being answered the slow way.
+
+  The colours carry the correspondence rather than a legend: the 48 and its
+  exponent are olive like the ticks, the 2 and its exponent brick like the
+  crosses, and every appearance of the supposed rate is orange. Read the
+  formula and the strip together and each number has a visible referent.
+
+  Canvas 1000x439, shown at scale(1.05).
 */
 (function () {
   var K = window.StageKit;
 
-  var N = 10, P = 0.3, NK = N + 1, NR = 80;    // trials, success prob, rounds
+  var N = 50, KHIT = 48, S = 0.95;            // seller B, and a supposed rate
+  var NK = N + 1;
 
-  // Stage geometry — 1000x445 canvas, shown at scale(1.05).
-  var W = 1000, H = 445;
+  // The SAME seed #seller-intuition gives seller B (index 1), so the two
+  // crosses land where the room last saw them.
+  var MISS = K.missSet(N, N - KHIT, 7919 + 1);
 
-  // --- trial strip, top left ---
-  var SX = 60, SY = 78, SIDE = 29, SGAP = 6;
-  var SPITCH = SIDE + SGAP;
-  var COUNT_Y = SY + SIDE + 34;                 // success-count readout, below the strip
-                                                 // (beside the strip, a 30px mono readout like "10 successes" runs into the histogram at x = 470)
+  // Binomial pmf by recurrence: P(0) = (1-p)^n, then
+  // P(k) = P(k-1) * (n-k+1)/k * p/(1-p) — no factorial is ever formed, so
+  // nothing overflows and C(50,48) never has to be built to get the curve.
+  function binomPmf(n, p) {
+    var q = 1 - p, ratio = p / q, out = [], v = Math.exp(n * Math.log(q)), k;
+    out.push(v);
+    for (k = 1; k <= n; k++) { v = v * ((n - k + 1) / k) * ratio; out.push(v); }
+    return out;
+  }
+  var PMF = binomPmf(N, S);
 
-  // --- histogram, right ---
-  var X0 = 470, X1 = 950, BASE = 367, BW = 38;
-  var SLOT = (X1 - X0) / NK;                   // ~43.6 per slot, 38 of it inked
-  var RMAX = 0.30, HMAX = 267;                 // rel. freq 0.30 reaches 267px
+  // C(n,k) by the same multiplicative route, for the label only.
+  function choose(n, k) {
+    var c = 1, i;
+    for (i = 0; i < k; i++) c = c * (n - i) / (i + 1);
+    return Math.round(c);
+  }
+  var COEF = choose(N, KHIT);
 
-  // --- fragment 3 panel, under the trial strip ---
-  var MX = 60, MY = 174, MSIDE = 20, MGAP = 4, MPITCH = 38;
-  var ARRANGEMENTS = [[0, 1, 2], [1, 4, 7], [7, 8, 9]];
-  var HILITE = 3;                              // the k we open up
+  // --- geometry — fixed 1000x395 space, scaled to the slide via CSS --------
+  var W = 1000, H = 439;
+  var GX = 36, STRIP_Y = 28, INFO_Y = 64;      // reviews, then the readouts
+  var YF = 172;                                // the worked case's baseline
+  var YG = 240;                                // the general form, under it
+  var X0 = 120, X1 = 900, BASE = 400;          // the histogram, pushed down
+                                               // to clear both equations
+  var SLOT = (X1 - X0) / NK, BW = 11;
+  // The axis runs to 40% rather than to the 26.1% the distribution actually
+  // peaks at, because early in the run — fifty samples, not twenty thousand —
+  // a count can easily land a third of the time by luck, and a bar climbing
+  // out of the top of the plot reads as a bug rather than as small-sample
+  // noise. ht() clamps as well, for the same reason.
+  var PMAX = 0.40, HMAX = 115;                 // 40% reaches 115px
 
-  function bx(k) { return X0 + k * SLOT + (SLOT - BW) / 2; }
-  function ht(rel) { return rel * (HMAX / RMAX); }
+  // Twenty thousand samples, shown across 160 batches. Sampling every draw on
+  // its own frame would take minutes, so they go in batches — but the batches
+  // are GEOMETRIC, not equal. Proportions settle long before the last sample:
+  // on an even schedule the shape is essentially final a second in, and the
+  // rest of the run shows a histogram that has stopped moving. Ramping the
+  // batch size instead keeps something changing the whole way through, starts
+  // jagged where fifty samples really are jagged, and reads like a sampler
+  // picking up speed. Seeded, because a deck must show the lecture theatre the
+  // same run it showed rehearsal.
+  // NSTART = 1: the run opens on a single sample, so the room sees draws
+  // landing one at a time before the schedule accelerates. The geometric
+  // step is below +1 for the first seventy-odd checkpoints, so the clamp in
+  // the generator carries it 1, 2, 3, 4 … until the ramp overtakes it.
+  var NSAMP = 20000, NCHK = 160, NSTART = 1;
 
-  // Seeded LCG. A deck must show the same 80 rounds in the lecture theatre
-  // that it showed in rehearsal, so Math.random() is off the table.
+
   function lcg(seed) {
     return function () {
       seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff;
@@ -53,256 +103,505 @@
     };
   }
 
-  // 80 rounds of 10 Bernoulli(0.3) trials, generated once at load. CUM[r] is
-  // the count histogram after r rounds, so CUM[0] is empty and CUM[80] final.
-  var ROUNDS = [], CUM = [], TALLY = [];
+  // CUM[i] is the count tally after batch i, TOT[i] how many samples that is,
+  // and SHOW[i] the last strip drawn in it — everything the frame needs, so
+  // nothing is generated while the animation is running.
+  var CUM = [], TOT = [], SHOW = [];
   (function () {
-    var rand = lcg(82), k, r, j, row, c;
-    for (k = 0; k < NK; k++) TALLY.push(0);
-    CUM.push(TALLY.slice());
-    for (r = 0; r < NR; r++) {
-      row = []; c = 0;
-      for (j = 0; j < N; j++) { var s = rand() < P ? 1 : 0; row.push(s); c += s; }
-      ROUNDS.push(row);
-      TALLY[c]++;
-      CUM.push(TALLY.slice());
+    var rand = lcg(4523), tally = [], i, j, r, c, row, prev = 0, want;
+    for (i = 0; i < NK; i++) tally.push(0);
+    CUM.push(tally.slice()); TOT.push(0); SHOW.push(null);
+    for (i = 1; i <= NCHK; i++) {
+      want = Math.round(NSTART *
+        Math.pow(NSAMP / NSTART, (i - 1) / (NCHK - 1)));
+      if (want <= prev) want = prev + 1;
+      row = null;
+      for (j = prev; j < want; j++) {
+        row = []; c = 0;
+        for (r = 0; r < N; r++) { var h = rand() < S ? 1 : 0; row.push(h); c += h; }
+        tally[c]++;
+      }
+      prev = want;
+      CUM.push(tally.slice()); TOT.push(want); SHOW.push(row);
     }
   })();
 
-  var EMPTY = ROUNDS[0].map(function () { return 0; });
-
-  // At the arrangement panel every number on screen is about k = 3: the
-  // highlighted bar, the three mini-strips, C(10,3). Leaving the main strip
-  // on the last simulated round (which happens to give 4) contradicts all of
-  // them, so pin it to a 3-success outcome — and deliberately one that is NOT
-  // among ARRANGEMENTS, so it reads as a fourth example rather than a repeat.
-  var K3 = [0, 0, 1, 0, 0, 1, 0, 0, 0, 1];
-  var ZEROS = CUM[0];
-
-  // Binomial pmf by recurrence: P(0) = (1-p)^n, then
-  // P(k) = P(k-1) * (n-k+1)/k * p/(1-p) — no factorial is ever formed, so
-  // nothing overflows and the printed 0.3^3 * 0.7^7 constant is reproducible.
-  function binomPmf(n, p) {
-    var q = 1 - p, ratio = p / q, out = [], v = Math.exp(n * Math.log(q));
-    out.push(v);
-    for (var k = 1; k <= n; k++) { v = v * ((n - k + 1) / k) * ratio; out.push(v); }
-    return out;
-  }
-  var PMF = binomPmf(N, P);
-
-  // The single-arrangement probability printed on the frag-3 panel, computed
-  // here rather than typed in, so the slide cannot drift from the maths.
-  var ONE_WAY = Math.pow(P, HILITE) * Math.pow(1 - P, N - HILITE);
-
-  // Stepped outline over the same slots the bars occupy: up the left edge of
-  // bar 0, across each top, down the right edge of bar 10.
-  function stepPoints(pmf) {
-    var pts = [bx(0) + ',' + BASE];
-    for (var k = 0; k < NK; k++) {
-      var y = BASE - ht(pmf[k]);
-      pts.push(bx(k) + ',' + y);
-      pts.push((bx(k) + BW) + ',' + y);
-      if (k < N) pts.push(bx(k + 1) + ',' + BASE, bx(k + 1) + ',' + BASE);
+  // Every way of putting the two bad reviews among the fifty — all C(50,48)
+  // of them, which is the coefficient made literal rather than named.
+  //
+  // The order is the one you would recite them in: all the good reviews
+  // first and the two bad ones at the very end, then walk the earlier bad
+  // review back one place at a time.
+  //    1   ✓ x48            ✗ ✗          48 good, then two bad
+  //    2   ✓ x47         ✗  ✓  ✗         47 good, then bad, good, bad
+  //    3   ✓ x46      ✗  ✓  ✓  ✗         and so on
+  //   ...
+  //   50   ✓ x47         ✗  ✗  ✓         the later one steps left, and the
+  //   ...                                 walk starts over
+  // So: the second cross holds at the right-hand end while the first walks
+  // leftwards, then the second steps left one and it repeats.
+  var ORDERS = (function () {
+    var out = [], i, j;
+    for (j = N - 1; j >= 1; j--) {
+      for (i = j - 1; i >= 0; i--) out.push([i, j]);
     }
-    pts.push((bx(N) + BW) + ',' + BASE);
-    return pts.join(' ');
+    return out;
+  })();
+
+  // An explicit paint schedule, not an easing curve. 1,224 arrangements over
+  // nine seconds averages seven milliseconds each, so NO curve can hold
+  // consecutive ones on screen at the ends: by the time any of them has
+  // climbed off zero it is already skipping dozens, and every gap collapses
+  // onto whatever minimum hold you impose. So the pacing is built by hand —
+  // a slow run of consecutive arrangements to open, a fast sweep through the
+  // bulk, and a slow run of consecutive ones to close. Each entry is
+  // [milliseconds, index into ORDERS].
+  var SCHED = (function () {
+    var out = [], t = 0, i, MAXI = ORDERS.length - 1;
+    var HEAD = 12, MID = 50, TAIL = 12;
+    for (i = 0; i < HEAD; i++) {              // consecutive, speeding up
+      out.push([t, i]);
+      t += 280 - (i / (HEAD - 1)) * 150;      // 280ms down to 130ms
+    }
+    var a = HEAD, b = MAXI - TAIL + 1;
+    for (i = 0; i < MID; i++) {               // the bulk, at a flicker
+      out.push([t, Math.round(a + (b - a) * (i / (MID - 1)))]);
+      t += 95;
+    }
+    for (i = 0; i < TAIL; i++) {              // consecutive, slowing down
+      out.push([t, b + i]);
+      t += 130 + (i / (TAIL - 1)) * 220;      // 130ms out to 350ms
+    }
+    return { list: out, dur: Math.round(t) };
+  })();
+
+  function commas(n) {
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
-  function square(svg, x, y, side, cls) {
-    return svg.appendChild(K.el('rect', {
-      x: x, y: y, width: side, height: side, rx: 3,
-      fill: K.PAL.white, stroke: K.PAL.dim, 'stroke-width': 1, class: cls
-    }));
+  var INK = K.PAL.ink, SOFT = K.PAL.inkSoft, GREY = K.PAL.dim;
+  var HIT = K.PAL.olive, MISSC = K.PAL.brick, RATE = K.PAL.orange;
+  var NB = ' ';   // SVG <text> strips whitespace at a run's edges
+
+  function bx(k) { return X0 + k * SLOT + (SLOT - BW) / 2; }
+  function ht(p) { return Math.min(p, PMAX) / PMAX * HMAX; }
+
+  // --- one formula, laid out left to right in mono -------------------------
+  // Parts: ['t', str, fill] baseline text · ['s', str, fill] superscript ·
+  // ['m', isMiss] a tick or cross · ['c'] the stacked binomial coefficient.
+  // Mono because glyph and superscript positions are computed, not measured,
+  // and JetBrains Mono advances a predictable 0.6em per character.
+  // SUP is 18 rather than a prettier 14 because StageKit's floor is 18 units
+  // and an exponent nobody can read at the back is not a saving; FSIZE goes
+  // up to 26 so that 18 still reads as a superscript against it.
+  var FSIZE = 26, ADV = FSIZE * 0.6, SUP = 18, CW = 66;
+
+  function parts() {
+    return [
+      ['t', 'P(', INK], ['t', String(KHIT), HIT], ['m', false],
+      ['t', ',' + NB, INK], ['t', '2', MISSC], ['m', true],
+      ['t', NB + '|' + NB, INK], ['t', 's = ' + S, RATE],
+      ['t', ')' + NB + '=' + NB, INK],
+      ['c'],
+      ['t', '(', INK], ['t', String(S), RATE], ['t', ')', INK],
+      ['s', String(KHIT), HIT],
+      ['t', '(1-', INK], ['t', String(S), RATE], ['t', ')', INK],
+      ['s', '2', MISSC]
+    ];
   }
-  // One square's two possible looks. Success is inked navy, failure is a
-  // hollow outline, so the strip reads as a row of coin flips at a glance.
-  function paint(sq, hit) {
-    sq.setAttribute('fill', hit ? K.PAL.navy : K.PAL.white);
-    sq.setAttribute('stroke', hit ? K.PAL.navy : K.PAL.dim);
-    sq.setAttribute('opacity', hit ? 0.75 : 1);
+
+  // Width first, so the whole line can be centred rather than eyeballed.
+  function measure(ps) {
+    return ps.reduce(function (w, p) {
+      if (p[0] === 'c') return w + CW;
+      if (p[0] === 's') return w + p[1].length * SUP * 0.6;
+      if (p[0] === 'm') return w + ADV;
+      return w + p[1].length * ADV;
+    }, 0);
+  }
+
+  // A horizontal curly brace, opening downward, with a peak in the middle.
+  function brace(x0, x1, y) {
+    var xm = (x0 + x1) / 2;
+    return 'M' + x0 + ' ' + (y + 7) +
+           'Q' + x0 + ' ' + y + ' ' + (x0 + 8) + ' ' + y +
+           'L' + (xm - 8) + ' ' + y +
+           'Q' + xm + ' ' + y + ' ' + xm + ' ' + (y - 7) +
+           'Q' + xm + ' ' + y + ' ' + (xm + 8) + ' ' + y +
+           'L' + (x1 - 8) + ' ' + y +
+           'Q' + x1 + ' ' + y + ' ' + x1 + ' ' + (y + 7);
+  }
+
+  // --- the two equations -------------------------------------------------
+  // Both are laid out by one routine, left to right in mono, and both are
+  // split at the "=" so the second can be hung underneath the first with its
+  // equals sign in the same column. Reading down that column is the point of
+  // the pair: the worked case above, the same statement with the particulars
+  // taken out below.
+  //
+  // An item is { t: text } · { sup: 1 } to raise it · { m: isMiss } for a
+  // tick or cross · { coef: 1 } for the stacked binomial coefficient.
+  // Superscripts are SUP (18) rather than a prettier ratio of FSIZE, because
+  // StageKit's floor is 18 units and an exponent nobody can read is no saving.
+  function lay(parent, x, y, items, dry) {
+    var cx = x;
+    items.forEach(function (it) {
+      if (it.coef) {
+        if (!dry) drawCoef(parent, cx, y);
+        cx += CW;
+        return;
+      }
+      var sup = !!it.sup, sz = sup ? SUP : FSIZE;
+      var a = sz * 0.6, yy = sup ? y - 14 : y;
+      if (it.m !== undefined) {
+        if (!dry) {
+          var sc = sup ? 0.7 : 0.95;
+          parent.appendChild(K.el('path', {
+            d: it.m ? K.MARK.CROSS : K.MARK.TICK,
+            transform: 'translate(' + (cx + a / 2) + ' ' + (yy - sz * 0.3) +
+                       ') scale(' + sc + ')',
+            fill: 'none', stroke: it.m ? MISSC : HIT,
+            'stroke-width': 2.6 / sc, 'stroke-linecap': 'round',
+            'stroke-linejoin': 'round'
+          }));
+        }
+        cx += a;
+      } else {
+        if (!dry) {
+          parent.appendChild(K.txt(cx, yy, it.t,
+            { size: sz, face: 'mono', fill: it.f || INK }));
+        }
+        cx += it.t.length * a;
+      }
+    });
+    return cx - x;
+  }
+
+  function width(items) { return lay(null, 0, 0, items, true); }
+
+  // The coefficient: two stacked numbers inside drawn parentheses, the
+  // notation the video uses and the one students meet in the formula sheet.
+  // 48 is olive so it reads as the tick count it counts. The brace above it
+  // carries the running order count while the arrangements go past.
+  function drawCoef(parent, cx, y) {
+    var p1 = cx + 8, p2 = cx + CW - 12;
+    [p1, p2].forEach(function (px, i) {
+      var bend = i ? 9 : -9;
+      parent.appendChild(K.el('path', {
+        d: 'M' + px + ' ' + (y - 33) + 'Q' + (px + bend) + ' ' + y +
+           ' ' + px + ' ' + (y + 25),
+        fill: 'none', stroke: INK, 'stroke-width': 2, 'stroke-linecap': 'round'
+      }));
+    });
+    parent.appendChild(K.txt(cx + CW / 2, y - 7, String(N),
+      { size: 22, face: 'mono', anchor: 'middle', fill: INK }));
+    parent.appendChild(K.txt(cx + CW / 2, y + 19, String(KHIT),
+      { size: 22, face: 'mono', anchor: 'middle', fill: HIT }));
+    parent.appendChild(K.el('path', {
+      d: brace(cx, cx + CW, y - 43), fill: 'none',
+      stroke: SOFT, 'stroke-width': 1.6, 'stroke-linecap': 'round'
+    }));
+    parent.appendChild(K.txt(cx + CW / 2, y - 55, '',
+      { size: 18, anchor: 'middle', fill: SOFT, cls: 'binom-olabel' }));
+  }
+
+  // Line 1, the worked case, split at its equals sign. Note the "s = 0.95"
+  // inside the condition also contains an "="; the split is the outer one.
+  function caseLhs() {
+    return [
+      { t: 'P(' }, { t: String(KHIT), f: HIT }, { m: false },
+      { t: ',' + NB }, { t: '2', f: MISSC }, { m: true },
+      { t: NB + '|' + NB }, { t: 's = ' + S, f: RATE }, { t: ')' + NB }
+    ];
+  }
+  function caseRhs() {
+    return [
+      { t: '=' + NB }, { coef: 1 },
+      { t: '(' }, { t: String(S), f: RATE }, { t: ')' },
+      { t: String(KHIT), f: HIT, sup: 1 },
+      { t: '(1-' }, { t: String(S), f: RATE }, { t: ')' },
+      { t: '2', f: MISSC, sup: 1 }
+    ];
+  }
+
+  // Line 2: c for however many orders there are, and the two exponents just
+  // counting marks. This is the line students meet again on #seller-sim,
+  // where s becomes the thing that varies.
+  function genLhs() {
+    return [
+      { t: 'P(data' }, { t: NB + '|' + NB }, { t: 's', f: RATE },
+      { t: ')' + NB }
+    ];
+  }
+  function genRhs() {
+    return [
+      { t: '=' + NB }, { t: 'c' }, { t: NB + '·' + NB },
+      { t: 's', f: RATE }, { t: '#', sup: 1 }, { m: false, sup: 1 },
+      { t: NB }, { t: '(1-' }, { t: 's', f: RATE }, { t: ')' },
+      { t: '#', sup: 1 }, { m: true, sup: 1 }
+    ];
+  }
+
+  // The column the two equals signs share. Placed so the wider of the two
+  // left-hand sides and the wider of the two right-hand sides together sit
+  // centred on the canvas.
+  var EQ_X = (function () {
+    var l = Math.max(width(caseLhs()), width(genLhs()));
+    var r = Math.max(width(caseRhs()), width(genRhs()));
+    return (W + l - r) / 2;
+  })();
+
+  function show(el, on) {
+    el.setAttribute('opacity', on ? 1 : 0);
+    el.style.opacity = '';
   }
 
   function build(stage) {
-    var svg = K.canvas(stage, W, H);
-    var i, k;
+    var svg = K.canvas(stage, W, H), k;
 
-    // --- caption: what the presenter is saying right now ---
-    var cap = K.txt(40, 28, '', { size: 'caption', cls: 'binom-caption' });
-    svg.appendChild(cap);
+    // --- seller B's fifty reviews, at #seller-intuition's own lattice ---
+    var marks = K.block(svg.appendChild(K.el('g', { class: 'binom-strip' })),
+                        N, MISS, GX, STRIP_Y);
+    marks.forEach(function (m) { m.setAttribute('opacity', 1); });
 
-    // --- the experiment, stated once above the strip ---
-    var head = K.txt(SX, 65, '10 independent trials, p = 0.3',
-      { size: 'label', fill: 'inkSoft' });
-    svg.appendChild(head);
+    // --- the supposed rate, the sample counter, the current count ---
+    svg.appendChild(K.txt(40, INFO_Y, 's = ' + S,
+      { size: 22, face: 'mono', fill: RATE }));
+    var total = svg.appendChild(K.txt(500, INFO_Y, '',
+      { size: 22, anchor: 'middle', fill: SOFT }));
+    var kread = svg.appendChild(K.txt(960, INFO_Y, '',
+      { size: 22, face: 'mono', anchor: 'end', fill: INK }));
 
-    // --- trial strip: 10 squares, repainted once per round ---
-    var cells = [];
-    for (i = 0; i < N; i++) {
-      cells.push(square(svg, SX + i * SPITCH, SY, SIDE, 'binom-cell'));
+    // --- the distribution the sampling builds ---
+    var plot = svg.appendChild(K.el('g', { class: 'binom-plot' }));
+    [0.1, 0.2, 0.3, 0.4].forEach(function (p) {
+      plot.appendChild(K.el('line', {
+        x1: X0, y1: BASE - ht(p), x2: X1, y2: BASE - ht(p),
+        stroke: K.PAL.rule, 'stroke-width': 1
+      }));
+      plot.appendChild(K.txt(X0 - 12, BASE - ht(p) + 6,
+        Math.round(p * 100) + '%',
+        { size: 'tick', face: 'mono', anchor: 'end', fill: SOFT }));
+    });
+    plot.appendChild(K.el('line', {
+      x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: GREY, 'stroke-width': 1
+    }));
+    for (k = 0; k < NK; k++) {
+      plot.appendChild(K.el('line', {
+        x1: bx(k) + BW / 2, y1: BASE, x2: bx(k) + BW / 2,
+        y2: BASE + (k % 5 === 0 ? 7 : 4),
+        stroke: GREY, 'stroke-width': 1
+      }));
+      if (k % 5 === 0) {
+        plot.appendChild(K.txt(bx(k) + BW / 2, BASE + 26, k,
+          { size: 'tick', face: 'mono', anchor: 'middle' }));
+      }
     }
-    var count = K.txt(SX, COUNT_Y, '',
-      { size: 'readout', face: 'mono', fill: 'ink', weight: 700, cls: 'binom-count' });
-    svg.appendChild(count);
-
-    // --- histogram bars, one per possible count k ---
     var bars = [];
     for (k = 0; k < NK; k++) {
-      bars.push(svg.appendChild(K.el('rect', {
+      bars.push(plot.appendChild(K.el('rect', {
         x: bx(k), y: BASE, width: BW, height: 0,
-        fill: K.PAL.navy, opacity: 0.55, class: 'binom-bar'
+        fill: GREY, class: 'binom-bar'
       })));
     }
 
-    // --- exact pmf, hidden until fragment 2 ---
-    var pmf = K.el('g', { opacity: 0, class: 'binom-pmf' });
-    pmf.appendChild(K.el('polyline', {
-      points: stepPoints(PMF), fill: 'none',
-      stroke: K.PAL.brick, 'stroke-width': 2, 'stroke-linejoin': 'round',
-      opacity: 0.8
+    // --- the count we came for, and the level it settled at ---
+    // The dashed leader stops short of the formula rather than crossing the
+    // full plot: everything left of x = 620 is permanently empty anyway, and
+    // that is where the working goes.
+    var mark = svg.appendChild(K.el('g', { class: 'binom-mark' }));
+    var ax = bx(KHIT) + BW / 2, atop = BASE - ht(PMF[KHIT]);
+    mark.appendChild(K.el('line', {
+      x1: 620, y1: atop, x2: X1, y2: atop, stroke: INK, 'stroke-width': 1.5,
+      'stroke-dasharray': '5 5'
     }));
-    pmf.appendChild(K.el('line', {
-      x1: 740, y1: 49, x2: 776, y2: 49,
-      stroke: K.PAL.brick, 'stroke-width': 2, opacity: 0.8
+    mark.appendChild(K.txt(X1 + 10, atop + 6,
+      (100 * PMF[KHIT]).toFixed(1) + '%',
+      { size: 'tick', face: 'mono', fill: INK }));
+    mark.appendChild(K.el('path', {
+      d: 'M' + ax + ' ' + (atop - 46) + 'V' + (atop - 16) +
+         'M' + (ax - 7) + ' ' + (atop - 24) + 'L' + ax + ' ' + (atop - 12) +
+         'L' + (ax + 7) + ' ' + (atop - 24),
+      fill: 'none', stroke: RATE, 'stroke-width': 2.5,
+      'stroke-linecap': 'round', 'stroke-linejoin': 'round'
     }));
-    pmf.appendChild(K.txt(784, 55, 'Binomial(10, 0.3)',
-      { size: 'label', fill: 'inkSoft' }));
-    svg.appendChild(pmf);
 
-    // --- axis and k labels ---
-    svg.appendChild(K.el('line', {
-      x1: X0, y1: BASE, x2: X1, y2: BASE, stroke: K.PAL.rule, 'stroke-width': 1
-    }));
-    for (k = 0; k < NK; k++) {
-      svg.appendChild(K.txt(bx(k) + BW / 2, BASE + 27, k,
-        { size: 'tick', face: 'mono', anchor: 'middle' }));
-    }
+    // --- and the closed form that gets there without sampling ---
+    // Both equations hang off the shared EQ_X, so their equals signs line up
+    // and the eye can read straight down from the worked case to the general
+    // one.
+    var form = svg.appendChild(K.el('g', { class: 'binom-form' }));
+    lay(form, EQ_X - width(caseLhs()), YF, caseLhs());
+    lay(form, EQ_X, YF, caseRhs());
+    var olabel = form.querySelector('.binom-olabel');
 
-    // --- fragment 3 panel: three strips that the count cannot tell apart ---
-    var order = K.el('g', { opacity: 0, class: 'binom-order' });
-    ARRANGEMENTS.forEach(function (hits, row) {
-      for (var j = 0; j < N; j++) {
-        var sq = square(order, MX + j * (MSIDE + MGAP), MY + row * MPITCH, MSIDE);
-        paint(sq, hits.indexOf(j) >= 0 ? 1 : 0);
-      }
-    });
-    // The lines sit under the strips, not beside them: the histogram starts
-    // at x = 470 and a long mono line at label size would run straight
-    // through the bars, so the probability line is split in two.
-    var l1 = K.txt(MX, MY + 3 * MPITCH + 40, 'C(10,3) = 120 arrangements',
-      { size: 'label', face: 'mono', fill: 'ink' });
-    order.appendChild(l1);
-    var l2 = K.txt(MX, MY + 3 * MPITCH + 67, 'each with probability 0.3³ × 0.7⁷',
-      { size: 'label', face: 'mono', fill: 'inkSoft' });
-    order.appendChild(l2);
-    var l3 = K.txt(MX, MY + 3 * MPITCH + 94, '= ' + ONE_WAY.toFixed(5),
-      { size: 'label', face: 'mono', fill: 'inkSoft' });
-    order.appendChild(l3);
-    svg.appendChild(order);
+    var gen = svg.appendChild(K.el('g', { class: 'binom-gen' }));
+    lay(gen, EQ_X - width(genLhs()), YG, genLhs());
+    lay(gen, EQ_X, YG, genRhs());
 
-    return {
-      cap: cap, cells: cells, count: count, bars: bars,
-      pmf: pmf, order: order, state: 0, gen: 0, timer: 0
-    };
+    [plot, mark, form, gen].forEach(function (g) { show(g, false); });
+
+    var s = { state: 0, marks: marks, total: total, kread: kread,
+              olabel: olabel, plot: plot, mark: mark, form: form, gen: gen,
+              bars: bars, on: [false, false, false], anims: [] };
+    setSample(s, 0);
+    return s;
   }
 
-  var CAPTIONS = [
-    'one round = 10 trials, count successes',
-    '80 rounds, tallied by how many succeeded',
-    'the tally is converging to the pmf',
-    'the count forgets the order'
-  ];
-
-  // Kill any round playback still in flight. Bumping gen orphans the pending
-  // step callback as well, in case the timeout has already fired.
   function stop(s) {
-    s.gen++;
-    if (s.timer) { clearTimeout(s.timer); s.timer = 0; }
+    s.anims.forEach(function (a) { if (a && a.pause) a.pause(); });
+    s.anims = [];
   }
 
-  function setStrip(s, pattern) {
-    var c = 0, i;
-    for (i = 0; i < N; i++) { paint(s.cells[i], pattern[i]); c += pattern[i]; }
-    s.count.textContent = c + (c === 1 ? ' success' : ' successes');
-  }
-
-  function setBars(s, counts, fast) {
-    if (fast) {
-      s.bars.forEach(function (b, k) {
-        var h = ht(counts[k] / NR);
-        b.setAttribute('height', h);
-        b.setAttribute('y', BASE - h);
-      });
-      return;
+  // One painter; three different things decide what it paints. `hit` answers
+  // "is review k a tick?" — the actual reviews, a simulated draw, or one of
+  // the 1,225 arrangements.
+  function paintStrip(s, hit) {
+    var k, c = 0, on;
+    for (k = 0; k < N; k++) {
+      on = hit(k);
+      s.marks[k].setAttribute('d', on ? K.MARK.TICK : K.MARK.CROSS);
+      s.marks[k].setAttribute('stroke', on ? HIT : MISSC);
+      c += on ? 1 : 0;
     }
-    // Rects grow downward from y, so y and height have to move together or
-    // the bars would slide off the baseline mid-flight.
-    window.anime.animate(s.bars, {
-      height: function (e, k) { return ht(counts[k] / NR); },
-      y: function (e, k) { return BASE - ht(counts[k] / NR); },
-      duration: 520,
-      delay: window.anime.stagger(22),
-      ease: 'outCubic'
+    s.kread.textContent = 'k = ' + c;
+  }
+
+  // Batch 0 is not a sample at all: it is seller B's actual reviews, which is
+  // what the room is looking at when the slide arrives and what the whole
+  // question is about. Sampling only starts at batch 1.
+  function setSample(s, i) {
+    var row = SHOW[i];
+    paintStrip(s, row ? function (k) { return !!row[k]; }
+                      : function (k) { return !MISS[k]; });
+    s.total.textContent = i ? 'Samples: ' + commas(TOT[i]) : '';
+  }
+
+  // The k readout deliberately never moves while this runs: every one of the
+  // 1,225 is still forty-eight ticks, which is the entire reason they collapse
+  // into a single bar.
+  function paintOrder(s, i) {
+    var pr = ORDERS[Math.max(0, Math.min(ORDERS.length - 1, Math.round(i)))];
+    paintStrip(s, function (k) { return k !== pr[0] && k !== pr[1]; });
+  }
+
+  function labelOrder(s, i) {
+    if (!s.olabel) return;
+    s.olabel.textContent = 'Order ' +
+      commas(Math.max(1, Math.min(ORDERS.length, Math.round(i) + 1))) +
+      ' of ' + commas(ORDERS.length);
+  }
+
+  function setOrder(s, i) { paintOrder(s, i); labelOrder(s, i); }
+
+  function setBars(s, i, hi) {
+    var n = TOT[i] || 1;
+    s.bars.forEach(function (b, k) {
+      var h = i ? ht(CUM[i][k] / n) : 0;
+      b.setAttribute('height', h);
+      b.setAttribute('y', BASE - h);
+      b.setAttribute('fill', hi && k === KHIT ? HIT : GREY);
     });
   }
 
-  function fade(node, to, fast) {
-    if (fast) { node.setAttribute('opacity', to); return; }
-    window.anime.animate(node, { opacity: to, duration: 420, ease: 'outQuad' });
+  // The finished state, written on every render before any tween starts, so a
+  // cancelled, frozen or never-started tween can never leave the slide part
+  // drawn. See the note on snap() in seller-anim.html.
+  function snap(s, want) {
+    if (want[2]) setOrder(s, ORDERS.length - 1);
+    else setSample(s, want[0] ? NCHK : 0);
+    setBars(s, want[0] ? NCHK : 0, want[1]);
+    show(s.plot, want[0]);
+    show(s.mark, want[1]);
+    show(s.form, want[2]);
+    show(s.gen, want[2]);
+    s.on = want;
   }
 
-  // Replay the 80 rounds at ~45ms each: strip repaints, the one bar that just
-  // gained a round eases up. Slower than a jump, faster than watching paint
-  // dry — it should read as a simulation accumulating, not as a transition.
-  function playRounds(s) {
-    var gen = s.gen, r = 0;
-    (function step() {
-      if (gen !== s.gen) return;                 // superseded by a newer state
-      setStrip(s, ROUNDS[r]);
-      var k = 0, i;
-      for (i = 0; i < N; i++) k += ROUNDS[r][i];
-      var h = ht(CUM[r + 1][k] / NR);
-      window.anime.animate(s.bars[k], {
-        height: h, y: BASE - h, duration: 200, ease: 'outCubic'
-      });
-      r++;
-      if (r >= NR) return;
-      s.timer = setTimeout(step, 45);
-    })();
+  // Fades by tweening a scalar into the ATTRIBUTE — an inline style would
+  // outrank whatever snap() writes next.
+  function fadeTo(s, el, to, dur, delay) {
+    var p = { v: to ? 0 : 1 };
+    el.setAttribute('opacity', p.v);
+    s.anims.push(window.anime.animate(p, {
+      v: to ? 1 : 0, duration: dur, delay: delay || 0, ease: 'outQuad',
+      onUpdate: function () { el.setAttribute('opacity', p.v); }
+    }));
   }
 
-  function place(s, state, instant) {
+  function render(s, st, instant) {
+    var was = s.on;
     stop(s);
-    var prev = s.state;
-    s.state = state;
-    s.cap.textContent = CAPTIONS[state];
-    var fast = instant || K.REDUCE || !K.animeReady();
+    s.state = st;
+    var want = [st >= 1, st >= 2, st >= 3];
+    snap(s, want);
+    if (instant || K.REDUCE || !K.animeReady()) return;
 
-    fade(s.pmf, state >= 2 ? 1 : 0, fast);
-    fade(s.order, state >= 3 ? 1 : 0, fast);
-    s.bars[HILITE].setAttribute('fill', state >= 3 ? K.PAL.orange : K.PAL.navy);
-    s.bars[HILITE].setAttribute('opacity', state >= 3 ? 0.85 : 0.55);
-
-    if (state === 0) {
-      setStrip(s, EMPTY);
-      setBars(s, ZEROS, fast);
-      return;
+    if (want[0] !== was[0]) {
+      fadeTo(s, s.plot, want[0], want[0] ? 260 : 200, 0);
+      // Only the 0 -> 1 step earns the run. Stepping back from the formula
+      // must not re-sample twenty thousand draws the room just watched.
+      if (want[0]) {
+        var p = { i: 0 };
+        setSample(s, 0); setBars(s, 0, false);
+        // Slow to start, then away: the first few hundred samples are the
+        // interesting ones — that is where the histogram is visibly jagged and
+        // visibly wrong — so they get held, and the tail, where nothing much
+        // changes any more, is got through quickly. inQuad rather than
+        // anything steeper so the late checkpoints still land about two frames
+        // apart instead of skipping.
+        s.anims.push(window.anime.animate(p, {
+          i: NCHK, duration: 10000, ease: 'inQuad',
+          onUpdate: function () {
+            var i = Math.max(0, Math.min(NCHK, Math.round(p.i)));
+            setSample(s, i);
+            setBars(s, i, s.on[1]);
+          }
+        }));
+      }
     }
-    setStrip(s, state >= 3 ? K3 : ROUNDS[NR - 1]);
-    // Only the 0 -> 1 step earns the replay. Stepping back from the pmf
-    // overlay must not re-run 3.6 seconds of simulation the room just saw.
-    if (!fast && prev < 1) {
-      setBars(s, ZEROS, true);
-      playRounds(s);
-      return;
+    if (want[1] !== was[1]) fadeTo(s, s.mark, want[1], want[1] ? 360 : 180, 0);
+    if (want[2] !== was[2]) {
+      fadeTo(s, s.form, want[2], want[2] ? 420 : 200, 0);
+      if (!want[2]) fadeTo(s, s.gen, false, 200, 0);
+      if (want[2]) {
+        // Step through the arrangements in order, on the hand-built
+        // schedule above: the opening dozen arrive one at a time and
+        // readably, the middle of the run flies past, and the closing dozen
+        // slow back down to single steps — so the sweep both begins and ends
+        // on something you can actually look at. The counter alongside always
+        // shows the true index, so the leap across the middle is visible
+        // rather than disguised.
+        var o = { ms: 0 }, at = -1;
+        setOrder(s, 0);
+        s.anims.push(window.anime.animate(o, {
+          ms: SCHED.dur, duration: SCHED.dur, delay: 300, ease: 'linear',
+          onUpdate: function () {
+            var k = at;
+            while (k + 1 < SCHED.list.length &&
+                   SCHED.list[k + 1][0] <= o.ms) k++;
+            if (k !== at && k >= 0) {
+              at = k;
+              setOrder(s, SCHED.list[k][1]);
+            }
+          },
+          onComplete: function () { setOrder(s, ORDERS.length - 1); }
+        }));
+        // After the 1,225 have finished going past — not alongside them. It
+        // is the summary of what was just shown, so it should not be sitting
+        // there while the thing it summarises is still running. That does
+        // mean it arrives ten seconds in: the delay is deliberate, and it is
+        // tied to SCHED.dur so it stays correct if the sweep is retimed.
+        fadeTo(s, s.gen, true, 600, 300 + SCHED.dur);
+      }
     }
-    setBars(s, CUM[NR], fast);
   }
 
   K.register({
     stage: 'binom-stage',
     frags: ['binom-frag-1', 'binom-frag-2', 'binom-frag-3'],
     build: build,
-    place: place,
+    place: render,
     stop: stop
   });
 })();

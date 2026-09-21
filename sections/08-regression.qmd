@@ -1,4 +1,4 @@
-# Correlation and regression {.hero #s08-regression}
+# Correlation and Regression {.hero #s08-regression}
 
 ::: {.sem-mark data-sem="8"}
 Seminar 8 · OLS and what it hides

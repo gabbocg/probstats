@@ -1,4 +1,4 @@
-# Comparing two populations {.hero #s07-two-populations}
+# Comparing Two Populations {.hero #s07-two-populations}
 
 ::: {.sem-mark data-sem="7"}
 Seminar 7 · Paired vs independent

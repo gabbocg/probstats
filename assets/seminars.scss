@@ -18,8 +18,14 @@
 // A title starting with a p/g/y is the case to re-check by eye. The hero
 // floor is set by "Hypothesis testing", whose 'y' IS the second character:
 // at 0.07em its tail clears the bar, at 0.04em the bar runs through it.
-.reveal section.stage-slide > h2::after,
-.reveal section.sim-slide > h2::after { margin-top: 0.15em; }
+// Deck-wide, not per slide class. It was scoped to .stage-slide and
+// .sim-slide, which left .formula-slide, .ojs-slide, .about-slide and the
+// unclassed slides on theme.scss's 0.55em — 26.7px against 7.3px, so the bar
+// hung visibly low on those and the title band ran to 86px instead of 80.
+// Checked before widening: the only titles with a descender in the first five
+// characters (Sample Spaces, Monty Hall, Laplace's, Why the, Why the) are all
+// stage or sim slides, so they were already at 0.15em and already reviewed.
+.reveal .slides section > h2::after { margin-top: 0.15em; }
 .reveal section.hero h1::after { margin-top: 0.07em; }
 
 // ---- Animation stages ----
@@ -38,8 +44,43 @@
   overflow: visible;
 }
 .stage-wrap-std { height: 468px; }   // 445 * 1.05
+.stage-wrap-about { height: 452px; }  // 430 * 1.05
 .stage-wrap-ci  { height: 347px; }   // 330 * 1.05 — leaves room for .claim-pair
 .stage-wrap-prior { height: 315px; }  // 300 * 1.05 — leaves room for .lede-min above
+
+// The dice board stops at y = 400 of its 445-unit canvas, and both set-theory
+// slides carry a lede AND a takeaway, so the wrap hands the rest back.
+#space-intuition .stage-wrap,
+#setops-intuition .stage-wrap { height: 424px; }
+
+// The Venn drawing starts at y = 30 and stops at 338. The wrap follows it up
+// rather than leaving a band of nothing under the lede, and carries 34 units
+// past the ink so the takeaway is not sitting on the box.
+#venn-intuition .stage-wrap { height: 392px; }
+
+// #cond-intuition's readout sits at y = 435 of its 445-unit canvas, so it can
+// give back 7px and no more — measured, not guessed. It needs every one of
+// the rest, which is why its lede and takeaway are one and two lines.
+// The unit square and its readout were set at the deck's usual 1.05 and read
+// as the biggest thing in Seminar 3. 0.90 brings the whole drawing down by a
+// sixth, readout included, and `transform-origin: top center` means it stays
+// centred and top-anchored while it shrinks. Ink runs to y = 423, so the wrap
+// is 423 * 0.90 rounded up with a few px of air.
+#cond-intuition .stage { transform: scale(0.90); }
+#cond-intuition .stage-wrap { height: 388px; }
+// 362, not 366 * 1.05: the drawing only reaches y = 345 of the 366-unit
+// canvas, so the extra 1.05 of slack all piled up BELOW it — 29px of air
+// above the marks against 51px beneath them. Measured from the SVG's own
+// bbox, not the wrapper, which is why the box gaps (13 and 12) looked even.
+// Shared by #seller-intuition and #laplace-intuition so their blocks line up.
+.stage-wrap-seller { height: 362px; }
+
+// #laplace-intuition draws the same lattice PLUS the ghost pair on its own
+// row, so its ink runs 27px lower than #seller-intuition's and the shared
+// 362 left its marks almost touching the takeaway. The SVG is fixed-size and
+// top-aligned, so a taller wrap only lengthens the empty tail — the blocks on
+// the two slides still register at identical coordinates.
+#laplace-intuition .stage-wrap { height: 389px; }
 .stage-wrap-monty {
   height: 435px;      // 414 * 1.05
 }
@@ -50,11 +91,27 @@
 // so it sits above the midpoint. Remove this rule if the slide gains a footer.
 #bayeq-formula .stage-wrap { margin-top: 62px; }
 
+// #binom-intuition carries a .lede-min stating the model AND a takeaway, so it
+// cannot use the shared 468px wrap without pushing its footer onto the 700px
+// projection line. Its canvas is 439 units. NB measure this with
+// offsetTop + offsetHeight, not getBoundingClientRect: Reveal scales the deck
+// (often ~1.24x) and the rects are in screen pixels.
+#binom-intuition .stage-wrap { height: 461px; }
+
+// The deck-wide 240px label track is sized for #likelihood-live's "true
+// success rate s"; these two labels are half that, so the sliders sat with a
+// visible gutter in front of them. Scoped, not lowered globally.
+#pois-intuition .observablehq form { --label-width: 130px; }
+#normal-intuition .observablehq form { --label-width: 160px; }  // "Success rate p"
+#expo-intuition .observablehq form { --label-width: 175px; }  // "Rate λ per minute" is 157
+
 .stage-wrap-bayes { height: 424px; }  // 358 * 1.05 = 376 of drawing + 48 of breathing room
 
 // Steve's description above the prior bar. The deck's 780px .lede-min width
 // would run it to five lines and push the stage off the bottom of the slide.
-.reveal section.stage-slide .lede-min {
+.reveal section.stage-slide .lede-min,
+.reveal section.ojs-slide .lede-min,
+.reveal section.formula-slide .lede-min {
   font-size: 26px;
   max-width: 980px;
   // 24px, not the theme's 0.25em: a .lede-min on a stage slide is what
@@ -77,18 +134,178 @@
 }
 .stage svg { display: block; }
 
-// Takeaway line under a stage: ink, 24px, two lines max.
-.reveal section.stage-slide .slide-footer {
+// Takeaway line under a stage: ink, 24px, two lines max. #binom-formal has no
+// stage but ends with the same kind of line, and at the theme's default size
+// it set smaller than the note above it — which read as a caption rather than
+// as the slide's conclusion.
+.reveal section.stage-slide .slide-footer,
+.reveal section.formula-slide .slide-footer {
   font-size: 24px;
   color: var(--ink);
   max-width: 980px;
   margin-top: 0.45em;
 }
 
-// Slide 12's takeaway is set as a justified block, matching the description
-// on slide 11. Scoped to the one slide on purpose: every other stage footer
-// in the deck stays ragged-right. Drop the id to flip them all.
-#bayes-intuition .slide-footer { text-align: justify; hyphens: auto; }
+// Takeaways set as a justified block, matching the .lede-min above them on
+// the same slide. Opted into per slide, not deck-wide, because every other
+// stage footer in the deck stays ragged-right. Every seminar-4 slide built
+// this way is listed, so the run from 17 to 29 reads consistently.
+#space-intuition .slide-footer,
+#setops-intuition .slide-footer,
+#venn-intuition .slide-footer,
+#set-formal .slide-footer,
+#cond-intuition .slide-footer,
+#bayes-intuition .slide-footer,
+#seller-intuition .slide-footer,
+#laplace-intuition .slide-footer,
+#binom-formal .slide-footer,
+#pois-intuition .slide-footer,
+#pois-formal .slide-footer,
+#expo-formal .slide-footer,
+#dist-questions .slide-footer,
+#normal-intuition .slide-footer,
+#funcrv .slide-footer { text-align: justify; hyphens: auto; }
+
+// #s00-webr carries none of the slide classes that justify .lede-min, so its
+// three blocks of prose were the only ragged-right text in the deck.
+#s00-webr {
+  .lede-min, .try-this, .slide-footer { text-align: justify; hyphens: auto; }
+  // The card and the try-this run the full 1050, so a lede stopping at the
+  // default 780 read as a cut line once it was justified. All four edges
+  // now agree.
+  .lede-min, .slide-footer { max-width: none; }
+}
+
+// ---- Chart-choice quiz (#chart-choice) ----
+// Observable Inputs names its <form> with a per-build hash (oi-3a86ea), so
+// everything here is matched STRUCTURALLY. The options row is a flex line
+// that does not wrap by default, which clipped the last two choices off the
+// right edge of the slide.
+#chart-choice form {
+  font-size: 21px;
+  margin: 10px 0;
+  // display:block, not Observable's flex row: with the caption beside the
+  // options the row started 120px in and the last choice ran off the slide.
+  // Stacked, the options get the full width and wrap cleanly.
+  display: block;
+  // Observable Inputs ships the form at max-width 640px, which is what kept
+  // the five options on two rows however short their labels got.
+  max-width: none;
+  > label {                       // the group caption, e.g. "Suitable display"
+    display: block;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-1);
+    margin-bottom: 4px;
+    width: auto;
+  }
+  > div {
+    display: flex;
+    flex-wrap: wrap;      // a safety net; at 21px the five fit on one line
+    gap: 4px 26px;
+    max-width: 100%;
+  }
+  > div > label {
+    font-size: 21px;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  input { margin-right: 7px; }
+}
+.quiz-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  vertical-align: middle;
+}
+.quiz-opt svg { flex-shrink: 0; }
+
+// The question and the verdict are the two things read from the back of the
+// room, so they set larger than the input that sits between them.
+.quiz-q {
+  font-size: 25px;
+  color: var(--ink);
+  margin: 14px 0 10px;
+  max-width: 980px;
+  text-align: justify;
+  hyphens: auto;
+}
+.quiz-fb {
+  font-size: 21px;
+  line-height: 1.45;
+  margin-top: 12px;
+  padding: 10px 16px;
+  border-left: 4px solid var(--rule);
+  border-radius: 0 6px 6px 0;
+  max-width: 980px;
+  text-align: justify;
+  hyphens: auto;
+  color: var(--ink-soft);
+}
+.quiz-idle { font-style: italic; }
+// Olive for a right answer, brick for a wrong one — the same two colours the
+// tick/cross lattice uses in Seminar 4, so the deck only ever has one green
+// and one red.
+.quiz-ok  { border-left-color: #93C54B; background: rgba(147, 197, 75, 0.08); }
+.quiz-no  { border-left-color: #B94A48; background: rgba(185, 74, 72, 0.07); }
+.quiz-fb b { color: var(--ink); }
+
+// ---- Where to Find Me (#s00b-about) ----
+// The grid ships as `220px 1fr`, so the list stretched to the slide edge and
+// the block sat hard left with 250 units of nothing on the right. Sizing both
+// columns to their content lets the pair centre as one object.
+#s00b-about .about-grid {
+  grid-template-columns: auto auto;
+  justify-content: center;
+  width: max-content;
+  max-width: 100%;
+  // Dropped down the slide rather than sitting right under the title: the
+  // block is 392 tall in 614 of space below the title, so the arithmetic
+  // centre is 111. 96 sits a shade above it, which reads as centred.
+  margin: 96px auto 0;
+}
+
+// ---- Deck facts strip (#s00-webr) ----
+// Three short columns under the R demo. Same shape as the SAY / WRITE strip
+// on #s00b-me: a navy small-caps label over one sentence, so the two opening
+// slides read as one voice.
+.deck-facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0 34px;
+  margin: 18px 0 0;
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--rule);
+  padding-top: 16px;
+  // Justified like every other block of prose on the two opening slides.
+  // Hyphenation is not optional at this column width — three words per line
+  // open ugly gaps without it.
+  text-align: justify;
+  hyphens: auto;
+}
+.deck-facts span {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+  margin-bottom: 6px;
+}
+// Without this the footer reads as a fourth line of the strip's first column.
+#s00-webr .slide-footer { margin-top: 16px; }
+.deck-facts kbd {
+  font-family: $font-family-monospace;
+  font-size: 0.86em;
+  background: var(--rule);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--ink);
+}
 
 // Invisible fragments used purely to gate animation steps.
 .fi-frag {
@@ -383,3 +600,318 @@
 }
 .claim-wrong .claim-tag { background: rgba(185, 74, 72, 0.14); color: #8A3937; }
 .claim-right .claim-tag { background: rgba(147, 197, 75, 0.18); color: #4E6B33; }
+
+
+// ---- OJS interactive slide (#likelihood-live) ------------------------------
+// Observable Inputs renders  <form class="oi-HASH"><label></label>
+//   <div class="oi-HASH-input"><input type=number><input type=range></div>
+// </form>.  That class is a per-build hash, so everything below is targeted
+// structurally instead. Without it the controls inherit Reveal's display type
+// size and the label wraps over two lines at 40px.
+.reveal section.ojs-slide {
+  display: block !important;
+  text-align: left !important;
+
+  .observablehq { font-family: "Roboto", sans-serif; }
+
+  // The cell after the lede stands in for .stage-wrap on this slide, so it
+  // carries the same 8px top margin and collapses against the lede's 0.5em
+  // exactly as the stage slides do. Quarto ships .cell with a 14.4px top
+  // margin, which otherwise wins the collapse and leaves the text-to-content
+  // gap a pixel adrift from slides 17-19 — invisible alone, not in sequence.
+  // NB an adjacent-sibling selector, not :first-of-type: .lede-min is a div
+  // too, so it IS the first div and no .cell would ever match.
+  .lede-min + .cell { margin-top: 8px; }
+  .cell-output-display { margin: 0; }
+  .observablehq svg { display: block; }
+
+  // --- the dial ---
+  .observablehq form {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 0 0 2px;
+    // Observable Inputs lays the label out in a fixed track and clips the
+    // overflow; these are its own knobs, and the only reliable way to widen
+    // it without depending on the per-build hashed class name.
+    --label-width: 210px;
+    --input-width: 110px;
+  }
+  .observablehq form > label {
+    font-size: 22px;
+    color: var(--ink-soft);
+    white-space: nowrap;      // "true success rate s" must not wrap
+    flex: 0 0 auto;           // ...and flex must not clip it either
+  }
+  .observablehq form > div {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 0 0 auto;
+  }
+  .observablehq input[type="number"] {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 24px;
+    color: var(--ink);
+    width: 104px;
+    min-width: 104px;         // Observable sets its own; override both
+    flex: 0 0 auto;
+    text-align: center;
+    padding: 2px 6px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: #fff;
+  }
+  .observablehq input[type="range"] {
+    width: 520px;
+    height: 24px;
+    accent-color: var(--accent-3);   // orange — the one thing you turn
+  }
+
+  // --- the reading, between the two plots ---
+  .ojs-eq {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 26px;
+    color: var(--ink);
+    text-align: center;
+    margin: 4px 0 2px;
+
+    .hit  { color: var(--accent-2); }   // olive, like the ticks
+    .miss { color: var(--accent-4); }   // brick, like the crosses
+    .rate { color: var(--accent-3); }   // orange, like s everywhere else
+  }
+}
+
+
+// ---- #binom-formal: the binomial written out -------------------------------
+// A definitions slide: two display equations with a line of prose between
+// them. At the deck's body size that prose sets larger than the maths it is
+// annotating and takes the eye first, so it is stepped down to sit under the
+// equations rather than over them.
+// --- #dist-questions -------------------------------------------------------
+// One row per distribution: a coloured rule, its name, and the single question
+// it answers. The colours are the deck's own — olive for the binomial's
+// successes, orange for the Poisson's rate, brick for the exponential's wait —
+// so the rows key back to the plots on slides 22 and 24.
+.reveal section.qcard-slide {
+  // A flex column with auto margins top and bottom of the group BELOW the
+  // title: the free space splits evenly, so the rows sit in the middle of
+  // the slide while the title stays pinned where every other slide puts it.
+  display: flex !important;
+  flex-direction: column;
+  height: 700px;
+  text-align: left !important;
+
+  > h2 { flex: 0 0 auto; }
+  > h2 + * { margin-top: auto; }
+  > :last-child { margin-bottom: auto; }
+
+  .qcard {
+    border-left: 4px solid var(--rule);
+    // The padding is the coloured rule's height; the margin is the gap
+    // between rows. Keep them separate — 60px of gap read as three unrelated
+    // lines rather than one list.
+    padding: 12px 0 12px 20px;
+    // Indented and set smaller than the lede above: the rows are the answer
+    // to the line that introduces them, so they read as subordinate to it.
+    margin: 0 0 32px 36px;
+  }
+  // The spans land inside a <p>, so the flex row has to live there.
+  .qcard p {
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+    margin: 0;
+  }
+  .qcard-name {
+    flex: 0 0 198px;
+    font-size: 22px;
+    .math { color: inherit; }   // inline MathJax does not inherit on its own
+  }
+  // 30px, not 33: at 33 the two longer questions wrap, and a wrapped
+  // question stops reading as one line.
+  .qcard-q { font-size: 24px; color: var(--ink); }
+
+  .qcard-binom { border-left-color: #93C54B; .qcard-name { color: #93C54B; } }
+  .qcard-pois  { border-left-color: #F47C3C; .qcard-name { color: #F47C3C; } }
+  .qcard-expo  { border-left-color: #B94A48; .qcard-name { color: #B94A48; } }
+
+  // No navy bar on this one: the three coloured card rules directly beneath
+  // it already carry that job, and a fourth vertical line above them read as
+  // a fourth row. The 14px padding stays so the text still lines up with the
+  // card names.
+  .lede-min { border-left: none; margin-bottom: 34px; }
+
+  .slide-footer { margin-top: 16px; }
+}
+
+.reveal section.formula-slide {
+  display: block !important;
+  text-align: left !important;
+
+  // The one line of prose between the two equations. At the deck's body size
+  // it sets larger than the maths it annotates and takes the eye first, so it
+  // steps down — and justifies, like every other block of prose on slides
+  // 17-21, so the left and right edges line up down the whole sequence.
+  .note {
+    font-size: 28px;
+    color: var(--ink);
+    max-width: 980px;
+    margin: 4px 0 2px;
+    text-align: justify;
+    hyphens: auto;
+  }
+
+  // Display maths carries its own leading; the theme's paragraph margins
+  // stack on top and push the takeaway off the bottom.
+  p:has(.math.display) { margin: 2px 0; }
+
+  // --- the binomial -> Poisson chain ---
+  // One row per step: a big navy arrow, then the reason for the step beside
+  // it. The arrow is MathJax's \downarrow rather than a bare glyph so it
+  // sits on the same baseline grid as the equations it joins.
+  // Centred, not left-indented: the equations are centred, so an arrow parked
+  // at the left margin floats away from the chain it is supposed to join and
+  // the step reads as a caption rather than a link. Arrow and its reason ride
+  // together down the middle.
+  .deriv-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin: 0;
+    line-height: 1;
+  }
+
+  // MathJax gives every display 1em top and bottom; three equations and two
+  // arrow rows on one slide cannot afford six of those.
+  .MathJax_Display { margin: 4px 0; }
+  // A literal glyph, not $\downarrow$: MathJax's inline box for it is 42px
+  // tall and dragged the whole row to 78.
+  .deriv-glyph { color: var(--navy); font-size: 32px; line-height: 1; }
+  .deriv-note {
+    font-size: 21px;
+    color: var(--ink-soft);
+    .math { color: var(--ink-soft); }
+  }
+
+  // Spacing lives on span.math.display — Quarto's wrapper — NOT on either of
+  // MathJax's own boxes. Which of those two actually lays a slide out flips
+  // between loads (its fast PREVIEW, .MJXp-math, until MathJax typesets that
+  // slide; .MathJax_Display after), so a margin set on one of them silently
+  // vanishes half the time. Both are zeroed; the wrapper carries the space.
+  .MJXp-math.MJXp-display,
+  .MathJax_Display { margin: 0; }
+  span.math.display { display: block; margin: 36px 0; }
+
+  // #binom-formal: the lede sat 36px off its equation, which reads as one
+  // block rather than a statement followed by its formula.
+  // One rhythm, no special first gap: 88 under the lede against 26 everywhere
+  // else read as a hole rather than a break. 42 is the same total height and
+  // an even step down the slide.
+  // #set-formal is three flat rules, not a dense chain, so it keeps full size
+  // — the 0.88 it wore briefly was paying for stacked fractions that are now
+  // written with a slash. Only its margins are scoped.
+  // Flush left, not centred. Everything else on the slide — title, lede,
+  // takeaway — starts at the same edge, and a centred block of rules floated
+  // in the middle of all of it. The 16px matches the .lede-min's rule plus
+  // its padding, so the first P lines up with the first word above it.
+  &#set-formal {
+    .MJXp-math.MJXp-display { font-size: 0.84em; }
+    .MathJax_Display { zoom: 0.84; }
+    // The two lines of a rule are one statement, so they sit close; the gap
+    // that separates the rules lives on the label above each pair instead.
+    span.math.display { margin: 6px 0; }
+
+    // The labels are HTML, so they keep the deck's sans. The two pairs are
+    // separate arrays, which would leave their '=' columns a few px apart —
+    // the \phantom in each second row is the WIDEST left-hand side, so both
+    // first columns size to it and the equals signs land in one column.
+    .rule-label {
+      font-size: 23px;
+      font-weight: 700;
+      margin: 26px 0 2px;
+      .math { color: inherit; }
+    }
+    .rule-or  { color: #93C54B; }
+    .rule-and { color: #325D88; }
+    // "Either" is 12 units wider than "Both", which left A ∪ B and A ∩ B
+    // starting at different x in the two headings. A fixed track on the word
+    // puts the notation in one column without reordering the label.
+    .rw { display: inline-block; min-width: 80px; }
+    // No indent. The slide's left margin is the one the title and the
+    // takeaway sit on; the lede only looks inset because of its navy rule.
+    // Indenting the maths to match the LEDE put it out of line with the
+    // other two, which is three edges on one slide.
+    // The equations sit one step in from "Either" and "Both", so the label
+    // reads as a heading over its pair rather than as another line of the
+    // rule. 40 + the array's own 4px sliver of padding lands them at 44.
+    // !important is not laziness here. MathJax 2.7 writes text-align:center
+    // as an INLINE style on .MathJax_Display, which no amount of selector
+    // specificity can beat. Without it the two arrays stayed centred, and
+    // since they are different widths (668 and 587 units) they started at
+    // different x — which is invisible in the MJXp preview, where the rule
+    // does apply, so it only showed up in a browser that had typeset.
+    // The inner box needs it too: the outer can be left-aligned while
+    // MathJax centres the .MathJax span inside it, which is the same bug
+    // one node down.
+    .MJXp-math.MJXp-display,
+    .MathJax_Display,
+    .MathJax_Display > .MathJax { text-align: left !important; }
+    .MJXp-math.MJXp-display,
+    .MathJax_Display { margin-left: 40px; }
+    .slide-footer { margin-top: 26px; }   // was 11px off the last equation
+
+  }
+
+  &#binom-formal {
+    // 0.82em, between full size and the 0.72 the three-step chains use: this
+    // slide carries three displays now, and at full size they dominated the
+    // prose that explains them. BOTH spellings — whichever of MathJax's two
+    // boxes lays the slide out, the size has to follow.
+    .MJXp-math.MJXp-display { font-size: 0.82em; }
+    .MathJax_Display { zoom: 0.82; }
+    span.math.display { margin: 30px 0; }
+  }
+
+  // #pois-formal carries three display equations and two arrow rows under a
+  // title; at the deck's display size that measures 917 of 700. Everything
+  // below buys the 230px back. Scoped so #binom-formal keeps full size.
+  // #pois-formal and #expo-formal are the same object: a three-step derivation
+  // chain with arrow rows between. They share the sizing so the two read as a
+  // pair when the room sees them minutes apart.
+  &#pois-formal,
+  &#expo-formal,
+  &#funcrv {
+    // The three gaps the animation slides define — 24 under the title, 13
+    // from the lede to the content, 12 from the content to the takeaway —
+    // so this slide sits in the 17-23 sequence like the rest. Only the gap
+    // BETWEEN derivation steps is this slide's own (18), because the stage
+    // slides have no equivalent of it.
+    .lede-min { margin-bottom: 0; }     // 24px top comes from the deck rule
+    p:has(.math.display):first-of-type span.math.display { margin-top: 24px; }
+    p:has(.math.display):last-of-type  span.math.display { margin-bottom: 36px; }
+
+    // Every gap on this slide is one MathJax display margin. The arrow rows
+    // carry none of their own, so an arrow sits between two equal 6px
+    // margins and the three equations step down evenly by construction —
+    // the one way to keep them even when each equation is a different height.
+    // Style .MJXp-display, NOT .MathJax_Display. In this deck MathJax's real
+    // output ends up 0-height and what actually lays out (and what you see)
+    // is its fast PREVIEW — which ships `margin: 36px 0`. Every rule aimed at
+    // .MathJax_Display here was a silent no-op. Corollary: a height measured
+    // while `.MathJax_Processing` is still on the node is fiction.
+    p:has(.math.display) { margin: 0; line-height: 1; }
+    span.math.display { margin: 18px 0; }
+    .MJXp-math.MJXp-display { font-size: 0.72em; }
+    .MathJax_Display { zoom: 0.72; }   // MathJax writes glyph sizes as inline px
+    .deriv-arrow { height: 40px; }
+    .slide-footer { margin-top: 10px; }
+  }
+
+  // NB the maths is coloured in the .qmd with MathJax's \color{}{} and the
+  // palette hexes, NOT with classes: MathJax 2.7 here does apply \class{}{}
+  // to inline maths but silently ignores it inside $$ ... $$, so half the
+  // equation came out plain ink. If that is ever fixed, move the colours back
+  // out of the source and into rules here.
+}

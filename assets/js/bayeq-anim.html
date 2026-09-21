@@ -122,12 +122,31 @@
 
   // Bracket spanning [x0,x1]; `up` draws the ticks pointing down at the text
   // above it, otherwise up at the text below.
+  // A horizontal curly brace — the same shape #binom-intuition draws over its
+  // binomial coefficient, so the two slides annotate a span of maths the same
+  // way. `up` keeps the old square-bracket signature: 1 peaks upward (an
+  // overbrace, label above), 0 peaks downward (an underbrace, label below).
+  //
+  // The curl radius is clamped to a quarter of the span: at the default 8 a
+  // brace narrower than ~32 units has its two curls meet in the middle and
+  // the straight run inverts, which draws a bow tie.
+  function bracePath(x0, x1, y, up) {
+    var t = up ? 7 : -7, xm = (x0 + x1) / 2;
+    var r = Math.min(8, (x1 - x0) / 4);
+    return 'M' + x0 + ' ' + (y + t) +
+           'Q' + x0 + ' ' + y + ' ' + (x0 + r) + ' ' + y +
+           'L' + (xm - r) + ' ' + y +
+           'Q' + xm + ' ' + y + ' ' + xm + ' ' + (y - t) +
+           'Q' + xm + ' ' + y + ' ' + (xm + r) + ' ' + y +
+           'L' + (x1 - r) + ' ' + y +
+           'Q' + x1 + ' ' + y + ' ' + x1 + ' ' + (y + t);
+  }
+
   function bracket(svg, x0, x1, y, up, colour) {
-    var t = up ? 6 : -6;
     return svg.appendChild(el('path', {
-      d: 'M' + x0 + ' ' + (y + t) + ' V' + y + ' H' + x1 + ' V' + (y + t),
+      d: bracePath(x0, x1, y, up),
       fill: 'none', stroke: colour, 'stroke-width': 2,
-      'stroke-linecap': 'round', opacity: 0
+      'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: 0
     }));
   }
 

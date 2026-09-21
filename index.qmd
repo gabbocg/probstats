@@ -1,5 +1,5 @@
 ---
-title: "Quantitative Methods"
+title: "Probability & Statistics"
 subtitle: "BMAN10750"
 author:
   - name: "Gabriel Cabrera^‡^"
@@ -10,6 +10,7 @@ date: "2026-09-03"
 date-format: "MMMM YYYY"
 ---
 
+{{< include sections/00a-about-me.qmd >}}
 {{< include sections/00-how-to-use.qmd >}}
 {{< include sections/01-visualisation.qmd >}}
 {{< include sections/02-descriptives.qmd >}}

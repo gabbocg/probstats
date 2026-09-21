@@ -1,0 +1,438 @@
+<script>
+/*
+  Sample spaces and set operations — slides #space-intuition and
+  #setops-intuition, which open Seminar 3 before the Bayes hook.
+
+  Both slides draw the SAME board: two dice as a 6 by 6 grid of the 36
+  equally likely outcomes, each cell carrying the total. That choice does the
+  teaching on its own. A sample space stops being an abstraction once you can
+  see all of it at once, an event stops being an abstraction once it is a
+  handful of cells you can point at, and every probability on both slides is
+  a count over 36 that a student can verify by eye. Venn circles would have
+  shown the same set algebra without ever showing an outcome.
+
+  The two events are chosen so the picture, not the arithmetic, carries the
+  addition rule:
+
+      A   the total is 7        6 cells   the anti-diagonal
+      B   the first die is even 18 cells  three whole rows
+      A n B                     3 cells   where the diagonal crosses them
+      A u B                     21 cells  = 6 + 18 - 3
+
+  Anyone who adds 6 and 18 and gets 24 can be shown the three cells they
+  counted twice. That is the entire reason for the slide.
+
+  One file, two registrations, because the boards must be identical cell for
+  cell: stepping from the first slide to the second has to add the second
+  event to a picture that is already on the screen, not redraw it. The same
+  argument as the shared tick/cross lattice in stage-kit.html.
+*/
+(function () {
+  var K = window.StageKit;
+  if (!K) return;
+  var PAL = K.PAL;
+
+  var W = 1000, H = 445;
+  var CELL = 46, PITCH = 52;          // 46px cell on a 52px lattice
+  var GX = 118, GY = 96;              // centre of the top-left cell's box
+  var RX = 520;                       // the labels column
+
+  var MIDY = 226;                     // vertical centre of the 6 rows of cells
+
+  function xOf(c) { return GX + c * PITCH; }
+  function yOf(r) { return GY + r * PITCH; }
+
+  // r and c are 0-based; the dice show r+1 and c+1.
+  function isA(r, c) { return (r + 1) + (c + 1) === 7; }        // total is 7
+  function isB(r, c) { return (r + 1) % 2 === 0; }              // first die even
+
+  // ---- the shared board ---------------------------------------------------
+  function board(stageEl) {
+    var svg = K.canvas(stageEl, W, H);
+    var s = { svg: svg, cells: [], ov: [], anims: [], on: [], state: 0 };
+
+    var gridG = svg.appendChild(K.el('g', {}));
+
+    // Axis labels on their own tracks, clear of the numbers. "First die" is
+    // set on its side, the way an axis label belongs, which also gets it out
+    // of the row numbers' way in one move instead of two stacked words. It
+    // labels the rows because that is the one event B talks about, and a
+    // reader checking B scans a column of labels.
+    svg.appendChild(K.txt(xOf(2.5), GY - 70, 'Second die',
+      { size: 'tick', fill: 'inkSoft', anchor: 'middle' }));
+    var fd = K.txt(GX - 62, MIDY, 'First die',
+      { size: 'tick', fill: 'inkSoft', anchor: 'middle' });
+    fd.setAttribute('transform', 'rotate(-90 ' + (GX - 62) + ' ' + MIDY + ')');
+    svg.appendChild(fd);
+
+    var r, c, row, ovRow;
+    for (c = 0; c < 6; c++) {
+      svg.appendChild(K.txt(xOf(c), GY - 40, String(c + 1),
+        { size: 'label', fill: 'inkSoft', anchor: 'middle', face: 'mono' }));
+    }
+    for (r = 0; r < 6; r++) {
+      svg.appendChild(K.txt(GX - 34, yOf(r) + 7, String(r + 1),
+        { size: 'label', fill: 'inkSoft', anchor: 'end', face: 'mono' }));
+    }
+
+    for (r = 0; r < 6; r++) {
+      row = []; ovRow = [];
+      for (c = 0; c < 6; c++) {
+        var x = xOf(c) - CELL / 2, y = yOf(r) - CELL / 2;
+        // The overlay sits under the number so the total stays readable on a
+        // filled cell; the base rect is only ever the empty outcome.
+        row.push(gridG.appendChild(K.el('rect', {
+          x: x, y: y, width: CELL, height: CELL, rx: 5,
+          fill: PAL.white, stroke: PAL.rule, 'stroke-width': 1.5
+        })));
+        ovRow.push(gridG.appendChild(K.el('rect', {
+          x: x, y: y, width: CELL, height: CELL, rx: 5,
+          fill: PAL.olive, opacity: 0
+        })));
+        gridG.appendChild(K.txt(xOf(c), yOf(r) + 7, String(r + c + 2),
+          { size: 'label', fill: 'inkSoft', anchor: 'middle', face: 'mono' }));
+      }
+      s.cells.push(row); s.ov.push(ovRow);
+    }
+    return s;
+  }
+
+  function stop(s) {
+    s.anims.forEach(function (a) { if (a && a.pause) a.pause(); });
+    s.anims = [];
+  }
+
+  // Writes the ATTRIBUTE, never inline style: anime's inline opacity would
+  // outrank whatever the next snap() writes, and a stage that is clicked
+  // through faster than it animates would be left half-drawn.
+  function fadeTo(s, node, on, dur, delay) {
+    var p = { v: on ? 0 : 1 };
+    node.setAttribute('opacity', p.v);
+    s.anims.push(window.anime.animate(p, {
+      v: on ? 1 : 0, duration: dur, delay: delay || 0, ease: 'outQuad',
+      onUpdate: function () { node.setAttribute('opacity', p.v); }
+    }));
+  }
+
+  // `want(r, c)` returns the fill for that cell, or null to leave it empty.
+  // Colour is an attribute write in snap(), not a tween, so a cell that
+  // changes event between states switches cleanly instead of sliding
+  // through some intermediate mud.
+  function paint(s, want, alpha) {
+    var r, c, col;
+    for (r = 0; r < 6; r++) {
+      for (c = 0; c < 6; c++) {
+        col = want(r, c);
+        if (col) s.ov[r][c].setAttribute('fill', col);
+        s.ov[r][c].setAttribute('opacity', col ? (alpha || 1) : 0);
+      }
+    }
+  }
+
+  // Same idea as fadeTo, but landing on a partial opacity instead of 1. The
+  // three Venn regions are washes, and fadeTo would have ended every one of
+  // them at full strength — which is exactly what the live deck was doing,
+  // since snap()'s 0.45 only ever survived when the tween did not run.
+  function fadeAlpha(s, node, alpha, dur, delay) {
+    var p = { v: 0 };
+    node.setAttribute('opacity', 0);
+    s.anims.push(window.anime.animate(p, {
+      v: alpha, duration: dur, delay: delay || 0, ease: 'outQuad',
+      onUpdate: function () { node.setAttribute('opacity', p.v); }
+    }));
+  }
+
+  function fadeCells(s, want, alpha, dur) {
+    var p = { v: 0 };
+    s.anims.push(window.anime.animate(p, {
+      v: 1, duration: dur, ease: 'outQuad',
+      onUpdate: function () {
+        var r, c;
+        for (r = 0; r < 6; r++) for (c = 0; c < 6; c++) {
+          if (want(r, c)) s.ov[r][c].setAttribute('opacity', p.v * (alpha || 1));
+        }
+      }
+    }));
+  }
+
+  // Roboto draws the set operators to X-HEIGHT while the letters beside them
+  // are full caps, so a plain "A ∪ B" reads as though the symbol had been
+  // shrunk. Measured off a canvas at 60px: the letters ink 43 tall, ∩ and ∪
+  // both 30 (they are identical to each other, which is not what it looks
+  // like). 43/30 lines them up, and since all three sit on the baseline the
+  // bigger glyph needs no vertical shift.
+  // ∪ takes a little more than ∩ although the two measure the same (102 and
+  // 103 ink units at 200px bold). An open bowl reads lighter than a closed
+  // arch at equal height, and here the ∪ is usually set in olive against the
+  // ∩'s orange, which makes it lighter again. Drawing the round one slightly
+  // larger so it LOOKS equal is the same correction a type designer makes to
+  // an O against an H.
+  var OP_SCALE = { '∩': 1.43, '∪': 1.52 };
+
+  function setTxt(x, y, str, o) {
+    var t = K.txt(x, y, '', o);
+    str.split(/([∩∪])/).forEach(function (part) {
+      if (!part) return;
+      var sp = K.el('tspan', OP_SCALE[part] ? { 'font-size': OP_SCALE[part] + 'em' } : {});
+      sp.textContent = part;
+      t.appendChild(sp);
+    });
+    return t;
+  }
+
+  var NONE = function () { return null; };
+
+  // ---- slide 1: the space, then one event inside it -----------------------
+  function buildSpace(stageEl) {
+    var s = board(stageEl), svg = s.svg;
+
+    s.omega = svg.appendChild(K.el('g', { opacity: 0 }));
+    s.omega.appendChild(K.txt(RX, 116, 'Ω', { size: 'readout', fill: 'navy', face: 'mono', weight: 700 }));
+    s.omega.appendChild(K.txt(RX + 48, 116, 'Every outcome of the two rolls', { size: 'caption', fill: 'ink' }));
+    s.omega.appendChild(K.txt(RX, 158, '|Ω| = 36', { size: 'caption', fill: 'inkSoft', face: 'mono' }));
+
+    s.evt = svg.appendChild(K.el('g', { opacity: 0 }));
+    s.evt.appendChild(K.txt(RX, 234, 'A', { size: 'readout', fill: 'olive', face: 'mono', weight: 700 }));
+    s.evt.appendChild(K.txt(RX + 48, 234, 'The total is 7', { size: 'caption', fill: 'ink' }));
+    s.evt.appendChild(K.txt(RX, 276, '|A| = 6', { size: 'caption', fill: 'inkSoft', face: 'mono' }));
+
+    s.pr = svg.appendChild(K.el('g', { opacity: 0 }));
+    s.pr.appendChild(K.txt(RX, 352, 'P(A) = 6/36 = 1/6', { size: 'caption', fill: 'ink', face: 'mono' }));
+    return s;
+  }
+
+  function placeSpace(s, st, instant) {
+    var was = s.on;
+    stop(s);
+    s.state = st;
+    var want = [st >= 1, st >= 2, st >= 3];
+    s.on = want;
+
+    // Static truth first, every single render. The tweens below only supply
+    // the movement; nothing about the finished picture depends on them
+    // running to completion. The board itself is never gated: it IS the
+    // sample space, so it is on the screen before the first click.
+    s.omega.setAttribute('opacity', want[0] ? 1 : 0);
+    s.evt.setAttribute('opacity', want[1] ? 1 : 0);
+    s.pr.setAttribute('opacity', want[2] ? 1 : 0);
+    paint(s, want[1] ? function (r, c) { return isA(r, c) ? PAL.olive : null; } : NONE, 0.55);
+
+    if (instant || K.REDUCE || !K.animeReady()) return;
+    if (want[0] !== was[0]) fadeTo(s, s.omega, want[0], want[0] ? 420 : 200, 0);
+    if (want[1] !== was[1]) {
+      fadeTo(s, s.evt, want[1], want[1] ? 380 : 200, want[1] ? 260 : 0);
+      if (want[1]) fadeCells(s, function (r, c) { return isA(r, c); }, 0.55, 520);
+    }
+    if (want[2] !== was[2]) fadeTo(s, s.pr, want[2], want[2] ? 380 : 200, 0);
+  }
+
+  // ---- slide 2: two events, their overlap, their union --------------------
+  function buildOps(stageEl) {
+    var s = board(stageEl), svg = s.svg;
+
+    s.both = svg.appendChild(K.el('g', { opacity: 0 }));
+    s.both.appendChild(K.txt(RX, 121, 'A', { size: 'readout', fill: 'olive', face: 'mono', weight: 700 }));
+    s.both.appendChild(K.txt(RX + 40, 121, 'Total is 7', { size: 'caption', fill: 'ink' }));
+    s.both.appendChild(K.txt(RX + 230, 121, '6', { size: 'caption', fill: 'inkSoft', face: 'mono' }));
+    s.both.appendChild(K.txt(RX, 177, 'B', { size: 'readout', fill: 'navy', face: 'mono', weight: 700 }));
+    s.both.appendChild(K.txt(RX + 40, 177, 'First die is even', { size: 'caption', fill: 'ink' }));
+    s.both.appendChild(K.txt(RX + 230, 177, '18', { size: 'caption', fill: 'inkSoft', face: 'mono' }));
+
+    s.cap = svg.appendChild(K.el('g', { opacity: 0 }));
+    s.cap.appendChild(setTxt(RX, 233, 'A ∩ B', { size: 'readout', fill: 'orange', weight: 700 }));
+    s.cap.appendChild(K.txt(RX + 110, 233, 'Both at once, 3 cells', { size: 'caption', fill: 'ink' }));
+
+    s.cup = svg.appendChild(K.el('g', { opacity: 0 }));
+    s.cup.appendChild(setTxt(RX, 289, 'A ∪ B', { size: 'readout', fill: 'olive', weight: 700 }));
+    s.cup.appendChild(K.txt(RX + 110, 289, '6 + 18 − 3 = 21', { size: 'caption', fill: 'ink', face: 'mono' }));
+    s.cup.appendChild(setTxt(RX, 345, 'P(A ∪ B) = 21/36', { size: 'caption', fill: 'ink' }));
+    return s;
+  }
+
+  // B is an OUTLINE, not a fill. Two filled events on one board gave three
+  // different colours of block and no way to see that the orange cells are
+  // the ones counted twice; drawn this way A is six green cells, B is a navy
+  // frame around three whole rows, and the three cells wearing both are the
+  // only orange on the grid.
+  function opsWant(st) {
+    if (st >= 3) return function (r, c) { return (isA(r, c) || isB(r, c)) ? PAL.olive : null; };
+    if (st >= 2) return function (r, c) { return (isA(r, c) && isB(r, c)) ? PAL.orange : null; };
+    // All six of A green on the first beat, orange held back until the next
+    // one names it. Colouring the three overlap cells here would have put an
+    // unexplained colour on the board a click before "A ∩ B" appears to
+    // explain it, and would leave a student counting three green cells
+    // against a legend that says six.
+    if (st >= 1) return function (r, c) { return isA(r, c) ? PAL.olive : null; };
+    return NONE;
+  }
+
+  function outline(s, on) {
+    var r, c, b;
+    for (r = 0; r < 6; r++) for (c = 0; c < 6; c++) {
+      b = on && isB(r, c);
+      s.cells[r][c].setAttribute('stroke', b ? PAL.navy : PAL.rule);
+      s.cells[r][c].setAttribute('stroke-width', b ? 2.6 : 1.5);
+    }
+  }
+
+  function placeOps(s, st, instant) {
+    var was = s.on;
+    stop(s);
+    s.state = st;
+    var want = [st >= 1, st >= 2, st >= 3];
+    s.on = want;
+
+    s.both.setAttribute('opacity', want[0] ? 1 : 0);
+    s.cap.setAttribute('opacity', want[1] ? 1 : 0);
+    s.cup.setAttribute('opacity', want[2] ? 1 : 0);
+    paint(s, opsWant(st), 0.55);
+    outline(s, want[0]);   // B stays framed through all three beats
+
+    if (instant || K.REDUCE || !K.animeReady()) return;
+    if (want[0] !== was[0]) {
+      fadeTo(s, s.both, want[0], want[0] ? 380 : 200, 0);
+      if (want[0] && !was[1]) fadeCells(s, function (r, c) { return isA(r, c); }, 0.55, 560);
+    }
+    if (want[1] !== was[1]) fadeTo(s, s.cap, want[1], want[1] ? 380 : 200, 0);
+    if (want[2] !== was[2]) fadeTo(s, s.cup, want[2], want[2] ? 380 : 200, 0);
+  }
+
+  // ---- slide 3: the same two events, drawn the way textbooks draw them ----
+  // The grid did the counting; this slide only renames the four regions. The
+  // numbers are carried over unchanged (3, 3, 15 and 15 outside, summing to
+  // 36) so a student can check the circles against the board they have just
+  // been looking at rather than taking the picture on trust.
+  //
+  // The shading is done three different ways because each region needs a
+  // different trick: the lens is circle B clipped to circle A, the union is
+  // two solid circles inside one half-transparent GROUP (per-shape opacity
+  // would double-darken the overlap and put a seam through the middle of
+  // what is supposed to read as one region), and the complement is the box
+  // masked by both circles.
+  // Sized to the counts, not drawn by eye. A holds 6 of the 36 outcomes and B
+  // holds 18, so their AREAS must be in 1:3 and the radii in 1:sqrt(3), which
+  // fixes rA at 81 against rB 140. Half of A is in the overlap (3 of its 6),
+  // and solving the circular-lens area for that gives a centre distance of
+  // 132: it lands the overlap at 0.499 of A. A Venn diagram whose regions are
+  // labelled with counts and drawn to some other proportion is telling the
+  // room two different things at once.
+  var VX = { ax: 300, ay: 184, ar: 81, bx: 432, by: 184, br: 140 };
+  var OM = { x: 70, y: 30, w: 590, h: 308 };
+
+  function buildVenn(stageEl) {
+    var svg = K.canvas(stageEl, W, H);
+    var s = { svg: svg, anims: [], on: [], state: 0 };
+    var defs = svg.appendChild(K.el('defs', {}));
+
+    var clip = defs.appendChild(K.el('clipPath', { id: 'venn-A' }));
+    clip.appendChild(K.el('circle', { cx: VX.ax, cy: VX.ay, r: VX.ar }));
+
+    var mask = defs.appendChild(K.el('mask', { id: 'venn-out' }));
+    mask.appendChild(K.el('rect', { x: OM.x, y: OM.y, width: OM.w, height: OM.h, fill: '#fff' }));
+    mask.appendChild(K.el('circle', { cx: VX.ax, cy: VX.ay, r: VX.ar, fill: '#000' }));
+    mask.appendChild(K.el('circle', { cx: VX.bx, cy: VX.by, r: VX.br, fill: '#000' }));
+
+    // complement, then union, then lens: later fills sit on top of earlier ones
+    s.outG = svg.appendChild(K.el('rect', {
+      x: OM.x, y: OM.y, width: OM.w, height: OM.h, rx: 12,
+      fill: PAL.navy, mask: 'url(#venn-out)', opacity: 0
+    }));
+    s.cupG = svg.appendChild(K.el('g', { opacity: 0 }));
+    s.cupG.appendChild(K.el('circle', { cx: VX.ax, cy: VX.ay, r: VX.ar, fill: PAL.olive }));
+    s.cupG.appendChild(K.el('circle', { cx: VX.bx, cy: VX.by, r: VX.br, fill: PAL.olive }));
+    s.lens = svg.appendChild(K.el('circle', {
+      cx: VX.bx, cy: VX.by, r: VX.br, fill: PAL.orange,
+      'clip-path': 'url(#venn-A)', opacity: 0
+    }));
+
+    svg.appendChild(K.el('rect', {
+      x: OM.x, y: OM.y, width: OM.w, height: OM.h, rx: 12,
+      fill: 'none', stroke: PAL.dim, 'stroke-width': 2
+    }));
+    svg.appendChild(K.el('circle', { cx: VX.ax, cy: VX.ay, r: VX.ar,
+      fill: 'none', stroke: PAL.olive, 'stroke-width': 2.5 }));
+    svg.appendChild(K.el('circle', { cx: VX.bx, cy: VX.by, r: VX.br,
+      fill: 'none', stroke: PAL.navy, 'stroke-width': 2.5 }));
+
+    svg.appendChild(K.txt(OM.x + 22, OM.y + 34, 'Ω', { size: 'readout', fill: 'inkSoft', weight: 700 }));
+    svg.appendChild(K.txt(VX.ax - 30, VX.ay - 60, 'A', { size: 'readout', fill: 'olive', weight: 700 }));
+    svg.appendChild(K.txt(VX.bx + 66, VX.by - 88, 'B', { size: 'readout', fill: 'navy', weight: 700 }));
+
+    // The four region counts, each in the colour of the region it belongs to,
+    // so the arithmetic can be read off without a legend: olive + orange is
+    // A's 6, navy + orange is B's 18, and the orange 3 is the one number
+    // that appears in both sums. All four ink means the reader has to work
+    // out which circle each belongs to before any of that is visible.
+    svg.appendChild(K.txt(VX.ax - 34, VX.ay + 9, '3', { size: 'readout', fill: 'olive', anchor: 'middle', face: 'mono', weight: 700 }));
+    svg.appendChild(K.txt(VX.ax + 46, VX.ay + 9, '3', { size: 'readout', fill: 'orange', anchor: 'middle', face: 'mono', weight: 700 }));
+    svg.appendChild(K.txt(VX.bx + 62, VX.by + 9, '15', { size: 'readout', fill: 'navy', anchor: 'middle', face: 'mono', weight: 700 }));
+    svg.appendChild(K.txt(618, OM.y + 44, '15', { size: 'readout', fill: 'inkSoft', anchor: 'middle', face: 'mono', weight: 700 }));
+
+    var RV = 710;
+    s.capA = svg.appendChild(K.el('g', { opacity: 0 }));
+    s.capA.appendChild(setTxt(RV, 88, 'A ∩ B', { size: 'readout', fill: 'orange', weight: 700 }));
+    s.capA.appendChild(K.txt(RV, 126, 'Both, 3 outcomes', { size: 'caption', fill: 'ink' }));
+
+    s.capU = svg.appendChild(K.el('g', { opacity: 0 }));
+    s.capU.appendChild(setTxt(RV, 182, 'A ∪ B', { size: 'readout', fill: 'olive', weight: 700 }));
+    s.capU.appendChild(K.txt(RV, 220, 'Either, 3 + 3 + 15 = 21', { size: 'caption', fill: 'ink' }));
+
+    s.capC = svg.appendChild(K.el('g', { opacity: 0 }));
+    s.capC.appendChild(setTxt(RV, 276, '(A ∪ B)', { size: 'readout', fill: 'inkSoft', weight: 700 }));
+    s.capC.appendChild(K.txt(RV + 96, 266, 'c', { size: 'label', fill: 'inkSoft', weight: 700 }));
+    s.capC.appendChild(K.txt(RV, 314, 'Neither, the other 15', { size: 'caption', fill: 'ink' }));
+    return s;
+  }
+
+  function placeVenn(s, st, instant) {
+    var was = s.on;
+    stop(s);
+    s.state = st;
+    var want = [st >= 1, st >= 2, st >= 3];
+    s.on = want;
+
+    // Only one region is filled at a time. Three shaded regions at once is a
+    // picture of nothing; the point is which part of Ω each operation names.
+    // Washes, not blocks. The counts sit ON these regions now, so the fill
+    // only has to say "this part", not shout it.
+    s.lens.setAttribute('opacity', want[0] && !want[1] ? 0.45 : 0);
+    s.cupG.setAttribute('opacity', want[1] && !want[2] ? 0.26 : 0);
+    s.outG.setAttribute('opacity', want[2] ? 0.18 : 0);
+    s.capA.setAttribute('opacity', want[0] ? 1 : 0);
+    s.capU.setAttribute('opacity', want[1] ? 1 : 0);
+    s.capC.setAttribute('opacity', want[2] ? 1 : 0);
+
+    if (instant || K.REDUCE || !K.animeReady()) return;
+    if (want[0] !== was[0]) {
+      if (want[0] && !want[1]) fadeAlpha(s, s.lens, 0.45, 420, 0);
+      fadeTo(s, s.capA, want[0], want[0] ? 380 : 200, 0);
+    }
+    if (want[1] !== was[1]) {
+      if (want[1] && !want[2]) fadeAlpha(s, s.cupG, 0.26, 460, 0);
+      fadeTo(s, s.capU, want[1], want[1] ? 380 : 200, 0);
+    }
+    if (want[2] !== was[2]) {
+      if (want[2]) fadeAlpha(s, s.outG, 0.18, 460, 0);
+      fadeTo(s, s.capC, want[2], want[2] ? 380 : 200, 0);
+    }
+  }
+
+  K.register({
+    stage: 'venn-stage',
+    frags: ['venn-frag-1', 'venn-frag-2', 'venn-frag-3'],
+    build: buildVenn, place: placeVenn, stop: stop
+  });
+
+  K.register({
+    stage: 'space-stage',
+    frags: ['space-frag-1', 'space-frag-2', 'space-frag-3'],
+    build: buildSpace, place: placeSpace, stop: stop
+  });
+
+  K.register({
+    stage: 'setops-stage',
+    frags: ['setops-frag-1', 'setops-frag-2', 'setops-frag-3'],
+    build: buildOps, place: placeOps, stop: stop
+  });
+})();
+</script>

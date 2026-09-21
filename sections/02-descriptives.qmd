@@ -1,13 +1,7 @@
-# Describing data II {.hero #s02-descriptives}
+# Describing Data II {.hero #s02-descriptives}
 
 ::: {.sem-mark data-sem="2"}
 Seminar 2 · Descriptive statistics
-:::
-
-Averages are opinions about what "typical" means.
-
-::: {.lede}
-The worksheet asks for the mean, the median, the mode and the standard deviation of the same data. That is not busywork — each answers a different question, and they disagree exactly when the answer matters most.
 :::
 
 ## Watch the mean chase one point {.stage-slide #mm-intuition}

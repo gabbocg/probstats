@@ -1,13 +1,7 @@
-# How this deck works {.hero #s00-how-to-use}
+# How These Decks Work {.hero #s00-how-to-use}
 
 ::: {.section-badge}
 BMAN10750 · nine seminars, one idea each
-:::
-
-Every seminar gets an intuition and a simulation.
-
-::: {.lede}
-The worksheets already show you *how* to compute. These slides are about *why* the computation behaves the way it does — and every claim on them is one you can check yourself, live, in the browser.
 :::
 
 ## The R runs here, in this page {#s00-webr}
@@ -24,12 +18,13 @@ The grey boxes below are real R. Press **Run** and the code executes inside your
 ```{webr-r}
 # Edit anything here, then press Run.
 x <- rnorm(10, mean = 100, sd = 15)
+
 round(mean(x), 2)
 ```
 :::
 
 ::: {.try-this}
-Press **Run** four or five times without changing a thing. The mean moves every time — *that* is the whole subject in one line.
+Press **Run** a few times without changing anything. The mean comes out different every time.
 :::
 
 ```{webr-r}
@@ -37,6 +32,26 @@ Press **Run** four or five times without changing a thing. The mean moves every 
 # Hidden: enlarges text and tightens margins on every plot in the deck (spec §6.2).
 # If this cell errors, the extension never re-enables the Run buttons, so keep it trivial.
 setHook("before.plot.new", function() par(cex = 1.6, mar = c(3.6, 3.8, 1.6, 0.8), mgp = c(2.3, 0.8, 0)))
+```
+
+```{=html}
+<div class="deck-facts">
+  <div>
+    <span>Nine seminars</span>
+    One idea each, in the order we meet them. Nothing here needs the seminar
+    before it to make sense.
+  </div>
+  <div>
+    <span>Moving around</span>
+    Arrows or space step through. <kbd>Esc</kbd> shows every slide at once,
+    <kbd>M</kbd> opens the contents.
+  </div>
+  <div>
+    <span>Writing on it</span>
+    <kbd>B</kbd> opens a blackboard and <kbd>C</kbd> draws straight over a
+    slide, so worked examples happen in front of you.
+  </div>
+</div>
 ```
 
 ::: {.slide-footer}

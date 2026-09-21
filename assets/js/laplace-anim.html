@@ -1,0 +1,221 @@
+<script>
+/*
+  Rule-of-succession animation — slide #laplace-intuition, straight after
+  #seller-intuition, which ends by asking how to trade confidence against a
+  lower headline rate. This slide is Laplace's answer, from 1774.
+
+  The rule is (k + 1) / (n + 2), and the reason it is drawn rather than
+  stated is that the "+1, +2" IS a picture: credit every seller with one
+  imaginary good review and one imaginary bad one before you count. On these
+  three sellers that is the whole argument, because two imaginary reviews are
+  a catastrophe for a seller with ten of them and a rounding error for a
+  seller with two hundred:
+
+      A   10 of 10   100%  ->  11 of 12   91.7%     -8.3 points
+      B   48 of 50    96%  ->  49 of 52   94.2%     -1.8
+      C  186 of 200   93%  ->  187 of 202 92.6%     -0.4
+
+  and the ranking turns over: A was first on the raw rate and is last here,
+  B wins, which is the answer #seller-sim then confirms with the likelihood.
+
+  The blocks are the ones from #seller-intuition, drawn at the same
+  coordinates on StageKit's shared lattice, so stepping between the two
+  slides adds two marks instead of redrawing the picture. That is the point
+  of the slide and it only works if nothing moves, which is why the lattice,
+  the glyphs and the seeded miss scatter live in stage-kit.html rather than
+  being copied into each file.
+
+  The three fragments are the three stages of the argument, not the three
+  sellers — the sellers are old news by now:
+    1. the blocks and their raw percentages, back as they were
+    2. the two imaginary reviews drop onto the end of each block, ghosted to
+       45% so they never read as data
+    3. the recomputed rates, with the winner picked out in olive
+
+  Canvas 1000x366 (the .stage-wrap-seller height), shown at scale(1.05).
+*/
+(function () {
+  var K = window.StageKit;
+
+  var SELLERS = [
+    { k: 10,  n: 10  },
+    { k: 48,  n: 50  },
+    { k: 186, n: 200 }
+  ];
+
+  var S = SELLERS.map(function (sl, i) {
+    return {
+      k: sl.k, n: sl.n,
+      raw: Math.round(100 * sl.k / sl.n) + '%',
+      lap: (100 * (sl.k + 1) / (sl.n + 2)),
+      // The SAME seed as #seller-intuition, or the crosses would land
+      // somewhere else and the two slides would stop being one picture.
+      miss: K.missSet(sl.n, sl.n - sl.k, 7919 + i)
+    };
+  });
+  var BEST = S.reduce(function (b, a, i) { return a.lap > S[b].lap ? i : b; }, 0);
+
+  // --- stage geometry — identical to #seller-intuition ---------------------
+  var W = 1000, H = 366;
+  var GX = 47;
+  var BLOCK = [                 // headline baseline, then first row centre
+    { ly: 46,  ry: 74  },
+    { ly: 142, ry: 170 },
+    { ly: 238, ry: 266 }
+  ];
+  var PCT_X = GX - 7, CNT_X = 122, ARROW_X = 244, NEW_X = 286;
+  var RULE_C = K.PAL.orange;    // the palette's "look here" colour
+  var GHOST = 0.55;             // faint enough never to read as data, solid
+                                // enough to survive a projector at the back
+
+  var INK = K.PAL.ink, GREY = K.PAL.dim, GOOD = K.PAL.olive;
+
+  function show(el, on, level) {
+    el.setAttribute('opacity', on ? (level || 1) : 0);
+    el.style.opacity = '';
+  }
+
+  function build(stage) {
+    var svg = K.canvas(stage, W, H);
+
+    // Three groups, because the three fragments are three stages of one
+    // argument rather than three sellers: every seller moves together.
+    var headG  = svg.appendChild(K.el('g'));
+    var blockG = svg.appendChild(K.el('g', { class: 'laplace-block' }));
+    var ghostG = svg.appendChild(K.el('g', { class: 'laplace-ghost' }));
+    var ruleG  = svg.appendChild(K.el('g', { class: 'laplace-rule' }));
+    var newG   = svg.appendChild(K.el('g'));
+
+    var marks = [];
+    S.forEach(function (a, idx) {
+      var B = BLOCK[idx];
+
+      headG.appendChild(K.txt(PCT_X, B.ly, a.raw,
+        { size: 'readout', face: 'mono', fill: INK }));
+      headG.appendChild(K.txt(CNT_X, B.ly, a.n + ' reviews',
+        { size: 'label', fill: GREY }));
+
+      // The real reviews, at #seller-intuition's coordinates.
+      marks = marks.concat(K.block(blockG, a.n, a.miss, GX, B.ry));
+
+      // The imaginary pair always gets a row of its own, at column 0 — which
+      // is what rounding the block up to a whole number of rows gives. Left
+      // to the natural flow they land wherever each block happens to end (A
+      // inline at column 11, B and C wrapped to column 1) and the three pairs
+      // never line up, so the one thing the slide is about is the one thing
+      // the eye cannot compare. On their own row they stack.
+      var gi = Math.ceil(a.n / K.MARK.PER) * K.MARK.PER, gm = {};
+      gm[gi + 1] = 1;                     // second of the pair is the cross
+      // Opacity multiplies down the tree, so these have to be fully opaque in
+      // themselves: the 55% that makes them read as imaginary is carried by
+      // ghostG, which is also what the fragment animates.
+      K.block(ghostG, 2, gm, GX, B.ry, gi).forEach(function (g) {
+        g.setAttribute('opacity', 1);
+      });
+
+      // ...and an underline under the pair. It is the one mark on the slide
+      // that is not evidence, so it is drawn at full strength in the accent
+      // colour: the ghosts are deliberately faint, and something has to say
+      // "these two, here" loudly enough to carry to the back of the room.
+      var gy = B.ry + Math.floor(gi / K.MARK.PER) * K.MARK.GP;
+      ruleG.appendChild(K.el('path', {
+        d: 'M' + (GX - 9) + ' ' + (gy + 12) + 'H' + (GX + K.MARK.GP + 9),
+        fill: 'none', stroke: RULE_C, 'stroke-width': 2.5,
+        'stroke-linecap': 'round'
+      }));
+
+      // The recomputed rate. The arrow is drawn rather than typed so it can
+      // never fall back to a different font's idea of an arrow.
+      newG.appendChild(K.el('path', {
+        d: 'M0 0H24M18 -6L24 0L18 6',
+        transform: 'translate(' + ARROW_X + ' ' + (B.ly - 10) + ')',
+        fill: 'none', stroke: GREY, 'stroke-width': 2,
+        'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+      }));
+      newG.appendChild(K.txt(NEW_X, B.ly, a.lap.toFixed(1) + '%',
+        { size: 'readout', face: 'mono', fill: idx === BEST ? GOOD : INK }));
+    });
+
+    [headG, ghostG, ruleG, newG].forEach(function (g) { show(g, false); });
+    marks.forEach(function (m) { show(m, false); });
+
+    return { state: 0, headG: headG, ghostG: ghostG, ruleG: ruleG, newG: newG,
+             marks: marks, on: [false, false, false], anims: [] };
+  }
+
+  function stop(s) {
+    s.anims.forEach(function (a) { if (a && a.pause) a.pause(); });
+    s.anims = [];
+  }
+
+  function setMarks(s, upto) {
+    for (var i = 0; i < s.marks.length; i++) {
+      s.marks[i].setAttribute('opacity', i < upto ? 1 : 0);
+    }
+  }
+
+  // As on #seller-intuition: the finished state is written on every render
+  // before any tween starts, so a cancelled, frozen or never-started tween
+  // can never leave the stage half-drawn. See the note on snap() there.
+  function snap(s, want) {
+    show(s.headG, want[0]);
+    setMarks(s, want[0] ? s.marks.length : 0);
+    show(s.ghostG, want[1], GHOST);
+    show(s.ruleG, want[1]);
+    show(s.newG, want[2]);
+    s.on = want;
+  }
+
+  // Attribute-writing fade — an inline style would outrank whatever snap()
+  // writes next.
+  function fadeTo(s, el, to, dur, delay) {
+    var p = { v: to ? 0 : (el === s.ghostG ? GHOST : 1) };
+    el.setAttribute('opacity', p.v);
+    var end = to ? (el === s.ghostG ? GHOST : 1) : 0;
+    s.anims.push(window.anime.animate(p, {
+      v: end, duration: dur, delay: delay || 0, ease: 'outQuad',
+      onUpdate: function () { el.setAttribute('opacity', p.v); }
+    }));
+  }
+
+  function render(s, st, instant) {
+    var was = s.on;
+    stop(s);
+    s.state = st;
+    var want = [st >= 1, st >= 2, st >= 3];
+    snap(s, want);
+    if (instant || K.REDUCE || !K.animeReady()) return;
+
+    // Stage 1: all 260 marks sweep back in as one run, A through C. They are
+    // not news — the slide before spent three beats on them — so this is a
+    // reminder at speed, not a reveal.
+    if (want[0] !== was[0]) {
+      fadeTo(s, s.headG, want[0], want[0] ? 300 : 200, 0);
+      var p = { u: want[0] ? 0 : 1 };
+      setMarks(s, Math.round(p.u * s.marks.length));
+      s.anims.push(window.anime.animate(p, {
+        u: want[0] ? 1 : 0, duration: want[0] ? 700 : 260,
+        delay: want[0] ? 150 : 0, ease: 'outQuad',
+        onUpdate: function () { setMarks(s, Math.round(p.u * s.marks.length)); }
+      }));
+    }
+    // Stage 2: the rule itself. Slow enough to be seen landing.
+    if (want[1] !== was[1]) {
+      fadeTo(s, s.ghostG, want[1], want[1] ? 480 : 220, 0);
+      fadeTo(s, s.ruleG, want[1], want[1] ? 380 : 220, want[1] ? 220 : 0);
+    }
+    // Stage 3: the payoff.
+    if (want[2] !== was[2]) {
+      fadeTo(s, s.newG, want[2], want[2] ? 380 : 200, 0);
+    }
+  }
+
+  K.register({
+    stage: 'laplace-stage',
+    frags: ['laplace-frag-1', 'laplace-frag-2', 'laplace-frag-3'],
+    build: build,
+    place: render,
+    stop: stop
+  });
+})();
+</script>
