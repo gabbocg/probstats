@@ -1,0 +1,87 @@
+<script>
+/*
+  Rolling-pair thumbnail — slide #prob-count.
+
+  Two dice cycling 11, 12, 13 ... 66, which is the sample space the slide
+  writes out as a set, played rather than described. A die showing a five
+  turns olive, so "at least one five" is something you watch arrive eleven
+  times out of thirty-six rather than a claim to be taken on trust.
+
+  Order is lexicographic, matching the Omega on the slide exactly. It loops
+  for as long as the slide is on screen; there are no fragments, because the
+  presenter should be able to talk over it.
+
+  Pacing: 36 faces at 150ms is 9 frames each, which steps. Anything under
+  about 2 frames per item strobes instead (see #binom-intuition, which
+  shipped at 3.4 per frame once and had to be quantised).
+
+  Built on StageKit (assets/js/stage-kit.html).
+*/
+(function () {
+  var K = window.StageKit;
+
+  var DIE = 34, GAP = 9, PIP = 3.4;
+  var W = 2 * DIE + GAP, H = DIE;
+  var OLIVE = '#93C54B', OLIVE_INK = '#5E8A1E';
+  var STEP = 150;
+
+  // Pip layout on the unit square, the standard faces.
+  var PIPS = {
+    1: [[.5, .5]],
+    2: [[.28, .28], [.72, .72]],
+    3: [[.28, .28], [.5, .5], [.72, .72]],
+    4: [[.28, .28], [.72, .28], [.28, .72], [.72, .72]],
+    5: [[.28, .28], [.72, .28], [.5, .5], [.28, .72], [.72, .72]],
+    6: [[.28, .28], [.72, .28], [.28, .5], [.72, .5], [.28, .72], [.72, .72]]
+  };
+
+  function die(svg, x) {
+    var box = svg.appendChild(K.el('rect', {
+      x: x, y: 0, width: DIE, height: DIE, rx: 6,
+      fill: 'none', stroke: K.PAL.dim, 'stroke-width': 1.6
+    }));
+    // Six pips are created once and shown or hidden per face. Rebuilding the
+    // group every 150ms would churn 36 nodes a second for no reason.
+    var slots = PIPS[6].concat([[.5, .5]]).map(function (p) {
+      return svg.appendChild(K.el('circle', {
+        cx: x + p[0] * DIE, cy: p[1] * DIE, r: PIP,
+        fill: K.PAL.inkSoft, opacity: 0
+      }));
+    });
+    return { box: box, slots: slots };
+  }
+
+  function show(d, face) {
+    var want = PIPS[face], hit = face === 5;
+    d.box.setAttribute('stroke', hit ? OLIVE : K.PAL.dim);
+    d.box.setAttribute('fill', hit ? 'rgba(147,197,75,0.18)' : 'none');
+    d.slots.forEach(function (n, i) {
+      // slots 0..5 are the six-face positions, slot 6 is the centre pip
+      var p = i < 6 ? PIPS[6][i] : [.5, .5];
+      var on = want.some(function (q) { return q[0] === p[0] && q[1] === p[1]; });
+      n.setAttribute('opacity', on ? 1 : 0);
+      n.setAttribute('fill', hit ? OLIVE_INK : K.PAL.inkSoft);
+    });
+  }
+
+  function build(stage) {
+    var svg = K.canvas(stage, W, H);
+    var s = { a: die(svg, 0), b: die(svg, DIE + GAP), i: 0, timer: null };
+    // Reduced motion gets a still frame that still makes the point: one five.
+    if (K.REDUCE) { show(s.a, 5); show(s.b, 2); return s; }
+    tick(s);
+    s.timer = setInterval(function () { tick(s); }, STEP);
+    return s;
+  }
+
+  function tick(s) {
+    show(s.a, Math.floor(s.i / 6) + 1);
+    show(s.b, (s.i % 6) + 1);
+    s.i = (s.i + 1) % 36;
+  }
+
+  function stop(s) { if (s && s.timer) { clearInterval(s.timer); s.timer = null; } }
+
+  K.register({ stage: 'dicegrid-stage', frags: [], build: build, stop: stop });
+})();
+</script>

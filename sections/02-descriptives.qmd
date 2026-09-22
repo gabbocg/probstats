@@ -4,7 +4,7 @@
 Seminar 2 · Descriptive statistics
 :::
 
-## Watch the mean chase one point {.stage-slide #mm-intuition}
+## Thirteen Salaries at a Small Firm {.stage-slide #mm-intuition}
 
 ::: {.stage-wrap .stage-wrap-std}
 <div id="mm-stage" class="stage"></div>
@@ -12,12 +12,15 @@ Seminar 2 · Descriptive statistics
 
 []{.fragment .fi-frag id="mm-frag-1"}
 []{.fragment .fi-frag id="mm-frag-2"}
+[]{.fragment .fi-frag id="mm-frag-3"}
+[]{.fragment .fi-frag id="mm-frag-4"}
+[]{.fragment .fi-frag id="mm-frag-5"}
 
 ::: {.slide-footer}
-Ten of the eleven values never moved. Report only the mean and you have described a dataset that nobody in it resembles — which is why the worksheet always asks for both.
+Twelve of the thirteen salaries never changed, yet the equal share rose by two and a half thousand. The person in the middle is still the same person on the same money, which is why a pay report quotes the median.
 :::
 
-## A bound that holds for *any* shape {.sim-slide #cheb-sim}
+## A Bound that Holds for *Any* Shape {.sim-slide #cheb-sim}
 
 ::: {.slide-kicker}
 Seminar 2 · Chebyshev
@@ -29,14 +32,15 @@ Chebyshev promises at least $1 - 1/k^2$ of any distribution lies within $k$ stan
 
 ::: {.sim-card .sim-text}
 ```{webr-r}
-k <- 2        # <-- how many SDs
+k <- 2 # <-- how many SDs
 n <- 20000
+
 # a wildly skewed population, far from normal
-x  <- rexp(n, rate = 1)^2
+x  <- rexp(n, rate = 1) ^ 2
 mu <- mean(x); s <- sd(x)
 
 actual <- mean(abs(x - mu) <= k * s)
-bound  <- 1 - 1/k^2
+bound  <- 1 - (1 / k) ^ 2
 round(c(actual = actual, chebyshev = bound), 3)
 ```
 :::

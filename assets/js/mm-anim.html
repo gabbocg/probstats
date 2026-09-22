@@ -1,165 +1,214 @@
 <script>
 /*
-  Mean-vs-median animation — slide #mm-intuition (Seminar 2).
+  Payroll animation — slide #mm-intuition (Seminar 2).
 
-  Teaching point: the mean is a balance point, so it is dragged towards
-  whatever is furthest away; the median only counts positions, so it does
-  not care how far the tail runs. The presenter advances fragments and:
-    0. eleven roughly symmetric values — the two markers sit on top of
-       each other, which is why the distinction looks pointless at first
-    1. the largest value walks out to 96 — the mean walks with it
-    2. a second value walks out to 92 — the mean moves again, the median
-       has still not moved a pixel
+  Thirteen salaries at a small firm, drawn as thirteen pay packets. Every
+  summary is a thing you DO to the payroll rather than a marker parked on an
+  axis, which is what the abstract number-line version never managed:
 
-  Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
-  Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
+    0. thirteen bars, sorted, in thousands
+    1. MODE   — three people are on 50. The commonest packet, no arithmetic.
+    2. MEDIAN — walk in from both ends, one pair at a time, until the two
+                walkers meet. The middle person IS the median, and stopping
+                the same walk a quarter of the way in is the 25th percentile.
+    3. MEAN   — the bars LEVEL OFF to a common height and then spring back,
+                leaving a line where they levelled. That is the mean: what
+                everyone would get if the payroll were shared equally.
+    4. SPREAD — the gap from each bar to that line, and a band one standard
+                deviation either side of it.
+    5. FOUNDER — one salary grows to 96. The equal share jumps, the person in
+                the middle is still the same person on the same money.
+
+  Built on StageKit (assets/js/stage-kit.html). Canvas 1000x445 at scale 1.05.
 */
 (function () {
   var K = window.StageKit;
 
-  var BASE = [38, 42, 45, 47, 49, 50, 52, 54, 56, 59, 62];
+  var BASE = [38, 42, 45, 47, 49, 50, 50, 50, 52, 54, 56, 59, 62];
+  var OUT  = BASE.map(function (v, i) { return i === 12 ? 96 : v; });
+  var N = BASE.length, MID = (N - 1) >> 1;          // 6 — the middle of thirteen
 
-  // Each state is the full value array, not a delta, so mean/median are
-  // always recomputed from what is actually on screen.
-  var VALUES = [
-    BASE,
-    BASE.map(function (v, i) { return i === 10 ? 96 : v; }),
-    BASE.map(function (v, i) { return i === 10 ? 96 : (i === 9 ? 92 : v); })
+  var VALUES  = [BASE, BASE, BASE, BASE, BASE, OUT];
+  var CAPTION = [
+    'Thirteen salaries at a small firm, in thousands',
+    'The mode is the salary that comes up most often',
+    'Line them up and the median is the person in the middle',
+    'Share the whole payroll out equally and everyone gets the mean',
+    'The spread is how far people sit from that equal share',
+    'The founder takes ninety-six, and only the mean follows'
   ];
 
-  var CAPTIONS = [
-    'symmetric data — mean and median agree',
-    'one outlier — the mean follows it',
-    'two outliers — the median has still not moved'
-  ];
+  var W = 1000, H = 445;
+  var BW = 52, GAP = 8, X0 = 110;                   // 13 bars, 110 -> 890
+  var BASE_Y = 344, TOP_V = 100, SCALE = 2.42;      // 100k reaches y = 102
+  var LINE_L = 84, LINE_R = 916;
 
-  // Stage geometry — 1000x445 canvas, shown at scale(1.05).
-  var W = 1000, H = 445, X0 = 60, X1 = 940, VMIN = 0, VMAX = 100;
-  var AXIS_Y = 351, ROW_Y = 246, DOT_R = 10;
-  // The two markers are stacked, never side by side: in state 0 they land
-  // on almost the same value, and horizontal labels would collide there.
-  var MEAN_TOP = 358, MEDIAN_TOP = 398, TRI_H = 14, TRI_W = 8, LAB_DROP = 32;
+  function bx(i) { return X0 + i * (BW + GAP); }
+  function by(v) { return BASE_Y - v * SCALE; }
 
-  function px(v) { return X0 + (v - VMIN) * (X1 - X0) / (VMAX - VMIN); }
-
-  function mean(vals) {
-    var s = 0;
-    vals.forEach(function (v) { s += v; });
-    return s / vals.length;
+  function mean(a) { var s = 0; a.forEach(function (v) { s += v; }); return s / a.length; }
+  function sd(a) {
+    var m = mean(a), s = 0;
+    a.forEach(function (v) { s += (v - m) * (v - m); });
+    return Math.sqrt(s / a.length);
   }
-  function median(vals) {
-    var a = vals.slice().sort(function (x, y) { return x - y; });
-    var m = a.length >> 1;
-    return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
-  }
-
-  // A marker is built at x = 0 and moved with a translate, so one tween of
-  // a single number drives the triangle, the label and the readout at once
-  // — they cannot drift apart.
-  function marker(svg, name, colour, top) {
-    var g = K.el('g', { transform: 'translate(0,0)' });
-    g.appendChild(K.el('polygon', {
-      points: '0,' + top + ' ' + (-TRI_W) + ',' + (top + TRI_H) +
-              ' ' + TRI_W + ',' + (top + TRI_H),
-      fill: K.PAL[colour]
-    }));
-    var lab = K.txt(-5, top + LAB_DROP, name,
-      { size: 'label', face: 'sans', fill: colour, anchor: 'end' });
-    g.appendChild(lab);
-    var num = K.txt(5, top + LAB_DROP, '',
-      { size: 'readout', face: 'mono', fill: colour, weight: 700, anchor: 'start' });
-    g.appendChild(num);
-    svg.appendChild(g);
-
-    return {
-      set: function (v) {
-        g.setAttribute('transform', 'translate(' + px(v) + ',0)');
-        num.textContent = v.toFixed(1);
-      }
-    };
+  function mode(a) {
+    var c = {}, best = a[0];
+    a.forEach(function (v) { c[v] = (c[v] || 0) + 1; if (c[v] > c[best]) best = v; });
+    return +best;
   }
 
   function build(stage) {
     var svg = K.canvas(stage, W, H);
+    var cap = svg.appendChild(K.txt(LINE_L, 32, CAPTION[0], { size: 'caption' }));
 
-    // --- axis ---
-    svg.appendChild(K.el('line', {
-      x1: X0, y1: AXIS_Y, x2: X1, y2: AXIS_Y, stroke: K.PAL.rule, 'stroke-width': 1
+    var band = svg.appendChild(K.el('rect', {
+      x: LINE_L, y: 0, width: LINE_R - LINE_L, height: 0,
+      fill: 'rgba(185,74,72,0.10)', opacity: 0
     }));
-    [0, 20, 40, 60, 80, 100].forEach(function (v) {
-      svg.appendChild(K.el('line', {
-        x1: px(v), y1: AXIS_Y, x2: px(v), y2: AXIS_Y + 7,
-        stroke: K.PAL.dim, 'stroke-width': 1
-      }));
-      svg.appendChild(K.txt(px(v), AXIS_Y - 14, v,
-        { size: 'tick', face: 'mono', anchor: 'middle' }));
+
+    var bars = [], vals = [], gaps = [];
+    BASE.forEach(function (v, i) {
+      gaps.push(svg.appendChild(K.el('line', {
+        x1: bx(i) + BW / 2, y1: 0, x2: bx(i) + BW / 2, y2: 0,
+        stroke: K.PAL.brick, 'stroke-width': 1.4,
+        'stroke-dasharray': '3 3', opacity: 0
+      })));
+      bars.push(svg.appendChild(K.el('rect', {
+        x: bx(i), y: by(v), width: BW, height: v * SCALE, rx: 3, fill: K.PAL.dim
+      })));
+      vals.push(svg.appendChild(K.txt(bx(i) + BW / 2, by(v) - 9, v,
+        { size: 'tick', face: 'mono', anchor: 'middle', weight: 700 })));
     });
 
-    var cap = K.txt(X0, 28, CAPTIONS[0], { size: 'caption', cls: 'mm-caption' });
-    svg.appendChild(cap);
+    // The equal-share line, and the label that names what it is.
+    var line = svg.appendChild(K.el('line', {
+      x1: LINE_L, y1: 0, x2: LINE_R, y2: 0,
+      stroke: K.PAL.brick, 'stroke-width': 2.4, opacity: 0
+    }));
+    // Anchored at the LEFT end: the bars are sorted ascending, so the tall
+    // ones are on the right and a label there lands on top of them.
+    var lineLab = svg.appendChild(K.txt(LINE_L, 0, '', {
+      size: 'label', fill: 'brick', weight: 700
+    }));
+    lineLab.setAttribute('opacity', 0);
 
-    // --- the sample ---
-    var dots = BASE.map(function (v) {
-      return svg.appendChild(K.el('circle', {
-        cx: px(v), cy: ROW_Y, r: DOT_R,
-        fill: K.PAL.navy, opacity: 0.5, class: 'mm-dot'
-      }));
+    svg.appendChild(K.el('line', {
+      x1: LINE_L, y1: BASE_Y, x2: LINE_R, y2: BASE_Y,
+      stroke: K.PAL.ink, 'stroke-width': 1.5
+    }));
+
+    // The middle person, named rather than pointed at.
+    var midLab = svg.appendChild(K.txt(bx(MID) + BW / 2, BASE_Y + 30,
+      'the middle one', { size: 'label', fill: 'olive', anchor: 'middle', weight: 700 }));
+    midLab.setAttribute('opacity', 0);
+
+    var s = { cap: cap, bars: bars, vals: vals, gaps: gaps, band: band, line: line,
+              lineLab: lineLab, midLab: midLab, at: 0, timers: [] };
+    paint(s, 0, BASE);
+    return s;
+  }
+
+  function fade(node, to, instant, delay) {
+    if (instant || K.REDUCE || !K.animeReady()) { node.setAttribute('opacity', to); return; }
+    var o = { v: +(node.getAttribute('opacity') || 0) };
+    window.anime.animate(o, {
+      v: to, duration: 360, delay: delay || 0, ease: 'outQuad',
+      onUpdate: function () { node.setAttribute('opacity', o.v); }
     });
-
-    var mMean = marker(svg, 'mean', 'brick', MEAN_TOP);
-    var mMed = marker(svg, 'median', 'olive', MEDIAN_TOP);
-
-    return { dots: dots, cap: cap, mean: mMean, median: mMed, at: 0 };
   }
 
-  function snap(s, state) {
-    var vals = VALUES[state];
-    s.cap.textContent = CAPTIONS[state];
-    s.dots.forEach(function (d, i) { d.setAttribute('cx', px(vals[i])); });
-    s.mean.set(mean(vals));
-    s.median.set(median(vals));
-    s.at = state;
+  // Bar colours are the argument. Orange marks the modal packets, olive the
+  // person in the middle, and after the founder's rise the tall bar goes
+  // brick so the thing that moved is obvious.
+  function colour(state, vals, i) {
+    if (state >= 5 && vals[i] > 80) return K.PAL.brick;
+    if (state >= 2 && i === MID) return K.PAL.olive;
+    if (state === 1 && vals[i] === mode(vals)) return K.PAL.orange;
+    return K.PAL.dim;
   }
+
+  function paint(s, state, vals, heights) {
+    var m = mean(vals), d = sd(vals);
+    s.bars.forEach(function (b, i) {
+      var v = heights ? heights[i] : vals[i];
+      b.setAttribute('y', by(v));
+      b.setAttribute('height', v * SCALE);
+      b.setAttribute('fill', colour(state, vals, i));
+      s.vals[i].setAttribute('y', by(v) - 9);
+      s.vals[i].textContent = Math.round(vals[i]);
+      s.gaps[i].setAttribute('y1', by(v));
+      s.gaps[i].setAttribute('y2', by(m));
+    });
+    s.line.setAttribute('y1', by(m));
+    s.line.setAttribute('y2', by(m));
+    s.lineLab.setAttribute('y', by(m) - 10);
+    s.lineLab.textContent = 'equal share ' + m.toFixed(1);
+    s.band.setAttribute('y', by(m + d));
+    s.band.setAttribute('height', by(m - d) - by(m + d));
+  }
+
+  function clearTimers(s) { s.timers.forEach(clearTimeout); s.timers = []; }
 
   function place(s, state, instant) {
-    var vals = VALUES[state];
-    var from = VALUES[s.at];
-    s.cap.textContent = CAPTIONS[state];
+    var from = VALUES[s.at], to = VALUES[state];
+    var prev = s.at;
+    s.cap.textContent = CAPTION[state];
     s.at = state;
+    clearTimers(s);
 
-    if (instant || K.REDUCE || !K.animeReady()) {
-      snap(s, state);
+    fade(s.midLab, state >= 2 ? 1 : 0, instant);
+    fade(s.line, state >= 3 ? 1 : 0, instant);
+    fade(s.lineLab, state >= 3 ? 1 : 0, instant);
+    fade(s.band, state >= 4 ? 1 : 0, instant);
+    s.gaps.forEach(function (g, i) {
+      fade(g, state >= 4 ? 1 : 0, instant, state >= 4 ? i * 40 : 0);
+    });
+
+    if (instant || K.REDUCE || !K.animeReady()) { paint(s, state, to); return; }
+
+    var A = window.anime, m = mean(to);
+
+    // Entering the mean: level every bar to the equal share, hold, spring
+    // back. The levelling IS the definition, so it gets its own beat rather
+    // than a marker appearing.
+    if (state === 3 && prev < 3) {
+      var lv = { k: 0 };
+      A.animate(lv, {
+        k: 1, duration: 850, ease: 'inOutCubic',
+        onUpdate: function () {
+          paint(s, state, to, to.map(function (v) { return v + (m - v) * lv.k; }));
+        }
+      });
+      s.timers.push(setTimeout(function () {
+        var bk = { k: 1 };
+        A.animate(bk, {
+          k: 0, duration: 700, ease: 'outCubic',
+          onUpdate: function () {
+            paint(s, state, to, to.map(function (v) { return v + (m - v) * bk.k; }));
+          }
+        });
+      }, 1750));
       return;
     }
 
-    var A = window.anime;
-    A.animate(s.dots, {
-      cx: function (el, i) { return px(vals[i]); },
-      duration: 700,
-      ease: 'outCubic'
-    });
+    if (from === to) { paint(s, state, to); return; }
 
-    // The mean is tweened rather than jumped so the marker and its readout
-    // move together with the dot that is dragging them. The median gets the
-    // same treatment for symmetry of code — its start and end are equal, so
-    // on screen it simply refuses to budge, which is the whole point.
-    [[s.mean, mean(from), mean(vals)],
-     [s.median, median(from), median(vals)]].forEach(function (job) {
-      var mk = job[0], p = { v: job[1] }, end = job[2];
-      A.animate(p, {
-        v: end,
-        duration: 700,
-        ease: 'outCubic',
-        onUpdate: function () { mk.set(p.v); }
-      });
+    var t = { k: 0 };
+    A.animate(t, {
+      k: 1, duration: 900, ease: 'inOutCubic',
+      onUpdate: function () {
+        paint(s, state, from.map(function (v, i) { return v + (to[i] - v) * t.k; }));
+      }
     });
   }
 
   K.register({
     stage: 'mm-stage',
-    frags: ['mm-frag-1', 'mm-frag-2'],
+    frags: ['mm-frag-1', 'mm-frag-2', 'mm-frag-3', 'mm-frag-4', 'mm-frag-5'],
     build: build,
-    place: place
+    place: place,
+    stop: clearTimers
   });
 })();
 </script>

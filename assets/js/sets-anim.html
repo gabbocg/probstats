@@ -370,17 +370,17 @@
 
     var RV = 710;
     s.capA = svg.appendChild(K.el('g', { opacity: 0 }));
-    s.capA.appendChild(setTxt(RV, 88, 'A ∩ B', { size: 'readout', fill: 'orange', weight: 700 }));
-    s.capA.appendChild(K.txt(RV, 126, 'Both, 3 outcomes', { size: 'caption', fill: 'ink' }));
+    s.capA.appendChild(setTxt(RV, 78, 'A ∩ B', { size: 'readout', fill: 'orange', weight: 700 }));
+    s.capA.appendChild(K.txt(RV, 116, 'Both, 3 outcomes', { size: 'caption', fill: 'ink' }));
 
     s.capU = svg.appendChild(K.el('g', { opacity: 0 }));
-    s.capU.appendChild(setTxt(RV, 182, 'A ∪ B', { size: 'readout', fill: 'olive', weight: 700 }));
-    s.capU.appendChild(K.txt(RV, 220, 'Either, 3 + 3 + 15 = 21', { size: 'caption', fill: 'ink' }));
+    s.capU.appendChild(setTxt(RV, 172, 'A ∪ B', { size: 'readout', fill: 'olive', weight: 700 }));
+    s.capU.appendChild(K.txt(RV, 210, 'Either, 3 + 3 + 15 = 21', { size: 'caption', fill: 'ink' }));
 
     s.capC = svg.appendChild(K.el('g', { opacity: 0 }));
-    s.capC.appendChild(setTxt(RV, 276, '(A ∪ B)', { size: 'readout', fill: 'inkSoft', weight: 700 }));
-    s.capC.appendChild(K.txt(RV + 96, 266, 'c', { size: 'label', fill: 'inkSoft', weight: 700 }));
-    s.capC.appendChild(K.txt(RV, 314, 'Neither, the other 15', { size: 'caption', fill: 'ink' }));
+    s.capC.appendChild(setTxt(RV, 266, '(A ∪ B)', { size: 'readout', fill: 'inkSoft', weight: 700 }));
+    s.capC.appendChild(K.txt(RV + 96, 256, 'c', { size: 'label', fill: 'inkSoft', weight: 700 }));
+    s.capC.appendChild(K.txt(RV, 304, 'Neither, the other 15', { size: 'caption', fill: 'ink' }));
     return s;
   }
 

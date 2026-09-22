@@ -46,6 +46,7 @@ format:
       - file: assets/js/about-anim.html
       - file: assets/js/bins-anim.html
       - file: assets/js/mm-anim.html
+      - file: assets/js/dicegrid-anim.html
       - file: assets/js/sets-anim.html
       - file: assets/js/prior-anim.html
       - file: assets/js/bayes-anim.html

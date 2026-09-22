@@ -20,10 +20,10 @@ echo "── slides ────────────────────
 for id in s00b-me s00b-about s00-how-to-use s00-webr \
           s01-visualisation chart-choice bins-intuition bins-sim \
           s02-descriptives mm-intuition cheb-sim \
-          s03-probability bayes-hook bayes-intuition bayeq-formula monty bayes-sim \
+          s03-probability prob-count combinatorics bayes-hook bayes-intuition bayeq-formula monty bayes-sim \
           space-intuition setops-intuition venn-intuition set-formal \
           cond-intuition \
-          s04-distributions binom-intuition seller-intuition laplace-intuition \
+          s04-distributions random-variables distribution-fn binom-intuition seller-intuition laplace-intuition \
           pois-intuition pois-formal \
           likelihood-live binom-formal \
           pois-intuition expo-intuition expo-formal dist-questions \
@@ -40,7 +40,7 @@ done
 echo "── animation stages ───────────────────────────────"
 # pois and expo dropped: #pois-intuition and #expo-intuition are {ojs}
 # slides now, not stages.
-STAGES="about bins mm space setops venn prior bayes bayeq monty ciflip cieq cond binom seller laplace clt zstd ci pval pair ls smooth"
+STAGES="about dicegrid bins mm space setops venn prior bayes bayeq monty ciflip cieq cond binom seller laplace clt zstd ci pval pair ls smooth"
 for s in $STAGES; do
   need "id=\"$s-stage\"" "stage #$s-stage"
 done

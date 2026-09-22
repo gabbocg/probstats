@@ -1,7 +1,72 @@
-# Probability {.hero #s03-probability}
+# Basic Concepts {.hero #s03-probability}
 
 ::: {.sem-mark data-sem="3"}
 Seminar 3 · Conditional probability and Bayes
+:::
+
+## Probability of an Event {.formula-slide #prob-count}
+
+::: {.lede-min}
+Count how many ways the event can happen, then how many things can happen at all. The probability is the ratio of the two.
+:::
+
+$$P(\color{#93C54B}{A}) = \frac{\#\ \text{ways } \color{#93C54B}{A} \text{ can happen}}{\#\ \text{of things that can happen}} = \frac{|\color{#93C54B}{A}|}{|\Omega|}$$
+
+:::: {.two-col}
+::: {}
+[Flip a coin twice]{.col-head}
+
+$\Omega = \{hh,\ ht,\ th,\ tt\} \quad \color{#6E7681}{\text{4 in all}}$
+
+```{=html}
+<div class="coin-row">
+<svg width="246" height="34" viewBox="0 0 246 34" aria-label="the four outcomes of two coin flips">
+<g font-family="Roboto, sans-serif" font-size="13" font-weight="700" text-anchor="middle">
+<circle cx="13" cy="17" r="11" fill="rgba(147,197,75,0.18)" stroke="#93C54B" stroke-width="1.4"/><text x="13" y="22" fill="#5E8A1E">H</text>
+<circle cx="39" cy="17" r="11" fill="rgba(147,197,75,0.18)" stroke="#93C54B" stroke-width="1.4"/><text x="39" y="22" fill="#5E8A1E">H</text>
+<circle cx="75" cy="17" r="11" fill="rgba(147,197,75,0.18)" stroke="#93C54B" stroke-width="1.4"/><text x="75" y="22" fill="#5E8A1E">H</text>
+<circle cx="101" cy="17" r="11" fill="none" stroke="#B0B7C0" stroke-width="1.4"/><text x="101" y="22" fill="#6E7681">T</text>
+<circle cx="137" cy="17" r="11" fill="none" stroke="#B0B7C0" stroke-width="1.4"/><text x="137" y="22" fill="#6E7681">T</text>
+<circle cx="163" cy="17" r="11" fill="rgba(147,197,75,0.18)" stroke="#93C54B" stroke-width="1.4"/><text x="163" y="22" fill="#5E8A1E">H</text>
+<circle cx="199" cy="17" r="11" fill="none" stroke="#B0B7C0" stroke-width="1.4"/><text x="199" y="22" fill="#6E7681">T</text>
+<circle cx="225" cy="17" r="11" fill="none" stroke="#B0B7C0" stroke-width="1.4"/><text x="225" y="22" fill="#6E7681">T</text>
+</g>
+</svg>
+</div>
+```
+
+[At least one head]{.col-lab}
+
+$\color{#93C54B}{A} = \{hh,\ ht,\ th\} \qquad P(\color{#93C54B}{A}) = \tfrac{3}{4} = 75\%$
+
+[No heads]{.col-lab}
+
+$\color{#325D88}{B} = \{tt\} \qquad P(\color{#325D88}{B}) = \tfrac{1}{4} = 25\%$
+:::
+
+::: {}
+[Roll two dice]{.col-head}
+
+::: {.dice-grid}
+<div id="dicegrid-stage" class="stage"></div>
+:::
+
+$\Omega = \{11,\ 12,\ \ldots,\ 66\} \quad \color{#6E7681}{\text{36 in all}}$
+
+[At least one five]{.col-lab}
+
+$\color{#93C54B}{A} = \{15, 25, 35, 45, 51, 52, 53, 54, 55, 56, 65\}$
+
+$P(\color{#93C54B}{A}) = \tfrac{11}{36}$
+
+[Or split on the first die]{.col-lab}
+
+$P(\color{#93C54B}{A}) = \tfrac{1}{6} + \tfrac{5}{6} \times \tfrac{1}{6} = \tfrac{6}{36} + \tfrac{5}{36} = \tfrac{11}{36}$
+:::
+::::
+
+::: {.pitfall}
+A tempting answer is 6 + 6 = 12, six rolls with a five on the first die and six with a five on the second. Five and five is in both lists, so twelve counts it twice. The split on the right avoids that, because its second case needs the first die not to be a five.
 :::
 
 ## Sample Spaces and Events {.stage-slide #space-intuition}
@@ -90,6 +155,8 @@ P(\color{#93C54B}{A} \cap \color{#325D88}{B}) & = & P(\color{#93C54B}{A}) \times
 Mutually exclusive means $\color{#93C54B}{A} \cap \color{#325D88}{B} = \varnothing$, so there is nothing to subtract. Independent means learning $\color{#93C54B}{A}$ tells you nothing about $\color{#325D88}{B}$, which the next slide makes precise.
 :::
 
+## Conditional Probabilities
+
 ## Conditioning Narrows the Sample Space {.stage-slide #cond-intuition}
 
 ::: {.lede-min}
@@ -107,6 +174,8 @@ Eight in ten office managers would buy the software ($\color{#93C54B}{A}$), and 
 ::: {.slide-footer}
 Learning $\color{#325D88}{B}$ throws the other 66% away, so $P(\color{#93C54B}{A} \mid \color{#325D88}{B}) = P(\color{#93C54B}{A} \cap \color{#325D88}{B})/P(\color{#325D88}{B})$.
 :::
+
+## The Law of Total Probability
 
 ## Librarian or Farmer? {.stage-slide #bayes-hook}
 
@@ -191,3 +260,61 @@ A car sits behind one of three doors and a goat behind each of the others. You p
 []{.fragment .fi-frag id="monty-frag-4"}
 []{.fragment .fi-frag id="monty-frag-5"}
 []{.fragment .fi-frag id="monty-frag-6"}
+
+## Combinatorics and the Factorial {.formula-slide #combinatorics}
+
+::: {.lede-min}
+There are $n$ choices and you are taking $r$ of them. Two questions settle which formula you need, whether you sample with replacement and whether the order matters.
+:::
+
+$$n! = n \times (n-1) \times \cdots \times 2 \times 1 \qquad 0! = 1$$
+
+::::: {.three-col}
+::: {}
+[With replacement]{.col-head}
+[Order matters]{.col-sub}
+
+$$n^{\,r}$$
+
+[Ten coin flips in a row]{.col-lab}
+
+$2^{10} = 1{,}024$
+:::
+
+::: {}
+[Without replacement]{.col-head}
+[Order matters]{.col-sub}
+[Permutation · $^{n}P_{r}$]{.col-term}
+
+$$\dfrac{n!}{(n-r)!}$$
+
+[Five cards off the top of the deck]{.col-lab}
+
+$\begin{array}{@{}r@{\;}c@{\;}l@{}}
+\dfrac{52!}{47!} & = & 52 \times 51 \times 50 \times 49 \times 48 \\[3pt]
+ & = & 311{,}875{,}200
+\end{array}$
+:::
+
+::: {}
+[Without replacement]{.col-head}
+[Order does not matter]{.col-sub}
+[Combination · $^{n}C_{r}$]{.col-term}
+
+$$\dfrac{n!}{(n-r)!\,r!} = \dbinom{n}{r}$$
+
+[One hand, dealt either way]{.col-lab}
+
+::: {.stack}
+```{=html}
+<div class="perm-row"><span>K Q 2 3 7</span><span>K 2 Q 7 3</span></div>
+```
+
+$\dbinom{52}{5} = 2{,}598{,}960$
+:::
+:::
+:::::
+
+::: {.note-box}
+The last two differ by $r!$, the orders the $r$ you picked could have come in. Those 311,875,200 runs collapse to 2,598,960 hands because one hand can be dealt $5! = 120$ ways.
+:::

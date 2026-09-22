@@ -20,20 +20,132 @@ ccOpts = ["Bar or pie", "Histogram", "Scatter plot", "Time series", "Box plot"]
 ccQ = [
   {q: "The tax paid by a light engineering company and its annual profit, for 20 consecutive years.",
    a: "Scatter plot",
+   hint: "Look again at how many measures there are, and at what pairs them up.",
    why: "Two numerical measures, and the question is whether they move together. The twenty years supply the pairs, they are not the thing being plotted."},
   {q: "The types of premises occupied by all the small businesses in a town: office, factory, warehouse, and so on.",
    a: "Bar or pie",
+   hint: "Ask first whether any of this can go on a number line at all.",
    why: "The variable is categorical. There is nothing to put on a number line, only counts in named boxes, so a bar chart or a pie chart."},
   {q: "The salary of a trainee accountant in the first year of training, at 30 major accountancy firms.",
    a: "Histogram",
+   hint: "One measure, thirty values of it, and the shape is what you are after.",
    why: "One numerical measure, and what you want to see is the shape of its spread. A stem-and-leaf does the same job by hand and keeps the digits."},
   {q: "The number of trainee accountants enrolling for professional examinations each year since 1960.",
    a: "Time series",
+   hint: "There is one measure here, but it is useless without the year beside it.",
    why: "One measure again, but it only means anything read against the year it belongs to."},
   {q: "The years of experience and the current salary of a random sample of economists at a New York bank.",
    a: "Scatter plot",
+   hint: "Count the measures recorded for each economist.",
    why: "Two numerical measures per person, so each economist is one point."}
 ]
+```
+
+```{ojs}
+//| echo: false
+// What each display is FOR. A wrong answer is explained by naming the job the
+// chosen chart actually does, which is one line per option rather than one
+// per (question, wrong option) pair — twenty of those would say the same five
+// things over and over.
+ccJob = ({
+  "Bar or pie":   "A bar or pie chart compares counts across named categories",
+  "Histogram":    "A histogram shows the shape of one numerical measure",
+  "Scatter plot": "A scatter plot shows how two numerical measures move together",
+  "Time series":  "A time series plot follows one measure against time",
+  "Box plot":     "A box plot summarises the spread of one numerical measure"
+})
+```
+
+```{ojs}
+//| echo: false
+// Every example plot is real worksheet data, so the picture a student sees
+// here is one they meet again later in the module:
+//   R&D spend            Seminar 1, Exercise 3   (also slides 8 and 9)
+//   Executive pay        Seminar 1, Exercise 2
+//   Executive salaries   Seminar 1, Exercise 4   (the stem-and-leaf one)
+//   Y against X          Seminar 8, Exercise 2
+//   Monthly demand       Seminar 9, Exercise 1
+ccStyle = ({fontSize: "13px", fontFamily: "Roboto, sans-serif",
+            color: "#6E7681", background: "transparent"})
+
+ccRD = [6.0, 10.4, 10.5, 9.0, 7.3, 6.6, 6.9, 8.2, 7.1, 8.1,
+        7.9, 6.8, 7.4, 9.5, 8.1, 13.5, 9.9, 6.9, 11.1, 8.2,
+        8.0, 7.7, 7.4, 6.5, 9.5, 8.2, 6.9, 7.2, 8.2, 6.7]
+
+ccSalary = [846, 457, 563, 1466, 1200, 2164, 746, 1611, 824, 824, 1310,
+            1007, 1367, 575, 1252, 1354, 2479, 1238, 927, 1253, 925,
+            1284, 1279, 1660, 860]
+
+// Five of the twenty-six, all with SHORT names. The bar chart is the only
+// plot with words on its y axis, so it used to set the shared left margin at
+// 88 — which left the other four, and the box plot worst of all, with a band
+// of empty space down their left side and the drawing pushed off centre.
+// Picking short names lets every plot share a 44px margin instead.
+ccPay = [["CBS", 60.25], ["Exxon", 34.90], ["AT&T", 21.00],
+         ["Apple", 4.17], ["Tesco", 1.90]].map(([k, v]) => ({k, v}))
+
+ccPairs = [1, 2, 3, 4, 5, 6, 7].map((x, i) => ({x, y: [2, 4, 8, 16, 32, 64, 128][i]}))
+
+ccMonths = [23, 39, 36, 26, 36, 12, 26, 30, 42, 35, 36, 28]
+  .map((x, i) => ({month: i + 1, x}))
+
+// One geometry for all five: identical margins mean the axes are the same
+// length and the ticks the same size from plot to plot, so clicking between
+// displays changes the picture and nothing else. marginLeft is set by the
+// longest company name on the bar chart; the numeric plots spend that space
+// on their y-axis label.
+ccBase = ({
+  width: 400, height: 152,
+  marginTop: 10, marginRight: 16, marginBottom: 56, marginLeft: 66,
+  style: ccStyle
+})
+
+// labelOffset 38 against a 48 bottom margin: Plot's default sets the axis
+// label directly under the tick text and the two touched.
+// The two labelOffsets are not equal because they are not measured the same
+// way: Plot pushes the x label DOWN from the axis and the y label LEFT from
+// it, past tick text of different lengths. These two land both labels the
+// same distance clear of their tick numbers, which is what reads as even.
+ccAxX = (label) => ({label, labelAnchor: "center", labelOffset: 46, tickSize: 5})
+ccAxY = (label, ticks, domain) => ({label, labelAnchor: "center",
+                                    labelOffset: 55, tickSize: 5,
+                                    ticks, domain, grid: true})
+// Explicit tick values, not a count. The shared geometry leaves a 94px plot
+// area and `ticks: n` is only a HINT — d3 rounds to a nice step, so both 4
+// and 5 came back with six labels 15px apart under 13px type, all but
+// touching, while leaving it automatic dropped to two. Naming the values is
+// the only way to fix the pitch, and these datasets never change.
+
+ccDemo = ({
+  "Bar or pie": () => Plot.plot({...ccBase,
+    x: ccAxX("Executive pay ($m)"),
+    y: {label: null, tickSize: 5},
+    marks: [
+      Plot.barX(ccPay, {y: "k", x: "v", fill: "#325D88",
+        sort: {y: "x", reverse: true}}),
+      Plot.ruleX([0], {stroke: "#B0B7C0"})
+    ]}),
+  "Histogram": () => Plot.plot({...ccBase,
+    x: ccAxX("R&D spend (% of revenue)"),
+    y: ccAxY("Firms", [0, 4, 8]),
+    marks: [
+      Plot.rectY(ccRD, Plot.binX({y: "count"},
+        {x: d => d, thresholds: d3.range(6, 15), fill: "#325D88"})),
+      Plot.ruleY([0], {stroke: "#B0B7C0"})
+    ]}),
+  "Scatter plot": () => Plot.plot({...ccBase,
+    x: ccAxX("X"), y: ccAxY("Y", [0, 40, 80, 120]),
+    marks: [Plot.dot(ccPairs, {x: "x", y: "y", fill: "#325D88", r: 3.4})]}),
+  "Time series": () => Plot.plot({...ccBase,
+    x: {...ccAxX("Month"), tickFormat: "d"}, // From zero: a demand axis that starts at 15 exaggerates every dip.
+    y: ccAxY("Demand", [0, 25, 50], [0, 50]),
+    marks: [Plot.line(ccMonths, {x: "month", y: "x",
+      stroke: "#325D88", strokeWidth: 2})]}),
+  "Box plot": () => Plot.plot({...ccBase,
+    x: {...ccAxX("Executive salary (£000s)"), grid: true},
+    y: {label: null, ticks: [], tickSize: 5},
+    marks: [Plot.boxX(ccSalary, {x: d => d, fill: "#CBD9E6", stroke: "#325D88"})]})
+})
 ```
 
 ```{ojs}
@@ -97,8 +209,22 @@ ccFeedback = {
   const want = ccQ[ccI - 1].a;
   if (!ccPick) return html`<div class="quiz-fb quiz-idle">Pick a display to see the reasoning.</div>`;
   const ok = ccPick === want;
-  return html`<div class="quiz-fb ${ok ? "quiz-ok" : "quiz-no"}">
-    <b>${ok ? "Yes." : want + "."}</b> ${ccQ[ccI - 1].why}</div>`;
+  // A wrong pick names the job the chosen chart does and points back at the
+  // data. It does NOT name the answer: handing it over ends the thinking, and
+  // the radio is still there to try again with.
+  const text = ok
+    ? html`<b>Yes.</b> ${ccQ[ccI - 1].why}`
+    : html`<b>Not quite.</b> ${ccJob[ccPick]}. ${ccQ[ccI - 1].hint}`;
+  // The plot always shows the display that was PICKED, not the right one —
+  // on a wrong answer it is the thing they asked for, which is an argument
+  // rather than a giveaway.
+  return html`<div class="quiz-answer">
+    <div class="quiz-fb ${ok ? "quiz-ok" : "quiz-no"}">${text}</div>
+    <figure class="quiz-plot">
+      <figcaption>${ccPick}</figcaption>
+      ${ccDemo[ccPick]()}
+    </figure>
+  </div>`;
 }
 ```
 

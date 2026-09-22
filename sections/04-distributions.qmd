@@ -4,6 +4,86 @@
 Seminar 4 · Binomial, Poisson, exponential, normal
 :::
 
+## Random Variables {.formula-slide #random-variables}
+
+::: {.lede-min}
+A random variable is not really a variable. It is a rule that hands every outcome in the sample space a number, which is what lets us do arithmetic with chance.
+:::
+
+$$X : \Omega \to \mathbb{R} \qquad\qquad P(X = x)$$
+
+:::: {.two-col}
+::: {}
+[Discrete]{.col-head}
+[Values you can list]{.col-sub}
+
+Roll two dice and let $\color{#93C54B}{X}$ be the total. It is the number already written in every cell of the board.
+
+```{=html}
+<div class="perm-row"><span>3 + 4</span><span>2 + 5</span><span>6 + 1</span></div>
+```
+
+Six of the thirty-six cells carry a 7, so
+
+$P(\color{#93C54B}{X} = 7) = \tfrac{6}{36}$
+:::
+
+::: {}
+[Continuous]{.col-head}
+[Values filling a range]{.col-sub}
+
+Wait at a bus stop and let $\color{#325D88}{X}$ be the minutes until the next arrival. It can be 3, or 3.1, or 3.0004.
+
+```{=html}
+<div class="perm-row"><span>3.0</span><span>3.1</span><span>3.0004</span></div>
+```
+
+No single value can carry any probability, so ask for a stretch instead
+
+$P(2 \le \color{#325D88}{X} \le 4)$
+:::
+::::
+
+::: {.note-box}
+Which kind you have decides the tool. A discrete variable gives every value its own probability and you add them up. A continuous one spreads probability along a line and you measure the area under a curve. The binomial and the Poisson ahead are discrete, the exponential and the normal are continuous.
+:::
+
+
+## A Distribution Is a Function {.formula-slide #distribution-fn}
+
+::: {.lede-min}
+Hand $P$ a value of $X$ and it hands back the probability of that value. That function is the distribution, and writing it down once replaces all the counting.
+:::
+
+$$\sum_{k} P(X = k) = 1 \qquad\qquad \int p(x)\,dx = 1$$
+
+:::: {.two-col}
+::: {}
+[Flip a coin four times]{.col-head}
+[$\Omega$ has sixteen outcomes, $\color{#93C54B}{X}$ counts the heads]{.col-sub}
+
+```{=html}
+<svg width="338" height="186" viewBox="0 0 338 186" aria-label="probability of each number of heads in four flips"><rect x="22" y="119" width="46" height="17" rx="3" fill="#93C54B"/><text x="45" y="110" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">1/16</text><text x="45" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">0</text><rect x="84" y="67" width="46" height="69" rx="3" fill="#93C54B"/><text x="107" y="58" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">4/16</text><text x="107" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">1</text><rect x="146" y="32" width="46" height="104" rx="3" fill="#93C54B"/><text x="169" y="23" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">6/16</text><text x="169" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">2</text><rect x="208" y="67" width="46" height="69" rx="3" fill="#93C54B"/><text x="231" y="58" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">4/16</text><text x="231" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">3</text><rect x="270" y="119" width="46" height="17" rx="3" fill="#93C54B"/><text x="293" y="110" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">1/16</text><text x="293" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">4</text><line x1="8" y1="136" x2="330" y2="136" stroke="#B0B7C0" stroke-width="1.4"/><text x="169" y="178" font-size="15" font-family="Roboto, sans-serif" fill="#6E7681" text-anchor="middle">number of heads</text></svg>
+```
+:::
+
+::: {}
+[Why bother]{.col-head}
+[Three things the function buys you]{.col-sub}
+
+**One summary.** Write $P(\color{#93C54B}{X})$ once and every probability is already in it, with no sample space left to count.
+
+**A model.** The distribution is a claim about the process, so data can test it and estimate the numbers inside it.
+
+**Arithmetic.** Add the bars over a range, or measure the area under the curve, and you have $P(a \le \color{#93C54B}{X} \le b)$.
+:::
+::::
+
+::: {.note-box}
+The two examples ahead already have names. Heads in $n$ flips is the **binomial**, and a height or a measurement error is the **normal**, written $\color{#93C54B}{X} \sim \text{Binomial}$ and $\color{#325D88}{X} \sim \text{Normal}$.
+:::
+
+
 ## Which Seller Do You Trust? {.stage-slide #seller-intuition}
 
 ::: {.lede-min}

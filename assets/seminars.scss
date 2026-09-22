@@ -111,6 +111,7 @@
 // would run it to five lines and push the stage off the bottom of the slide.
 .reveal section.stage-slide .lede-min,
 .reveal section.ojs-slide .lede-min,
+.reveal section.sim-slide .lede-min,
 .reveal section.formula-slide .lede-min {
   font-size: 26px;
   max-width: 980px;
@@ -164,6 +165,7 @@
 #expo-formal .slide-footer,
 #dist-questions .slide-footer,
 #normal-intuition .slide-footer,
+#prob-count .slide-footer,
 #funcrv .slide-footer { text-align: justify; hyphens: auto; }
 
 // #s00-webr carries none of the slide classes that justify .lede-min, so its
@@ -176,14 +178,307 @@
   .lede-min, .slide-footer { max-width: none; }
 }
 
+// ---- Pitfall callout ----
+// The mirror image of .try-this, in brick rather than orange: that box says
+// "your turn", this one says "here is where the room goes wrong". Same
+// geometry and same marker treatment so the deck has one callout language.
+.pitfall {
+  margin: 0.1em 0 0.2em;
+  padding: 10px 18px 10px 46px;
+  background: rgba(185, 74, 72, 0.06);
+  border: 1px solid rgba(185, 74, 72, 0.22);
+  border-left: 4px solid var(--accent-4);
+  border-radius: 0 6px 6px 0;
+  font-size: 21px;
+  line-height: 1.5;
+  color: var(--ink);
+  position: relative;
+  text-align: justify;
+  hyphens: auto;
+}
+.pitfall::before {
+  content: "!";
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-4);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.66em;
+  font-weight: 700;
+  line-height: 1;
+}
+.pitfall p { margin: 0; }
+
+// The third member of the callout family. .try-this is orange and says "your
+// turn"; .pitfall is brick and says "this is where the room goes wrong";
+// .note is navy and says "here is the connection". Same geometry, same
+// marker treatment, so which one is speaking is a colour and a glyph.
+.note-box {
+  margin: 0.1em 0 0.2em;
+  padding: 10px 18px 10px 46px;
+  background: rgba(50, 93, 136, 0.05);
+  border: 1px solid rgba(50, 93, 136, 0.2);
+  border-left: 4px solid var(--accent-1);
+  border-radius: 0 6px 6px 0;
+  font-size: 21px;
+  line-height: 1.5;
+  color: var(--ink);
+  position: relative;
+  text-align: justify;
+  hyphens: auto;
+}
+.note-box::before {
+  content: "i";
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  // The nudge rides on the transform, NOT on padding. Flex centres the text
+  // box, not the ink, and an italic 'i' leans right — measured on a canvas,
+  // its ink centre sits 0.75px right of the box centre. Correcting that with
+  // padding-right made the element 22x20, so the circle became an ellipse.
+  transform: translateY(-50%) translateX(-0.75px);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.66em;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
+}
+.note-box p { margin: 0; }
+
+// ---- Two worked examples side by side (#prob-count) ----
+// Built on the .deck-facts idiom from #s00-webr rather than inventing a
+// second column style: a hairline ABOVE the whole block, a navy small-caps
+// head on each column, and no vertical rule. A divider between two columns
+// was the only one in the deck and it read as a table.
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 52px;
+  margin-top: 4px;
+  border-top: 1px solid var(--rule);
+  padding-top: 10px;
+}
+.col-head {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+  margin-bottom: 6px;
+}
+// The line under a column head. Two of the three heads on #combinatorics
+// read "Without replacement", which is the point — the split between them
+// is the order, and that has to sit directly underneath.
+.col-sub {
+  display: block;
+  font-size: 17px;
+  color: var(--ink-soft);
+  margin: -4px 0 4px;
+}
+
+// The named concept. Olive, because it is the term the module will use from
+// here on, not another descriptor of the case above it.
+.col-term {
+  display: block;
+  font-size: 17px;
+  font-weight: 700;
+  color: #6E9A2E;
+  margin-top: 2px;
+}
+
+// One level of small caps per slide. The sub-labels stay sentence case so
+// the column head is unambiguously the heading.
+.col-lab {
+  display: block;
+  font-size: 18px;
+  color: var(--ink-soft);
+  margin-top: 8px;
+}
+#prob-count {
+  .two-col p { margin: 4px 0; font-size: 20px; }
+  // The headline formula is the definition, not the working — it does not
+  // need to shout over two columns of it. Both MathJax spellings, since
+  // which one lays the slide out flips between loads (see #set-formal).
+  // Centred and small. This is the ONE slide in the deck whose display
+  // equation is centred rather than flush left: it is a definition standing
+  // over two columns of worked examples, not a line of working that has to
+  // align with a left edge the way #set-formal's arrays do.
+  .MJXp-math.MJXp-display { font-size: 0.64em; }
+  .MathJax_Display { zoom: 0.64; }
+  span.math.display { margin: 16px 0 24px; }
+  .pitfall { margin-top: 16px; }
+  // The four outcomes drawn, since a coin CAN be drawn and 36 dice rolls
+  // cannot. Heads olive because A is olive two lines down, so "at least one
+  // head" is visible in the picture before it is stated.
+  .coin-row { margin: 6px 0 2px; line-height: 0; }
+  // Floated, not stacked: the three text lines beside it are taller than the
+  // grid, so the picture costs the slide no height at all. Rows are die one,
+  // columns die two; the eleven olive cells are the event, and the single
+  // cell at their corner is why the answer is 11 and not 12.
+  .dice-grid { float: right; margin: 6px 6px 4px 14px; line-height: 0; }
+  // .stage is authored for the deck's 1000-unit canvases and hard-codes that
+  // width and a 1.05 scale; this pair of dice is 77 units wide.
+  .dice-grid .stage { width: auto; transform: none; margin: 0; }
+
+}
+
+// ---- Random variables (#random-variables) ----
+// The .two-col base rule carries no type sizing — each slide that uses it
+// sets its own, or the column prose comes out at the slide's 36px and the
+// block runs to 588px a column.
+#random-variables,
+#distribution-fn {
+  // Justified, with hyphenation on. At a 480px column three words a line
+  // open real gaps without it — the same lesson as the deck-facts strip.
+  .two-col p {
+    margin: 6px 0;
+    font-size: 20px;
+    text-align: justify;
+    hyphens: auto;
+  }
+  .two-col .col-sub { margin-bottom: 8px; }
+  .MJXp-math.MJXp-display { font-size: 0.62em; }
+  .MathJax_Display { zoom: 0.62; }
+  span.math.display { margin: 14px 0 18px; }
+  .perm-row { margin: 8px 0 10px; }
+  .perm-row span { font-size: 16px; }
+  .note-box { margin-top: 16px; }
+  .two-col strong { color: var(--accent-1); }
+}
+
+// ---- Permutation chips (#combinatorics) ----
+// The same job the coin row does on #prob-count: show the thing being
+// counted rather than assert how many there are. Six chips, six orderings.
+.perm-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 2px;
+}
+.perm-row span {
+  font-family: $font-family-monospace;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--accent-1);
+  background: rgba(50, 93, 136, 0.07);
+  border: 1px solid rgba(50, 93, 136, 0.2);
+  border-radius: 4px;
+  padding: 3px 7px;
+}
+
+// Three columns rather than two: the board this slide follows splits the
+// counting into repeats-allowed, no-repeats-in-order and no-repeats-any-
+// order, and collapsing that to two loses the middle case.
+.three-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  // Grid items stretch to their row by default, which blew the KQ chips up
+  // to the height of the card working beside them.
+  align-items: start;
+  gap: 0 38px;
+  margin-top: 4px;
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+}
+// The three columns SHARE grid rows. Without this each column stacks
+// independently, so a one-line formula like n^r leaves its example label
+// 25px higher than the two-line fractions beside it and the rows across the
+// slide never line up. display:contents dissolves the wrapper divs into the
+// grid, and pinning each one's children to a column makes item k of every
+// column land in row k, which is row height by the tallest of the three.
+// Rows must be pinned as well as columns. With grid-auto-flow: row the
+// placement cursor only ever moves FORWARD, so giving the children a column
+// alone put column one in rows 1-6 and then started column two at row 7 —
+// a 1144px slide. Naming the row for each child index fixes item k of every
+// column into row k, whose height is the tallest of the three.
+.three-col > div { display: contents; }
+.three-col > div:nth-child(1) > * { grid-column: 1; }
+.three-col > div:nth-child(2) > * { grid-column: 2; }
+.three-col > div:nth-child(3) > * { grid-column: 3; }
+.three-col > div > *:nth-child(1) { grid-row: 1; }
+.three-col > div > *:nth-child(2) { grid-row: 2; }
+.three-col > div > *:nth-child(3) { grid-row: 3; }
+.three-col > div > *:nth-child(4) { grid-row: 4; }
+.three-col > div > *:nth-child(5) { grid-row: 5; }
+.three-col > div > *:nth-child(6) { grid-row: 6; }
+
+#combinatorics {
+  // Grid items do not collapse margins, so row spacing comes from row-gap
+  // and every child's own vertical margin is zeroed. Leaving them on took
+  // the slide to 773px.
+  .three-col { row-gap: 8px; }
+  .three-col p { margin: 0; font-size: 19px; }
+  .three-col .col-lab { margin-top: 0; }
+  // Air above the formula only. row-gap is uniform across the grid, so the
+  // one gap that wants to be bigger is set on the item itself — which works
+  // here precisely because grid items keep their margins.
+  .three-col > div > p:nth-child(2) { margin-top: 6px; }
+  .three-col .perm-row { margin: 0; }
+  // The chips and the count they explain are ONE grid item, so the
+  // count follows the chips instead of being pushed into the next
+  // shared row by the tall card working in column two.
+  .stack p { margin: 13px 0 0; }
+  // The definition at the top is scene-setting; the three formulas in the
+  // columns are the slide. They set LARGER than it, not the same size, and
+  // they stand on their own line instead of hanging off a blackboard "#",
+  // which typeset in a serif face reads as a stray glyph rather than "the
+  // number of".
+  > p .MJXp-math.MJXp-display { font-size: 0.60em; }
+  > p .MathJax_Display { zoom: 0.60; }
+  > p span.math.display { margin: 20px 0 20px; }   // even air above and below
+  // em inside a column resolves against .three-col p's 19px, not the slide's
+  // 36px — an earlier 0.78 here came out half the size of the definition it
+  // was meant to outrank. Centred in the column, unlike the rest of the deck,
+  // because each one is the answer to the heading directly above it.
+  // Flush left, on the column's own edge. Centring the formula inside a
+  // left-aligned column was tried and it reads as a misplaced element
+  // rather than a centred one — there is no axis for it to be centred on.
+  .three-col .MJXp-math.MJXp-display { font-size: 0.95em; }
+  .three-col .MathJax_Display { zoom: 0.95; }
+  .three-col span.math.display { margin: 0; }
+  .three-col .MJXp-math.MJXp-display,
+  .three-col .MathJax_Display,
+  .three-col .MathJax_Display > .MathJax { text-align: left !important; }
+  .three-col .MJXp-math.MJXp-display,
+  .three-col .MathJax_Display { margin-left: 0; }
+
+  .note-box { margin-top: 16px; }
+  .perm-row span { font-size: 15px; letter-spacing: 0.04em; }
+}
+
 // ---- Chart-choice quiz (#chart-choice) ----
 // Observable Inputs names its <form> with a per-build hash (oi-3a86ea), so
 // everything here is matched STRUCTURALLY. The options row is a flex line
 // that does not wrap by default, which clipped the last two choices off the
 // right edge of the slide.
+// Quarto gives every {ojs} cell 14.4px of margin top and bottom, and four of
+// the cells on this slide define values and render nothing — zero height, but
+// they still spend their margins, which piled ~45px of emptiness between the
+// lede and the question. Spacing is carried by the elements instead.
+#chart-choice .cell { margin: 0; }
+// Quarto gives OJS outputs overflow:auto, so nudging the figure 6px past its
+// cell raised a scrollbar down the right of the plot.
+#chart-choice .cell-output-display { overflow: visible; }
+
 #chart-choice form {
   font-size: 21px;
-  margin: 10px 0;
+  margin: 6px 0 10px;
   // display:block, not Observable's flex row: with the caption beside the
   // options the row started 120px in and the last choice ran off the slide.
   // Stacked, the options get the full width and wrap cleanly.
@@ -224,32 +519,70 @@
 
 // The question and the verdict are the two things read from the back of the
 // room, so they set larger than the input that sits between them.
+// The item being answered sits in a card so it reads as the thing on the
+// table, distinct from the .lede-min above it, which is the instruction. A
+// neutral border rather than the lede's navy bar, or the two would compete.
 .quiz-q {
   font-size: 25px;
   color: var(--ink);
-  margin: 14px 0 10px;
-  max-width: 980px;
+  margin: 6px 0 14px;
+  // No max-width. At 980 the card stopped 28 units short of the verdict box
+  // and the options row below it, which both run the full 1050.
+  padding: 14px 20px;
+  background: #F7F8F9;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
   text-align: justify;
   hyphens: auto;
 }
-.quiz-fb {
-  font-size: 21px;
-  line-height: 1.45;
+// The verdict and an example of the chart that was picked, side by side.
+.quiz-answer {
+  display: flex;
+  align-items: stretch;
+  gap: 24px;
   margin-top: 12px;
-  padding: 10px 16px;
-  border-left: 4px solid var(--rule);
-  border-radius: 0 6px 6px 0;
-  max-width: 980px;
+}
+.quiz-fb {
+  font-size: 20px;
+  line-height: 1.45;
+  padding: 12px 16px;
+  border: 1px solid var(--rule);
+  border-left-width: 4px;
+  border-radius: 6px;
+  flex: 1 1 auto;
   text-align: justify;
   hyphens: auto;
   color: var(--ink-soft);
+}
+.quiz-plot {
+  flex: 0 0 400px;
+  margin: 0;
+  // The svg's own bottom edge already meets the verdict box's, but the axis
+  // label sits 6.3 units above it in the plot's trailing space. Relative
+  // positioning drops the figure by exactly that, so the LABEL lines up with
+  // the box while the layout height is untouched.
+  position: relative;
+  top: 6px;
+}
+// Scoped to the slide id for SPECIFICITY, not out of habit: Quarto ships
+// `.reveal .slide figure > figcaption { font-size: 0.7em }` at (0,2,2), which
+// beat a plain `.quiz-plot figcaption` and rendered this at 25px.
+#chart-choice .quiz-plot figcaption {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+  margin-bottom: 2px;
 }
 .quiz-idle { font-style: italic; }
 // Olive for a right answer, brick for a wrong one — the same two colours the
 // tick/cross lattice uses in Seminar 4, so the deck only ever has one green
 // and one red.
-.quiz-ok  { border-left-color: #93C54B; background: rgba(147, 197, 75, 0.08); }
-.quiz-no  { border-left-color: #B94A48; background: rgba(185, 74, 72, 0.07); }
+.quiz-ok  { border-color: rgba(147, 197, 75, 0.45); border-left-color: #93C54B;
+            background: rgba(147, 197, 75, 0.08); }
+.quiz-no  { border-color: rgba(185, 74, 72, 0.4); border-left-color: #B94A48;
+            background: rgba(185, 74, 72, 0.07); }
 .quiz-fb b { color: var(--ink); }
 
 // ---- Where to Find Me (#s00b-about) ----
@@ -838,7 +1171,12 @@
     // "Either" is 12 units wider than "Both", which left A ∪ B and A ∩ B
     // starting at different x in the two headings. A fixed track on the word
     // puts the notation in one column without reordering the label.
-    .rw { display: inline-block; min-width: 80px; }
+    // A fixed gap after the word, not a fixed track. The track version lined
+    // the two middots up in one column, so A u B and A n B started at the
+    // same x, but it had to leave more air after "Both" (48 units of ink)
+    // than after "Either" (59) to do it. Equal gaps were asked for instead,
+    // which means the notation no longer aligns between the two rows.
+    .rw { display: inline-block; min-width: 0; margin-right: 3px; }
     // No indent. The slide's left margin is the one the title and the
     // takeaway sit on; the lede only looks inset because of its navy rule.
     // Indenting the maths to match the LEDE put it out of line with the
@@ -860,7 +1198,7 @@
     .MathJax_Display > .MathJax { text-align: left !important; }
     .MJXp-math.MJXp-display,
     .MathJax_Display { margin-left: 40px; }
-    .slide-footer { margin-top: 26px; }   // was 11px off the last equation
+    .slide-footer { margin-top: 36px; }   // was 11px off the last equation
 
   }
 
