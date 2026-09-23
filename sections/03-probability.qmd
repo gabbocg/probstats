@@ -155,7 +155,72 @@ P(\color{#93C54B}{A} \cap \color{#325D88}{B}) & = & P(\color{#93C54B}{A}) \times
 Mutually exclusive means $\color{#93C54B}{A} \cap \color{#325D88}{B} = \varnothing$, so there is nothing to subtract. Independent means learning $\color{#93C54B}{A}$ tells you nothing about $\color{#325D88}{B}$, which the next slide makes precise.
 :::
 
-## Conditional Probabilities
+## Conditional Probabilities {.formula-slide #conditional-probabilities}
+
+::: {.lede-min}
+Being told that $\color{#325D88}{B}$ happened throws away every outcome outside it. What is left is a smaller sample space, and the question is how much of that is $\color{#93C54B}{A}$.
+:::
+
+::: {.cond-row}
+```{=html}
+<svg width="470" height="142" viewBox="0 0 470 142" aria-label="A straddles the edge of B inside omega, then B alone with the same overlap">
+<defs>
+<pattern id="cp-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+<rect width="7" height="7" fill="rgba(244,124,60,0.16)"/>
+<line x1="0" y1="0" x2="0" y2="7" stroke="#F47C3C" stroke-width="2"/>
+</pattern>
+<clipPath id="cp-bx1"><rect x="56" y="28" width="120" height="64" rx="4"/></clipPath>
+<clipPath id="cp-bx2"><rect x="324" y="28" width="120" height="64" rx="4"/></clipPath>
+<marker id="cp-arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+<path d="M0 0L10 5L0 10z" fill="#6E7681"/></marker>
+</defs>
+<rect x="4" y="8" width="230" height="104" rx="6" fill="#FBFBFC" stroke="#D8DCE2" stroke-width="1.7"/>
+<text x="222" y="28" font-size="15" font-family="Roboto, sans-serif" fill="#6E7681" font-weight="700" text-anchor="end">&#937;</text>
+<rect x="56" y="28" width="120" height="64" rx="4" fill="rgba(50,93,136,0.07)" stroke="#325D88" stroke-width="1.7"/>
+<text x="64" y="47" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700">B</text>
+<circle cx="166" cy="76" r="32" fill="none" stroke="#93C54B" stroke-width="1.7"/>
+<g clip-path="url(#cp-bx1)"><circle cx="166" cy="76" r="32" fill="url(#cp-hatch)" stroke="#F47C3C" stroke-width="1.4"/></g>
+<text x="180" y="94" font-size="15" font-family="Roboto, sans-serif" fill="#93C54B" font-weight="700">A</text>
+<text x="119" y="130" font-size="14" font-family="Roboto, sans-serif" fill="#6E7681" text-anchor="middle">out of all of &#937;</text>
+<line x1="244" y1="60" x2="262" y2="60" stroke="#6E7681" stroke-width="1.6" marker-end="url(#cp-arw)"/>
+<rect x="324" y="28" width="120" height="64" rx="4" fill="rgba(50,93,136,0.07)" stroke="#325D88" stroke-width="1.7"/>
+<text x="332" y="47" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700">B</text>
+<g clip-path="url(#cp-bx2)"><circle cx="434" cy="76" r="32" fill="url(#cp-hatch)" stroke="#F47C3C" stroke-width="1.4"/></g>
+<text x="384" y="130" font-size="14" font-family="Roboto, sans-serif" fill="#6E7681" text-anchor="middle">out of B alone</text>
+</svg>
+```
+
+$$P(\color{#93C54B}{A} \mid \color{#325D88}{B}) = \frac{P(\color{#93C54B}{A} \cap \color{#325D88}{B})}{P(\color{#325D88}{B})}$$
+:::
+
+:::: {.two-col}
+::: {}
+[Knowing it changes nothing]{.col-head}
+[$\color{#325D88}{B}$ is "the second die is a five"]{.col-sub}
+
+```{=html}
+<div class="die-grid"><svg width="97" height="96" viewBox="0 0 97.0 96.0" aria-label="the six rolls where the second die is a five, one of which has a three first"><text x="21.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">1</text><text x="35.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">2</text><text x="49.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">3</text><text x="63.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">4</text><text x="77.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">5</text><text x="91.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">6</text><text x="11" y="23.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">1</text><text x="11" y="37.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">2</text><text x="11" y="51.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">3</text><text x="11" y="65.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">4</text><text x="11" y="79.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">5</text><text x="11" y="93.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">6</text><rect x="15.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="14.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="85.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="28.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="85.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#F47C3C"/><rect x="85.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="56.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="85.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="70.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="85.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="84.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="85.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/></svg></div>
+```
+
+Six rolls survive and one of them starts with a three, so $P(\color{#93C54B}{A} \mid \color{#325D88}{B}) = \tfrac{1}{6}$, which is $P(\color{#93C54B}{A})$ over again. The dice are **independent**.
+:::
+
+::: {}
+[Knowing it changes everything]{.col-head}
+[$\color{#325D88}{C}$ is "the total is six"]{.col-sub}
+
+```{=html}
+<div class="die-grid"><svg width="97" height="96" viewBox="0 0 97.0 96.0" aria-label="the five rolls totalling six, one of which has a three first"><text x="21.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">1</text><text x="35.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">2</text><text x="49.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">3</text><text x="63.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">4</text><text x="77.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">5</text><text x="91.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">6</text><text x="11" y="23.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">1</text><text x="11" y="37.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">2</text><text x="11" y="51.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">3</text><text x="11" y="65.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">4</text><text x="11" y="79.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">5</text><text x="11" y="93.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">6</text><rect x="15.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="14.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="85.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="28.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="71.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="85.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#F47C3C"/><rect x="57.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="85.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="56.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="43.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="85.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="70.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="29.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="85.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="85.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/></svg></div>
+```
+
+Now only five rolls survive and one of them starts with a three, so $P(\color{#93C54B}{A} \mid \color{#325D88}{C}) = \tfrac{1}{5}$. The total tells you something about the first die.
+:::
+::::
+
+::: {.note-box}
+Here $\color{#93C54B}{A}$ is "the first die is a three". Reversing the bar asks something else, and that is what Bayes is for.
+:::
+
 
 ## Conditioning Narrows the Sample Space {.stage-slide #cond-intuition}
 
@@ -175,7 +240,70 @@ Eight in ten office managers would buy the software ($\color{#93C54B}{A}$), and 
 Learning $\color{#325D88}{B}$ throws the other 66% away, so $P(\color{#93C54B}{A} \mid \color{#325D88}{B}) = P(\color{#93C54B}{A} \cap \color{#325D88}{B})/P(\color{#325D88}{B})$.
 :::
 
-## The Law of Total Probability
+## The Law of Total Probability {.formula-slide #total-probability}
+
+::: {.lede-min}
+Cut $\Omega$ into pieces that do not overlap and leave nothing out. Every outcome in $\color{#93C54B}{A}$ then lies in exactly one piece, so the probability of $\color{#93C54B}{A}$ is its slices added back up.
+:::
+
+::: {.cond-row}
+```{=html}
+<svg width="470" height="150" viewBox="0 0 470 150" aria-label="omega cut into three pieces, with A straddling all three and each slice hatched">
+<defs>
+<pattern id="tp-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+<rect width="7" height="7" fill="rgba(244,124,60,0.16)"/>
+<line x1="0" y1="0" x2="0" y2="7" stroke="#F47C3C" stroke-width="2"/>
+</pattern>
+<clipPath id="tp-box"><rect x="6" y="14" width="458" height="104" rx="6"/></clipPath>
+</defs>
+<g clip-path="url(#tp-box)">
+<rect x="6" y="14" width="229" height="104" fill="rgba(50,93,136,0.05)"/>
+<rect x="235" y="14" width="137" height="104" fill="rgba(50,93,136,0.09)"/>
+<rect x="372" y="14" width="92" height="104" fill="rgba(50,93,136,0.13)"/>
+<rect x="52" y="50" width="366" height="48" rx="4" fill="url(#tp-hatch)" stroke="#93C54B" stroke-width="1.8"/>
+<line x1="235" y1="14" x2="235" y2="118" stroke="#325D88" stroke-width="1.7"/>
+<line x1="372" y1="14" x2="372" y2="118" stroke="#325D88" stroke-width="1.7"/>
+</g>
+<rect x="6" y="14" width="458" height="104" rx="6" fill="none" stroke="#D8DCE2" stroke-width="1.7"/>
+<text x="120" y="36" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">B&#8321;</text>
+<text x="303" y="36" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">B&#8322;</text>
+<text x="418" y="36" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">B&#8323;</text>
+<text x="30" y="79" font-size="15" font-family="Roboto, sans-serif" fill="#93C54B" font-weight="700" stroke="#FFFFFF" stroke-width="3" paint-order="stroke">A</text>
+<text x="452" y="112" font-size="15" font-family="Roboto, sans-serif" fill="#6E7681" font-weight="700" text-anchor="end">&#937;</text>
+<text x="235" y="142" font-size="14" font-family="Roboto, sans-serif" fill="#6E7681" text-anchor="middle">Three slices of A, one per piece</text>
+</svg>
+```
+
+$$P(\color{#93C54B}{A}) = \sum_{i} P(\color{#93C54B}{A} \mid \color{#325D88}{B_i})\, P(\color{#325D88}{B_i})$$
+:::
+
+:::: {.three-col}
+::: {}
+[Supplier 1]{.col-head}
+[Half the parts, two per hundred faulty]{.col-sub}
+
+$$0.50 \times 0.02 = 0.010$$
+:::
+
+::: {}
+[Supplier 2]{.col-head}
+[Three parts in ten, four per hundred faulty]{.col-sub}
+
+$$0.30 \times 0.04 = 0.012$$
+:::
+
+::: {}
+[Supplier 3]{.col-head}
+[One part in five, seven per hundred faulty]{.col-sub}
+
+$$0.20 \times 0.07 = 0.014$$
+:::
+::::
+
+::: {.note-box}
+Adding the three routes gives $P(\text{faulty}) = 0.036$. Ask instead which supplier sent the faulty part in your hand, and you are asking for Bayes.
+:::
+
 
 ## Librarian or Farmer? {.stage-slide #bayes-hook}
 

@@ -58,6 +58,11 @@
 // past the ink so the takeaway is not sitting on the box.
 #venn-intuition .stage-wrap { height: 392px; }
 
+// The drawing sat 25px under the title and 87px off the slide floor; the
+// extra top margin splits the slack so the stage is centred in what the
+// title leaves behind.
+#mm-intuition .stage-wrap { margin-top: 57px; }
+
 // #cond-intuition's readout sits at y = 435 of its 445-unit canvas, so it can
 // give back 7px and no more — measured, not guessed. It needs every one of
 // the rest, which is why its lede and takeaway are one and two lines.
@@ -167,6 +172,12 @@
 #normal-intuition .slide-footer,
 #prob-count .slide-footer,
 #funcrv .slide-footer { text-align: justify; hyphens: auto; }
+
+// Every sim slide ends on a .try-this box. They were ragged-right while the
+// ledes above them were justified, so the two blocks of prose on the same
+// slide disagreed. One rule for all fifteen keeps them consistent with each
+// other rather than justifying two of them by hand.
+.reveal .try-this { text-align: justify; hyphens: auto; }
 
 // #s00-webr carries none of the slide classes that justify .lede-min, so its
 // three blocks of prose were the only ragged-right text in the deck.
@@ -337,11 +348,62 @@
 
 }
 
+// ---- Conditional probability: the picture beside the formula ----
+// The two panels and the definition say the same thing, so they share a row
+// rather than stacking — which is also the only way both fit the slide.
+.cond-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 44px;
+  margin: 10px 0 4px;
+}
+.cond-row p { margin: 0; }
+
 // ---- Random variables (#random-variables) ----
 // The .two-col base rule carries no type sizing — each slide that uses it
 // sets its own, or the column prose comes out at the slide's 36px and the
 // block runs to 588px a column.
+// The 97px grid in a 480px column left the paragraph stacked underneath and
+// 380px of nothing beside it. Floated, the text wraps into that gap and the
+// column loses a third of its height.
+.die-grid { float: left; margin: 0 16px 4px 0; line-height: 0; }
+// The wrapped text starts level with the grid's top row of numbers, which
+// reads as high. PADDING, not margin: a margin here collapses with the
+// sub-label's above it and moves nothing.
+#conditional-probabilities .die-grid + p { padding-top: 6px; }
+
+// The raw <svg> is a direct child of the section, so it sits left-aligned
+// with the slack piled on the right. margin:auto centres it.
+#box-normal svg { display: block; margin: 8px auto 4px; }
+
+#total-probability {
+  // Both blocks of maths came out at the slide's base size: the sum stood
+  // taller than the figure beside it, and the three products were the
+  // loudest thing on the slide. WHICH MathJax box lays the slide out flips
+  // between loads, so both spellings are set and the wrapper carries the gaps.
+  .cond-row .MJXp-math.MJXp-display { font-size: 0.56em; }
+  .cond-row .MathJax_Display { zoom: 0.56; }
+  .cond-row span.math.display { margin: 0; }
+
+  // Grid items do not collapse margins, so row spacing is row-gap and every
+  // child's own vertical margin is zeroed.
+  // The products measured dead centre of their columns already (offset 0 on
+  // all three), but they sat under a left-aligned heading, so the eye read
+  // them as pushed right. Centring the whole column puts head, sub and
+  // number on one axis and the centring becomes visible.
+  .three-col { row-gap: 6px; }
+  .three-col p { margin: 0; font-size: 19px; text-align: center; }
+  // em here resolves against the COLUMN's 19px, not the slide's base size, so
+  // a factor under 1 lands at nine pixels. #combinatorics sits at 0.95.
+  .three-col .MJXp-math.MJXp-display { font-size: 1.1em; }
+  .three-col .MathJax_Display { zoom: 1.1; }
+  .three-col span.math.display { margin: 8px 0 0; }
+  .note-box { margin-top: 16px; }
+}
+
 #random-variables,
+#conditional-probabilities,
 #distribution-fn {
   // Justified, with hyphenation on. At a 480px column three words a line
   // open real gaps without it — the same lesson as the deck-facts strip.

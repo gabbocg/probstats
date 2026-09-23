@@ -1179,7 +1179,9 @@ $presentation-heading-line-height: 1.15;
   // The trailing ‡ superscript + ORCID icon add ~24px of visual weight
   // to the right of the name. Nudge the whole authors block right so the
   // NAME TEXT sits on the geometric centerline rather than the whole line.
-  padding-left: 26px;
+  // 28.1px, not 26: the exact offset that puts the NAME TEXT's midpoint on
+  // the title's, measured with a Range over the text node alone.
+  padding-left: 28.1px;
 }
 // The parent padding-left above also drags the affiliation right, but the
 // affiliation has its own leading "‡ " marker — so we need to pull it back
@@ -1207,9 +1209,18 @@ $presentation-heading-line-height: 1.15;
   display: inline-block;
   // negative margin eats the HTML whitespace between </a>(name) and <a>(orcid)
   margin-left: -4px;
+  // Placed against the double dagger beside it, measured rather than
+  // eyeballed: the glyph's own ink (canvas actualBoundingBox, NOT its line
+  // box, which is three times taller) runs 491 to 504 on a 1.245 scale.
+  // `vertical-align: super` alone left the badge 2.45 slide px low at the
+  // centre, so it hung below the dagger. -4px rather than the -2.45px that
+  // centres it exactly: the dagger is a thin tall glyph and the badge a solid
+  // disc, so dead-centre still reads as sitting low next to it.
   width: 16px;
   height: 16px;
   vertical-align: super;
+  position: relative;
+  top: -5.5px;
   background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><circle cx='128' cy='128' r='128' fill='%23A6CE39'/><g fill='%23FFFFFF'><path d='M86.3 186.2H70.9V79.1h15.4v107.1z'/><path d='M108.9 79.1h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7 0-21.5-13.7-39.7-43.7-39.7h-23.7v79.4z'/><circle cx='78.6' cy='56.8' r='10.1'/></g></svg>") no-repeat center / contain;
 }
 

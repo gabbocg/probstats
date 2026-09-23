@@ -8,8 +8,25 @@
 #   5. a sim cell growing past the projection line budget or line length
 set -euo pipefail
 
-OUT="${1:-_site/index.html}"
-[[ -f "$OUT" ]] || { echo "FAIL: $OUT not found — run quarto render first"; exit 1; }
+OUT_RAW="${1:-_site/index.html}"
+[[ -f "$OUT_RAW" ]] || { echo "FAIL: $OUT_RAW not found — run quarto render first"; exit 1; }
+
+# A commented-out .qmd block reaches the HTML verbatim, so <div id="x-stage">
+# inside <!-- --> is still greppable even though nothing renders it. Every
+# check here asks "is this on the deck", so they all read a stripped copy.
+# Stripped with a non-greedy match over the WHOLE file: a line-based scan for
+# <!-- / --> swallowed the rest of index.html, because Quarto's own one-line
+# comments open and close on the same line.
+strip_comments() { perl -0777 -pe 's/<!--.*?-->//gs' "$@"; }
+
+OUT=$(mktemp); SRC=$(mktemp); trap 'rm -f "$OUT" "$SRC"' EXIT
+strip_comments "$OUT_RAW" > "$OUT"
+
+# Only the sections index.qmd actually includes; a commented-out include ships
+# no cells, so its cells must not be counted against the render either. SRC is
+# those sections with their own commented-out blocks removed.
+SECTIONS=$(strip_comments index.qmd | grep -o 'sections/[A-Za-z0-9._-]*\.qmd')
+strip_comments $SECTIONS > "$SRC"
 
 fail=0
 need() {  # need <needle> <label>
@@ -18,29 +35,43 @@ need() {  # need <needle> <label>
 
 echo "── slides ─────────────────────────────────────────"
 for id in s00b-me s00b-about s00-how-to-use s00-webr \
-          s01-visualisation chart-choice bins-intuition bins-sim \
+          s01-visualisation chart-choice \
           s02-descriptives mm-intuition cheb-sim \
           s03-probability prob-count combinatorics bayes-hook bayes-intuition bayeq-formula monty bayes-sim \
           space-intuition setops-intuition venn-intuition set-formal \
-          cond-intuition \
+          conditional-probabilities cond-intuition total-probability \
           s04-distributions random-variables distribution-fn binom-intuition seller-intuition laplace-intuition \
           pois-intuition pois-formal \
           likelihood-live binom-formal \
-          pois-intuition expo-intuition expo-formal dist-questions \
-          normal-intuition clt-intuition zstd-intuition funcrv pois-sim clt-sim \
+          pois-intuition expo-intuition expo-formal \
+          normal-intuition box-normal funcrv pois-sim; do
+  need "id=\"$id\"" "slide #$id"
+done
+
+# Commented out in the sources on 2026-09-23 (slides 8, 9, 42 and 44-67 of the
+# then 67-slide deck). Asserted ABSENT rather than deleted from this file: if
+# one reappears the comment markers have been broken, and if the blocks are
+# uncommented again this list is where the ids come back from.
+for id in bins-intuition bins-sim dist-questions \
+          clt-intuition clt-sim zstd-intuition \
           s05-estimation ciflip-intuition cieq-formula \
           ci-intuition ci-sim ci-t-vs-z \
           s06-testing pval-intuition alpha-sim power-sim \
           s07-two-populations pair-intuition pair-sim \
           s08-regression ls-intuition ols-sim ovb-sim \
           s09-forecasting smooth-intuition smooth-sim; do
-  need "id=\"$id\"" "slide #$id"
+  if grep -qF "id=\"$id\"" "$OUT"; then
+    echo "FAIL: slide #$id is commented out in sections/ but rendered anyway"; fail=1
+  fi
 done
+echo "OK:   26 commented-out slides stayed out"
 
 echo "── animation stages ───────────────────────────────"
 # pois and expo dropped: #pois-intuition and #expo-intuition are {ojs}
 # slides now, not stages.
-STAGES="about dicegrid bins mm space setops venn prior bayes bayeq monty ciflip cieq cond binom seller laplace clt zstd ci pval pair ls smooth"
+# bins, clt, zstd, ciflip, cieq, ci, pval, pair, ls and smooth belong to
+# slides commented out on 2026-09-23; put them back here when those return.
+STAGES="about dicegrid mm space setops venn prior bayes bayeq monty cond binom seller laplace"
 for s in $STAGES; do
   need "id=\"$s-stage\"" "stage #$s-stage"
 done
@@ -86,8 +117,7 @@ need "deck-sim-tune" "sim-tune included"
 
 echo "── gating fragments ───────────────────────────────"
 # Each stage's JS listens for these ids; losing one silently freezes a step.
-for f in bins-frag-w1 bins-frag-w2 \
-         prior-frag-1 prior-frag-2 \
+for f in prior-frag-1 prior-frag-2 \
          mm-frag-1 mm-frag-2 \
          bayes-frag-1 bayes-frag-2 bayes-frag-3 bayes-frag-4 \
          bayeq-frag-1 bayeq-frag-2 bayeq-frag-3 bayeq-frag-4 \
@@ -99,15 +129,7 @@ for f in bins-frag-w1 bins-frag-w2 \
          venn-frag-1 venn-frag-2 venn-frag-3 \
          binom-frag-1 binom-frag-2 binom-frag-3 \
          seller-frag-1 seller-frag-2 seller-frag-3 \
-         laplace-frag-1 laplace-frag-2 laplace-frag-3 \
-         clt-frag-1 clt-frag-2 clt-frag-3 \
-         zstd-frag-1 zstd-frag-2 \
-         ciflip-frag-1 ciflip-frag-2 ciflip-frag-3 \
-         cieq-frag-1 cieq-frag-2 cieq-frag-3 cieq-frag-4 \
-         pval-frag-1 pval-frag-2 pval-frag-3 \
-         pair-frag-1 pair-frag-2 \
-         ls-frag-1 ls-frag-2 \
-         smooth-frag-1 smooth-frag-2; do
+         laplace-frag-1 laplace-frag-2 laplace-frag-3; do
   need "id=\"$f\"" "fragment $f"
 done
 
@@ -123,7 +145,8 @@ fi
 # Count qwebr-insertion-location-N: the filter emits exactly one per chunk.
 # (Do NOT count .qwebr-console-area — that DOM is built at runtime by JS and
 # its static occurrences have nothing to do with how many cells exist.)
-want=$( { grep -ho '```{webr-r}' sections/*.qmd || true; } | wc -l | tr -d ' ')
+# Commented-out blocks are not rendered, so they must not be counted either.
+want=$( { grep -c '^```{webr-r}' "$SRC" || true; } | tr -d ' ')
 # Require at least one digit: the extension's own JS carries a bare
 # "qwebr-insertion-location-" template string that would otherwise be counted.
 got=$( { grep -o 'qwebr-insertion-location-[0-9][0-9]*' "$OUT" || true; } | sort -u | wc -l | tr -d ' ')
@@ -162,7 +185,8 @@ fi
 
 echo "── sim-cell budgets (spec §4.3) ───────────────────"
 # Budget by slide shape: 14 lines plain, 10 with a .lede-min, 12 with a plot,
-# 8 on power-sim (claim pair above the card). 48 characters max everywhere.
+# 8 on power-sim (claim pair above the card), 11 on mm-sim (its vector is
+# wrapped over three lines and the slide measures 608/700). 48 chars max.
 # `#|` option lines never count; a `#| context: setup` cell is exempt.
 budget_out=$(awk '
   !inchunk && /^## / { id=$0; sub(/.*#/,"",id); sub(/\}.*/,"",id); lede=0; plot=0 }
@@ -172,7 +196,7 @@ budget_out=$(awk '
   inchunk && /^```$/ {
     inchunk=0
     if (setup) next
-    budget = plot ? 12 : (lede ? 10 : 14); if (id == "power-sim") budget = 8
+    budget = plot ? 12 : (lede ? 10 : 14); if (id == "power-sim") budget = 8; if (id == "mm-sim") budget = 11
     status = (n <= budget && mx <= 48) ? "OK:  " : "FAIL:"
     if (status == "FAIL:") bad = 1
     printf "%s %-11s lines %2d/%-2d longest %2d/48\n", status, id, n, budget, mx
@@ -181,7 +205,7 @@ budget_out=$(awk '
   # BSD awk length() counts bytes: a non-ASCII character in a cell line counts as 2+. Cells are ASCII today; keep them so.
   inchunk { n++; if (length($0) > mx) mx = length($0) }
   END { exit bad ? 1 : 0 }
-' sections/*.qmd) || fail=1
+' "$SRC") || fail=1
 echo "$budget_out"
 
 echo "───────────────────────────────────────────────────"

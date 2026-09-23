@@ -3,6 +3,7 @@ title: "Probability & Statistics"
 subtitle: "BMAN10750"
 author:
   - name: "Gabriel Cabrera^‡^"
+    orcid: "0000-0000-0000-0000"
     url: "https://gcabrerag.rbind.io"
     affiliations:
       - name: "‡ The University of Manchester"
@@ -16,8 +17,12 @@ date-format: "MMMM YYYY"
 {{< include sections/02-descriptives.qmd >}}
 {{< include sections/03-probability.qmd >}}
 {{< include sections/04-distributions.qmd >}}
+<!-- commented out: slides 48-67 (seminars 5 to 9)
+
 {{< include sections/05-estimation.qmd >}}
 {{< include sections/06-testing.qmd >}}
 {{< include sections/07-two-populations.qmd >}}
 {{< include sections/08-regression.qmd >}}
 {{< include sections/09-forecasting.qmd >}}
+
+-->

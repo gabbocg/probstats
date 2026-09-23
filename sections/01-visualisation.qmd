@@ -228,6 +228,8 @@ ccFeedback = {
 }
 ```
 
+<!-- commented out: slides 8-9 (bins-intuition, bins-sim)
+
 ## The same 30 numbers, three ways {.stage-slide #bins-intuition}
 
 ::: {.stage-wrap .stage-wrap-std}
@@ -268,3 +270,5 @@ hist(x, breaks = brk, col = "#CBD9E6",
 ::: {.try-this}
 Run it with `bw <- 1`, then `0.5`, then `2`. The worksheet asks how many of the thirty spend more than 9%. At which width can you still read the answer off the picture?
 :::
+
+-->

@@ -2,3 +2,9 @@
 **/*.quarto_ipynb
 # Quarto HTML render artifacts of a single section (never wanted; the deck renders from index.qmd)
 **/*_files/
+/_site/
+/.Rproj.user/
+.DS_Store
+# The **/*.quarto_ipynb pattern does not match the numbered copies Quarto
+# leaves behind on a crashed render.
+**/*.quarto_ipynb_*

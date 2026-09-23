@@ -492,6 +492,8 @@ $$f(t) \;=\; \color{#F47C3C}{\lambda}\, e^{-\color{#F47C3C}{\lambda} t} \qquad T
 The same $\color{#F47C3C}{\lambda}$, read the other way round. $\operatorname{E}[T] = 1/\color{#F47C3C}{\lambda}$ is the average gap between arrivals.
 :::
 
+<!-- commented out: slide 42 (dist-questions)
+
 ## Summary: Three Questions, Three Distributions {.qcard-slide #dist-questions}
 
 ::: {.lede-min}
@@ -514,6 +516,8 @@ Each one answers exactly one question.
 The first two count and the third measures, so only the third has no $n$ and no $k$ in it.
 :::
 
+
+-->
 ## The Limit of a Binomial Distribution for Large n {.ojs-slide #normal-intuition}
 
 ::: {.lede-min}
@@ -585,6 +589,77 @@ html`<div class="ojs-eq">Binomial(${nBig}, <span class="rate">${pBig.toFixed(2)}
 Two limits come out of one distribution. Rare events with $\color{#F47C3C}{\lambda} = n\color{#F47C3C}{p}$ held still give the Poisson, plenty of events with $\color{#F47C3C}{p}$ held still give the normal.
 :::
 
+## The Box Plot on a Normal Curve {.formula-slide #box-normal}
+
+::: {.lede-min}
+A box plot is five numbers and no assumptions. Lay it over a normal curve and all five land in fixed places, which is where the $1.5 \times \text{IQR}$ rule comes from.
+:::
+
+```{=html}
+<svg width="880" height="342" viewBox="0 -12 880 342" aria-label="a box plot lined up with a normal curve, showing where the quartiles, the whiskers and the outlier fences fall in standard deviations">
+<path d="M90.5 296 L90.5 292.6 L96.9 292.2 L103.4 291.6 L109.9 291 L116.4 290.3 L122.8 289.6 L129.3 288.8 L135.8 287.9 L142.3 286.9 L148.7 285.8 L155.2 284.6 L161.7 283.3 L168.1 281.8 L174.6 280.3 L181.1 278.6 L187.6 276.8 L194 274.9 L200.5 272.8 L207 270.6 L213.5 268.3 L219.9 265.8 L226.4 263.1 L232.9 260.3 L239.3 257.4 L245.8 254.4 L252.3 251.2 L258.8 247.9 L265.2 244.5 L271.7 240.9 L278.2 237.3 L284.7 233.6 L291.1 229.9 L297.6 226 L304.1 222.2 L310.5 218.3 L317 214.4 L323.5 210.6 L330 206.8 L336.4 203 L342.9 199.3 L349.4 195.8 L355.9 192.3 L362.3 189.1 L368.8 185.9 L375.3 183 L381.7 180.3 L388.2 177.8 L394.7 175.6 L401.2 173.6 L407.6 171.9 L414.1 170.5 L420.6 169.4 L427.1 168.6 L433.5 168.2 L440 168 L446.5 168.2 L452.9 168.6 L459.4 169.4 L465.9 170.5 L472.4 171.9 L478.8 173.6 L485.3 175.6 L491.8 177.8 L498.3 180.3 L504.7 183 L511.2 185.9 L517.7 189.1 L524.1 192.3 L530.6 195.8 L537.1 199.3 L543.6 203 L550 206.8 L556.5 210.6 L563 214.4 L569.5 218.3 L575.9 222.2 L582.4 226 L588.9 229.9 L595.3 233.6 L601.8 237.3 L608.3 240.9 L614.8 244.5 L621.2 247.9 L627.7 251.2 L634.2 254.4 L640.7 257.4 L647.1 260.3 L653.6 263.1 L660.1 265.8 L666.5 268.3 L673 270.6 L679.5 272.8 L686 274.9 L692.4 276.8 L698.9 278.6 L705.4 280.3 L711.9 281.8 L718.3 283.3 L724.8 284.6 L731.3 285.8 L737.7 286.9 L744.2 287.9 L750.7 288.8 L757.2 289.6 L763.6 290.3 L770.1 291 L776.6 291.6 L783.1 292.2 L789.5 292.6 L789.5 296 Z" fill="rgba(50,93,136,0.10)"/>
+<path d="M352.6 296 L352.6 194 L359.1 190.7 L365.6 187.5 L372 184.5 L378.5 181.6 L385 179 L391.5 176.7 L397.9 174.6 L404.4 172.7 L410.9 171.2 L417.3 169.9 L423.8 169 L430.3 168.4 L436.8 168 L443.2 168 L449.7 168.4 L456.2 169 L462.7 169.9 L469.1 171.2 L475.6 172.7 L482.1 174.6 L488.5 176.7 L495 179 L501.5 181.6 L508 184.5 L514.4 187.5 L520.9 190.7 L527.4 194 L527.4 296 Z" fill="rgba(50,93,136,0.13)"/>
+<path d="M6 295.5 L12.5 295.4 L19 295.3 L25.4 295.2 L31.9 295.1 L38.4 295 L44.9 294.8 L51.3 294.6 L57.8 294.3 L64.3 294.1 L70.8 293.8 L77.3 293.5 L83.7 293.1 L90.2 292.7 L96.7 292.2 L103.2 291.6 L109.6 291 L116.1 290.4 L122.6 289.6 L129.1 288.8 L135.6 287.9 L142 286.9 L148.5 285.8 L155 284.6 L161.5 283.3 L167.9 281.9 L174.4 280.3 L180.9 278.7 L187.4 276.9 L193.9 274.9 L200.3 272.9 L206.8 270.7 L213.3 268.3 L219.8 265.8 L226.2 263.2 L232.7 260.4 L239.2 257.5 L245.7 254.4 L252.1 251.3 L258.6 248 L265.1 244.5 L271.6 241 L278.1 237.4 L284.5 233.7 L291 229.9 L297.5 226.1 L304 222.2 L310.4 218.4 L316.9 214.5 L323.4 210.6 L329.9 206.8 L336.4 203.1 L342.8 199.4 L349.3 195.8 L355.8 192.4 L362.3 189.1 L368.7 186 L375.2 183 L381.7 180.3 L388.2 177.8 L394.7 175.6 L401.1 173.6 L407.6 171.9 L414.1 170.5 L420.6 169.4 L427 168.6 L433.5 168.2 L440 168 L446.5 168.2 L453 168.6 L459.4 169.4 L465.9 170.5 L472.4 171.9 L478.9 173.6 L485.3 175.6 L491.8 177.8 L498.3 180.3 L504.8 183 L511.3 186 L517.7 189.1 L524.2 192.4 L530.7 195.8 L537.2 199.4 L543.6 203.1 L550.1 206.8 L556.6 210.6 L563.1 214.5 L569.6 218.4 L576 222.2 L582.5 226.1 L589 229.9 L595.5 233.7 L601.9 237.4 L608.4 241 L614.9 244.5 L621.4 248 L627.9 251.3 L634.3 254.4 L640.8 257.5 L647.3 260.4 L653.8 263.2 L660.2 265.8 L666.7 268.3 L673.2 270.7 L679.7 272.9 L686.1 274.9 L692.6 276.9 L699.1 278.7 L705.6 280.3 L712.1 281.9 L718.5 283.3 L725 284.6 L731.5 285.8 L738 286.9 L744.4 287.9 L750.9 288.8 L757.4 289.6 L763.9 290.4 L770.4 291 L776.8 291.6 L783.3 292.2 L789.8 292.7 L796.3 293.1 L802.7 293.5 L809.2 293.8 L815.7 294.1 L822.2 294.3 L828.7 294.6 L835.1 294.8 L841.6 295 L848.1 295.1 L854.6 295.2 L861 295.3 L867.5 295.4 L874 295.5" fill="none" stroke="#325D88" stroke-width="2.4" stroke-linejoin="round"/>
+<line x1="6" y1="296" x2="874" y2="296" stroke="#325D88" stroke-width="1.6"/>
+<line x1="51.3" y1="296" x2="51.3" y2="302" stroke="#325D88" stroke-width="1.4"/>
+<text x="51.3" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">&#8722;3&#963;</text>
+<line x1="180.9" y1="296" x2="180.9" y2="302" stroke="#325D88" stroke-width="1.4"/>
+<text x="180.9" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">&#8722;2&#963;</text>
+<line x1="310.4" y1="296" x2="310.4" y2="302" stroke="#325D88" stroke-width="1.4"/>
+<text x="310.4" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">&#8722;1&#963;</text>
+<line x1="440" y1="296" x2="440" y2="302" stroke="#325D88" stroke-width="1.4"/>
+<text x="440" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">&#956;</text>
+<line x1="569.6" y1="296" x2="569.6" y2="302" stroke="#325D88" stroke-width="1.4"/>
+<text x="569.6" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">+1&#963;</text>
+<line x1="699.1" y1="296" x2="699.1" y2="302" stroke="#325D88" stroke-width="1.4"/>
+<text x="699.1" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">+2&#963;</text>
+<line x1="828.7" y1="296" x2="828.7" y2="302" stroke="#325D88" stroke-width="1.4"/>
+<text x="828.7" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">+3&#963;</text>
+<line x1="90.5" y1="98" x2="90.5" y2="122" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="90.5" y1="148" x2="90.5" y2="296" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="352.6" y1="98" x2="352.6" y2="122" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="352.6" y1="148" x2="352.6" y2="296" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="527.4" y1="98" x2="527.4" y2="122" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="527.4" y1="148" x2="527.4" y2="296" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="789.5" y1="98" x2="789.5" y2="122" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="789.5" y1="148" x2="789.5" y2="296" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="90.5" y1="78" x2="789.5" y2="78" stroke="#325D88" stroke-width="1.8"/>
+<line x1="90.5" y1="66" x2="90.5" y2="90" stroke="#325D88" stroke-width="1.8"/>
+<line x1="789.5" y1="66" x2="789.5" y2="90" stroke="#325D88" stroke-width="1.8"/>
+<rect x="352.6" y="60" width="174.8" height="36" fill="rgba(50,93,136,0.22)" stroke="#325D88" stroke-width="1.8"/>
+<line x1="440" y1="60" x2="440" y2="96" stroke="#325D88" stroke-width="1.8"/>
+<circle cx="70.5" cy="78" r="3.6" fill="#B94A48"/>
+<circle cx="809.5" cy="78" r="3.6" fill="#B94A48"/>
+<circle cx="50.5" cy="78" r="3.6" fill="#B94A48"/>
+<circle cx="829.5" cy="78" r="3.6" fill="#B94A48"/>
+<circle cx="30.5" cy="78" r="3.6" fill="#B94A48"/>
+<circle cx="849.5" cy="78" r="3.6" fill="#B94A48"/>
+<text x="50.5" y="103" font-size="15" font-family="Roboto, sans-serif" fill="#B94A48" font-weight="700" text-anchor="middle">Outliers</text>
+<text x="829.5" y="103" font-size="15" font-family="Roboto, sans-serif" fill="#B94A48" font-weight="700" text-anchor="middle">Outliers</text>
+<path d="M352.6 28V20H527.4V28M440 20V13" fill="none" stroke="#325D88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="440" y="9" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">IQR</text>
+<text x="352.6" y="52" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">Q1</text>
+<text x="527.4" y="52" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">Q3</text>
+<text x="90.5" y="52" font-size="15" font-family="Roboto, sans-serif" fill="#6E7681" font-weight="700" text-anchor="middle">Q1 &#8722; 1.5 &#215; IQR</text>
+<text x="789.5" y="52" font-size="15" font-family="Roboto, sans-serif" fill="#6E7681" font-weight="700" text-anchor="middle">Q3 + 1.5 &#215; IQR</text>
+<text x="440" y="116" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">Median</text>
+<text x="90.5" y="141" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" text-anchor="middle">&#8722;2.698&#963;</text>
+<text x="352.6" y="141" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" text-anchor="middle">&#8722;0.6745&#963;</text>
+<text x="527.4" y="141" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" text-anchor="middle">0.6745&#963;</text>
+<text x="789.5" y="141" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" text-anchor="middle">2.698&#963;</text>
+<text x="263.8" y="282" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">24.65%</text>
+<text x="440" y="282" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">50%</text>
+<text x="616.2" y="282" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">24.65%</text>
+</svg>
+```
+
+::: {.note-box}
+$Q_1$ and $Q_3$ sit at $\mp 0.6745\sigma$, so the fences fall at $\mp 2.698\sigma$ and only $0.7\%$ of a normal lies beyond them. In a sample of a thousand, about seven points get flagged with nothing wrong.
+:::
+
+
+<!-- commented out: slides 44-47 (clt-intuition, clt-sim, zstd-intuition, funcrv)
+
 ## Why the normal turns up at all {.stage-slide #clt-intuition}
 
 ::: {.stage-wrap .stage-wrap-std}
@@ -640,6 +715,8 @@ round(c(sd_obs  = sd(xbar),
 Subtracting $\mu$ moves the curve; dividing by $\sigma$ squeezes it, so it grows *taller* — area is always 1. The shaded probability never moves: standardising changes the ruler, not the answer.
 :::
 
+-->
+
 ## Functions of a Random Variable {.formula-slide #funcrv}
 
 ::: {.lede-min}
@@ -663,4 +740,3 @@ $$f_{\color{#93C54B}{Y}}(y) \;=\; \tfrac{1}{|a|}\, f_X\big(\tfrac{y-b}{a}\big) \
 ::: {.slide-footer .fragment}
 Standardising is this with $a = 1/\sigma$ and $b = -\mu/\sigma$, which is why one table serves every normal. A *non-linear* $g$ leaves the family, so $X \sim \operatorname{N}(0,1)$ makes $\color{#93C54B}{Y} = X^{2}$ chi-squared.
 :::
-

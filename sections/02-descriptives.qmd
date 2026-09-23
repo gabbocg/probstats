@@ -15,10 +15,39 @@ Seminar 2 · Descriptive statistics
 []{.fragment .fi-frag id="mm-frag-3"}
 []{.fragment .fi-frag id="mm-frag-4"}
 []{.fragment .fi-frag id="mm-frag-5"}
+[]{.fragment .fi-frag id="mm-frag-6"}
+[]{.fragment .fi-frag id="mm-frag-7"}
 
-::: {.slide-footer}
-Twelve of the thirteen salaries never changed, yet the equal share rose by two and a half thousand. The person in the middle is still the same person on the same money, which is why a pay report quotes the median.
+## The Same Thirteen Salaries, in R {.sim-slide #mm-sim}
+
+::: {.slide-kicker}
+Seminar 2 · Descriptive statistics
 :::
+
+::: {.lede-min}
+Every summary you just watched is one line of R.
+:::
+
+::: {.sim-card .sim-text}
+```{webr-r}
+pay <- c(38, 42, 45, 47, 49, 50,
+         50, 50, 52, 54, 56, 59, 
+         62)
+
+# Descriptive statistics
+sort(table(pay), decreasing = TRUE)[1] # mode
+range(pay)   # 38 and 62
+median(pay)  # the 7th value once sorted
+mean(pay)    # 654 / 13
+var(pay)     # divisor is n - 1, not n
+sd(pay)
+```
+:::
+
+::: {.try-this}
+Change the last salary to `96` and run it again. The mode and the median count positions, so they do not move; the mean and the standard deviation measure distances, so they do.
+:::
+
 
 ## A Bound that Holds for *Any* Shape {.sim-slide #cheb-sim}
 

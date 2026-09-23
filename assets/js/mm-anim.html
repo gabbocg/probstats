@@ -2,110 +2,176 @@
 /*
   Payroll animation — slide #mm-intuition (Seminar 2).
 
-  Thirteen salaries at a small firm, drawn as thirteen pay packets. Every
-  summary is a thing you DO to the payroll rather than a marker parked on an
-  axis, which is what the abstract number-line version never managed:
+  Thirteen salaries at a small firm. Every summary is a thing you DO to the
+  bars, and every beat carries the arithmetic that goes with it:
 
-    0. thirteen bars, sorted, in thousands
-    1. MODE   — three people are on 50. The commonest packet, no arithmetic.
-    2. MEDIAN — walk in from both ends, one pair at a time, until the two
-                walkers meet. The middle person IS the median, and stopping
-                the same walk a quarter of the way in is the 25th percentile.
-    3. MEAN   — the bars LEVEL OFF to a common height and then spring back,
-                leaving a line where they levelled. That is the mean: what
-                everyone would get if the payroll were shared equally.
-    4. SPREAD — the gap from each bar to that line, and a band one standard
-                deviation either side of it.
-    5. FOUNDER — one salary grows to 96. The equal share jumps, the person in
-                the middle is still the same person on the same money.
+    0. UNSORTED  — the salaries in the order they arrived
+    1. SORT      — line them up, which is what makes the rest cheap
+    2. MODE      — the three equal bars light up
+    3. MIN / MAX — the two ends, and the span between them
+    4. MEDIAN    — six either side, so the seventh is the middle
+    5. MEAN      — the bars LEVEL OFF and spring back, leaving a line where
+                   they levelled. That line is the equal share.
+    6. OUTLIER   — one salary becomes 96 and the three summaries part company
+    7. SPREAD    — each bar's distance to the mean, and a band one standard
+                   deviation either side of it
+
+  Nothing is asserted: the readout under the axis always shows the rule in
+  words on one line and the numbers that come out of it on the next, both
+  computed from whatever is on screen.
 
   Built on StageKit (assets/js/stage-kit.html). Canvas 1000x445 at scale 1.05.
 */
 (function () {
   var K = window.StageKit;
 
-  var BASE = [38, 42, 45, 47, 49, 50, 50, 50, 52, 54, 56, 59, 62];
-  var OUT  = BASE.map(function (v, i) { return i === 12 ? 96 : v; });
-  var N = BASE.length, MID = (N - 1) >> 1;          // 6 — the middle of thirteen
+  var SORTED   = [38, 42, 45, 47, 49, 50, 50, 50, 52, 54, 56, 59, 62];
+  // The same thirteen, in "the order they arrived". Fixed, not shuffled at
+  // run time, so the picture is the same in every seminar.
+  var UNSORTED = [50, 38, 56, 47, 50, 62, 42, 54, 45, 50, 59, 49, 52];
+  var OUT      = SORTED.map(function (v, i) { return i === 12 ? 96 : v; });
+  var N = SORTED.length, MID = (N - 1) >> 1;
 
-  var VALUES  = [BASE, BASE, BASE, BASE, BASE, OUT];
+  var VALUES  = [UNSORTED, SORTED, SORTED, SORTED, SORTED, SORTED, OUT, OUT];
   var CAPTION = [
-    'Thirteen salaries at a small firm, in thousands',
+    'Thirteen salaries, in the order they arrived',
+    'Sort them, and every summary below gets easier',
     'The mode is the salary that comes up most often',
-    'Line them up and the median is the person in the middle',
-    'Share the whole payroll out equally and everyone gets the mean',
-    'The spread is how far people sit from that equal share',
-    'The founder takes ninety-six, and only the mean follows'
+    'The range is the whole spread, end to end',
+    'The median is the one in the middle once sorted',
+    'The mean is what everyone would get if the payroll were shared equally',
+    'The founder takes ninety-six and the three part company',
+    'The spread measures how far people sit from that equal share'
   ];
 
   var W = 1000, H = 445;
-  var BW = 52, GAP = 8, X0 = 110;                   // 13 bars, 110 -> 890
-  var BASE_Y = 344, TOP_V = 100, SCALE = 2.42;      // 100k reaches y = 102
-  var LINE_L = 84, LINE_R = 916;
+  var BW = 50, GAP = 8, X0 = 134;   // axis spans 116..884, centred in W
+  var BAR = '#D7DEE6';          // soft navy-grey; accents are for the beat
+  var BASE_Y = 296, SCALE = 2.08;              // 96 reaches y = 96
+  var SPAN_Y = 142;            // the brace sits just above the tallest bar
+  var EQ1_Y = 372, EQ2_Y = 410;                // rule in words, then the numbers
+
+  var AX0 = X0 - 18, AX1 = X0 + 750;     // the axis frame, and the ink block
+  var ACCENT = ['navy', 'navy', 'orange', 'navy', 'olive',
+                'brick', 'brick', 'brick'];
 
   function bx(i) { return X0 + i * (BW + GAP); }
   function by(v) { return BASE_Y - v * SCALE; }
 
-  function mean(a) { var s = 0; a.forEach(function (v) { s += v; }); return s / a.length; }
+  function sum(a) { var s = 0; a.forEach(function (v) { s += v; }); return s; }
+  function mean(a) { return sum(a) / a.length; }
+  // SAMPLE variance: the divisor is n - 1, not n. These thirteen salaries are
+  // a sample from a bigger world, and dividing by n would systematically
+  // under-state the spread because the deviations are measured from x-bar
+  // rather than from the true mean, which x-bar is fitted to.
   function sd(a) {
-    var m = mean(a), s = 0;
+    var m = mean(a), s = 0, df = a.length - 1;
     a.forEach(function (v) { s += (v - m) * (v - m); });
-    return Math.sqrt(s / a.length);
+    return { v: s / df, s: Math.sqrt(s / df), ss: s, df: df };
   }
   function mode(a) {
     var c = {}, best = a[0];
     a.forEach(function (v) { c[v] = (c[v] || 0) + 1; if (c[v] > c[best]) best = v; });
-    return +best;
+    return { value: +best, count: c[best] };
+  }
+  function lo(a) { return Math.min.apply(null, a); }
+  function hi(a) { return Math.max.apply(null, a); }
+
+  // The rule in words and the arithmetic, both derived from what is drawn.
+  function readout(state, v) {
+    var m = mean(v), md = mode(v), d = sd(v);
+    switch (state) {
+      case 1: return ['Smallest on the left, largest on the right',
+                      'Thirteen values, nothing added or removed'];
+      case 2: return ['Mode  =  the value that occurs most often',
+                      md.value + ' appears ' + md.count + ' times'];
+      case 3: return ['Range  =  max − min',
+                      hi(v) + ' − ' + lo(v) + '  =  ' + (hi(v) - lo(v))];
+      case 4: return ['Median  =  the middle value once sorted',
+                      'Six either side, so the 7th of 13  =  ' + v[MID]];
+      case 5: return ['x\u0304  =  ( \u03A3 x\u1D62 )  \u00F7  n',
+                      sum(v) + '  \u00F7  ' + v.length + '  =  ' + m.toFixed(2)];
+      case 6: return ['One value moved, and only one summary followed',
+                      'Mean ' + m.toFixed(2) + '     Median ' + v[MID] +
+                      '     Mode ' + md.value];
+      case 7: return ['s\u00B2  =  \u03A3 ( x\u1D62 \u2212 x\u0304 )\u00B2  \u00F7  ( n \u2212 1 )',
+                      Math.round(d.ss) + '  \u00F7  ' + d.df + '  =  ' + d.v.toFixed(2) +
+                      '        s  =  ' + d.s.toFixed(2)];
+      default: return ['', ''];
+    }
   }
 
   function build(stage) {
     var svg = K.canvas(stage, W, H);
-    var cap = svg.appendChild(K.txt(LINE_L, 32, CAPTION[0], { size: 'caption' }));
+    var cap = svg.appendChild(K.txt(AX0, 32, CAPTION[0], { size: 'caption' }));
 
-    var band = svg.appendChild(K.el('rect', {
-      x: LINE_L, y: 0, width: LINE_R - LINE_L, height: 0,
-      fill: 'rgba(185,74,72,0.10)', opacity: 0
-    }));
-
-    var bars = [], vals = [], gaps = [];
-    BASE.forEach(function (v, i) {
+    var gaps = [], bars = [], vals = [];
+    SORTED.forEach(function (v, i) {
       gaps.push(svg.appendChild(K.el('line', {
         x1: bx(i) + BW / 2, y1: 0, x2: bx(i) + BW / 2, y2: 0,
         stroke: K.PAL.brick, 'stroke-width': 1.4,
         'stroke-dasharray': '3 3', opacity: 0
       })));
       bars.push(svg.appendChild(K.el('rect', {
-        x: bx(i), y: by(v), width: BW, height: v * SCALE, rx: 3, fill: K.PAL.dim
+        x: bx(i), y: by(v), width: BW, height: v * SCALE, rx: 3, fill: BAR
       })));
-      vals.push(svg.appendChild(K.txt(bx(i) + BW / 2, by(v) - 9, v,
+      // Below the baseline, like an axis label. Above the bars the values
+      // shared a band of air with the equal-share line and were crossed by
+      // it; down here all thirteen can show at once and nothing touches them.
+      vals.push(svg.appendChild(K.txt(bx(i) + BW / 2, BASE_Y + 24, v,
         { size: 'tick', face: 'mono', anchor: 'middle', weight: 700 })));
     });
 
-    // The equal-share line, and the label that names what it is.
+    // The soft-red band is built AFTER the bars, so it is a wash laid over
+    // the picture rather than a panel the bars stand on. The mean line and
+    // the brace come later still and stay above it.
+    var band = svg.appendChild(K.el('rect', {
+      x: AX0, y: 0, width: AX1 - AX0, height: 0,
+      fill: 'rgba(185,74,72,0.07)', opacity: 0
+    }));
+
+    // min-to-max span, shown only on its own beat
+    // A brace, not a bare rule: the ends turn down towards the two bars it
+    // spans and a stem rises to the label, so it reads as "this much" rather
+    // than as another line in the chart. Flat rather than curly, like the
+    // one over the two surnames on #combinatorics.
+    var span = svg.appendChild(K.el('g', { opacity: 0 }));
+    var spanPath = span.appendChild(K.el('path', {
+      d: '', fill: 'none', stroke: K.PAL.navy, 'stroke-width': 1.8,
+      'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+    }));
+    var spanLab = span.appendChild(K.txt(0, SPAN_Y - 22, '',
+      { size: 'label', fill: 'navy', anchor: 'middle', weight: 700 }));
+
+    // Dashed and on top, so it reads as a reference line rather than another
+    // object in the picture — and it no longer vanishes behind the tall bars
+    // the way a line drawn underneath them did. Its value lives out in the
+    // right margin, past the last bar, where nothing can collide with it.
     var line = svg.appendChild(K.el('line', {
-      x1: LINE_L, y1: 0, x2: LINE_R, y2: 0,
-      stroke: K.PAL.brick, 'stroke-width': 2.4, opacity: 0
+      x1: AX0, y1: 0, x2: AX1, y2: 0,
+      stroke: K.PAL.brick, 'stroke-width': 1.6,
+      'stroke-dasharray': '7 5', opacity: 0
     }));
-    // Anchored at the LEFT end: the bars are sorted ascending, so the tall
-    // ones are on the right and a label there lands on top of them.
-    var lineLab = svg.appendChild(K.txt(LINE_L, 0, '', {
-      size: 'label', fill: 'brick', weight: 700
-    }));
-    lineLab.setAttribute('opacity', 0);
+    var lineLab = svg.appendChild(K.el('g', { opacity: 0 }));
+    var lineTxt = lineLab.appendChild(K.txt(AX0 + 6, 0, '',
+      { size: 'label', fill: 'brick', weight: 700 }));
 
     svg.appendChild(K.el('line', {
-      x1: LINE_L, y1: BASE_Y, x2: LINE_R, y2: BASE_Y,
+      x1: AX0, y1: BASE_Y, x2: AX1, y2: BASE_Y,
       stroke: K.PAL.ink, 'stroke-width': 1.5
     }));
 
-    // The middle person, named rather than pointed at.
-    var midLab = svg.appendChild(K.txt(bx(MID) + BW / 2, BASE_Y + 30,
-      'the middle one', { size: 'label', fill: 'olive', anchor: 'middle', weight: 700 }));
-    midLab.setAttribute('opacity', 0);
+    var MIDX = (AX0 + AX1) / 2;
+    var eq1 = svg.appendChild(K.txt(MIDX, EQ1_Y, '',
+      { size: 29, fill: 'ink', anchor: 'middle' }));
+    var eq2 = svg.appendChild(K.txt(MIDX, EQ2_Y, '',
+      { size: 26, face: 'mono', fill: 'navy', weight: 700, anchor: 'middle' }));
 
-    var s = { cap: cap, bars: bars, vals: vals, gaps: gaps, band: band, line: line,
-              lineLab: lineLab, midLab: midLab, at: 0, timers: [] };
-    paint(s, 0, BASE);
+    var s = { cap: cap, bars: bars, vals: vals, gaps: gaps, band: band,
+              line: line, lineLab: lineLab, lineTxt: lineTxt, span: span, spanLab: spanLab,
+              spanPath: spanPath, eq1: eq1, eq2: eq2,
+              at: 0, timers: [] };
+    paint(s, 0, UNSORTED);
     return s;
   }
 
@@ -113,102 +179,117 @@
     if (instant || K.REDUCE || !K.animeReady()) { node.setAttribute('opacity', to); return; }
     var o = { v: +(node.getAttribute('opacity') || 0) };
     window.anime.animate(o, {
-      v: to, duration: 360, delay: delay || 0, ease: 'outQuad',
+      v: to, duration: 340, delay: delay || 0, ease: 'outQuad',
       onUpdate: function () { node.setAttribute('opacity', o.v); }
     });
   }
 
-  // Bar colours are the argument. Orange marks the modal packets, olive the
-  // person in the middle, and after the founder's rise the tall bar goes
-  // brick so the thing that moved is obvious.
-  function colour(state, vals, i) {
-    if (state >= 5 && vals[i] > 80) return K.PAL.brick;
-    if (state >= 2 && i === MID) return K.PAL.olive;
-    if (state === 1 && vals[i] === mode(vals)) return K.PAL.orange;
-    return K.PAL.dim;
+  // Colour is the argument: orange for the modal bars, navy for the two ends,
+  // olive for the middle one, brick for the salary that ran away.
+  function colour(state, v, i) {
+    if (state >= 6 && v[i] > 80) return K.PAL.brick;
+    if (state === 4 && i === MID) return K.PAL.olive;
+    if (state === 3 && (v[i] === Math.min.apply(null, v) ||
+                        v[i] === Math.max.apply(null, v))) return K.PAL.navy;
+    if (state === 2 && v[i] === mode(v).value) return K.PAL.orange;
+    return BAR;
   }
 
-  function paint(s, state, vals, heights) {
-    var m = mean(vals), d = sd(vals);
+  function paint(s, state, v, heights) {
+    var m = mean(v), d = sd(v), r = readout(state, v);
     s.bars.forEach(function (b, i) {
-      var v = heights ? heights[i] : vals[i];
-      b.setAttribute('y', by(v));
-      b.setAttribute('height', v * SCALE);
-      b.setAttribute('fill', colour(state, vals, i));
-      s.vals[i].setAttribute('y', by(v) - 9);
-      s.vals[i].textContent = Math.round(vals[i]);
-      s.gaps[i].setAttribute('y1', by(v));
+      var h = heights ? heights[i] : v[i];
+      b.setAttribute('y', by(h));
+      b.setAttribute('height', h * SCALE);
+      b.setAttribute('fill', colour(state, v, i));
+      // Every value is on show; the beat's colour picks out the ones being
+      // read, and the rest recede.
+      var c = colour(state, v, i);
+      s.vals[i].setAttribute('fill', c === BAR ? K.PAL.inkSoft : c);
+      s.vals[i].setAttribute('opacity', c === BAR ? 0.75 : 1);
+      s.vals[i].textContent = Math.round(v[i]);
+      s.gaps[i].setAttribute('y1', by(h));
       s.gaps[i].setAttribute('y2', by(m));
     });
     s.line.setAttribute('y1', by(m));
     s.line.setAttribute('y2', by(m));
-    s.lineLab.setAttribute('y', by(m) - 10);
-    s.lineLab.textContent = 'equal share ' + m.toFixed(1);
-    s.band.setAttribute('y', by(m + d));
-    s.band.setAttribute('height', by(m - d) - by(m + d));
+    s.lineTxt.setAttribute('y', by(m) - 9);
+    s.lineTxt.textContent = m.toFixed(2);
+    s.band.setAttribute('y', by(m + d.s));
+    s.band.setAttribute('height', by(m - d.s) - by(m + d.s));
+    var iLo = v.indexOf(Math.min.apply(null, v)), iHi = v.indexOf(Math.max.apply(null, v));
+    var xa = bx(iLo) + BW / 2, xb = bx(iHi) + BW / 2, xm = (xa + xb) / 2;
+    s.spanPath.setAttribute('d',
+      'M' + xa + ' ' + (SPAN_Y + 11) + 'V' + SPAN_Y + 'H' + xb + 'V' + (SPAN_Y + 11) +
+      'M' + xm + ' ' + SPAN_Y + 'V' + (SPAN_Y - 9));
+    s.spanLab.setAttribute('x', xm);
+    s.spanLab.textContent = 'Range ' + (Math.max.apply(null, v) - Math.min.apply(null, v));
+    s.eq2.setAttribute('fill', K.PAL[ACCENT[state]]);
+    s.eq1.textContent = r[0];
+    s.eq2.textContent = r[1];
   }
 
-  function clearTimers(s) { s.timers.forEach(clearTimeout); s.timers = []; }
+  function clearTimers(s) { if (s) { s.timers.forEach(clearTimeout); s.timers = []; } }
 
   function place(s, state, instant) {
-    var from = VALUES[s.at], to = VALUES[state];
-    var prev = s.at;
+    var from = VALUES[s.at], to = VALUES[state], prev = s.at;
+    s.atWas = prev;
     s.cap.textContent = CAPTION[state];
     s.at = state;
     clearTimers(s);
 
-    fade(s.midLab, state >= 2 ? 1 : 0, instant);
-    fade(s.line, state >= 3 ? 1 : 0, instant);
-    fade(s.lineLab, state >= 3 ? 1 : 0, instant);
-    fade(s.band, state >= 4 ? 1 : 0, instant);
+    fade(s.span, state === 3 ? 1 : 0, instant);
+    // While the bars are levelled every value label sits ON the mean line,
+    // so the line and its chip wait for them to spring apart again.
+    var levelling = state === 5 && s.atWas < 5;
+    fade(s.line, state >= 5 ? 1 : 0, instant, levelling ? 2450 : 0);
+    fade(s.lineLab, state >= 5 ? 1 : 0, instant, levelling ? 2450 : 0);
+    fade(s.band, state >= 7 ? 1 : 0, instant);
     s.gaps.forEach(function (g, i) {
-      fade(g, state >= 4 ? 1 : 0, instant, state >= 4 ? i * 40 : 0);
+      fade(g, state >= 7 ? 1 : 0, instant, state >= 7 ? i * 35 : 0);
     });
 
     if (instant || K.REDUCE || !K.animeReady()) { paint(s, state, to); return; }
 
     var A = window.anime, m = mean(to);
 
-    // Entering the mean: level every bar to the equal share, hold, spring
-    // back. The levelling IS the definition, so it gets its own beat rather
-    // than a marker appearing.
-    if (state === 3 && prev < 3) {
+    // The mean beat levels every bar to the equal share, holds, and springs
+    // back. The levelling IS the definition, so it gets its own movement.
+    if (state === 5 && prev < 5) {
       var lv = { k: 0 };
-      A.animate(lv, {
-        k: 1, duration: 850, ease: 'inOutCubic',
+      A.animate(lv, { k: 1, duration: 850, ease: 'inOutCubic',
         onUpdate: function () {
-          paint(s, state, to, to.map(function (v) { return v + (m - v) * lv.k; }));
-        }
-      });
+          paint(s, state, to, to.map(function (x) { return x + (m - x) * lv.k; }));
+        } });
       s.timers.push(setTimeout(function () {
         var bk = { k: 1 };
-        A.animate(bk, {
-          k: 0, duration: 700, ease: 'outCubic',
+        A.animate(bk, { k: 0, duration: 700, ease: 'outCubic',
           onUpdate: function () {
-            paint(s, state, to, to.map(function (v) { return v + (m - v) * bk.k; }));
-          }
-        });
+            paint(s, state, to, to.map(function (x) { return x + (m - x) * bk.k; }));
+          } });
       }, 1750));
       return;
     }
 
     if (from === to) { paint(s, state, to); return; }
 
+    // Tween the VALUES. The sort and the outlier are then the same mechanism,
+    // and every readout recomputes from the interpolated data each frame.
     var t = { k: 0 };
     A.animate(t, {
-      k: 1, duration: 900, ease: 'inOutCubic',
+      k: 1, duration: 950, ease: 'inOutCubic',
       onUpdate: function () {
-        paint(s, state, from.map(function (v, i) { return v + (to[i] - v) * t.k; }));
-      }
+        paint(s, state, from.map(function (x, i) { return x + (to[i] - x) * t.k; }));
+      },
+      onComplete: function () { paint(s, state, to); }
     });
   }
 
   K.register({
     stage: 'mm-stage',
-    frags: ['mm-frag-1', 'mm-frag-2', 'mm-frag-3', 'mm-frag-4', 'mm-frag-5'],
-    build: build,
-    place: place,
-    stop: clearTimers
+    frags: ['mm-frag-1', 'mm-frag-2', 'mm-frag-3', 'mm-frag-4',
+            'mm-frag-5', 'mm-frag-6', 'mm-frag-7'],
+    build: build, place: place, stop: clearTimers
   });
 })();
 </script>
