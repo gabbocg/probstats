@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# check-render.sh — acceptance checks for the BMAN10750 seminar deck.
+# check-render.sh — acceptance checks for the Probability & Statistics deck.
 # Guards the failure modes that actually bit us building this:
 #   1. a stale render (freeze caching an include-file edit)
 #   2. a slide losing its animation stage or gating fragments

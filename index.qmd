@@ -1,6 +1,6 @@
 ---
 title: "Probability & Statistics"
-subtitle: "BMAN10750"
+subtitle: "A visual introduction"
 author:
   - name: "Gabriel Cabrera^‡^"
     orcid: "0000-0000-0000-0000"

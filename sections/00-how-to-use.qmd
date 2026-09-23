@@ -1,7 +1,7 @@
 # How These Decks Work {.hero #s00-how-to-use}
 
 ::: {.section-badge}
-BMAN10750 · nine seminars, one idea each
+Nine seminars, one idea each
 :::
 
 ## The R runs here, in this page {#s00-webr}
