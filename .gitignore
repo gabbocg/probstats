@@ -8,3 +8,6 @@
 # The **/*.quarto_ipynb pattern does not match the numbered copies Quarto
 # leaves behind on a crashed render.
 **/*.quarto_ipynb_*
+
+# Design specs and plans; working notes, not part of the deck.
+docs/superpowers/
