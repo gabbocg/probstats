@@ -1,0 +1,209 @@
+<script>
+/*
+  Why √π — slide #normal-pi. The 3Blue1Brown volume argument.
+
+  C is the area under the bell e^{-x²}. Spin it into the round hill
+  e^{-(x²+y²)} from the previous slide and measure the hill's volume twice:
+    0. the hill, drawn as a stack of slices
+    1. slice it like bread — the slice at depth y is the bell scaled by
+       e^{-y²}, so its area is e^{-y²} · C; adding the slices adds up another
+       C, and V = C · C
+    2. peel it like an onion — the ring at radius r is 2πr round and e^{-r²}
+       tall, and the area under 2πr e^{-r²} is exactly π (the r is what makes
+       it integrable). The live "area so far" is π(1 - e^{-r²}), the exact
+       running integral, not a sketch.
+    3. the same volume, so C² = π and C = √π. The next slide, #normal-full,
+       turns that into the 1/√(2π) of the textbook formula.
+
+  The hill is an oblique projection, painted back to front. Canvas 1000x445.
+*/
+(function () {
+  var K = window.StageKit, PAL = K.PAL;
+
+  var W = 1000, H = 445;
+  var CX = 300, CY = 290, AX = 82, AY = 44, DY = 30, AZ = 200;  // projection
+  var NS = 21, SPAN = 2;                          // slices at y = -2, -1.8, ..., 2
+  var Y_REST = 0.6;                               // the slice left lit in state 1
+  var R_END = 3.5;                                // rings sweep r to 3.5, where the running area reads π to 4 dp
+
+  var CAPS = [
+    'two bells at right angles make a round hill. What is its volume?',
+    'way 1: cut it like bread. Every slice is the bell, scaled down',
+    'way 2: peel it like an onion. Every ring is 2πr round',
+    'one hill, one volume, so the two answers must agree'
+  ];
+
+  function hill(x, y) { return Math.exp(-(x * x + y * y)); }
+  function X(x, y)    { return CX + AX * x - AY * y; }
+  function Y(y, z)    { return CY + DY * y - AZ * z; }
+  function pt(x, y, z) { return X(x, y).toFixed(1) + ' ' + Y(y, z).toFixed(1); }
+
+  function show(node, on, instant) {
+    node.style.transition = instant ? 'none' : 'opacity 450ms ease';
+    node.style.opacity = on ? 1 : 0;
+  }
+
+  function slicePath(y) {
+    var d = '', i, x;
+    for (i = 0; i <= 80; i++) {
+      x = -SPAN + 2 * SPAN * i / 80;
+      d += (i ? 'L' : 'M') + pt(x, y, hill(x, y));
+    }
+    return d + 'L' + pt(SPAN, y, 0) + 'L' + pt(-SPAN, y, 0) + 'Z';
+  }
+
+  // The wall of the cylinder of radius r cut out by the hill: its front half
+  // filled, its top rim drawn all the way round.
+  function ringPaths(r) {
+    var h = Math.exp(-r * r), a0 = Math.atan2(-AY, AX), front = '', rim = '', i, a;
+    for (i = 0; i <= 60; i++) {
+      a = a0 + Math.PI * i / 60;
+      front += (i ? 'L' : 'M') + pt(r * Math.cos(a), r * Math.sin(a), 0);
+    }
+    for (i = 60; i >= 0; i--) {
+      a = a0 + Math.PI * i / 60;
+      front += 'L' + pt(r * Math.cos(a), r * Math.sin(a), h);
+    }
+    for (i = 0; i <= 120; i++) {
+      a = 2 * Math.PI * i / 120;
+      rim += (i ? 'L' : 'M') + pt(r * Math.cos(a), r * Math.sin(a), h);
+    }
+    return { front: front + 'Z', rim: rim };
+  }
+
+  // the unrolled rings: 2πr e^{-r²} against r, on the right
+  var GX0 = 620, GX1 = 960, GB = 350, GH = 38;    // 38 px per unit of 2πr e^{-r²}
+  function gx(r) { return GX0 + (GX1 - GX0) * r / R_END; }
+  function gy(v) { return GB - GH * v; }
+  function ringCurve(r1, closed) {
+    var d = closed ? 'M' + gx(0) + ' ' + GB : '', i, r;
+    for (i = 0; i <= 90; i++) {
+      r = r1 * i / 90;
+      d += (closed || i ? 'L' : 'M') + gx(r).toFixed(1) + ' ' + gy(2 * Math.PI * r * Math.exp(-r * r)).toFixed(1);
+    }
+    return closed ? d + 'L' + gx(r1).toFixed(1) + ' ' + GB + 'Z' : d;
+  }
+
+  function build(stage) {
+    var svg = K.canvas(stage, W, H);
+    var cap = svg.appendChild(K.txt(40, 30, '', { size: 'caption' }));
+
+    // the floor, then the hill back (y = -2) to front (y = +2)
+    svg.appendChild(K.el('path', {
+      d: 'M' + pt(-SPAN, -SPAN, 0) + 'L' + pt(SPAN, -SPAN, 0) + 'L' + pt(SPAN, SPAN, 0) + 'L' + pt(-SPAN, SPAN, 0) + 'Z',
+      fill: PAL.rule, 'fill-opacity': 0.5, stroke: PAL.dim
+    }));
+    var slices = [];
+    for (var j = 0; j < NS; j++) {
+      slices.push(svg.appendChild(K.el('path', {
+        d: slicePath(-SPAN + 2 * SPAN * j / (NS - 1)),
+        fill: PAL.white, stroke: PAL.navy, 'stroke-width': 1.3, 'stroke-linejoin': 'round'
+      })));
+    }
+    // the one slice or ring being talked about, drawn over the ghosted hill
+    var lit = svg.appendChild(K.el('path', {
+      fill: PAL.orange, 'fill-opacity': 0.35, stroke: PAL.orange, 'stroke-width': 2.5, 'stroke-linejoin': 'round'
+    }));
+    var rim = svg.appendChild(K.el('path', { fill: 'none', stroke: PAL.orange, 'stroke-width': 2 }));
+
+    // --- right-hand column ---
+    var RX = 620;
+    var litLab = svg.appendChild(K.rich(RX, 92, '', { size: 'label', face: 'mono', fill: 'orange' }));
+    var way1 = svg.appendChild(K.txt(RX, 130, 'bread:   V  =  C · C  =  C²',
+      { size: 'caption', face: 'mono', fill: 'ink', weight: 700 }));
+    var way2 = svg.appendChild(K.txt(RX, 172, 'onion:   V  =  π',
+      { size: 'caption', face: 'mono', fill: 'navy', weight: 700 }));
+
+    var graph = svg.appendChild(K.el('g', {}));
+    var area = graph.appendChild(K.el('path', { fill: PAL.orange, 'fill-opacity': 0.3 }));
+    graph.appendChild(K.el('path', { d: ringCurve(R_END, false), fill: 'none', stroke: PAL.navy, 'stroke-width': 2.5 }));
+    graph.appendChild(K.el('line', { x1: GX0, y1: GB, x2: GX1, y2: GB, stroke: PAL.dim }));
+    graph.appendChild(K.rich(RX, 225, '2πr · e^{−r²}  against r', { size: 'label', face: 'mono', fill: 'inkSoft' }));
+    var sofar = graph.appendChild(K.txt(RX, 385, '', { size: 'label', face: 'mono', fill: 'ink' }));
+
+    var end = svg.appendChild(K.el('g', {}));
+    end.appendChild(K.txt(RX, 250, 'C²  =  π,  so  C  =  √π',
+      { size: 'readout', face: 'mono', fill: 'brick', weight: 700 }));
+    end.appendChild(K.rich(RX, 305, 'the area under e^{−x²} is √π ≈ 1.7725,', { size: 'label', fill: 'ink' }));
+    end.appendChild(K.txt(RX, 335, 'the number the normal divides by', { size: 'label', fill: 'ink' }));
+
+    return { svg: svg, cap: cap, slices: slices, lit: lit, rim: rim, litLab: litLab,
+             way1: way1, way2: way2, graph: graph, area: area, sofar: sofar, end: end,
+             state: 0, tween: null };
+  }
+
+  function setLab(s, str) {
+    var n = K.rich(620, 92, str, { size: 'label', face: 'mono', fill: 'orange' });
+    s.svg.replaceChild(n, s.litLab); s.litLab = n;
+  }
+
+  // way 1 at depth y
+  function slice(s, y) {
+    s.lit.setAttribute('d', slicePath(y));
+    s.rim.setAttribute('d', '');
+    setLab(s, 'y = ' + y.toFixed(2) + ':  e^{−y²} · C = ' + Math.exp(-y * y).toFixed(2) + ' C');
+  }
+
+  // way 2 at radius r. The ring stops being drawn past the edge of the grid,
+  // where it is flat on the floor anyway; the running area carries on to R_END.
+  function peel(s, r) {
+    var p = ringPaths(Math.min(r, SPAN));
+    s.lit.setAttribute('d', r > SPAN ? '' : p.front);
+    s.rim.setAttribute('d', r > SPAN ? '' : p.rim);
+    s.area.setAttribute('d', ringCurve(Math.max(r, 1e-3), true));
+    s.sofar.textContent = 'area so far  ' + (Math.PI * (1 - Math.exp(-r * r))).toFixed(4);
+    setLab(s, 'r = ' + r.toFixed(2) + ':  2πr · e^{−r²} = ' + (2 * Math.PI * r * Math.exp(-r * r)).toFixed(2));
+  }
+
+  function place(s, i, instant) {
+    s.cap.textContent = CAPS[i];
+    s.slices.forEach(function (p) {
+      p.style.transition = instant ? 'none' : 'fill-opacity 450ms ease, stroke-opacity 450ms ease';
+      p.style.fillOpacity = i === 0 ? 0.92 : 0.5;
+      p.style.strokeOpacity = i === 0 ? 1 : 0.3;
+    });
+    show(s.way1, i >= 1, instant);
+    show(s.way2, i >= 2, instant);
+    show(s.graph, i === 2, instant);
+    show(s.end, i === 3, instant);
+    show(s.lit, i === 1 || i === 2, instant);
+    show(s.rim, i === 2, instant);
+    show(s.litLab, i === 1 || i === 2, instant);
+
+    if (s.tween) { s.tween.pause(); s.tween = null; }
+    s.state = i;
+    var go = !(instant || K.REDUCE || !K.animeReady());
+    var p;
+    if (i === 1) {
+      // sweep the knife from the back of the hill to the front, then settle
+      if (!go) { slice(s, Y_REST); return; }
+      p = { y: -SPAN };
+      slice(s, p.y);
+      s.tween = window.anime.animate(p, {
+        y: [{ to: SPAN, duration: 2400 }, { to: Y_REST, duration: 900 }], ease: 'inOutSine',
+        onUpdate: function () { slice(s, p.y); }
+      });
+    } else if (i === 2) {
+      if (!go) { peel(s, R_END); return; }
+      p = { r: 0.02 };
+      peel(s, p.r);
+      // slow where the rings stand tall, quick across the flat tail; the
+      // answer line waits until the running area has reached it
+      show(s.way2, false, true);
+      s.tween = window.anime.animate(p, {
+        r: [{ to: 1.2, duration: 2600 }, { to: R_END, duration: 1400 }], ease: 'inOutSine',
+        onUpdate: function () { peel(s, p.r); },
+        onComplete: function () { show(s.way2, true, false); }
+      });
+    }
+  }
+
+  K.register({
+    stage: 'normalpi-stage',
+    frags: ['normalpi-frag-1', 'normalpi-frag-2', 'normalpi-frag-3'],
+    build: build,
+    place: place,
+    stop: function (s) { if (s.tween) s.tween.pause(); }
+  });
+})();
+</script>

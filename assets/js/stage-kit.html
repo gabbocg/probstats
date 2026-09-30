@@ -81,6 +81,26 @@
     return t;
   }
 
+  // txt() that also sets exponents: 'e^{−x²}' raises what is in the braces.
+  // Each run is a tspan; dy lifts an exponent and drops back after it.
+  function rich(x, y, str, o) {
+    o = o || {};
+    var t = txt(x, y, '', o), up = false;
+    var lift = 0.42 * (TYPE[o.size] || o.size || TYPE.label);   // px, not em: em would follow each tspan's own size
+    str.split(/\^\{([^}]*)\}/).forEach(function (run, i) {
+      if (!run) return;
+      var sup = i % 2 === 1;
+      var s = el('tspan', {
+        dy: sup === up ? null : (sup ? -lift : lift),
+        'font-size': sup ? '72%' : null
+      });
+      s.textContent = run;
+      t.appendChild(s);
+      up = sup;
+    });
+    return t;
+  }
+
   function canvas(stage, W, H) {
     stage.innerHTML = '';
     var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, width: W, height: H });
@@ -149,6 +169,34 @@
     return marks;
   }
 
+  // ---- dice ---------------------------------------------------------------
+  // Shared by #clt-idea and #clt-dice. A die is a group drawn about its own
+  // centre, so it can be shaken (translate + rotate) and re-faced in place.
+  var PIPS = { 1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]],
+    4: [[-1, -1], [1, -1], [-1, 1], [1, 1]], 5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]],
+    6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]] };
+  function die(g, cx, cy, size, face) {
+    var d = { g: g.appendChild(el('g', { transform: 'translate(' + cx + ' ' + cy + ')' })),
+              cx: cx, cy: cy, size: size, face: face, spin: 0 };
+    d.g.appendChild(el('rect', { x: -size / 2, y: -size / 2, width: size, height: size,
+      rx: size * 0.18, fill: PAL.navy }));
+    d.pips = d.g.appendChild(el('g', {}));
+    dieFace(d, face);
+    return d;
+  }
+  function dieFace(d, face) {
+    if (d.face === face && d.pips.firstChild) return;
+    d.face = face;
+    while (d.pips.firstChild) d.pips.removeChild(d.pips.firstChild);
+    PIPS[face].forEach(function (p) {
+      d.pips.appendChild(el('circle', { cx: p[0] * d.size * 0.27, cy: p[1] * d.size * 0.27,
+        r: d.size * 0.09, fill: PAL.white }));
+    });
+  }
+  function diePose(d, dy, angle) {
+    d.g.setAttribute('transform', 'translate(' + d.cx + ' ' + (d.cy + dy) + ') rotate(' + angle + ')');
+  }
+
   var registry = {};
 
   function register(spec) {
@@ -183,6 +231,8 @@
       if (typeof Reveal === 'undefined') { setTimeout(init, 30); return; }
       Reveal.on('slidechanged', function (e) { mount(e.currentSlide); });
       Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
+      // 'ready' may already have fired: landing on a #hash then mounts nothing.
+      if (Reveal.isReady && Reveal.isReady()) mount(Reveal.getCurrentSlide());
       Reveal.on('fragmentshown', function (e) {
         var i = index[e.fragment.id];
         if (current && i !== undefined && spec.place) spec.place(current, i + 1, false);
@@ -197,8 +247,9 @@
 
   window.StageKit = {
     PAL: PAL, FONT: FONT, TYPE: TYPE, REDUCE: REDUCE, MARK: MARK,
-    animeReady: animeReady, el: el, txt: txt, canvas: canvas,
+    animeReady: animeReady, el: el, txt: txt, rich: rich, canvas: canvas,
     missSet: missSet, mark: mark, block: block,
+    die: die, dieFace: dieFace, diePose: diePose,
     register: register, registry: registry
   };
 })();

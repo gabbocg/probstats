@@ -1,0 +1,169 @@
+<script>
+/*
+  Why e^{-x²} — slide #normal-e. Herschel's argument, told the 3Blue1Brown way.
+
+  Throw darts at a target. Two plain assumptions pin the shape down:
+    0. independence — the miss across (x) and the miss up (y) do not talk to
+       each other, so the height of the density at P is f(x) · f(y)
+    1. no favourite direction — turn the target and nothing changes, so the
+       height depends on the distance r alone. P rides its circle to (r, 0).
+    2. so f(x) · f(y) is a function of x² + y²: heights MULTIPLY while squares
+       ADD, and the function that turns + into × is the exponential. P rides
+       back while live numbers show the two factors trade off and the product
+       never moves.
+    3. the slice through the centre of that round hill is the bell e^{-x²}.
+
+  The shading is the true e^{-(x²+y²)}, as a radial gradient. Canvas 1000x445.
+*/
+(function () {
+  var K = window.StageKit, PAL = K.PAL;
+
+  var W = 1000, H = 445;
+  var CX = 225, CY = 250, U = 78, RANGE = 2.2;   // plane centre, px per unit
+  var R = 1.4, TH = 40 * Math.PI / 180;          // P sits at r = 1.4, 40°
+  var THETA = [TH, 0, TH, TH];                   // P's angle in each state
+
+  var CAPS = [
+    'a dart misses across by x and up by y, independently',
+    'a round target: nothing prefers one direction over another',
+    'heights multiply while squares add: only an exponential turns + into ×',
+    'slice the round hill through its middle and out comes the bell'
+  ];
+
+  function sx(x) { return CX + x * U; }
+  function sy(y) { return CY - y * U; }
+
+  // Fade by style, so a CSS transition carries it; instant turns that off.
+  function show(node, on, instant) {
+    node.style.transition = instant ? 'none' : 'opacity 450ms ease';
+    node.style.opacity = on ? 1 : 0;
+  }
+
+  function build(stage) {
+    var svg = K.canvas(stage, W, H);
+
+    // e^{-r²} sampled onto the gradient's stops, so the glow IS the density.
+    var defs = svg.appendChild(K.el('defs', {}));
+    var g = defs.appendChild(K.el('radialGradient', {
+      id: 'normale-glow', gradientUnits: 'userSpaceOnUse',
+      cx: CX, cy: CY, r: RANGE * U
+    }));
+    for (var i = 0; i <= 20; i++) {
+      var t = i / 20, r = t * RANGE;
+      g.appendChild(K.el('stop', {
+        offset: t, 'stop-color': PAL.navy, 'stop-opacity': (0.75 * Math.exp(-r * r)).toFixed(3)
+      }));
+    }
+
+    var cap = svg.appendChild(K.txt(40, 30, '', { size: 'caption' }));
+
+    svg.appendChild(K.el('rect', {
+      x: sx(-RANGE), y: sy(RANGE), width: 2 * RANGE * U, height: 2 * RANGE * U,
+      fill: 'url(#normale-glow)', stroke: PAL.rule
+    }));
+    [0.5, 1, 1.5, 2].forEach(function (r) {
+      svg.appendChild(K.el('circle', {
+        cx: CX, cy: CY, r: r * U, fill: 'none', stroke: PAL.white,
+        'stroke-opacity': 0.8, 'stroke-dasharray': '3 5'
+      }));
+    });
+    svg.appendChild(K.el('line', { x1: sx(-RANGE), y1: CY, x2: sx(RANGE), y2: CY, stroke: PAL.dim }));
+    svg.appendChild(K.el('line', { x1: CX, y1: sy(-RANGE), x2: CX, y2: sy(RANGE), stroke: PAL.dim }));
+
+    // P's circle: every point on it is the same height.
+    var ring = svg.appendChild(K.el('circle', {
+      cx: CX, cy: CY, r: R * U, fill: 'none', stroke: PAL.orange, 'stroke-width': 2.5
+    }));
+
+    var hyp = svg.appendChild(K.el('line', { stroke: PAL.orange, 'stroke-width': 2, 'stroke-dasharray': '6 4' }));
+    var legX = svg.appendChild(K.el('line', { stroke: PAL.ink, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    var legY = svg.appendChild(K.el('line', { stroke: PAL.olive, 'stroke-width': 3, 'stroke-linecap': 'round' }));
+    var labX = svg.appendChild(K.txt(0, 0, 'x', { size: 'label', face: 'mono', fill: 'ink', anchor: 'middle', weight: 700 }));
+    var labY = svg.appendChild(K.txt(0, 0, 'y', { size: 'label', face: 'mono', fill: 'olive', anchor: 'middle', weight: 700 }));
+    var labR = svg.appendChild(K.txt(0, 0, 'r', { size: 'label', face: 'mono', fill: 'orange', anchor: 'middle', weight: 700 }));
+    var dot = svg.appendChild(K.el('circle', { r: 7, fill: PAL.brick, stroke: PAL.white, 'stroke-width': 2 }));
+    var labP = svg.appendChild(K.txt(0, 0, 'P', { size: 'label', fill: 'brick', weight: 700 }));
+
+    // --- the right-hand column: the argument, one line per step ---
+    var RX = 500;
+    var l0 = svg.appendChild(K.txt(RX, 100, 'height at P  =  f(x) · f(y)',
+      { size: 'caption', face: 'mono', fill: 'ink' }));
+    var l1 = svg.appendChild(K.txt(RX, 145, '=  a function of x² + y² = r² only',
+      { size: 'label', face: 'mono', fill: 'orange' }));
+    var l2 = svg.appendChild(K.rich(RX, 205, 'e^{−x²} · e^{−y²}  =  e^{−(x² + y²)}',
+      { size: 'caption', face: 'mono', fill: 'navy', weight: 700 }));
+    var live = svg.appendChild(K.txt(RX, 245, '',
+      { size: 'label', face: 'mono', fill: 'inkSoft' }));
+
+    // the bell: the slice along y = 0
+    var bell = svg.appendChild(K.el('g', {}));
+    var BX0 = RX, BX1 = 960, BB = 420, BH = 110;
+    var d = '';
+    for (i = 0; i <= 120; i++) {
+      var x = -RANGE + 2 * RANGE * i / 120;
+      d += (i ? 'L' : 'M') + (BX0 + (BX1 - BX0) * i / 120).toFixed(1) + ' ' + (BB - BH * Math.exp(-x * x)).toFixed(1);
+    }
+    bell.appendChild(K.el('path', { d: d + 'Z', fill: PAL.navy, 'fill-opacity': 0.12, stroke: PAL.navy, 'stroke-width': 2.5 }));
+    bell.appendChild(K.el('line', { x1: BX0, y1: BB, x2: BX1, y2: BB, stroke: PAL.dim }));
+    bell.appendChild(K.rich(RX, 292, 'the slice at y = 0:  f(x) = e^{−x²}',
+      { size: 'label', face: 'mono', fill: 'ink' }));
+    // the line on the plane where that slice is taken
+    var cut = svg.appendChild(K.el('line', {
+      x1: sx(-RANGE), y1: CY, x2: sx(RANGE), y2: CY, stroke: PAL.navy, 'stroke-width': 3
+    }));
+
+    return { svg: svg, cap: cap, ring: ring, hyp: hyp, legX: legX, legY: legY,
+             labX: labX, labY: labY, labR: labR, dot: dot, labP: labP,
+             l0: l0, l1: l1, l2: l2, live: live, bell: bell, cut: cut,
+             state: 0, tween: null };
+  }
+
+  // P at angle th on its circle, legs and live numbers following it.
+  function point(s, th) {
+    var x = R * Math.cos(th), y = R * Math.sin(th);
+    function at(n, a) { for (var k in a) n.setAttribute(k, a[k]); }
+    at(s.legX, { x1: CX, y1: CY, x2: sx(x), y2: CY });
+    at(s.legY, { x1: sx(x), y1: CY, x2: sx(x), y2: sy(y) });
+    at(s.hyp,  { x1: CX, y1: CY, x2: sx(x), y2: sy(y) });
+    at(s.dot,  { cx: sx(x), cy: sy(y) });
+    at(s.labP, { x: sx(x) + 12, y: sy(y) - 10 });
+    at(s.labX, { x: sx(x / 2), y: CY + 24 });
+    at(s.labY, { x: sx(x) + 16, y: sy(y / 2) + 6 });
+    at(s.labR, { x: sx(x / 2) - 12 * Math.sin(th) - 6, y: sy(y / 2) - 10 * Math.cos(th) });
+    s.labY.style.visibility = y > 0.15 ? 'visible' : 'hidden';
+    var fx = Math.exp(-x * x), fy = Math.exp(-y * y);
+    s.live.textContent = fx.toFixed(3) + ' × ' + fy.toFixed(3) + '  =  ' + (fx * fy).toFixed(3);
+  }
+
+  function place(s, i, instant) {
+    s.cap.textContent = CAPS[i];
+
+    show(s.ring, i >= 1, instant);
+    show(s.hyp, i >= 1, instant);
+    show(s.labR, i >= 1, instant);
+    show(s.l1, i >= 1, instant);
+    show(s.l2, i >= 2, instant);
+    show(s.live, i >= 2, instant);
+    show(s.bell, i >= 3, instant);
+    show(s.cut, i >= 3, instant);
+
+    if (s.tween) { s.tween.pause(); s.tween = null; }
+    var from = THETA[s.state], to = THETA[i];
+    s.state = i;
+    if (instant || K.REDUCE || from === to || !K.animeReady()) { point(s, to); return; }
+    var p = { th: from };
+    s.tween = window.anime.animate(p, {
+      th: to, duration: 1400, ease: 'inOutCubic',
+      onUpdate: function () { point(s, p.th); }
+    });
+  }
+
+  K.register({
+    stage: 'normale-stage',
+    frags: ['normale-frag-1', 'normale-frag-2', 'normale-frag-3'],
+    build: build,
+    place: place,
+    stop: function (s) { if (s.tween) s.tween.pause(); }
+  });
+})();
+</script>

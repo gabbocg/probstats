@@ -72,6 +72,13 @@
 // centred and top-anchored while it shrinks. Ink runs to y = 423, so the wrap
 // is 423 * 0.90 rounded up with a few px of air.
 #cond-intuition .stage { transform: scale(0.90); }
+// #clt-intuition came back with a lede; its drawing ends at y = 416 of 445,
+// so 0.95 and a 420px wrap buy the takeaway its line back with air above it.
+#clt-intuition .stage { transform: scale(0.95); }
+#clt-intuition .stage-wrap { height: 420px; }
+// #clt-idea has no lede and, since its takeaway went, no footer: the grid sat
+// hard under the title with ~120px spare below. A bit over half goes on top.
+#clt-idea .stage-wrap { margin-top: 72px; }
 #cond-intuition .stage-wrap { height: 388px; }
 // 362, not 366 * 1.05: the drawing only reaches y = 345 of the 366-unit
 // canvas, so the extra 1.05 of slack all piled up BELOW it — 29px of air
@@ -170,6 +177,7 @@
 #expo-formal .slide-footer,
 #dist-questions .slide-footer,
 #normal-intuition .slide-footer,
+#clt-intuition .slide-footer,
 #prob-count .slide-footer,
 #funcrv .slide-footer { text-align: justify; hyphens: auto; }
 
@@ -1314,4 +1322,38 @@
   // to inline maths but silently ignores it inside $$ ... $$, so half the
   // equation came out plain ink. If that is ever fixed, move the colours back
   // out of the source and into rules here.
+}
+
+// #normal-formula: the formula across the top, then the dials stacked in a
+// left column and the plot on the right. Each dial sets its label above the
+// number box and track, so the column stays narrow.
+.reveal section#normal-formula {
+  // centred as one unit: neither column stretches, the row's slack goes to its sides
+  .nf-row { display: flex; align-items: center; justify-content: center; gap: 40px; margin-top: 0; }
+  .nf-left { flex: 0 0 300px; }
+  .nf-right { flex: 0 0 auto; }
+  .nf-dials { display: flex; flex-direction: column; gap: 22px; }
+  .observablehq form {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    --label-width: auto;
+    width: auto; max-width: none;
+    input[type="range"] { width: 170px; }
+  }
+  .cell-output-display { overflow: hidden; }
+  .cell.hidden { display: none; }        // the value-only cell: its empty box still carried 29px of margin
+  .nf-left .cell + .cell { margin-top: 18px; }
+  .nf-card {
+    background: #FAFBFC;
+    border: 1.5px solid var(--rule);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 18px;
+    color: var(--ink-soft);
+    div { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; }
+    div + div { border-top: 1px solid var(--rule); }
+    b { font-family: "JetBrains Mono", monospace; color: var(--navy); }
+    b.nf-band { color: var(--accent-3); }
+  }
 }

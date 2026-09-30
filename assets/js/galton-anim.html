@@ -1,0 +1,274 @@
+<script>
+/*
+  Galton board — slide #galton.
+
+  Twelve rows of pegs; at each one a ball goes left or right, 50/50. The bin
+  it ends in is the number of rights, so each ball IS one Binomial(12, ½)
+  draw, and the pile of balls is the binomial histogram built by gravity.
+    0. one ball, slowly, its path traced peg by peg
+    1. 1500 balls rain down and stack up in the bins
+    2. the curve lands on the pile: Binomial(12, ½) ≈ Normal(6, 3), in the
+       same units as the stacks (expected count / balls per stack row)
+
+  Every bounce comes from a seeded generator, so the pile is a real
+  simulation and the same one every time. The rain is one tweened clock with
+  every ball's position read off it (release i happens at i · REL ms).
+
+  Built on StageKit (assets/js/stage-kit.html). Canvas 1000x445.
+*/
+(function () {
+  var K = window.StageKit, PAL = K.PAL;
+
+  var W = 1000, H = 445;
+  var N = 1500, R = 12;                           // balls, rows of pegs
+  var CX = 330, TOP = 58, DX = 34, DY = 18;       // board geometry
+  var BIN_TOP = TOP + R * DY + 6, BASE = 432;
+  // 9 x 3.6 = 32.4px fits a 34px bin; this seed's tallest bin (324 balls) stacks
+  // 36 rows = 130px, inside the 152px between the last pegs and the floor.
+  var D = 3.6, COLS = 9;                          // ball size, balls per stack row
+  var REL = 5, ROWT = 75, FALL = 280;             // ms: gap between releases, per row, into the bin
+  var DEMO_ROWT = 330;                            // ms per row for the slow first ball
+  var RX = 640;                                   // text column
+
+  var RW = 320;                                   // text column width: RX to the divider's end
+  var TEXT = [
+    'Every peg sends the ball left or right, 50/50.',
+    'Its bin is the number of rights in 12 bounces.',
+    'So every ball is one draw from a Binomial(12,\u00a0½), and the pile is the bell.'   // \u00a0: never split the name
+  ];
+
+  // mulberry32: small and seeded.
+  function rng(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  // Every ball's twelve bounces, its bin, and its place in that bin's stack.
+  var rand = rng(1889), dirs = [], bin = [], slot = [], filled = [], i, r;
+  for (i = 0; i <= R; i++) filled.push(0);
+  for (i = 0; i < N; i++) {
+    var d = [], s = 0;
+    for (r = 0; r < R; r++) { d.push(rand() < 0.5 ? 0 : 1); s += d[r]; }
+    dirs.push(d); bin.push(s); slot.push(filled[s]++);
+  }
+
+  function binX(j) { return CX + (j - R / 2) * DX; }
+  // waypoint k: the ball after k bounces with j rights, just above peg row k
+  function way(k, j) { return [CX + (j - k / 2) * DX, TOP + k * DY - 8]; }
+  function rest(i) {
+    var k = slot[i];
+    return [binX(bin[i]) + (k % COLS - (COLS - 1) / 2) * D, BASE - D / 2 - Math.floor(k / COLS) * D];
+  }
+
+  // Where ball i is, t ms after its release, at `rowt` ms per row. null = not yet out.
+  function pos(i, t, rowt) {
+    if (t < 0) return null;
+    var k = Math.floor(t / rowt), j = 0, n;
+    if (k < R) {
+      for (n = 0; n < k; n++) j += dirs[i][n];
+      var u = t / rowt - k, a = way(k, j), b = way(k + 1, j + dirs[i][k]);
+      return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u - 7 * Math.sin(Math.PI * u)];
+    }
+    var f = (t - R * rowt) / FALL, e = way(R, bin[i]), z = rest(i);
+    if (f >= 1) return z;
+    return [e[0] + (z[0] - e[0]) * f, e[1] + (z[1] - e[1]) * f * f];
+  }
+  function flight(rowt) { return R * rowt + FALL; }
+
+  function show(node, on, instant) {
+    node.style.transition = instant ? 'none' : 'opacity 500ms ease';
+    node.style.opacity = on ? 1 : 0;
+  }
+
+  function build(stage) {
+    var svg = K.canvas(stage, W, H), j, r;
+
+    // funnel, pegs, bins
+    svg.appendChild(K.el('path', { d: 'M' + (CX - 26) + ' 20L' + (CX - 7) + ' 42M' + (CX + 26) + ' 20L' + (CX + 7) + ' 42',
+      stroke: PAL.dim, 'stroke-width': 2.5, fill: 'none', 'stroke-linecap': 'round' }));
+    for (r = 0; r < R; r++) {
+      for (j = 0; j <= r; j++) {
+        svg.appendChild(K.el('circle', { cx: CX + (j - r / 2) * DX, cy: TOP + r * DY, r: 3.5, fill: PAL.dim }));
+      }
+    }
+    for (j = 0; j <= R + 1; j++) {
+      var x = binX(j - 0.5);
+      svg.appendChild(K.el('line', { x1: x, y1: BIN_TOP, x2: x, y2: BASE, stroke: PAL.dim, 'stroke-width': 1.5 }));
+    }
+    svg.appendChild(K.el('line', { x1: binX(-0.5), y1: BASE, x2: binX(R + 0.5), y2: BASE, stroke: PAL.inkSoft, 'stroke-width': 1.5 }));
+
+    var trace = svg.appendChild(K.el('path', { fill: 'none', stroke: PAL.orange, 'stroke-width': 2.5,
+      'stroke-dasharray': '5 4', 'stroke-linejoin': 'round' }));
+
+    var balls = [];
+    for (var b = 0; b < N; b++) {
+      balls.push(svg.appendChild(K.el('circle', { r: b === 0 ? 4 : D / 2 - 0.2, fill: b === 0 ? PAL.orange : PAL.navy,
+        visibility: 'hidden' })));
+    }
+
+    // the curve: expected count per bin, in stack rows, drawn in stack pixels
+    var cd = '', x0;
+    for (j = 0; j <= 200; j++) {
+      x0 = -0.5 + (R + 1) * j / 200;
+      var cnt = N * Math.exp(-(x0 - R / 2) * (x0 - R / 2) / (2 * R / 4)) / Math.sqrt(2 * Math.PI * R / 4);
+      cd += (j ? 'L' : 'M') + binX(x0).toFixed(1) + ' ' + (BASE - cnt / COLS * D).toFixed(1);
+    }
+    var curve = svg.appendChild(K.el('path', { d: cd, fill: 'none', stroke: PAL.brick, 'stroke-width': 3 }));
+
+    // right-hand column, on the board's own grid: the step text starts level
+    // with the top peg, the count sits level with the top of the bins, and
+    // the law's last line stands on the bin floor. Each reading is a small
+    // grey label over a large value, the way the other stages set theirs.
+    var lines = svg.appendChild(K.el('g', {}));
+    svg.appendChild(K.el('line', { x1: RX, y1: BIN_TOP - 40, x2: RX + RW, y2: BIN_TOP - 40, stroke: PAL.rule }));
+    svg.appendChild(K.txt(RX, BIN_TOP - 6, 'Balls dropped', { size: 'label' }));
+    var count = svg.appendChild(K.txt(RX, BIN_TOP + 30, '', { size: 'readout', face: 'mono', fill: 'navy', weight: 700 }));
+    var law = svg.appendChild(K.el('g', {}));
+    law.appendChild(K.txt(RX, BASE - 70, 'The pile follows', { size: 'label' }));
+    law.appendChild(K.txt(RX, BASE - 36, 'Binomial(12, ½)', { size: 'readout', face: 'mono', fill: 'brick', weight: 700 }));
+    law.appendChild(K.txt(RX, BASE, '≈ Normal(6, 3)', { size: 'caption', face: 'mono', fill: 'brick' }));
+
+    return { svg: svg, balls: balls, trace: trace, curve: curve, lines: lines, count: count, law: law,
+             state: 0, tween: null };
+  }
+
+  // The step text as a justified block, like the slide's lede. SVG cannot
+  // justify, so: measure each word, fill lines greedily to RW, and hand every
+  // line but the last the leftover width, split evenly between its gaps.
+  function words(s, i) {
+    var g = s.lines, list = TEXT[i].split(' '), lines = [], cur = [], used = 0, k;
+    while (g.firstChild) g.removeChild(g.firstChild);
+    var probe = g.appendChild(K.txt(0, -100, '', { size: 'caption' }));
+    probe.textContent = ' ';
+    var space = probe.getComputedTextLength() || 6;
+    var wide = list.map(function (w) { probe.textContent = w; return probe.getComputedTextLength(); });
+    g.removeChild(probe);
+    if (!wide[0]) {                               // not laid out (hidden): leave it ragged
+      g.appendChild(K.txt(RX, TOP + 8, TEXT[i], { size: 'caption' }));
+      return;
+    }
+    list.forEach(function (w, n) {
+      if (cur.length && used + space + wide[n] > RW) { lines.push(cur); cur = []; used = 0; }
+      used += (cur.length ? space : 0) + wide[n];
+      cur.push(n);
+    });
+    lines.push(cur);
+    lines.forEach(function (ln, row) {
+      var sum = ln.reduce(function (a, n) { return a + wide[n]; }, 0);
+      var gap = row < lines.length - 1 && ln.length > 1 ? (RW - sum) / (ln.length - 1) : space;
+      var x = RX;
+      for (k = 0; k < ln.length; k++) {
+        g.appendChild(K.txt(x, TOP + 8 + row * 34, list[ln[k]], { size: 'caption' }));
+        x += wide[ln[k]] + gap;
+      }
+    });
+  }
+
+  function put(s, i, p) {
+    var b = s.balls[i];
+    if (!p) { b.setAttribute('visibility', 'hidden'); return; }
+    b.setAttribute('visibility', 'visible');
+    b.setAttribute('cx', p[0].toFixed(1));
+    b.setAttribute('cy', p[1].toFixed(1));
+  }
+
+  // ball 0's path, through waypoint k (fractional k draws part of the next leg)
+  function tracePath(s, upto) {
+    var d = '', j = 0, k, a;
+    for (k = 0; k <= Math.min(R, Math.floor(upto)); k++) {
+      a = way(k, j);
+      d += (k ? 'L' : 'M') + a[0] + ' ' + a[1];
+      if (k < R) j += dirs[0][k];
+    }
+    s.trace.setAttribute('d', d);
+  }
+
+  function settle(s, upto) {                      // balls [0, upto) at rest, the rest hidden
+    for (var b = 0; b < N; b++) put(s, b, b < upto ? rest(b) : null);
+    s.count.textContent = String(upto);
+  }
+
+  function stop(s) {
+    if (s.tween) s.tween.pause();
+    s.tween = null;
+  }
+
+  // The first ball alone: one scalar (ms of flight) tweened like every other
+  // stage, so it plays the moment the slide arrives.
+  function demo(s, delay) {
+    var p = { t: 0 }, end = flight(DEMO_ROWT);
+    put(s, 0, null);
+    tracePath(s, -1);
+    s.tween = window.anime.animate(p, {
+      t: end, duration: end, delay: delay, ease: 'linear',
+      onUpdate: function () {
+        put(s, 0, pos(0, p.t, DEMO_ROWT));
+        tracePath(s, p.t / DEMO_ROWT);
+        s.count.textContent = p.t >= end ? '1' : '0';
+      }
+    });
+  }
+
+  // The rain: one clock tweened from 0 to the moment the last ball lands, and
+  // every ball's position read off it. anime rather than a hand-rolled
+  // requestAnimationFrame loop, so it runs on the same ticker as every other
+  // stage (a bare rAF loop was seen to stall after a slide change).
+  function rain(s) {
+    var p = { t: 0 }, end = (N - 2) * REL + flight(ROWT), landed = 1;
+    s.tween = window.anime.animate(p, {
+      t: end, duration: end, ease: 'linear',
+      // Balls land in release order, so everything below `landed` is already
+      // at rest and everything past the first unreleased ball is still
+      // hidden: each update touches only the ones in the air.
+      onUpdate: function () {
+        for (var b = landed; b < N; b++) {
+          var ti = p.t - (b - 1) * REL;
+          if (ti < 0) break;
+          put(s, b, pos(b, ti, ROWT));
+          if (ti >= flight(ROWT) && b === landed) landed = b + 1;
+        }
+        s.count.textContent = String(landed);
+      }
+    });
+  }
+
+  function place(s, i, instant) {
+    var from = s.state;
+    s.state = i;
+    words(s, i);
+    show(s.curve, i >= 2, instant);
+    show(s.law, i >= 2, instant);
+    show(s.trace, i === 0, instant);
+    var go = !(instant || K.REDUCE || !K.animeReady());
+
+    if (i === 0) {
+      // Arriving on the slide is `instant` too, but the first ball is the
+      // point of this step: drop it anyway, once the slide transition is over.
+      stop(s);
+      settle(s, 0);
+      if (!K.REDUCE && K.animeReady()) { demo(s, instant ? 500 : 0); }
+      else { settle(s, 1); tracePath(s, R); }
+    } else if (i === 1 && from === 0 && go) {
+      stop(s);
+      settle(s, 1);
+      tracePath(s, R);
+      rain(s);
+    } else if (!(i === 2 && from === 1 && s.tween)) {   // 1 -> 2 mid-rain: let it finish under the curve
+      stop(s);
+      settle(s, N);
+    }
+  }
+
+  K.register({
+    stage: 'galton-stage',
+    frags: ['galton-frag-1', 'galton-frag-2'],
+    build: build,
+    place: place,
+    stop: stop
+  });
+})();
+</script>

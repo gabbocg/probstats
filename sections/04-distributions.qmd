@@ -589,6 +589,227 @@ html`<div class="ojs-eq">Binomial(${nBig}, <span class="rate">${pBig.toFixed(2)}
 Two limits come out of one distribution. Rare events with $\color{#F47C3C}{\lambda} = n\color{#F47C3C}{p}$ held still give the Poisson, plenty of events with $\color{#F47C3C}{p}$ held still give the normal.
 :::
 
+## The Galton Board {.stage-slide #galton}
+
+::: {.lede-min}
+Galton's 1889 machine: a coin flip at every peg, and a binomial built out of falling balls.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="galton-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="galton-frag-1"}
+[]{.fragment .fi-frag id="galton-frag-2"}
+
+## The Idea Behind the Central Limit Theorem {.stage-slide #clt-idea}
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="cltidea-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="cltidea-frag-1"}
+[]{.fragment .fi-frag id="cltidea-frag-2"}
+
+## Let's Try Some Simulations {.stage-slide #clt-dice}
+
+::: {.lede-min}
+Throw $\color{#F47C3C}{n}$ of them and add them up, 2,500 times.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="cltdice-stage" class="stage"></div>
+:::
+
+<!-- commented out: clt-intuition
+
+## The Central Limit Theorem {.stage-slide #clt-intuition}
+
+::: {.lede-min}
+Not just coin flips: average draws from *any* population and the bell appears.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="clt-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="clt-frag-1"}
+[]{.fragment .fi-frag id="clt-frag-2"}
+[]{.fragment .fi-frag id="clt-frag-3"}
+
+::: {.slide-footer}
+The population never becomes normal; the **mean** does, narrowing at $\sigma/\sqrt{n}$ on an axis that never rescales.
+:::
+
+-->
+
+<!-- commented out: clt-sim
+
+## Break the Bell on Purpose {.sim-slide #clt-sim}
+
+::: {.slide-kicker}
+Seminar 4 · the CLT, stress-tested
+:::
+
+::: {.sim-card .sim-plot}
+```{webr-r}
+#| fig-width: 5.7
+#| fig-height: 4.3
+#| out-width: "100%"
+n <- 5             # <-- draws per average
+pop <- function(k) rexp(k)^2   # no bell at all
+
+xbar <- replicate(4000, mean(pop(n)))
+hist(xbar, breaks = 40, col = "#CBD9E6",
+     border = "white", main = "",
+     xlab = paste("mean of", n, "draws"))
+
+round(c(sd_obs  = sd(xbar),
+        se_pred = sd(pop(1e5)) / sqrt(n)), 3)
+```
+:::
+
+::: {.try-this}
+`n <- 1` is the raw population, violently skewed; by `n <- 30` it is nearly symmetric and `sd_obs` tracks $\sigma/\sqrt{n}$. **The CLT is a claim about the mean, and it survives a parent this ugly.**
+:::
+
+-->
+
+## The Normal Distribution {.ojs-slide #normal-formula}
+
+::: {.lede-min}
+That bell has a formula. $\color{#B94A48}{\mu}$ slides it, $\color{#F47C3C}{\sigma}$ stretches it, and the area under it is always 1.
+:::
+
+$$f(x) \;=\; \frac{1}{\color{#F47C3C}{\sigma}\sqrt{2\pi}}\; e^{-\frac{1}{2}\left(\frac{x-\color{#B94A48}{\mu}}{\color{#F47C3C}{\sigma}}\right)^{2}}$$
+
+```{ojs}
+//| echo: false
+//| output: false
+// The density itself, on a FIXED vertical scale, so a small σ visibly
+// buys its narrowness with height: the area never changes.
+nfDens = x => Math.exp(-0.5 * ((x - nfMu) / nfSig) ** 2) / (nfSig * Math.sqrt(2 * Math.PI))
+nfGrid = d3.range(0, 401).map(i => -4 + 8 * i / 400)
+nfPeak = nfDens(nfMu)
+nfArrowY = Math.min(nfPeak + 0.1, 1.1)
+// the reference N(0, 1), and the stretch within one σ of the centre
+nfStd = x => Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI)
+nfBand = d3.range(0, 121).map(i => nfMu - nfSig + 2 * nfSig * i / 120)
+NFSTYLE = ({fontSize: "15px", fontFamily: "Roboto, sans-serif",
+            color: PPAL.soft, background: "transparent"})
+```
+
+:::: {.nf-row}
+::: {.nf-left}
+```{ojs}
+//| echo: false
+// The two dials, stacked in the left column; the plot takes the right.
+viewof nf = Inputs.form({
+  sig: Inputs.range([0.4, 2], {value: 0.84, step: 0.01, label: htl.html`Spread <b style="color:${PPAL.orange}">σ</b>`}),
+  mu:  Inputs.range([-2, 2], {value: 0.34, step: 0.01, label: htl.html`Centre <b style="color:${PPAL.brick}">μ</b>`})
+}, {template: ins => htl.html`<div class="nf-dials">${Object.values(ins)}</div>`})
+nfSig = nf.sig
+nfMu = nf.mu
+```
+
+```{ojs}
+//| echo: false
+// Three readings. Only the first moves: the area and the ±σ share are the
+// same for every normal, which is the point of showing them beside it.
+html`<div class="nf-card">
+  <div><span>Peak height</span><b>${nfPeak.toFixed(3)}</b></div>
+  <div><span>Area under the curve</span><b>1</b></div>
+  <div><span>Within μ ± σ</span><b class="nf-band">68.3%</b></div>
+</div>`
+```
+:::
+
+::: {.nf-right}
+```{ojs}
+//| echo: false
+Plot.plot({
+  width: 640, height: 330, marginLeft: 56, marginBottom: 28, marginTop: 20, marginRight: 10,
+  style: NFSTYLE,
+  x: {domain: [-4, 4], label: null, tickSize: 4},
+  // up to 1.1: room for σ = 0.4, whose peak is 0.997, and the arrows over it
+  y: {domain: [0, 1.1], grid: true, ticks: [0, 0.5, 1], label: "f(x)",
+      labelAnchor: "center", labelOffset: 46},
+  marks: [
+    // the reference: N(0, 1), dashed, behind everything
+    Plot.line(nfGrid, {x: d => d, y: nfStd, stroke: PPAL.dim, strokeWidth: 1.5, strokeDasharray: "5 5"}),
+    Plot.areaY(nfGrid, {x: d => d, y: nfDens, fill: PPAL.navy, fillOpacity: 0.08}),
+    // within one σ of the centre: always 68.3% of the area
+    Plot.areaY(nfBand, {x: d => d, y: nfDens, fill: PPAL.orange, fillOpacity: 0.18}),
+    Plot.line(nfGrid, {x: d => d, y: nfDens, stroke: PPAL.navy, strokeWidth: 2.5}),
+    // the peak, read across to the axis: 1/(σ√2π), never 1 unless σ ≈ 0.4
+    Plot.ruleY([nfPeak], {x1: -4, x2: nfMu, stroke: PPAL.navy, strokeDasharray: "2 4", strokeOpacity: 0.7}),
+    Plot.dot([nfMu], {x: d => d, y: nfPeak, r: 4.5, fill: PPAL.navy}),
+    Plot.text([nfPeak], {x: -4, y: d => d, dx: 4, dy: -9, textAnchor: "start",
+      text: d => d.toFixed(3), fill: PPAL.navy, fontSize: 14, fontWeight: 700}),
+    Plot.text(["N(0, 1)"], {x: 2.6, y: nfStd(2.6) + 0.07, text: d => d,
+      fill: PPAL.soft, fontSize: 14}),
+    Plot.ruleX([nfMu - nfSig, nfMu + nfSig], {y1: 0, y2: nfArrowY + 0.05,
+      stroke: PPAL.orange, strokeWidth: 1.5}),
+    Plot.ruleX([nfMu], {y1: 0, y2: nfArrowY + 0.05, stroke: PPAL.brick, strokeWidth: 2}),
+    Plot.arrow([-1, 1], {x1: nfMu, x2: d => nfMu + d * nfSig, y1: nfArrowY, y2: nfArrowY,
+      stroke: PPAL.orange, strokeWidth: 2.5, headLength: 10, inset: 4}),
+    Plot.text([-1, 1], {x: d => nfMu + d * nfSig / 2, y: nfArrowY, dy: -12, text: () => "σ",
+      fill: PPAL.orange, fontSize: 20, fontWeight: 700}),
+    Plot.text([nfMu], {x: d => d, y: nfArrowY + 0.05, dy: -12, text: () => "μ",
+      fill: PPAL.brick, fontSize: 20, fontWeight: 700}),
+    // in the left half of the band, clear of the μ line at every σ
+    Plot.text([nfMu - nfSig / 2], {x: d => d, y: nfPeak * 0.3, text: () => "68.3%",
+      fill: PPAL.orange, fontSize: 16, fontWeight: 700}),
+    Plot.ruleY([0], {stroke: PPAL.dim})
+  ]
+})
+```
+:::
+::::
+
+## Where the $e$ in the Normal Comes From {.stage-slide #normal-e}
+
+::: {.lede-min}
+Forget the binomial for a moment. Ask only that errors in two directions be independent and that no direction be special, and the bell has no choice about its shape.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="normale-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="normale-frag-1"}
+[]{.fragment .fi-frag id="normale-frag-2"}
+[]{.fragment .fi-frag id="normale-frag-3"}
+
+## Where the $\pi$ in the Normal Comes From {.stage-slide #normal-pi}
+
+::: {.lede-min}
+Call $C$ the area under the bell $e^{-x^2}$. Build the round hill from two of them, then measure its volume in two different ways.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="normalpi-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="normalpi-frag-1"}
+[]{.fragment .fi-frag id="normalpi-frag-2"}
+[]{.fragment .fi-frag id="normalpi-frag-3"}
+
+## Putting the Normal Together {.stage-slide #normal-full}
+
+::: {.lede-min}
+The shape $e^{-x^2}$ and its area $\sqrt{\pi}$ are all the ingredients. Four moves turn them into the formula in every textbook, and each move writes one piece of it.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="normalfull-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="normalfull-frag-1"}
+[]{.fragment .fi-frag id="normalfull-frag-2"}
+[]{.fragment .fi-frag id="normalfull-frag-3"}
+[]{.fragment .fi-frag id="normalfull-frag-4"}
+
 ## The Box Plot on a Normal Curve {.formula-slide #box-normal}
 
 ::: {.lede-min}
@@ -658,49 +879,7 @@ $Q_1$ and $Q_3$ sit at $\mp 0.6745\sigma$, so the fences fall at $\mp 2.698\sigm
 :::
 
 
-<!-- commented out: slides 44-47 (clt-intuition, clt-sim, zstd-intuition, funcrv)
-
-## Why the normal turns up at all {.stage-slide #clt-intuition}
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="clt-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="clt-frag-1"}
-[]{.fragment .fi-frag id="clt-frag-2"}
-[]{.fragment .fi-frag id="clt-frag-3"}
-
-::: {.slide-footer}
-The population on the left never changes and never becomes normal; the **mean** does, and it narrows at the rate $\sigma/\sqrt{n}$. Both panels share one axis, so the narrowing is real, not a rescaling.
-:::
-
-## Break the bell on purpose {.sim-slide #clt-sim}
-
-::: {.slide-kicker}
-Seminar 4 · the CLT, stress-tested
-:::
-
-::: {.sim-card .sim-plot}
-```{webr-r}
-#| fig-width: 5.7
-#| fig-height: 4.3
-#| out-width: "100%"
-n <- 5             # <-- draws per average
-pop <- function(k) rexp(k)^2   # no bell at all
-
-xbar <- replicate(4000, mean(pop(n)))
-hist(xbar, breaks = 40, col = "#CBD9E6",
-     border = "white", main = "",
-     xlab = paste("mean of", n, "draws"))
-
-round(c(sd_obs  = sd(xbar),
-        se_pred = sd(pop(1e5)) / sqrt(n)), 3)
-```
-:::
-
-::: {.try-this}
-`n <- 1` is the raw population, violently skewed; by `n <- 30` it is nearly symmetric and `sd_obs` tracks $\sigma/\sqrt{n}$. **The CLT is a claim about the mean, and it survives a parent this ugly.**
-:::
+<!-- commented out: zstd-intuition
 
 ## One table for every normal {.stage-slide #zstd-intuition}
 

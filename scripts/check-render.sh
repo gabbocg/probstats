@@ -44,7 +44,7 @@ for id in s00b-me s00b-about s00-how-to-use s00-webr \
           pois-intuition pois-formal \
           likelihood-live binom-formal \
           pois-intuition expo-intuition expo-formal \
-          normal-intuition box-normal funcrv pois-sim; do
+          normal-intuition galton clt-idea clt-dice normal-formula normal-e normal-pi normal-full box-normal funcrv pois-sim; do
   need "id=\"$id\"" "slide #$id"
 done
 
@@ -71,7 +71,7 @@ echo "── animation stages ────────────────�
 # slides now, not stages.
 # bins, clt, zstd, ciflip, cieq, ci, pval, pair, ls and smooth belong to
 # slides commented out on 2026-09-23; put them back here when those return.
-STAGES="about dicegrid mm space setops venn prior bayes bayeq monty cond binom seller laplace"
+STAGES="about dicegrid mm space setops venn prior bayes bayeq monty cond binom seller laplace galton cltidea cltdice normale normalpi normalfull"
 for s in $STAGES; do
   need "id=\"$s-stage\"" "stage #$s-stage"
 done
@@ -129,7 +129,12 @@ for f in prior-frag-1 prior-frag-2 \
          venn-frag-1 venn-frag-2 venn-frag-3 \
          binom-frag-1 binom-frag-2 binom-frag-3 \
          seller-frag-1 seller-frag-2 seller-frag-3 \
-         laplace-frag-1 laplace-frag-2 laplace-frag-3; do
+         laplace-frag-1 laplace-frag-2 laplace-frag-3 \
+         galton-frag-1 galton-frag-2 \
+         cltidea-frag-1 cltidea-frag-2 \
+         normale-frag-1 normale-frag-2 normale-frag-3 \
+         normalpi-frag-1 normalpi-frag-2 normalpi-frag-3 \
+         normalfull-frag-1 normalfull-frag-2 normalfull-frag-3 normalfull-frag-4; do
   need "id=\"$f\"" "fragment $f"
 done
 

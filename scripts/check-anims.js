@@ -36,9 +36,10 @@ for (const f of files) {
     FONT: { mono: 'm', sans: 's' },
     TYPE: { tick: 18, label: 20, caption: 24, readout: 30 },
     REDUCE: false, MARK: { PER: 50, GP: 19, TICK: 'T', CROSS: 'C' },
-    el: nodeStub, txt: nodeStub, canvas: nodeStub, mark: nodeStub,
+    el: nodeStub, txt: nodeStub, rich: nodeStub, canvas: nodeStub, mark: nodeStub,
     missSet: (n, m) => { const s = {}; for (let i = 0; i < m; i++) s[i] = 1; return s; },
     block: (p, c) => Array.from({ length: c }, nodeStub),
+    die: () => ({ g: nodeStub(), pips: nodeStub() }), dieFace() {}, diePose() {},
     animeReady: () => false,
     register: (spec) => { registered = spec && spec.stage; },
     registry: {}

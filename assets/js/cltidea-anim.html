@@ -1,0 +1,317 @@
+<script>
+/*
+  The idea behind the CLT — slide #clt-idea, after 3Blue1Brown's summary.
+
+  Three rows, one per fragment, each told twice — a Galton board on the left,
+  dice on the right — so the claim is seen not to depend on the example:
+    0. start with a random variable X: a ball that bounces −1 or +1 off a peg,
+       a die that lands 1 to 6
+    1. add n samples of it: one ball's path through ten rows of pegs (the
+       same n = 10 as the histogram under it), eight dice and their total
+    2. the distribution of that sum looks more like a bell as n grows: the
+       two histograms fill in live, one draw at a time
+
+  Every draw is simulated from a seeded generator, so the histograms are real
+  counts, the same ones every time the slide is shown. They grow against a
+  fixed scale (the final tallest bar), so the bell builds rather than rescales.
+
+  Built on StageKit (assets/js/stage-kit.html). Canvas 1000x445.
+*/
+(function () {
+  var K = window.StageKit, PAL = K.PAL;
+
+  var W = 1000, H = 445;
+  var PA = 505, PB = 760, PW = 225, PH = 128;     // the two panel columns
+  var TX = 20, HX = TX + 46;                      // text column: badge, then text
+  var MID = (TX + PA - 20) / 2;                   // the column's centre, where the three-block group is centred
+  var ROWS = [4, 154, 304];                       // top of each row
+  var STEPS = 10, NGALTON = 600;                  // ±1 bounces per ball, balls
+  var NDICE = 8, NROLLS = 1500;                   // dice per sum, sums
+  // The dice axis shows sums 14..42, not the possible 8..48: the ends hold
+  // about 0.3% of throws, invisible at this height, and cost half the width.
+  var DLO = 14, DHI = 42;
+  // 16px for the small panel labels, under the kit's 18px tick floor: at 18
+  // they crowded the panels, and they are secondary to what they label.
+  var SMALL = 16;
+
+  // mulberry32: small, seeded, good enough for a histogram.
+  function rng(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  // The draws, once, in order. galton[i] is a bin 0..STEPS, dice[i] a total.
+  var R = rng(7331), galton = [], dice = [], i, j, s;
+  for (i = 0; i < NGALTON; i++) {
+    for (s = 0, j = 0; j < STEPS; j++) s += R() < 0.5 ? 0 : 1;
+    galton.push(s);
+  }
+  for (i = 0; i < NROLLS; i++) {
+    for (s = 0, j = 0; j < NDICE; j++) s += 1 + Math.floor(R() * 6);
+    dice.push(s);
+  }
+  var FACES = [3, 1, 5, 6, 2, 4, 1, 3];           // row 2's eight dice
+  var FACE_SUM = FACES.reduce(function (a, b) { return a + b; }, 0);
+  var PATH = [1, 0, 1, 1, 0, 0, 1, 0, 1, 1];      // row 2's ball, one entry per peg row (STEPS of them): 6 rights, 4 lefts = +2
+
+  function show(node, on, instant) {
+    node.style.transition = instant ? 'none' : 'opacity 500ms ease';
+    node.style.opacity = on ? 1 : 0;
+  }
+
+  // Text whose runs carry their own colour: [['Add ', null], ['n', 'orange'], ...].
+  function runs(g, x, y, parts, o) {
+    var t = g.appendChild(K.txt(x, y, '', o));
+    parts.forEach(function (r) {
+      var sp = t.appendChild(K.el('tspan', { fill: r[1] ? (PAL[r[1]] || r[1]) : null }));
+      sp.textContent = r[0];
+    });
+    return t;
+  }
+
+  // A group clipped to a panel's rounded border: a die shaken inside it can
+  // never draw over the frame or out of the box.
+  var clips = 0;
+  function inside(g, x, y) {
+    var id = 'cltidea-clip-' + (clips++);
+    var cp = g.appendChild(K.el('clipPath', { id: id }));
+    cp.appendChild(K.el('rect', { x: x + 1, y: y + 1, width: PW - 2, height: PH - 2, rx: 5 }));
+    return g.appendChild(K.el('g', { 'clip-path': 'url(#' + id + ')' }));
+  }
+
+  function panel(g, x, y) {
+    g.appendChild(K.el('rect', { x: x, y: y, width: PW, height: PH, rx: 6,
+      fill: PAL.white, stroke: PAL.dim }));
+  }
+
+  var die = K.die, setFace = K.dieFace, pose = K.diePose;
+  function face() { return 1 + Math.floor(Math.random() * 6); }
+
+  // A numbered badge in front of each row's heading.
+  function badge(g, n, y) {
+    g.appendChild(K.el('circle', { cx: TX + 16, cy: y - 8, r: 16, fill: PAL.navy }));
+    g.appendChild(K.txt(TX + 16, y, String(n), { size: 'label', fill: 'white', anchor: 'middle', weight: 700 }));
+  }
+
+  function arrow(g, x1, x2, y, col) {
+    var d = x2 > x1 ? 1 : -1;
+    g.appendChild(K.el('path', {
+      d: 'M' + x1 + ' ' + y + 'L' + x2 + ' ' + y + 'M' + (x2 - 8 * d) + ' ' + (y - 5) +
+         'L' + x2 + ' ' + y + 'L' + (x2 - 8 * d) + ' ' + (y + 5),
+      fill: 'none', stroke: col, 'stroke-width': 2.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+    }));
+  }
+
+  // One histogram: bars laid out once, heights set by fill(k) as draws land.
+  function histo(g, x, y, lo, hi, color) {
+    var n = hi - lo + 1, bw = (PW - 20) / n, bars = [];
+    for (var b = 0; b < n; b++) {
+      bars.push(g.appendChild(K.el('rect', { x: x + 10 + b * bw + 0.5, width: Math.max(bw - 1, 1),
+        y: y + PH - 10, height: 0, fill: color })));
+    }
+    g.appendChild(K.el('line', { x1: x + 8, y1: y + PH - 10, x2: x + PW - 8, y2: y + PH - 10, stroke: PAL.dim }));
+    return { bars: bars, lo: lo, n: n, y0: y + PH - 10, hmax: PH - 34 };
+  }
+  function fill(h, draws, k, top) {
+    var c = [], b;
+    for (b = 0; b < h.n; b++) c.push(0);
+    for (b = 0; b < k; b++) if (draws[b] - h.lo >= 0 && draws[b] - h.lo < h.n) c[draws[b] - h.lo]++;
+    for (b = 0; b < h.n; b++) {
+      var hh = c[b] / top * h.hmax;
+      h.bars[b].setAttribute('y', h.y0 - hh);
+      h.bars[b].setAttribute('height', hh);
+    }
+  }
+  function maxCount(draws, lo, n) {
+    var c = [], b;
+    for (b = 0; b < n; b++) c.push(0);
+    draws.forEach(function (v) { if (v - lo >= 0 && v - lo < n) c[v - lo]++; });
+    return Math.max.apply(null, c);
+  }
+  var GTOP = maxCount(galton, 0, STEPS + 1);
+  var DTOP = maxCount(dice, DLO, DHI - DLO + 1);
+
+  function build(stage) {
+    var svg = K.canvas(stage, W, H);
+    var rows = [], y;
+
+    // --- row 0: one random variable ---
+    y = ROWS[0];
+    var r0 = svg.appendChild(K.el('g', {}));
+    var t0 = r0.appendChild(K.el('g', {}));
+    badge(t0, 1, y + 44);
+    t0.appendChild(K.txt(HX, y + 44, 'Start with a random variable X', { size: 'caption', fill: 'ink', weight: 700}));
+    t0.appendChild(K.txt(HX, y + 78, 'A random process where each outcome', { size: 'label'}));
+    t0.appendChild(K.txt(HX, y + 104, 'is given a number', { size: 'label'}));
+    panel(r0, PA, y);
+    var cx = PA + PW / 2;
+    r0.appendChild(K.el('circle', { cx: cx, cy: y + 88, r: 9, fill: PAL.dim }));
+    r0.appendChild(K.el('circle', { cx: cx, cy: y + 64, r: 11, fill: PAL.orange }));
+    arrow(r0, cx - 18, cx - 80, y + 64, PAL.brick);
+    arrow(r0, cx + 18, cx + 80, y + 64, PAL.navy);
+    r0.appendChild(K.txt(cx - 52, y + 44, '−1', { size: 'label', face: 'mono', fill: 'brick', anchor: 'middle', weight: 700 }));
+    r0.appendChild(K.txt(cx + 52, y + 44, '+1', { size: 'label', face: 'mono', fill: 'navy', anchor: 'middle', weight: 700 }));
+    r0.appendChild(K.txt(cx - 52, y + 96, '50%', { size: SMALL, face: 'mono', anchor: 'middle' }));
+    r0.appendChild(K.txt(cx + 52, y + 96, '50%', { size: SMALL, face: 'mono', anchor: 'middle' }));
+    panel(r0, PB, y);
+    var one = [die(inside(r0, PB, y), PB + PW / 2, y + PH / 2 - 6, 58, 3)];
+    r0.appendChild(K.txt(PB + PW / 2, y + PH - 10, '1 to 6, each 1/6', { size: SMALL, face: 'mono', anchor: 'middle' }));
+    rows.push(r0);
+
+    // --- row 1: add n samples ---
+    y = ROWS[1];
+    var r1 = svg.appendChild(K.el('g', {}));
+    var t1 = r1.appendChild(K.el('g', {}));
+    badge(t1, 2, y + 44);
+    runs(t1, HX, y + 44, [['Add '], ['n', 'orange'], [' samples of it']], { size: 'caption', fill: 'ink', weight: 700});
+    runs(t1, HX, y + 96, [['X₁ + X₂ + … + X'], ['ₙ', 'orange']], { size: 'readout', face: 'mono', fill: 'navy', weight: 700});
+    panel(r1, PA, y);
+    // ten rows of pegs, the same n as the histogram below it; the ball's
+    // path through them, then where it lands
+    var DX = 19, DY = 9, py0 = y + 12;
+    for (var r = 0; r < STEPS; r++) {
+      for (var c = 0; c <= r; c++) {
+        r1.appendChild(K.el('circle', { cx: cx + (c - r / 2) * DX, cy: py0 + r * DY + 6, r: 2.5, fill: PAL.dim }));
+      }
+    }
+    var pts = [[cx, py0 - 6]], col = 0;
+    PATH.forEach(function (step, k) {
+      col += step;
+      pts.push([cx + (col - (k + 1) / 2) * DX, py0 + (k + 1) * DY - 4]);
+    });
+    r1.appendChild(K.el('path', {
+      d: pts.map(function (p, k) { return (k ? 'L' : 'M') + p[0] + ' ' + p[1]; }).join(''),
+      fill: 'none', stroke: PAL.orange, 'stroke-width': 2, 'stroke-dasharray': '4 3'
+    }));
+    var ball = r1.appendChild(K.el('circle', { r: 5, fill: PAL.orange }));
+    r1.appendChild(K.txt(cx, y + PH - 8, STEPS + ' bounces, sum = +' + (2 * PATH.reduce(function (a, b) { return a + b; }, 0) - STEPS),
+      { size: SMALL, face: 'mono', anchor: 'middle' }));
+    panel(r1, PB, y);
+    // 30px dice spun to 45° reach 21px from centre, plus a 6px hop: centres
+    // at y + 34 and y + 78 keep every pose inside the panel and clear of the sum.
+    var box = inside(r1, PB, y);
+    var eight = FACES.map(function (f, k) {
+      return die(box, PB + 31 + (k % 4) * 54, y + 34 + Math.floor(k / 4) * 44, 30, f);
+    });
+    var sum = r1.appendChild(K.txt(PB + PW / 2, y + PH - 10, 'sum = ' + FACE_SUM, { size: 'label', face: 'mono', fill: 'ink', anchor: 'middle', weight: 700 }));
+    rows.push(r1);
+
+    // --- row 2: the sum's distribution ---
+    y = ROWS[2];
+    var r2 = svg.appendChild(K.el('g', {}));
+    var t2 = r2.appendChild(K.el('g', {}));
+    badge(t2, 3, y + 44);
+    t2.appendChild(K.txt(HX, y + 44, 'The distribution of the sum looks', { size: 'caption', fill: 'ink', weight: 700}));
+    runs(t2, HX, y + 78, [['more like a bell as '], ['n → ∞', 'orange']], { size: 'caption', fill: 'ink', weight: 700});
+    panel(r2, PA, y);
+    var hg = histo(r2, PA, y, 0, STEPS, PAL.orange);
+    var gl = r2.appendChild(K.txt(PA + 12, y + 20, '', { size: SMALL, face: 'mono' }));
+    r2.appendChild(K.txt(PA + PW - 12, y + 20, 'n = ' + STEPS, { size: SMALL, face: 'mono', fill: 'orange', anchor: 'end', weight: 700 }));
+    panel(r2, PB, y);
+    var hd = histo(r2, PB, y, DLO, DHI, PAL.olive);
+    var dl = r2.appendChild(K.txt(PB + 12, y + 20, '', { size: SMALL, face: 'mono' }));
+    r2.appendChild(K.txt(PB + PW - 12, y + 20, 'n = ' + NDICE, { size: SMALL, face: 'mono', fill: 'orange', anchor: 'end', weight: 700 }));
+    rows.push(r2);
+
+    // The three blocks stay left-aligned as one column, and that column is
+    // moved as a unit: centred across the space left of the panels, while
+    // each block sits on its own row's midline, level with the panels'
+    // middle. Measured, since the blocks differ in width and height.
+    var bb = [t0, t1, t2].map(function (t) { return t.getBBox(); });
+    var lo = Math.min.apply(null, bb.map(function (b) { return b.x; }));
+    var hi = Math.max.apply(null, bb.map(function (b) { return b.x + b.width; }));
+    var dx = hi > lo ? MID - (lo + hi) / 2 : 0;
+    [t0, t1, t2].forEach(function (t, k) {
+      var b = bb[k], dy = b.height ? ROWS[k] + PH / 2 - (b.y + b.height / 2) : 0;
+      t.setAttribute('transform', 'translate(' + dx.toFixed(1) + ' ' + dy.toFixed(1) + ')');
+    });
+
+    return { rows: rows, ball: ball, pts: pts, hg: hg, hd: hd, gl: gl, dl: dl, one: one, eight: eight, sum: sum,
+             state: 0, tween: null, dice: null };
+  }
+
+  function roll(s, t) {
+    var g = Math.round(t * NGALTON), d = Math.round(t * NROLLS);
+    fill(s.hg, galton, g, GTOP);
+    fill(s.hd, dice, d, DTOP);
+    s.gl.textContent = g + ' balls';
+    s.dl.textContent = d + ' sums';
+  }
+
+  // the ball in row 1, t = 0 at the top peg, 1 where it lands
+  function drop(s, t) {
+    var seg = Math.min(Math.floor(t * (s.pts.length - 1)), s.pts.length - 2);
+    var u = t * (s.pts.length - 1) - seg, a = s.pts[seg], b = s.pts[seg + 1];
+    s.ball.setAttribute('cx', a[0] + (b[0] - a[0]) * u);
+    s.ball.setAttribute('cy', a[1] + (b[1] - a[1]) * u);
+  }
+
+  // The dice on the right never stop: shake and flicker for a moment, land
+  // on fresh faces, rest, roll again. Row 1's single die always rolls; row
+  // 2's eight join once that row is on screen, and their sum is the one
+  // printed under them. Real throws, not a loop of stored faces.
+  function tumble(s) {
+    var dice = s.one.concat(s.state >= 1 ? s.eight : []);
+    dice.forEach(function (d) { d.spin = (Math.random() < 0.5 ? -1 : 1) * (200 + Math.random() * 160); });
+    var p = { t: 0 }, tick = -1;
+    s.dice = window.anime.animate(p, {
+      t: 1, duration: 750, delay: 1100, ease: 'outQuad',
+      onUpdate: function () {
+        var k = Math.floor(p.t * 9);
+        dice.forEach(function (d) {
+          if (k !== tick && p.t < 1) setFace(d, face());
+          pose(d, -6 * Math.sin(Math.PI * p.t), d.spin * (1 - p.t));
+        });
+        tick = k;
+      },
+      onComplete: function () {
+        dice.forEach(function (d) { setFace(d, face()); pose(d, 0, 0); });
+        s.sum.textContent = 'sum = ' + s.eight.reduce(function (a, d) { return a + d.face; }, 0);
+        tumble(s);
+      }
+    });
+  }
+
+  function stop(s) {
+    if (s.tween) s.tween.pause();
+    if (s.dice) s.dice.pause();
+    s.tween = s.dice = null;
+  }
+
+  function place(s, i, instant) {
+    s.rows.forEach(function (g, k) { show(g, k <= i, instant); });
+    if (!s.dice && !K.REDUCE && K.animeReady()) tumble(s);
+    if (s.tween) { s.tween.pause(); s.tween = null; }
+    var from = s.state;
+    s.state = i;
+    var go = !(instant || K.REDUCE || !K.animeReady()) && i === from + 1;
+    var p = { t: 0 };
+    if (i === 1 && go) {
+      drop(s, 0);
+      s.tween = window.anime.animate(p, { t: 1, duration: 1600, ease: 'inOutSine',
+        onUpdate: function () { drop(s, p.t); } });
+    } else {
+      drop(s, 1);
+    }
+    if (i === 2 && go) {
+      roll(s, 0);
+      s.tween = window.anime.animate(p, { t: 1, duration: 4500, ease: 'inQuad',
+        onUpdate: function () { roll(s, p.t); } });
+    } else {
+      roll(s, i >= 2 ? 1 : 0);
+    }
+  }
+
+  K.register({
+    stage: 'cltidea-stage',
+    frags: ['cltidea-frag-1', 'cltidea-frag-2'],
+    build: build,
+    place: place,
+    stop: stop
+  });
+})();
+</script>

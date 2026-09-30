@@ -1,0 +1,230 @@
+<script>
+/*
+  Adding up a lopsided die — slide #clt-dice, after 3Blue1Brown.
+
+  One die, deliberately far from fair: a 1 comes up 41% of the time, a 6 only
+  3%. Four panels throw n = 2, 5, 10 and 15 of them at once, add them up, and
+  keep a histogram of the sums. Each panel shows
+    · top left:  the die's own distribution, with an orange mark stacked on
+                 each face for every die in the current throw that shows it
+    · top right: the current throw and its sum
+    · below:     the histogram of every sum so far, from 0 to just past that
+                 panel's sums
+  It starts itself half a second after the slide arrives (no fragment): all
+  four run together, slow at first so single throws can be read, then fast to
+  2,500 sums a panel. When the last sum is in, each panel's predicted normal
+  curve, Normal(n·μ, n·σ²) from the die alone, lands on its histogram: poor at
+  n = 2, where the sums are as lopsided as the die, and close by n = 15.
+
+  Every throw comes from a seeded generator: real sums, the same every time.
+  The histograms grow against a fixed scale (each panel's final tallest bar).
+
+  Built on StageKit (assets/js/stage-kit.html). Canvas 1000x445.
+*/
+(function () {
+  var K = window.StageKit, PAL = K.PAL;
+
+  var W = 1000, H = 445;
+  var NS = [2, 5, 10, 15];                        // dice per sum, one per panel
+  var P = [0.41, 0.25, 0.15, 0.10, 0.06, 0.03];   // the lopsided die
+  var NSUM = 2500;                                // sums per panel
+  // Every axis starts at 0 and ends just past its own panel's sums, so each
+  // histogram fills its width and the n = 2 lean is plain to see (one shared
+  // 0..50 axis squeezed it into a spike). This seed's largest sums: 12, 23,
+  // 38 and 55; the two n = 15 sums past 50 have no bar, but are counted.
+  var XHI = [15, 25, 40, 50];
+  // One die's mean and variance, straight from P: μ = 2.24, σ² = 1.92.
+  var MU = P.reduce(function (a, p, i) { return a + p * (i + 1); }, 0);
+  var VAR = P.reduce(function (a, p, i) { return a + p * (i + 1) * (i + 1); }, 0) - MU * MU;
+  var PW = 494, PH = 216, GAP = 12;               // panel size: 2 x 216 + 12 = 444, inside the 445 canvas
+  var SMALL = 16;                                 // panel labels, under the kit's 18px floor, as on #clt-idea
+
+  function rng(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  var CUM = P.reduce(function (a, p, i) { a.push((a[i - 1] || 0) + p); return a; }, []);
+  function throw1(r) {
+    var u = r(), f = 0;
+    while (f < 5 && u > CUM[f]) f++;
+    return f + 1;
+  }
+
+  // Every throw of every panel, up front: rolls[panel][k] is the k-th throw.
+  var R = rng(2024), ROLLS = NS.map(function (n) {
+    var out = [];
+    for (var k = 0; k < NSUM; k++) {
+      var t = [];
+      for (var j = 0; j < n; j++) t.push(throw1(R));
+      out.push(t);
+    }
+    return out;
+  });
+  function sum(t) { return t.reduce(function (a, b) { return a + b; }, 0); }
+
+  function panel(svg, idx) {
+    var n = NS[idx], x = (idx % 2) * (PW + GAP), y = Math.floor(idx / 2) * (PH + GAP);
+    var g = svg.appendChild(K.el('g', {}));
+    g.appendChild(K.el('rect', { x: x + 0.5, y: y + 0.5, width: PW - 1, height: PH - 1, rx: 10,
+      fill: '#FAFBFC', stroke: PAL.rule, 'stroke-width': 1.5 }));
+
+    // --- header: an orange n pill, and the running count beside it ---
+    g.appendChild(K.el('rect', { x: x + 14, y: y + 12, width: 72, height: 26, rx: 13,
+      fill: PAL.orange, 'fill-opacity': 0.13 }));
+    g.appendChild(K.txt(x + 50, y + 31, 'n = ' + n, { size: SMALL + 1, face: 'mono', fill: 'orange', anchor: 'middle', weight: 700 }));
+    var countT = g.appendChild(K.txt(x + 96, y + 30, '', { size: SMALL, face: 'mono' }));
+
+    // --- the die's own distribution, a small die under each bar, and the
+    // marks for the current throw stacked on top. The baseline sits low
+    // enough that the tallest stack this seed throws (12 ones at n = 15:
+    // 56px) clears the header.
+    var DX = x + 16, DB = y + 150, BW = 22, DH = 80;
+    for (var f = 0; f < 6; f++) {
+      g.appendChild(K.el('rect', { x: DX + f * (BW + 2), y: DB - P[f] * DH, width: BW, height: P[f] * DH,
+        rx: 2, fill: PAL.navy, 'fill-opacity': 0.8 }));
+      K.die(g, DX + f * (BW + 2) + BW / 2, DB + 13, 15, f + 1);
+    }
+    var marks = g.appendChild(K.el('g', {}));
+
+    // --- the current throw, top right, and its sum ---
+    var cols = Math.min(n, 5), rows = Math.ceil(n / cols);
+    var size = n <= 5 ? 26 : 20, step = size + 6;
+    var right = x + PW - 14, top = y + 12;
+    var dice = [];
+    for (var k = 0; k < n; k++) {
+      dice.push(K.die(g, right - (cols - 1 - k % cols) * step - size / 2, top + Math.floor(k / cols) * step + size / 2, size, 1));
+    }
+    var sumY = top + rows * step + 18;
+    var sumT = g.appendChild(K.txt(right, sumY, '', { size: 'label', face: 'mono', fill: 'ink', anchor: 'end', weight: 700 }));
+
+    // --- the histogram of sums, right of the labels, on the shared axis ---
+    var all = ROLLS[idx].map(sum);
+    var lo = 0, hi = XHI[idx], nb = hi - lo + 1;
+    var HX1 = x + PW - 16, HB = y + PH - 24, HH = HB - Math.max(sumY + 8, y + 104);
+    var hx0 = x + 176, bw = (HX1 - hx0) / nb;
+    var counts = [], top1 = 0, v;
+    for (v = 0; v < nb; v++) counts.push(0);
+    all.forEach(function (v2) { if (v2 <= hi) counts[v2 - lo]++; });
+    top1 = Math.max.apply(null, counts);
+    for (v = 0; v < nb; v++) counts[v] = 0;
+    var bars = [];
+    for (v = 0; v < nb; v++) {
+      bars.push(g.appendChild(K.el('rect', { x: hx0 + v * bw + 0.75, width: Math.max(bw - 1.5, 1), y: HB, height: 0,
+        rx: Math.min(2, bw / 4), fill: PAL.olive })));
+    }
+    g.appendChild(K.el('line', { x1: hx0, y1: HB, x2: HX1, y2: HB, stroke: PAL.inkSoft }));
+
+    // The curve the CLT promises: Normal(n·μ, n·σ²), in expected counts per
+    // sum (NSUM · density, bins one wide) on the bars' own scale. Computed
+    // from the die, not fitted to the bars, so how well they meet is the result.
+    // Drawn only within 3.5 sd of the centre: past that it lies flat on the
+    // shared axis and would paint the axis red.
+    var m = n * MU, sd = Math.sqrt(n * VAR), cd = '';
+    var c0 = Math.max(lo - 0.5, m - 3.5 * sd), c1 = Math.min(hi + 0.5, m + 3.5 * sd);
+    for (v = 0; v <= 160; v++) {
+      var xs = c0 + (c1 - c0) * v / 160;
+      var dens = Math.exp(-(xs - m) * (xs - m) / (2 * sd * sd)) / (sd * Math.sqrt(2 * Math.PI));
+      cd += (v ? 'L' : 'M') + (hx0 + (xs - lo + 0.5) * bw).toFixed(1) + ' ' +
+            (HB - Math.min(NSUM * dens / top1, 1.15) * HH).toFixed(1);
+    }
+    var curve = g.appendChild(K.el('path', { d: cd, fill: 'none', stroke: PAL.brick, 'stroke-width': 2.5 }));
+    // Ticks hang below the axis: a longer one at each end, a short labelled
+    // one every 5 (short axes) or 10.
+    var every = hi <= 25 ? 5 : 10;
+    for (v = lo; v <= hi; v++) {
+      var end = v === lo || v === hi;
+      if (!end && v % every) continue;
+      var tx = hx0 + (v - lo + 0.5) * bw;
+      g.appendChild(K.el('line', { x1: tx, y1: HB, x2: tx, y2: HB + (end ? 7 : 4), stroke: PAL.inkSoft, 'stroke-width': 1.2 }));
+      if (v % every === 0) g.appendChild(K.txt(tx, HB + 19, String(v), { size: 14, face: 'mono', anchor: 'middle' }));
+    }
+
+    return { n: n, idx: idx, dice: dice, sumT: sumT, countT: countT, marks: marks, bars: bars, counts: counts, curve: curve,
+             shown: 0, lo: lo, top1: top1, HB: HB, HH: HH, DX: DX, DB: DB, BW: BW, DH: DH };
+  }
+
+  // Show panel p with its first k sums counted and throw k-1 on the table.
+  function show(p, k) {
+    var b, v;
+    if (k < p.shown) {                              // stepping back: recount from zero
+      for (v = 0; v < p.counts.length; v++) p.counts[v] = 0;
+      p.shown = 0;
+    }
+    var dirty = {};
+    for (b = p.shown; b < k; b++) {
+      v = sum(ROLLS[p.idx][b]) - p.lo;
+      if (v < p.counts.length) { p.counts[v]++; dirty[v] = 1; }
+    }
+    if (p.shown === 0) for (v = 0; v < p.counts.length; v++) dirty[v] = 1;
+    p.shown = k;
+    for (v in dirty) {
+      var h = p.counts[v] / p.top1 * p.HH;
+      p.bars[v].setAttribute('y', p.HB - h);
+      p.bars[v].setAttribute('height', h);
+    }
+
+    var t = ROLLS[p.idx][Math.max(k - 1, 0)], per = [0, 0, 0, 0, 0, 0];
+    p.dice.forEach(function (d, j) { K.dieFace(d, t[j]); per[t[j] - 1]++; });
+    p.sumT.textContent = 'Sum = ' + sum(t);
+    p.countT.textContent = k.toLocaleString('en') + (k === 1 ? ' sum' : ' sums');
+
+    // one small orange chevron per die showing that face, stacked above its bar
+    while (p.marks.firstChild) p.marks.removeChild(p.marks.firstChild);
+    per.forEach(function (c, f) {
+      var cx = p.DX + f * (p.BW + 2) + p.BW / 2, base = p.DB - P[f] * p.DH - 4;
+      for (var m = 0; m < c; m++) {
+        var yy = base - m * 4;
+        p.marks.appendChild(K.el('path', { d: 'M' + (cx - 5) + ' ' + (yy - 4) + 'L' + cx + ' ' + yy + 'L' + (cx + 5) + ' ' + (yy - 4),
+          fill: 'none', stroke: PAL.orange, 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+      }
+    });
+  }
+
+  function build(stage) {
+    var svg = K.canvas(stage, W, H);
+    return { panels: NS.map(function (n, i) { return panel(svg, i); }), tween: null };
+  }
+
+  function all(s, k) { s.panels.forEach(function (p) { show(p, k); }); }
+
+  function stop(s) { if (s.tween) s.tween.pause(); s.tween = null; }
+
+  // The predicted curves stay hidden until every sum is in, then land on the
+  // finished histograms — the comparison is the payoff, not a guide to aim at.
+  function curves(s, on, instant) {
+    s.panels.forEach(function (p) {
+      p.curve.style.transition = instant ? 'none' : 'opacity 700ms ease';
+      p.curve.style.opacity = on ? 1 : 0;
+    });
+  }
+
+  // Called once, on arrival (no fragments). Arriving is always `instant`, so
+  // that flag is not a reason to skip the run: only reduced motion or a
+  // stalled ticker is, and then the finished picture is shown straight away.
+  function place(s) {
+    stop(s);
+    if (K.REDUCE || !K.animeReady()) { all(s, NSUM); curves(s, true, true); return; }
+    all(s, 1);
+    curves(s, false, true);
+    // slow first, so the first dozen throws can be read one by one, then fast
+    var p = { t: 0 };
+    s.tween = window.anime.animate(p, {
+      t: 1, duration: 11000, delay: 500, ease: 'inCubic',
+      onUpdate: function () { all(s, Math.max(1, Math.round(p.t * NSUM))); },
+      onComplete: function () { curves(s, true, false); }
+    });
+  }
+
+  K.register({
+    stage: 'cltdice-stage',
+    frags: [],
+    build: build,
+    place: place,
+    stop: stop
+  });
+})();
+</script>

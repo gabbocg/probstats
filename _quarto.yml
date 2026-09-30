@@ -59,7 +59,13 @@ format:
       - file: assets/js/pois-anim.html
       - file: assets/js/expo-anim.html
       - file: assets/js/clt-anim.html
+      - file: assets/js/galton-anim.html
+      - file: assets/js/cltidea-anim.html
+      - file: assets/js/cltdice-anim.html
       - file: assets/js/zstd-anim.html
+      - file: assets/js/normale-anim.html
+      - file: assets/js/normalpi-anim.html
+      - file: assets/js/normalfull-anim.html
       - file: assets/js/ciflip-anim.html
       - file: assets/js/cieq-anim.html
       - file: assets/js/ci-anim.html
