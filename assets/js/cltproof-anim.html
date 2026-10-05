@@ -1,0 +1,138 @@
+<script>
+/*
+  The central limit theorem, argued by eye — slide #clt-proof.
+
+  Standardise the sum of n lopsided dice, Zₙ = (Sₙ − nμ)/(σ√n). Two of its
+  numbers are pinned by construction: mean 0, variance 1. Every other number
+  that describes its shape shrinks with n: skewness like 1/√n, excess
+  kurtosis like 1/n, and so on (cumulants add under sums, and standardising
+  divides the k-th by n^{k/2}). The one distribution with mean 0, variance 1
+  and nothing else is N(0, 1). That is the whole argument, and it is the
+  real proof in outline: its formal version is the same sentence written
+  with moment generating functions.
+
+  Left: the EXACT distribution of Zₙ (the die's pmf convolved n times, not a
+  simulation), drawn as a density on the z axis over the N(0, 1) curve.
+  Right: the argument, with the skew read off each n.
+    0. n = 1: the die itself, standardised. Skew 1.01, far from any bell
+    1. n = 2    2. n = 5    3. n = 15: the shape numbers fall away
+
+  Built on StageKit (assets/js/stage-kit.html). Canvas 1000x445.
+*/
+(function () {
+  var K = window.StageKit, PAL = K.PAL;
+
+  var W = 1000, H = 445;
+  var P = [0.41, 0.25, 0.15, 0.10, 0.06, 0.03];
+  var NS = [1, 2, 5, 15];
+  var MU = P.reduce(function (a, p, i) { return a + p * (i + 1); }, 0);
+  function cm(k) { return P.reduce(function (a, p, i) { return a + p * Math.pow(i + 1 - MU, k); }, 0); }
+  var VAR = cm(2), SD = Math.sqrt(VAR);
+  var SKEW = cm(3) / Math.pow(VAR, 1.5);          // 1.01 for this die
+
+  // P(S_n = s) by repeated convolution; index s - n
+  function pmf(n) {
+    var out = [1];
+    for (var j = 0; j < n; j++) {
+      var nx = new Array(out.length + 5).fill(0);
+      out.forEach(function (q, a) { P.forEach(function (p, f) { nx[a + f] += q * p; }); });
+      out = nx;
+    }
+    return out;
+  }
+  var PMFS = NS.map(pmf);
+
+  // plot on z in [-3, 4]; density up to 0.75
+  var PX0 = 60, PX1 = 540, PY0 = 70, PY1 = 370, ZLO = -3, ZHI = 4, DHI = 0.75;
+  function sx(z) { return PX0 + (z - ZLO) / (ZHI - ZLO) * (PX1 - PX0); }
+  function sy(d) { return PY1 - d / DHI * (PY1 - PY0); }
+  var RX = 580;
+
+  function show(node, on, instant) {
+    node.style.transition = instant ? 'none' : 'opacity 450ms ease';
+    node.style.opacity = on ? 1 : 0;
+  }
+
+  function build(stage) {
+    var svg = K.canvas(stage, W, H), i, z;
+    var cap = svg.appendChild(K.txt(40, 30, '', { size: 'caption' }));
+
+    // axes
+    svg.appendChild(K.el('line', { x1: PX0, y1: PY1, x2: PX1, y2: PY1, stroke: PAL.inkSoft }));
+    for (z = ZLO; z <= ZHI; z++) {
+      svg.appendChild(K.el('line', { x1: sx(z), y1: PY1, x2: sx(z), y2: PY1 + 6, stroke: PAL.inkSoft }));
+      svg.appendChild(K.txt(sx(z), PY1 + 24, String(z).replace('-', '−'), { size: 16, face: 'mono', anchor: 'middle' }));
+    }
+    svg.appendChild(K.txt((PX0 + PX1) / 2, PY1 + 50, 'z = (sum − nμ) / (σ√n)', { size: 16, face: 'mono', anchor: 'middle' }));
+
+    var bars = svg.appendChild(K.el('g', {}));
+
+    // N(0, 1), the target
+    var d = '';
+    for (i = 0; i <= 200; i++) {
+      z = ZLO + (ZHI - ZLO) * i / 200;
+      d += (i ? 'L' : 'M') + sx(z).toFixed(1) + ' ' + sy(Math.exp(-z * z / 2) / Math.sqrt(2 * Math.PI)).toFixed(1);
+    }
+    svg.appendChild(K.el('path', { d: d, fill: 'none', stroke: PAL.brick, 'stroke-width': 2.5 }));
+    svg.appendChild(K.txt(sx(1.6), sy(0.2) - 8, 'N(0, 1)', { size: 16, face: 'mono', fill: 'brick', weight: 700 }));
+
+    var nLab = svg.appendChild(K.txt(PX1, PY0 - 8, '', { size: 'readout', face: 'mono', fill: 'orange', anchor: 'end', weight: 700 }));
+
+    // the argument, right
+    var big = { size: 'caption', face: 'mono', fill: 'ink', weight: 700 }, small = { size: 16, face: 'mono' };
+    svg.appendChild(K.rich(RX, 80, 'Zₙ = (Sₙ − nμ) / (σ√n)', big));
+    svg.appendChild(K.txt(RX, 108, 'centre it, then scale it to unit spread', small));
+    svg.appendChild(K.txt(RX, 150, 'mean 0, variance 1', { size: 'label', face: 'mono', fill: 'navy', weight: 700 }));
+    svg.appendChild(K.txt(RX, 176, 'fixed by construction, for every n', small));
+
+    svg.appendChild(K.rich(RX, 224, 'skew(Zₙ) = skew(X) / √n', { size: 'label', face: 'mono', fill: 'orange', weight: 700 }));
+    var skT = svg.appendChild(K.txt(RX, 250, '', small));
+    // Kurtosis would be the next line, but this die's excess kurtosis is only
+    // 0.10: its "÷ n" teaches nothing here. The general statement does.
+    svg.appendChild(K.txt(RX, 290, 'every other shape number', { size: 'label', face: 'mono', fill: 'orange', weight: 700 }));
+    svg.appendChild(K.txt(RX, 316, 'shrinks faster still: ÷ n, ÷ n√n, …', small));
+
+    var end = svg.appendChild(K.el('g', {}));
+    end.appendChild(K.txt(RX, 364, 'only mean 0 and variance 1 survive:', { size: 16, face: 'mono', fill: 'ink' }));
+    end.appendChild(K.txt(RX, 392, 'that distribution is N(0, 1)', { size: 'label', face: 'mono', fill: 'brick', weight: 700 }));
+
+    return { cap: cap, bars: bars, nLab: nLab, skT: skT, end: end, state: 0 };
+  }
+
+  var CAPS = [
+    'one lopsided die, standardised: nothing like a bell',
+    'two dice: the lopsidedness is already halving',
+    'five dice',
+    'fifteen dice: what made it lopsided has almost gone'
+  ];
+
+  function draw(s, i) {
+    var n = NS[i], q = PMFS[i], w = 1 / (SD * Math.sqrt(n));   // bar width in z units
+    while (s.bars.firstChild) s.bars.removeChild(s.bars.firstChild);
+    q.forEach(function (p, a) {
+      if (p < 1e-5) return;
+      var z = (a + n - n * MU) * w, h = p / w;                 // density = probability / width
+      if (z < ZLO - w || z > ZHI) return;
+      var x0 = Math.max(PX0, sx(z - w / 2)), x1 = Math.min(PX1, sx(z + w / 2));
+      s.bars.appendChild(K.el('rect', { x: x0 + 0.5, y: sy(Math.min(h, DHI)), width: Math.max(x1 - x0 - 1, 1),
+        height: PY1 - sy(Math.min(h, DHI)), fill: PAL.olive, 'fill-opacity': 0.85 }));
+    });
+    s.nLab.textContent = 'n = ' + n;
+    s.skT.textContent = '= ' + SKEW.toFixed(2) + ' / √' + n + ' = ' + (SKEW / Math.sqrt(n)).toFixed(2);
+  }
+
+  function place(s, i, instant) {
+    s.cap.textContent = CAPS[i];
+    draw(s, i);
+    show(s.end, i === 3, instant);
+    s.state = i;
+  }
+
+  K.register({
+    stage: 'cltproof-stage',
+    frags: ['cltproof-frag-1', 'cltproof-frag-2', 'cltproof-frag-3'],
+    build: build,
+    place: place
+  });
+})();
+</script>

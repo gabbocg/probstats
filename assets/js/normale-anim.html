@@ -24,10 +24,10 @@
   var THETA = [TH, 0, TH, TH];                   // P's angle in each state
 
   var CAPS = [
-    'a dart misses across by x and up by y, independently',
-    'a round target: nothing prefers one direction over another',
-    'heights multiply while squares add: only an exponential turns + into ×',
-    'slice the round hill through its middle and out comes the bell'
+    'A dart misses across by x and up by y, independently',
+    'A round target: nothing prefers one direction over another',
+    'Heights multiply while squares add: only an exponential turns + into ×',
+    'Slice the round hill through its middle and out comes the bell'
   ];
 
   function sx(x) { return CX + x * U; }
@@ -86,7 +86,7 @@
 
     // --- the right-hand column: the argument, one line per step ---
     var RX = 500;
-    var l0 = svg.appendChild(K.txt(RX, 100, 'height at P  =  f(x) · f(y)',
+    var l0 = svg.appendChild(K.txt(RX, 100, 'Height at P  =  f(x) · f(y)',
       { size: 'caption', face: 'mono', fill: 'ink' }));
     var l1 = svg.appendChild(K.txt(RX, 145, '=  a function of x² + y² = r² only',
       { size: 'label', face: 'mono', fill: 'orange' }));
@@ -105,7 +105,7 @@
     }
     bell.appendChild(K.el('path', { d: d + 'Z', fill: PAL.navy, 'fill-opacity': 0.12, stroke: PAL.navy, 'stroke-width': 2.5 }));
     bell.appendChild(K.el('line', { x1: BX0, y1: BB, x2: BX1, y2: BB, stroke: PAL.dim }));
-    bell.appendChild(K.rich(RX, 292, 'the slice at y = 0:  f(x) = e^{−x²}',
+    bell.appendChild(K.rich(RX, 292, 'The slice at y = 0:  f(x) = e^{−x²}',
       { size: 'label', face: 'mono', fill: 'ink' }));
     // the line on the plane where that slice is taken
     var cut = svg.appendChild(K.el('line', {

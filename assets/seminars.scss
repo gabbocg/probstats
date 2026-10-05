@@ -175,6 +175,7 @@
 #pois-intuition .slide-footer,
 #pois-formal .slide-footer,
 #expo-formal .slide-footer,
+#moments-formal .slide-footer,
 #dist-questions .slide-footer,
 #normal-intuition .slide-footer,
 #clt-intuition .slide-footer,
@@ -478,6 +479,10 @@
 // a 1144px slide. Naming the row for each child index fixes item k of every
 // column into row k, whose height is the tallest of the three.
 .three-col > div { display: contents; }
+// A column wrapper is display: contents, so a fragment's fade on it reaches
+// nothing; fade its children instead (visibility already passes down).
+.three-col > div.fragment > * { opacity: 0; transition: opacity 0.4s ease; }
+.three-col > div.fragment.visible > * { opacity: 1; }
 .three-col > div:nth-child(1) > * { grid-column: 1; }
 .three-col > div:nth-child(2) > * { grid-column: 2; }
 .three-col > div:nth-child(3) > * { grid-column: 3; }
@@ -1290,6 +1295,7 @@
   // pair when the room sees them minutes apart.
   &#pois-formal,
   &#expo-formal,
+  &#moments-formal,
   &#funcrv {
     // The three gaps the animation slides define — 24 under the title, 13
     // from the lede to the content, 12 from the content to the takeaway —
@@ -1328,8 +1334,12 @@
 // left column and the plot on the right. Each dial sets its label above the
 // number box and track, so the column stays narrow.
 .reveal section#normal-formula {
+  // the headline formula a touch smaller (both MathJax boxes, see #pois-formal)
+  > p span.math.display { font-size: 0.9em; }
   // centred as one unit: neither column stretches, the row's slack goes to its sides
-  .nf-row { display: flex; align-items: center; justify-content: center; gap: 40px; margin-top: 0; }
+  // the same light rule as .two-col (slide 29) between the formula and the row
+  .nf-row { display: flex; align-items: center; justify-content: center; gap: 40px; margin-top: 0;
+            border-top: 1px solid var(--rule); padding-top: 10px; }
   .nf-left { flex: 0 0 300px; }
   .nf-right { flex: 0 0 auto; }
   .nf-dials { display: flex; flex-direction: column; gap: 22px; }
@@ -1357,3 +1367,28 @@
     b.nf-band { color: var(--accent-3); }
   }
 }
+
+// #box-normal: a little air between the lede and the figure, which also
+// lowers the note box under it.
+.reveal section#box-normal svg { margin-top: 22px; }
+.reveal section#box-normal .note-box { margin-top: 26px; }
+
+// #conditional-probabilities, #total-probability: the opening picture gets
+// the same 22px above (from the lede) and below (to the columns' rule).
+#conditional-probabilities .cond-row { margin-top: 22px; margin-bottom: 22px; }
+// #total-probability's picture carries empty space at its top inside the box,
+// so equal box gaps read as 49px above and 32px below: shift 8px across.
+#total-probability .cond-row { margin-top: 14px; margin-bottom: 30px; }
+
+// #moments has no lede: the stage gets the room above it instead
+#moments .stage-wrap { margin-top: 95px; }   // about equal air above and below
+// #lln has no lede either: room above the stage so it sits mid-slide
+#lln .stage-wrap { margin-top: 80px; }
+// #normal-build: the formula sits high in its canvas, with room under it for the plot
+#normal-build .stage-wrap { margin-top: -2px; }
+
+// #chisq, #tdist: the formula sits high in its canvas, with room under it for the plot
+#chisq .stage-wrap, #tdist .stage-wrap { margin-top: -5px; }
+
+// #dist-map: the relationships chart fills the width under the lede
+.reveal section#dist-map svg.dist-map { display: block; height: 470px; width: auto; max-width: 100%; margin: 34px auto 0; }

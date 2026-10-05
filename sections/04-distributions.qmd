@@ -13,7 +13,7 @@ A random variable is not really a variable. It is a rule that hands every outcom
 $$X : \Omega \to \mathbb{R} \qquad\qquad P(X = x)$$
 
 :::: {.two-col}
-::: {}
+::: {.fragment}
 [Discrete]{.col-head}
 [Values you can list]{.col-sub}
 
@@ -28,7 +28,7 @@ Six of the thirty-six cells carry a 7, so
 $P(\color{#93C54B}{X} = 7) = \tfrac{6}{36}$
 :::
 
-::: {}
+::: {.fragment}
 [Continuous]{.col-head}
 [Values filling a range]{.col-sub}
 
@@ -44,7 +44,7 @@ $P(2 \le \color{#325D88}{X} \le 4)$
 :::
 ::::
 
-::: {.note-box}
+::: {.note-box .fragment}
 Which kind you have decides the tool. A discrete variable gives every value its own probability and you add them up. A continuous one spreads probability along a line and you measure the area under a curve. The binomial and the Poisson ahead are discrete, the exponential and the normal are continuous.
 :::
 
@@ -58,7 +58,7 @@ Hand $P$ a value of $X$ and it hands back the probability of that value. That fu
 $$\sum_{k} P(X = k) = 1 \qquad\qquad \int p(x)\,dx = 1$$
 
 :::: {.two-col}
-::: {}
+::: {.fragment}
 [Flip a coin four times]{.col-head}
 [$\Omega$ has sixteen outcomes, $\color{#93C54B}{X}$ counts the heads]{.col-sub}
 
@@ -67,7 +67,7 @@ $$\sum_{k} P(X = k) = 1 \qquad\qquad \int p(x)\,dx = 1$$
 ```
 :::
 
-::: {}
+::: {.fragment}
 [Why bother]{.col-head}
 [Three things the function buys you]{.col-sub}
 
@@ -79,7 +79,7 @@ $$\sum_{k} P(X = k) = 1 \qquad\qquad \int p(x)\,dx = 1$$
 :::
 ::::
 
-::: {.note-box}
+::: {.note-box .fragment}
 The two examples ahead already have names. Heads in $n$ flips is the **binomial**, and a height or a measurement error is the **normal**, written $\color{#93C54B}{X} \sim \text{Binomial}$ and $\color{#325D88}{X} \sim \text{Normal}$.
 :::
 
@@ -767,6 +767,91 @@ Plot.plot({
 :::
 ::::
 
+## Expected Value, Variance and Standard Deviation {.stage-slide #moments}
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="moments-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="moments-frag-1"}
+[]{.fragment .fi-frag id="moments-frag-2"}
+[]{.fragment .fi-frag id="moments-frag-3"}
+[]{.fragment .fi-frag id="moments-frag-4"}
+[]{.fragment .fi-frag id="moments-frag-5"}
+[]{.fragment .fi-frag id="moments-frag-6"}
+
+<!-- commented out: moments-formal (merged into #moments)
+
+## Mean and Spread in Standard Notation {.formula-slide #moments-formal}
+
+::: {.lede-min}
+The three pictures, written down. Each piece of a formula is a piece of the picture.
+:::
+
+$$\operatorname{E}[X] \;=\; \sum_x \underset{\color{#6E7681}{\text{where it sits}}}{x}\;\;\underset{\color{#6E7681}{\text{its weight}}}{\color{#325D88}{p(x)}} \;=\; \color{#B94A48}{2.24}$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Replace each position by the area of its square, and average again]{.deriv-note}
+:::
+
+$$\operatorname{Var}(X) \;=\; \sum_x \underset{\color{#6E7681}{\text{area of its square}}}{\color{#F47C3C}{(x - \mu)^2}}\;\;\underset{\color{#6E7681}{\text{its weight}}}{\color{#325D88}{p(x)}} \;=\; \color{#F47C3C}{1.92}$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Read off the side of the average square, back in the units of $X$]{.deriv-note}
+:::
+
+$$\operatorname{SD}(X) \;=\; \underset{\color{#6E7681}{\text{side of the average square}}}{\sqrt{\operatorname{Var}(X)}} \;=\; \color{#325D88}{1.39}$$
+
+::: {.slide-footer .fragment}
+For a normal these are exactly its two parameters: $\operatorname{E}[X] = \color{#B94A48}{\mu}$ and $\operatorname{SD}(X) = \color{#325D88}{\sigma}$.
+:::
+
+-->
+
+## The Law of Large Numbers, Intuitively {.stage-slide #lln}
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="lln-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="lln-frag-1"}
+[]{.fragment .fi-frag id="lln-frag-2"}
+[]{.fragment .fi-frag id="lln-frag-3"}
+
+<!-- commented out: clt-proof
+
+## The Central Limit Theorem, Intuitively {.stage-slide #clt-proof}
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="cltproof-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="cltproof-frag-1"}
+[]{.fragment .fi-frag id="cltproof-frag-2"}
+[]{.fragment .fi-frag id="cltproof-frag-3"}
+
+-->
+
+## Unpacking the Normal Formula {.stage-slide #normal-build}
+
+::: {.lede-min}
+Every piece of the formula has a job. The $e$ and the square make the bell, $\sigma$ sets its width, $\mu$ moves it, and the constant in front keeps the area at 1.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="normbuild-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="normbuild-frag-1"}
+[]{.fragment .fi-frag id="normbuild-frag-2"}
+[]{.fragment .fi-frag id="normbuild-frag-3"}
+[]{.fragment .fi-frag id="normbuild-frag-4"}
+[]{.fragment .fi-frag id="normbuild-frag-5"}
+[]{.fragment .fi-frag id="normbuild-frag-6"}
+[]{.fragment .fi-frag id="normbuild-frag-7"}
+[]{.fragment .fi-frag id="normbuild-frag-8"}
+[]{.fragment .fi-frag id="normbuild-frag-9"}
+
 ## Where the $e$ in the Normal Comes From {.stage-slide #normal-e}
 
 ::: {.lede-min}
@@ -795,6 +880,8 @@ Call $C$ the area under the bell $e^{-x^2}$. Build the round hill from two of th
 []{.fragment .fi-frag id="normalpi-frag-2"}
 []{.fragment .fi-frag id="normalpi-frag-3"}
 
+<!-- commented out: normal-full (replaced by #normal-build)
+
 ## Putting the Normal Together {.stage-slide #normal-full}
 
 ::: {.lede-min}
@@ -810,6 +897,8 @@ The shape $e^{-x^2}$ and its area $\sqrt{\pi}$ are all the ingredients. Four mov
 []{.fragment .fi-frag id="normalfull-frag-3"}
 []{.fragment .fi-frag id="normalfull-frag-4"}
 
+-->
+
 ## The Box Plot on a Normal Curve {.formula-slide #box-normal}
 
 ::: {.lede-min}
@@ -817,60 +906,60 @@ A box plot is five numbers and no assumptions. Lay it over a normal curve and al
 :::
 
 ```{=html}
-<svg width="880" height="342" viewBox="0 -12 880 342" aria-label="a box plot lined up with a normal curve, showing where the quartiles, the whiskers and the outlier fences fall in standard deviations">
-<path d="M90.5 296 L90.5 292.6 L96.9 292.2 L103.4 291.6 L109.9 291 L116.4 290.3 L122.8 289.6 L129.3 288.8 L135.8 287.9 L142.3 286.9 L148.7 285.8 L155.2 284.6 L161.7 283.3 L168.1 281.8 L174.6 280.3 L181.1 278.6 L187.6 276.8 L194 274.9 L200.5 272.8 L207 270.6 L213.5 268.3 L219.9 265.8 L226.4 263.1 L232.9 260.3 L239.3 257.4 L245.8 254.4 L252.3 251.2 L258.8 247.9 L265.2 244.5 L271.7 240.9 L278.2 237.3 L284.7 233.6 L291.1 229.9 L297.6 226 L304.1 222.2 L310.5 218.3 L317 214.4 L323.5 210.6 L330 206.8 L336.4 203 L342.9 199.3 L349.4 195.8 L355.9 192.3 L362.3 189.1 L368.8 185.9 L375.3 183 L381.7 180.3 L388.2 177.8 L394.7 175.6 L401.2 173.6 L407.6 171.9 L414.1 170.5 L420.6 169.4 L427.1 168.6 L433.5 168.2 L440 168 L446.5 168.2 L452.9 168.6 L459.4 169.4 L465.9 170.5 L472.4 171.9 L478.8 173.6 L485.3 175.6 L491.8 177.8 L498.3 180.3 L504.7 183 L511.2 185.9 L517.7 189.1 L524.1 192.3 L530.6 195.8 L537.1 199.3 L543.6 203 L550 206.8 L556.5 210.6 L563 214.4 L569.5 218.3 L575.9 222.2 L582.4 226 L588.9 229.9 L595.3 233.6 L601.8 237.3 L608.3 240.9 L614.8 244.5 L621.2 247.9 L627.7 251.2 L634.2 254.4 L640.7 257.4 L647.1 260.3 L653.6 263.1 L660.1 265.8 L666.5 268.3 L673 270.6 L679.5 272.8 L686 274.9 L692.4 276.8 L698.9 278.6 L705.4 280.3 L711.9 281.8 L718.3 283.3 L724.8 284.6 L731.3 285.8 L737.7 286.9 L744.2 287.9 L750.7 288.8 L757.2 289.6 L763.6 290.3 L770.1 291 L776.6 291.6 L783.1 292.2 L789.5 292.6 L789.5 296 Z" fill="rgba(50,93,136,0.10)"/>
-<path d="M352.6 296 L352.6 194 L359.1 190.7 L365.6 187.5 L372 184.5 L378.5 181.6 L385 179 L391.5 176.7 L397.9 174.6 L404.4 172.7 L410.9 171.2 L417.3 169.9 L423.8 169 L430.3 168.4 L436.8 168 L443.2 168 L449.7 168.4 L456.2 169 L462.7 169.9 L469.1 171.2 L475.6 172.7 L482.1 174.6 L488.5 176.7 L495 179 L501.5 181.6 L508 184.5 L514.4 187.5 L520.9 190.7 L527.4 194 L527.4 296 Z" fill="rgba(50,93,136,0.13)"/>
-<path d="M6 295.5 L12.5 295.4 L19 295.3 L25.4 295.2 L31.9 295.1 L38.4 295 L44.9 294.8 L51.3 294.6 L57.8 294.3 L64.3 294.1 L70.8 293.8 L77.3 293.5 L83.7 293.1 L90.2 292.7 L96.7 292.2 L103.2 291.6 L109.6 291 L116.1 290.4 L122.6 289.6 L129.1 288.8 L135.6 287.9 L142 286.9 L148.5 285.8 L155 284.6 L161.5 283.3 L167.9 281.9 L174.4 280.3 L180.9 278.7 L187.4 276.9 L193.9 274.9 L200.3 272.9 L206.8 270.7 L213.3 268.3 L219.8 265.8 L226.2 263.2 L232.7 260.4 L239.2 257.5 L245.7 254.4 L252.1 251.3 L258.6 248 L265.1 244.5 L271.6 241 L278.1 237.4 L284.5 233.7 L291 229.9 L297.5 226.1 L304 222.2 L310.4 218.4 L316.9 214.5 L323.4 210.6 L329.9 206.8 L336.4 203.1 L342.8 199.4 L349.3 195.8 L355.8 192.4 L362.3 189.1 L368.7 186 L375.2 183 L381.7 180.3 L388.2 177.8 L394.7 175.6 L401.1 173.6 L407.6 171.9 L414.1 170.5 L420.6 169.4 L427 168.6 L433.5 168.2 L440 168 L446.5 168.2 L453 168.6 L459.4 169.4 L465.9 170.5 L472.4 171.9 L478.9 173.6 L485.3 175.6 L491.8 177.8 L498.3 180.3 L504.8 183 L511.3 186 L517.7 189.1 L524.2 192.4 L530.7 195.8 L537.2 199.4 L543.6 203.1 L550.1 206.8 L556.6 210.6 L563.1 214.5 L569.6 218.4 L576 222.2 L582.5 226.1 L589 229.9 L595.5 233.7 L601.9 237.4 L608.4 241 L614.9 244.5 L621.4 248 L627.9 251.3 L634.3 254.4 L640.8 257.5 L647.3 260.4 L653.8 263.2 L660.2 265.8 L666.7 268.3 L673.2 270.7 L679.7 272.9 L686.1 274.9 L692.6 276.9 L699.1 278.7 L705.6 280.3 L712.1 281.9 L718.5 283.3 L725 284.6 L731.5 285.8 L738 286.9 L744.4 287.9 L750.9 288.8 L757.4 289.6 L763.9 290.4 L770.4 291 L776.8 291.6 L783.3 292.2 L789.8 292.7 L796.3 293.1 L802.7 293.5 L809.2 293.8 L815.7 294.1 L822.2 294.3 L828.7 294.6 L835.1 294.8 L841.6 295 L848.1 295.1 L854.6 295.2 L861 295.3 L867.5 295.4 L874 295.5" fill="none" stroke="#325D88" stroke-width="2.4" stroke-linejoin="round"/>
-<line x1="6" y1="296" x2="874" y2="296" stroke="#325D88" stroke-width="1.6"/>
-<line x1="51.3" y1="296" x2="51.3" y2="302" stroke="#325D88" stroke-width="1.4"/>
-<text x="51.3" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">&#8722;3&#963;</text>
-<line x1="180.9" y1="296" x2="180.9" y2="302" stroke="#325D88" stroke-width="1.4"/>
-<text x="180.9" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">&#8722;2&#963;</text>
-<line x1="310.4" y1="296" x2="310.4" y2="302" stroke="#325D88" stroke-width="1.4"/>
-<text x="310.4" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">&#8722;1&#963;</text>
-<line x1="440" y1="296" x2="440" y2="302" stroke="#325D88" stroke-width="1.4"/>
-<text x="440" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">&#956;</text>
-<line x1="569.6" y1="296" x2="569.6" y2="302" stroke="#325D88" stroke-width="1.4"/>
-<text x="569.6" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">+1&#963;</text>
-<line x1="699.1" y1="296" x2="699.1" y2="302" stroke="#325D88" stroke-width="1.4"/>
-<text x="699.1" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">+2&#963;</text>
-<line x1="828.7" y1="296" x2="828.7" y2="302" stroke="#325D88" stroke-width="1.4"/>
-<text x="828.7" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">+3&#963;</text>
-<line x1="90.5" y1="98" x2="90.5" y2="122" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
-<line x1="90.5" y1="148" x2="90.5" y2="296" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
-<line x1="352.6" y1="98" x2="352.6" y2="122" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
-<line x1="352.6" y1="148" x2="352.6" y2="296" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
-<line x1="527.4" y1="98" x2="527.4" y2="122" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
-<line x1="527.4" y1="148" x2="527.4" y2="296" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
-<line x1="789.5" y1="98" x2="789.5" y2="122" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
-<line x1="789.5" y1="148" x2="789.5" y2="296" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
-<line x1="90.5" y1="78" x2="789.5" y2="78" stroke="#325D88" stroke-width="1.8"/>
-<line x1="90.5" y1="66" x2="90.5" y2="90" stroke="#325D88" stroke-width="1.8"/>
-<line x1="789.5" y1="66" x2="789.5" y2="90" stroke="#325D88" stroke-width="1.8"/>
-<rect x="352.6" y="60" width="174.8" height="36" fill="rgba(50,93,136,0.22)" stroke="#325D88" stroke-width="1.8"/>
-<line x1="440" y1="60" x2="440" y2="96" stroke="#325D88" stroke-width="1.8"/>
-<circle cx="70.5" cy="78" r="3.6" fill="#B94A48"/>
-<circle cx="809.5" cy="78" r="3.6" fill="#B94A48"/>
-<circle cx="50.5" cy="78" r="3.6" fill="#B94A48"/>
-<circle cx="829.5" cy="78" r="3.6" fill="#B94A48"/>
-<circle cx="30.5" cy="78" r="3.6" fill="#B94A48"/>
-<circle cx="849.5" cy="78" r="3.6" fill="#B94A48"/>
-<text x="50.5" y="103" font-size="15" font-family="Roboto, sans-serif" fill="#B94A48" font-weight="700" text-anchor="middle">Outliers</text>
-<text x="829.5" y="103" font-size="15" font-family="Roboto, sans-serif" fill="#B94A48" font-weight="700" text-anchor="middle">Outliers</text>
-<path d="M352.6 28V20H527.4V28M440 20V13" fill="none" stroke="#325D88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="440" y="9" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">IQR</text>
-<text x="352.6" y="52" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">Q1</text>
-<text x="527.4" y="52" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">Q3</text>
-<text x="90.5" y="52" font-size="15" font-family="Roboto, sans-serif" fill="#6E7681" font-weight="700" text-anchor="middle">Q1 &#8722; 1.5 &#215; IQR</text>
-<text x="789.5" y="52" font-size="15" font-family="Roboto, sans-serif" fill="#6E7681" font-weight="700" text-anchor="middle">Q3 + 1.5 &#215; IQR</text>
-<text x="440" y="116" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">Median</text>
-<text x="90.5" y="141" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" text-anchor="middle">&#8722;2.698&#963;</text>
-<text x="352.6" y="141" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" text-anchor="middle">&#8722;0.6745&#963;</text>
-<text x="527.4" y="141" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" text-anchor="middle">0.6745&#963;</text>
-<text x="789.5" y="141" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" text-anchor="middle">2.698&#963;</text>
-<text x="263.8" y="282" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">24.65%</text>
-<text x="440" y="282" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">50%</text>
-<text x="616.2" y="282" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">24.65%</text>
+<svg width="720" height="342" viewBox="80 -12 720 342" aria-label="a box plot lined up with a normal curve, showing where the quartiles, the whiskers and the outlier fences fall in standard deviations">
+<path d="M160.4 296L160.4 292.6L165.5 292.2L170.7 291.6L175.9 291L181.1 290.3L186.2 289.6L191.4 288.8L196.6 287.9L201.8 286.9L207.0 285.8L212.2 284.6L217.4 283.3L222.5 281.8L227.7 280.3L232.9 278.6L238.1 276.8L243.2 274.9L248.4 272.8L253.6 270.6L258.8 268.3L263.9 265.8L269.1 263.1L274.3 260.3L279.4 257.4L284.6 254.4L289.8 251.2L295.0 247.9L300.2 244.5L305.4 240.9L310.6 237.3L315.8 233.6L320.9 229.9L326.1 226L331.3 222.2L336.4 218.3L341.6 214.4L346.8 210.6L352.0 206.8L357.1 203L362.3 199.3L367.5 195.8L372.7 192.3L377.8 189.1L383.0 185.9L388.2 183L393.4 180.3L398.6 177.8L403.8 175.6L409.0 173.6L414.1 171.9L419.3 170.5L424.5 169.4L429.7 168.6L434.8 168.2L440.0 168L445.2 168.2L450.3 168.6L455.5 169.4L460.7 170.5L465.9 171.9L471.0 173.6L476.2 175.6L481.4 177.8L486.6 180.3L491.8 183L497.0 185.9L502.2 189.1L507.3 192.3L512.5 195.8L517.7 199.3L522.9 203L528.0 206.8L533.2 210.6L538.4 214.4L543.6 218.3L548.7 222.2L553.9 226L559.1 229.9L564.2 233.6L569.4 237.3L574.6 240.9L579.8 244.5L585.0 247.9L590.2 251.2L595.4 254.4L600.6 257.4L605.7 260.3L610.9 263.1L616.1 265.8L621.2 268.3L626.4 270.6L631.6 272.8L636.8 274.9L641.9 276.8L647.1 278.6L652.3 280.3L657.5 281.8L662.6 283.3L667.8 284.6L673.0 285.8L678.2 286.9L683.4 287.9L688.6 288.8L693.8 289.6L698.9 290.3L704.1 291L709.3 291.6L714.5 292.2L719.6 292.6L719.6 296Z" fill="rgba(50,93,136,0.10)"/>
+<path d="M370.1 296L370.1 194L375.3 190.7L380.5 187.5L385.6 184.5L390.8 181.6L396.0 179L401.2 176.7L406.3 174.6L411.5 172.7L416.7 171.2L421.8 169.9L427.0 169L432.2 168.4L437.4 168L442.6 168L447.8 168.4L453.0 169L458.2 169.9L463.3 171.2L468.5 172.7L473.7 174.6L478.8 176.7L484.0 179L489.2 181.6L494.4 184.5L499.5 187.5L504.7 190.7L509.9 194L509.9 296Z" fill="rgba(50,93,136,0.13)"/>
+<path d="M92.8 295.5L98.0 295.4L103.2 295.3L108.3 295.2L113.5 295.1L118.7 295L123.9 294.8L129.0 294.6L134.2 294.3L139.4 294.1L144.6 293.8L149.8 293.5L155.0 293.1L160.2 292.7L165.4 292.2L170.6 291.6L175.7 291L180.9 290.4L186.1 289.6L191.3 288.8L196.5 287.9L201.6 286.9L206.8 285.8L212.0 284.6L217.2 283.3L222.3 281.9L227.5 280.3L232.7 278.7L237.9 276.9L243.1 274.9L248.2 272.9L253.4 270.7L258.6 268.3L263.8 265.8L269.0 263.2L274.2 260.4L279.4 257.5L284.6 254.4L289.7 251.3L294.9 248L300.1 244.5L305.3 241L310.5 237.4L315.6 233.7L320.8 229.9L326.0 226.1L331.2 222.2L336.3 218.4L341.5 214.5L346.7 210.6L351.9 206.8L357.1 203.1L362.2 199.4L367.4 195.8L372.6 192.4L377.8 189.1L383.0 186L388.2 183L393.4 180.3L398.6 177.8L403.8 175.6L408.9 173.6L414.1 171.9L419.3 170.5L424.5 169.4L429.6 168.6L434.8 168.2L440.0 168L445.2 168.2L450.4 168.6L455.5 169.4L460.7 170.5L465.9 171.9L471.1 173.6L476.2 175.6L481.4 177.8L486.6 180.3L491.8 183L497.0 186L502.2 189.1L507.4 192.4L512.6 195.8L517.8 199.4L522.9 203.1L528.1 206.8L533.3 210.6L538.5 214.5L543.7 218.4L548.8 222.2L554.0 226.1L559.2 229.9L564.4 233.7L569.5 237.4L574.7 241L579.9 244.5L585.1 248L590.3 251.3L595.4 254.4L600.6 257.5L605.8 260.4L611.0 263.2L616.2 265.8L621.4 268.3L626.6 270.7L631.8 272.9L636.9 274.9L642.1 276.9L647.3 278.7L652.5 280.3L657.7 281.9L662.8 283.3L668.0 284.6L673.2 285.8L678.4 286.9L683.5 287.9L688.7 288.8L693.9 289.6L699.1 290.4L704.3 291L709.4 291.6L714.6 292.2L719.8 292.7L725.0 293.1L730.2 293.5L735.4 293.8L740.6 294.1L745.8 294.3L751.0 294.6L756.1 294.8L761.3 295L766.5 295.1L771.7 295.2L776.8 295.3L782.0 295.4L787.2 295.5" fill="none" stroke="#325D88" stroke-width="2.4" stroke-linejoin="round"/>
+<line x1="92.8" y1="296" x2="787.2" y2="296" stroke="#325D88" stroke-width="1.6"/>
+<line x1="129.0" y1="296" x2="129.0" y2="302" stroke="#325D88" stroke-width="1.4"/>
+<text x="129.0" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">&#8722;3&#963;</text>
+<line x1="232.7" y1="296" x2="232.7" y2="302" stroke="#325D88" stroke-width="1.4"/>
+<text x="232.7" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">&#8722;2&#963;</text>
+<line x1="336.3" y1="296" x2="336.3" y2="302" stroke="#325D88" stroke-width="1.4"/>
+<text x="336.3" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">&#8722;1&#963;</text>
+<line x1="440.0" y1="296" x2="440.0" y2="302" stroke="#325D88" stroke-width="1.4"/>
+<text x="440.0" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">&#956;</text>
+<line x1="543.7" y1="296" x2="543.7" y2="302" stroke="#325D88" stroke-width="1.4"/>
+<text x="543.7" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">+1&#963;</text>
+<line x1="647.3" y1="296" x2="647.3" y2="302" stroke="#325D88" stroke-width="1.4"/>
+<text x="647.3" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">+2&#963;</text>
+<line x1="751.0" y1="296" x2="751.0" y2="302" stroke="#325D88" stroke-width="1.4"/>
+<text x="751.0" y="318" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">+3&#963;</text>
+<line x1="160.4" y1="98" x2="160.4" y2="122" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="160.4" y1="148" x2="160.4" y2="296" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="370.1" y1="98" x2="370.1" y2="122" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="370.1" y1="148" x2="370.1" y2="296" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="509.9" y1="98" x2="509.9" y2="122" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="509.9" y1="148" x2="509.9" y2="296" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="719.6" y1="98" x2="719.6" y2="122" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="719.6" y1="148" x2="719.6" y2="296" stroke="#6E7681" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="160.4" y1="78" x2="719.6" y2="78" stroke="#325D88" stroke-width="1.8"/>
+<line x1="160.4" y1="66" x2="160.4" y2="90" stroke="#325D88" stroke-width="1.8"/>
+<line x1="719.6" y1="66" x2="719.6" y2="90" stroke="#325D88" stroke-width="1.8"/>
+<rect x="370.1" y="60" width="139.8" height="36" fill="rgba(50,93,136,0.22)" stroke="#325D88" stroke-width="1.8"/>
+<line x1="440.0" y1="60" x2="440.0" y2="96" stroke="#325D88" stroke-width="1.8"/>
+<circle cx="144.4" cy="78" r="3.6" fill="#B94A48"/>
+<circle cx="735.6" cy="78" r="3.6" fill="#B94A48"/>
+<circle cx="128.4" cy="78" r="3.6" fill="#B94A48"/>
+<circle cx="751.6" cy="78" r="3.6" fill="#B94A48"/>
+<circle cx="112.4" cy="78" r="3.6" fill="#B94A48"/>
+<circle cx="767.6" cy="78" r="3.6" fill="#B94A48"/>
+<text x="128.4" y="103" font-size="15" font-family="Roboto, sans-serif" fill="#B94A48" font-weight="700" text-anchor="middle">Outliers</text>
+<text x="751.6" y="103" font-size="15" font-family="Roboto, sans-serif" fill="#B94A48" font-weight="700" text-anchor="middle">Outliers</text>
+<path d="M370.1 28V20H509.9V28M440.0 20V13" fill="none" stroke="#325D88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="440.0" y="9" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">IQR</text>
+<text x="370.1" y="52" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">Q1</text>
+<text x="509.9" y="52" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">Q3</text>
+<text x="160.4" y="52" font-size="15" font-family="Roboto, sans-serif" fill="#6E7681" font-weight="700" text-anchor="middle">Q1 &#8722; 1.5 &#215; IQR</text>
+<text x="719.6" y="52" font-size="15" font-family="Roboto, sans-serif" fill="#6E7681" font-weight="700" text-anchor="middle">Q3 + 1.5 &#215; IQR</text>
+<text x="440.0" y="116" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">Median</text>
+<text x="160.4" y="141" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" text-anchor="middle">&#8722;2.698&#963;</text>
+<text x="370.1" y="141" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" text-anchor="middle">&#8722;0.6745&#963;</text>
+<text x="509.9" y="141" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" text-anchor="middle">0.6745&#963;</text>
+<text x="719.6" y="141" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" text-anchor="middle">2.698&#963;</text>
+<text x="299.0" y="282" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">24.65%</text>
+<text x="440.0" y="282" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">50%</text>
+<text x="581.0" y="282" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">24.65%</text>
 </svg>
 ```
 
@@ -919,3 +1008,53 @@ $$f_{\color{#93C54B}{Y}}(y) \;=\; \tfrac{1}{|a|}\, f_X\big(\tfrac{y-b}{a}\big) \
 ::: {.slide-footer .fragment}
 Standardising is this with $a = 1/\sigma$ and $b = -\mu/\sigma$, which is why one table serves every normal. A *non-linear* $g$ leaves the family, so $X \sim \operatorname{N}(0,1)$ makes $\color{#93C54B}{Y} = X^{2}$ chi-squared.
 :::
+
+## The Chi-Square Distribution {.stage-slide #chisq}
+
+::: {.lede-min}
+Square $k$ independent standard normals and add them up. The total is never negative, and it is the yardstick for sample variances, since $(n-1)s^2/\sigma^2 \sim \chi^2_{n-1}$.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="chisq-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="chisq-frag-1"}
+[]{.fragment .fi-frag id="chisq-frag-2"}
+[]{.fragment .fi-frag id="chisq-frag-3"}
+
+## The Student's $t$ Distribution {.stage-slide #tdist}
+
+::: {.lede-min}
+Swap the unknown $\sigma$ for the sample's $s$ and the bell gets fatter tails. Formally $T = Z/\sqrt{V/k}$ with $V \sim \chi^2_k$, which is why the chi-square came first.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="tdist-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="tdist-frag-1"}
+[]{.fragment .fi-frag id="tdist-frag-2"}
+[]{.fragment .fi-frag id="tdist-frag-3"}
+
+## Relationships Among Probability Distributions {.formula-slide #dist-map}
+
+::: {.lede-min}
+Each distribution is one step from another: a sum, a limit, a square or a ratio.
+:::
+
+```{=html}
+<svg class="dist-map" viewBox="0 0 2000 1056" aria-label="a map of how probability distributions turn into one another, with orange arrows added for Poisson to exponential, Z squared to chi-squared and Z over root V over k to t, and with Bernoulli, binomial, Poisson, exponential, normal, standard normal, chi-squared and t filled light orange">
+<defs><marker id="dist-map-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#F47C3C"/></marker><mask id="dist-map-mask"><rect width="2000" height="1056" fill="#fff"/><rect x="1248" y="123" width="156" height="65" rx="24" fill="#000"/><rect x="928" y="123" width="180" height="66" rx="24" fill="#000"/><rect x="586" y="33" width="156" height="64" rx="24" fill="#000"/><rect x="654" y="327" width="162" height="65" rx="24" fill="#000"/><rect x="563" y="579" width="156" height="64" rx="24" fill="#000"/><rect x="1248" y="670" width="180" height="65" rx="24" fill="#000"/><rect x="791" y="854" width="203" height="65" rx="24" fill="#000"/><rect x="564" y="785" width="87" height="65" rx="24" fill="#000"/></mask></defs>
+<image href="assets/img/dist-relationships.png" width="2000" height="1056"/>
+<!-- step 1: the ones we have met fill light orange (the same chart, flood-filled), the rest fades back -->
+<g class="fragment"><image href="assets/img/dist-relationships-met.png" width="2000" height="1056"/><rect width="2000" height="1056" fill="#fff" fill-opacity="0.6" mask="url(#dist-map-mask)"/></g>
+<!-- step 2: links from our slides that the chart leaves out -->
+<g class="fragment">
+<path d="M716 90 C820 380, 1080 520, 1282 676" fill="none" stroke="#fff" stroke-width="12"/><path d="M716 90 C820 380, 1080 520, 1282 676" fill="none" stroke="#F47C3C" stroke-width="5" marker-end="url(#dist-map-head)"/><text x="1000" y="470" font-size="30" font-weight="700" font-family="Roboto, sans-serif" fill="#F47C3C" text-anchor="start" stroke="#fff" stroke-width="8" paint-order="stroke">Time between events</text>
+<path d="M700 632 C780 700, 840 780, 866 858" fill="none" stroke="#fff" stroke-width="12"/><path d="M700 632 C780 700, 840 780, 866 858" fill="none" stroke="#F47C3C" stroke-width="5" marker-end="url(#dist-map-head)"/><text x="792" y="738" font-size="30" font-weight="700" font-family="Roboto, sans-serif" fill="#F47C3C" text-anchor="end" stroke="#fff" stroke-width="8" paint-order="stroke">Z²</text>
+<path d="M800 880 C730 872, 690 856, 648 830" fill="none" stroke="#fff" stroke-width="12"/><path d="M800 880 C730 872, 690 856, 648 830" fill="none" stroke="#F47C3C" stroke-width="5" marker-end="url(#dist-map-head)"/><text x="700" y="822" font-size="30" font-weight="700" font-family="Roboto, sans-serif" fill="#F47C3C" text-anchor="middle" stroke="#fff" stroke-width="8" paint-order="stroke">Z/√(V/k)</text>
+
+</g>
+</svg>
+```

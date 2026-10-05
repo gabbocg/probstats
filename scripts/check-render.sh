@@ -44,7 +44,7 @@ for id in s00b-me s00b-about s00-how-to-use s00-webr \
           pois-intuition pois-formal \
           likelihood-live binom-formal \
           pois-intuition expo-intuition expo-formal \
-          normal-intuition galton clt-idea clt-dice normal-formula normal-e normal-pi normal-full box-normal funcrv pois-sim; do
+          normal-intuition galton clt-idea clt-dice normal-formula moments lln normal-build normal-pi normal-e box-normal funcrv chisq tdist dist-map pois-sim; do
   need "id=\"$id\"" "slide #$id"
 done
 
@@ -53,7 +53,7 @@ done
 # one reappears the comment markers have been broken, and if the blocks are
 # uncommented again this list is where the ids come back from.
 for id in bins-intuition bins-sim dist-questions \
-          clt-intuition clt-sim zstd-intuition \
+          clt-intuition clt-sim clt-proof moments-formal normal-full zstd-intuition \
           s05-estimation ciflip-intuition cieq-formula \
           ci-intuition ci-sim ci-t-vs-z \
           s06-testing pval-intuition alpha-sim power-sim \
@@ -64,14 +64,14 @@ for id in bins-intuition bins-sim dist-questions \
     echo "FAIL: slide #$id is commented out in sections/ but rendered anyway"; fail=1
   fi
 done
-echo "OK:   26 commented-out slides stayed out"
+echo "OK:   29 commented-out slides stayed out"
 
 echo "── animation stages ───────────────────────────────"
 # pois and expo dropped: #pois-intuition and #expo-intuition are {ojs}
 # slides now, not stages.
 # bins, clt, zstd, ciflip, cieq, ci, pval, pair, ls and smooth belong to
 # slides commented out on 2026-09-23; put them back here when those return.
-STAGES="about dicegrid mm space setops venn prior bayes bayeq monty cond binom seller laplace galton cltidea cltdice normale normalpi normalfull"
+STAGES="about dicegrid mm space setops venn prior bayes bayeq monty cond binom seller laplace galton cltidea cltdice moments lln normbuild normalpi normale chisq tdist"
 for s in $STAGES; do
   need "id=\"$s-stage\"" "stage #$s-stage"
 done
@@ -132,9 +132,13 @@ for f in prior-frag-1 prior-frag-2 \
          laplace-frag-1 laplace-frag-2 laplace-frag-3 \
          galton-frag-1 galton-frag-2 \
          cltidea-frag-1 cltidea-frag-2 \
-         normale-frag-1 normale-frag-2 normale-frag-3 \
+         moments-frag-1 moments-frag-2 moments-frag-3 moments-frag-4 moments-frag-5 moments-frag-6 \
+         lln-frag-1 lln-frag-2 lln-frag-3 \
+         normbuild-frag-1 normbuild-frag-2 normbuild-frag-3 normbuild-frag-4 normbuild-frag-5 normbuild-frag-6 normbuild-frag-7 normbuild-frag-8 normbuild-frag-9 \
          normalpi-frag-1 normalpi-frag-2 normalpi-frag-3 \
-         normalfull-frag-1 normalfull-frag-2 normalfull-frag-3 normalfull-frag-4; do
+         normale-frag-1 normale-frag-2 normale-frag-3 \
+         chisq-frag-1 chisq-frag-2 chisq-frag-3 \
+         tdist-frag-1 tdist-frag-2 tdist-frag-3; do
   need "id=\"$f\"" "fragment $f"
 done
 

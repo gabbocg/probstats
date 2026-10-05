@@ -1,0 +1,289 @@
+<script>
+/*
+  Unpacking the normal formula — slide #normal-build, after 3Blue1Brown.
+  It keeps the promise made at the end of #moments ("we'll unpack this"),
+  building 1/(σ√2π) · e^{−½((x−μ)/σ)²} one piece at a time on one grid:
+    0. eˣ, exponential growth
+    1. e^{−x}, decay
+    2. e^{−|x|}, symmetric, but with a corner at 0
+    3. e^{−x²}, smooth: the bell's shape
+    4. e^{−cx²} = (e^c)^{−x²}: c sweeps, only the width changes
+    5. e^{−½(x/σ)²}: the width written as σ, with ±σ arrows; σ sweeps
+    6. the area under e^{−x²}, shaded: "We want this area to be 1"
+    7. "Area = √π" (why π: the next slide)
+    8. 1/(σ√2π) · e^{−½(x/σ)²}: area 1 for every σ; σ sweeps
+    9. (x − μ): μ slides the whole bell; μ sweeps, then the room can drag
+       the μ line (move) or a σ line (widen) by hand
+  Each change of formula morphs the curve point by point from the old one.
+
+  Built on StageKit (assets/js/stage-kit.html). Canvas 1000x445.
+*/
+(function () {
+  var K = window.StageKit, PAL = K.PAL;
+
+  var W = 1000, H = 445;
+  var X0 = 60, X1 = 940, XL = -4, XR = 4, YB = 410, UY = 118;   // plot: x −4..4, y 0..2
+  function px(x) { return X0 + (x - XL) / (XR - XL) * (X1 - X0); }
+  function py(y) { return YB - y * UY; }
+  var NPT = 240, XS = [];
+  for (var i = 0; i <= NPT; i++) XS.push(XL + (XR - XL) * i / NPT);
+  var R2P = Math.sqrt(2 * Math.PI);
+
+  var ROMAN = "MathJax_Main, 'Times New Roman', serif", ITAL = "MathJax_Math, 'Times New Roman', serif";
+  // runs: [text, italic?, colour?, 'sup'?]
+  function math(g, x, y, runs, size, anchor) {
+    var t = g.appendChild(K.el('text', { x: x, y: y, 'font-size': size || 34, 'font-family': ROMAN, fill: PAL.ink, 'text-anchor': anchor || 'middle' }));
+    runs.forEach(function (r) {
+      var sp = t.appendChild(K.el('tspan', { 'font-family': r[1] ? ITAL : null, 'font-style': r[1] ? 'italic' : null,
+        fill: r[2] || null, 'baseline-shift': r[3] === 'sup' ? '42%' : null, 'font-size': r[3] === 'sup' ? '68%' : null }));
+      sp.textContent = r[0];
+    });
+    return t;
+  }
+  // e raised to −½ · ((x − μ)/σ)², set as display maths: stacked fractions,
+  // tall brackets. (ex, ey) is the base e; the exponent is centred on cy.
+  function expo(g, ex, ey, withMu) {
+    var S = 25, cy = ey - 34, x = ex + 27, el = function (n, a) { return g.appendChild(K.el(n, a)); };
+    function frac(cx, w, top, bot) {
+      el('line', { x1: cx - w / 2, y1: cy, x2: cx + w / 2, y2: cy, stroke: PAL.ink, 'stroke-width': 1.5 });
+      math(g, cx, cy - 6, top, S);
+      math(g, cx, cy + 22, bot, S);
+    }
+    math(g, ex, ey, [['e', 1]], 46, 'start');
+    math(g, x, cy + 8, [['−']], S, 'start'); x += 19;
+    frac(x + 8, 17, [['1']], [['2']]); x += 22;
+    math(g, x, cy + 16, [['(']], 50, 'start'); x += 17;
+    var w = withMu ? 66 : 22;
+    frac(x + w / 2, w, withMu ? [['x', 1], [' − '], ['μ', 1, PAL.brick]] : [['x', 1]], [['σ', 1, PAL.orange]]); x += w + 3;
+    math(g, x, cy + 16, [[')']], 50, 'start'); x += 15;
+    math(g, x, cy - 14, [['2']], 18, 'start');
+  }
+
+  function show(node, on, instant) {
+    node.style.transition = instant ? 'none' : 'opacity 450ms ease';
+    node.style.opacity = on ? 1 : 0;
+  }
+  function halo(t) { t.setAttribute('stroke', PAL.white); t.setAttribute('stroke-width', 6); t.setAttribute('paint-order', 'stroke'); return t; }
+
+  // the curve for each step, given the swept parameters
+  function fn(i, p) {
+    return function (x) {
+      switch (i) {
+        case 0: return Math.exp(x);
+        case 1: return Math.exp(-x);
+        case 2: return Math.exp(-Math.abs(x));
+        case 3: case 6: case 7: return Math.exp(-x * x);
+        case 4: return Math.exp(-p.c * x * x);
+        case 5: return Math.exp(-0.5 * (x / p.s) * (x / p.s));
+        case 8: return Math.exp(-0.5 * (x / p.s) * (x / p.s)) / (p.s * R2P);
+        default: return Math.exp(-0.5 * ((x - p.m) / p.s) * ((x - p.m) / p.s)) / (p.s * R2P);
+      }
+    };
+  }
+  var START = { c: 0.55, s: 1.17, m: 0 };
+
+  function build(stage) {
+    var svg = K.canvas(stage, W, H), v;
+
+    // grid, light, in the deck's tone
+    var grid = svg.appendChild(K.el('g', {}));
+    // only whole-number lines, faint: the curve is the subject
+    for (v = XL; v <= XR; v += 1) grid.appendChild(K.el('line', { x1: px(v), y1: py(2.05), x2: px(v), y2: YB, stroke: PAL.rule, 'stroke-width': 1 }));
+    for (v = 1; v <= 2; v += 1) grid.appendChild(K.el('line', { x1: X0, y1: py(v), x2: X1, y2: py(v), stroke: PAL.rule, 'stroke-width': 1 }));
+    grid.appendChild(K.el('line', { x1: X0, y1: YB, x2: X1, y2: YB, stroke: PAL.inkSoft, 'stroke-width': 1.6 }));
+    grid.appendChild(K.el('line', { x1: px(0), y1: py(2.05), x2: px(0), y2: YB, stroke: PAL.inkSoft, 'stroke-width': 1.6 }));
+    for (v = -3; v <= 4; v++) if (v) grid.appendChild(K.txt(px(v), YB + 22, String(v).replace('-', '−'), { size: 15, face: 'mono', anchor: 'middle' }));
+    // y numbers at the plot's left edge, clear of the curve, μ and σ
+    [1, 2].forEach(function (u) { grid.appendChild(K.txt(X0 - 10, py(u) + 5, String(u), { size: 15, face: 'mono', anchor: 'end' })); });
+
+    var clip = svg.appendChild(K.el('clipPath', { id: 'nb-clip' }));
+    // cut at the grid's top edge, so eˣ and e^{−x} never rise past the plot
+    clip.appendChild(K.el('rect', { x: X0, y: py(2.05), width: X1 - X0, height: YB - py(2.05) + 2 }));
+    var plot = svg.appendChild(K.el('g', { 'clip-path': 'url(#nb-clip)' }));
+    var area = plot.appendChild(K.el('path', { fill: PAL.navy, 'fill-opacity': 0.18 }));
+    var curve = plot.appendChild(K.el('path', { fill: 'none', stroke: PAL.navy, 'stroke-width': 3.2, 'stroke-linejoin': 'round' }));
+
+    // σ arrows and the μ line (steps 5, 8, 9)
+    var sig = svg.appendChild(K.el('g', {}));
+    var sl = sig.appendChild(K.el('line', { stroke: PAL.orange, 'stroke-width': 2.2 }));
+    var sr = sig.appendChild(K.el('line', { stroke: PAL.orange, 'stroke-width': 2.2 }));
+    var sa = sig.appendChild(K.el('path', { fill: 'none', stroke: PAL.orange, 'stroke-width': 3, 'stroke-linejoin': 'round' }));
+    var sla = sig.appendChild(halo(math(sig, 0, 0, [['σ', 1, PAL.orange]], 24)));
+    var sra = sig.appendChild(halo(math(sig, 0, 0, [['σ', 1, PAL.orange]], 24)));
+    var mu = svg.appendChild(K.el('g', {}));
+    var ml = mu.appendChild(K.el('line', { stroke: PAL.brick, 'stroke-width': 2.4 }));
+    var mt = mu.appendChild(halo(math(mu, 0, 0, [['μ', 1, PAL.brick]], 26)));
+
+    // the formulas, one group per step, centred at the top
+    var FY = 80, F = [];
+    function f(runs, size) { var g = svg.appendChild(K.el('g', {})); g.t = math(g, 500, FY, runs, size || 40); F.push(g); return g; }
+    f([['e', 1], ['x', 1, null, 'sup']]);
+    f([['e', 1], ['−', 0, null, 'sup'], ['x', 1, null, 'sup']]);
+    f([['e', 1], ['−|', 0, null, 'sup'], ['x', 1, null, 'sup'], ['|', 0, null, 'sup']]);
+    f([['e', 1], ['−', 0, null, 'sup'], ['x', 1, null, 'sup'], ['²', 0, null, 'sup']]);
+    var f4 = f([['e', 1], ['−', 0, null, 'sup'], ['c', 1, PAL.orange, 'sup'], ['x²', 1, null, 'sup'], ['  =  ('], ['e', 1], ['c', 1, PAL.orange, 'sup'], [')'], ['−x²', 1, null, 'sup'], ['  =  (']], 36);
+    var base = f4.t.appendChild(K.el('tspan', { fill: PAL.olive })); f4.t.appendChild(K.el('tspan', {})).textContent = ')';
+    var be = f4.t.appendChild(K.el('tspan', { 'baseline-shift': '42%', 'font-size': '68%', 'font-family': ITAL, 'font-style': 'italic' })); be.textContent = '−x²';
+    (function () { var g = svg.appendChild(K.el('g', {})); expo(g, 450, FY + 10, false); F.push(g); })();
+    f([['e', 1], ['−', 0, null, 'sup'], ['x', 1, null, 'sup'], ['²', 0, null, 'sup']]);
+    f([['e', 1], ['−', 0, null, 'sup'], ['x', 1, null, 'sup'], ['²', 0, null, 'sup']]);
+    // with the 1/(σ√2π) in front, as a stacked fraction
+    function frac(withMu) {
+      var g = svg.appendChild(K.el('g', {}));
+      math(g, 395, FY - 18, [['1']], 30);
+      g.appendChild(K.el('line', { x1: 352, y1: FY - 8, x2: 440, y2: FY - 8, stroke: PAL.ink, 'stroke-width': 1.8 }));
+      math(g, 396, FY + 26, [['σ', 1, PAL.orange], ['√2'], ['π', 1]], 30);
+      expo(g, 452, FY + 10, withMu);
+      F.push(g);
+    }
+    frac(false); frac(true);
+
+    // readouts: c or σ top left, μ top right
+    var rc = svg.appendChild(K.el('g', {})), rcv = math(rc, X0, FY, [['c', 1, PAL.orange], ['  =  ']], 30, 'start').appendChild(K.el('tspan', {}));
+    var rs = svg.appendChild(K.el('g', {})), rsv = math(rs, X0, FY, [['σ', 1, PAL.orange], ['  =  ']], 30, 'start').appendChild(K.el('tspan', {}));
+    var rm = svg.appendChild(K.el('g', {})), rmv = math(rm, X1, FY, [['μ', 1, PAL.brick], ['  =  ']], 30, 'end');
+    var rmt = rmv.appendChild(K.el('tspan', {}));
+
+    // notes
+    var note0 = svg.appendChild(halo(K.txt(px(1.3), py(1.75), 'Exponential growth', { size: 26, fill: 'ink' })));
+    // step 1 mirrors it on the left, the side e^{−x} decays from
+    var note1 = svg.appendChild(halo(K.txt(px(-1.3), py(1.75), 'Decay rate', { size: 26, fill: 'ink', anchor: 'end' })));
+    function pointer(text, sub) {
+      var g = svg.appendChild(K.el('g', {}));
+      g.appendChild(K.el('path', { d: 'M' + px(1.35) + ' ' + py(1.2) + 'L' + px(0.35) + ' ' + py(0.55), fill: 'none', stroke: PAL.inkSoft, 'stroke-width': 2.5 }));
+      g.appendChild(K.el('path', { d: 'M' + (px(0.35) + 3) + ' ' + (py(0.55) - 15) + 'L' + px(0.35) + ' ' + py(0.55) + 'L' + (px(0.35) + 16) + ' ' + (py(0.55) - 4), fill: 'none', stroke: PAL.inkSoft, 'stroke-width': 2.5, 'stroke-linejoin': 'round' }));
+      halo(math(g, px(1.5), py(1.4), text, 30, 'start'));
+      if (sub) halo(K.txt(px(1.5), py(1.4) + 28, sub, { size: 17, anchor: 'start' }));
+      return g;
+    }
+    var n6 = pointer([['We want this area to be 1']]);
+    var n7 = pointer([['Area  =  √'], ['π', 1]], 'Why π? The next slide.');
+    var n8 = pointer([['Area  =  1']]);
+
+    // step 9 is interactive: wide invisible handles over the μ line and the
+    // two σ lines, dragged with the pointer. The hint sits top left of the plot.
+    var drag = svg.appendChild(K.el('g', {}));
+    function handle(cursor) {
+      return drag.appendChild(K.el('rect', { y: py(1.7), width: 26, height: YB - py(1.7), fill: '#000', 'fill-opacity': 0,
+        style: 'cursor:' + cursor + ';pointer-events:all' }));
+    }
+    var hm = handle('ew-resize'), hl = handle('col-resize'), hr = handle('col-resize');
+    // under the μ readout: below the axis it fell off the canvas
+    var hint = svg.appendChild(K.txt(X0 + 14, py(2) + 24, 'Drag the μ and σ lines', { size: 16 }));
+
+    return { drag: drag, hm: hm, hl: hl, hr: hr, hint: hint, svg: svg, curve: curve, area: area, sig: sig, sl: sl, sr: sr, sa: sa, sla: sla, sra: sra, mu: mu, ml: ml, mt: mt,
+             F: F, base: base, rc: rc, rcv: rcv, rs: rs, rsv: rsv, rm: rm, rmt: rmt, note0: note0, note1: note1, n6: n6, n7: n7, n8: n8,
+             cur: XS.map(fn(0, START)), p: { c: START.c, s: START.s, m: 0 }, state: 0, tween: null };
+  }
+
+  function pathOf(ys) {
+    return ys.map(function (y, k) { return (k ? 'L' : 'M') + px(XS[k]).toFixed(1) + ' ' + py(Math.min(y, 3)).toFixed(1); }).join('');
+  }
+  function draw(s, i, ys) {
+    s.cur = ys;
+    var d = pathOf(ys);
+    s.curve.setAttribute('d', d);
+    s.area.setAttribute('d', i >= 6 ? d + 'L' + X1 + ' ' + YB + 'L' + X0 + ' ' + YB + 'Z' : '');
+    var p = s.p, sd = i === 5 ? p.s : i >= 8 ? p.s : 1, m = i === 9 ? p.m : 0;
+    if (i === 5 || i >= 8) {
+      var lo = px(m - sd), hi = px(m + sd), c = px(m), ay = py(1.3);
+      [[s.sl, lo], [s.sr, hi]].forEach(function (q) { q[0].setAttribute('x1', q[1]); q[0].setAttribute('x2', q[1]); q[0].setAttribute('y1', py(1.55)); q[0].setAttribute('y2', YB); });
+      s.sa.setAttribute('d', 'M' + (c - 6) + ' ' + ay + 'H' + (lo + 4) + 'M' + (lo + 14) + ' ' + (ay - 7) + 'L' + (lo + 4) + ' ' + ay + 'L' + (lo + 14) + ' ' + (ay + 7) +
+        'M' + (c + 6) + ' ' + ay + 'H' + (hi - 4) + 'M' + (hi - 14) + ' ' + (ay - 7) + 'L' + (hi - 4) + ' ' + ay + 'L' + (hi - 14) + ' ' + (ay + 7));
+      s.sla.setAttribute('x', (c + lo) / 2); s.sla.setAttribute('y', ay - 12);
+      s.sra.setAttribute('x', (c + hi) / 2); s.sra.setAttribute('y', ay - 12);
+    }
+    s.ml.setAttribute('x1', px(m)); s.ml.setAttribute('x2', px(m)); s.ml.setAttribute('y1', py(1.62)); s.ml.setAttribute('y2', YB);   // below the y axis's "2"
+    s.mt.setAttribute('x', px(m)); s.mt.setAttribute('y', py(1.62) - 10);
+    s.rcv.textContent = p.c.toFixed(2);
+    s.base.textContent = Math.exp(p.c).toFixed(3);
+    s.rsv.textContent = p.s.toFixed(2);
+    s.rmt.textContent = p.m.toFixed(2);
+    if (s.hm) {
+      s.hm.setAttribute('x', px(m) - 13);
+      s.hl.setAttribute('x', px(m - sd) - 13);
+      s.hr.setAttribute('x', px(m + sd) - 13);
+    }
+  }
+
+  function stop(s) { if (s.tween) s.tween.pause(); s.tween = null; }
+
+  // pointer x in canvas units, through the SVG's own transform (the stage is scaled)
+  function toX(s, e) {
+    var pt = s.svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    return pt.matrixTransform(s.svg.getScreenCTM().inverse()).x;
+  }
+  function wire(s) {
+    if (s.wired || !s.svg.createSVGPoint) return;
+    s.wired = true;
+    var what = null;
+    function down(kind) {
+      return function (e) {
+        if (s.state !== 9) return;
+        what = kind; stop(s);
+        e.preventDefault(); e.stopPropagation();
+        if (e.target.setPointerCapture) e.target.setPointerCapture(e.pointerId);
+      };
+    }
+    function move(e) {
+      if (!what) return;
+      var v = XL + (toX(s, e) - X0) / (X1 - X0) * (XR - XL);
+      if (what === 'm') s.p.m = Math.max(-3, Math.min(3, v));
+      else s.p.s = Math.max(0.35, Math.min(2.5, Math.abs(v - s.p.m)));
+      draw(s, 9, XS.map(fn(9, s.p)));
+      e.preventDefault();
+    }
+    function up() { what = null; }
+    s.hm.addEventListener('pointerdown', down('m'));
+    s.hl.addEventListener('pointerdown', down('s'));
+    s.hr.addEventListener('pointerdown', down('s'));
+    [s.hm, s.hl, s.hr].forEach(function (h) {
+      h.addEventListener('pointermove', move);
+      h.addEventListener('pointerup', up);
+      h.addEventListener('pointercancel', up);
+    });
+  }
+
+  // the parameter sweep each sliding step plays once it has arrived
+  var SWEEP = { 4: { key: 'c', keys: [2.2, 0.3, 1] }, 5: { key: 's', keys: [0.6, 1.6, 1] }, 8: { key: 's', keys: [0.5, 1.6, 1] }, 9: { key: 'm', keys: [-2, 1.5, 0] } };
+
+  function place(s, i, instant) {
+    stop(s);
+    s.F.forEach(function (g, k) { show(g, k === i, instant); });
+    show(s.note0, i === 0, instant);
+    show(s.note1, i === 1, instant);
+    show(s.n6, i === 6, instant); show(s.n7, i === 7, instant); show(s.n8, i === 8, instant);
+    show(s.rc, i === 4, instant); show(s.rs, i === 5 || i >= 8, instant); show(s.rm, i === 9, instant);
+    show(s.sig, i === 5 || i >= 8, instant); show(s.mu, i === 9, instant);
+    show(s.hint, i === 9, instant);
+    s.drag.style.display = i === 9 ? '' : 'none';
+    wire(s);
+    var from = s.state; s.state = i;
+    if (i === 4) s.p.c = START.c;
+    if (i === 5) s.p.s = START.s;
+    if (i >= 8) s.p.s = 1;
+    if (i < 9) s.p.m = 0;
+    var target = XS.map(fn(i, s.p));
+    var go = !instant && !K.REDUCE && K.animeReady() && i === from + 1;
+    if (!go) { draw(s, i, target); return; }
+    var start = s.cur.slice(), t = { k: 0 };
+    s.tween = window.anime.animate(t, { k: 1, duration: 900, ease: 'inOutCubic',
+      onUpdate: function () { draw(s, i, start.map(function (y, n) { return y + (target[n] - y) * t.k; })); },
+      onComplete: function () {
+        var sw = SWEEP[i];
+        if (!sw) return;
+        s.tween = window.anime.animate(s.p, { [sw.key]: sw.keys.map(function (v) { return { to: v, duration: 1300 }; }), ease: 'inOutSine',
+          onUpdate: function () { draw(s, i, XS.map(fn(i, s.p))); } });
+      } });
+  }
+
+  K.register({
+    stage: 'normbuild-stage',
+    frags: ['normbuild-frag-1', 'normbuild-frag-2', 'normbuild-frag-3', 'normbuild-frag-4', 'normbuild-frag-5',
+            'normbuild-frag-6', 'normbuild-frag-7', 'normbuild-frag-8', 'normbuild-frag-9'],
+    build: build,
+    place: place,
+    stop: stop
+  });
+})();
+</script>

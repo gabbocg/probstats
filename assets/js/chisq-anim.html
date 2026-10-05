@@ -1,0 +1,203 @@
+<script>
+/*
+  The chi-square distribution — slide #chisq, in the style of #normal-build.
+  It picks up where #funcrv ends (X ~ N(0,1) makes X² chi-squared):
+    0. k = 1: the Y = X² that #funcrv ends on, piled up against 0
+    1. k = 2: add a second square; the k = 1 curve stays as a ghost
+    2. k = 4: the hump leaves 0; the mean line sits at k; Mean = k, Variance = 2k
+    3. k sweeps to 10 with the normal N(k, 2k) dashed over it: a sum of many
+       squares is a sum, so the CLT makes it a bell again
+  Each step morphs the curve point by point; the y scale eases with it.
+
+  Built on StageKit (assets/js/stage-kit.html). Canvas 1000x445.
+*/
+(function () {
+  var K = window.StageKit, PAL = K.PAL;
+
+  var W = 1000, H = 445;
+  var X0 = 60, X1 = 940, XL = 0, XR = 20, YB = 410, PT = 165;   // plot: x 0..20, y 0..ymax
+  function px(x) { return X0 + (x - XL) / (XR - XL) * (X1 - X0); }
+  var NPT = 240, XS = [];
+  for (var i = 0; i <= NPT; i++) XS.push(XL + 0.02 + (XR - XL - 0.02) * i / NPT);
+
+  // log Γ, Lanczos (g = 7): enough for the chi-square density at any k
+  var LC = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313,
+    -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+  function lgamma(z) {
+    if (z < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * z)) - lgamma(1 - z);
+    z -= 1;
+    var a = LC[0], t = z + 7.5;
+    for (var j = 1; j < 9; j++) a += LC[j] / (z + j);
+    return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(a);
+  }
+  function chi(k) {
+    return function (x) { return Math.exp((k / 2 - 1) * Math.log(x) - x / 2 - (k / 2) * Math.LN2 - lgamma(k / 2)); };
+  }
+  function normal(m, v) {
+    return function (x) { return Math.exp(-(x - m) * (x - m) / (2 * v)) / Math.sqrt(2 * Math.PI * v); };
+  }
+
+  var ROMAN = "MathJax_Main, 'Times New Roman', serif", ITAL = "MathJax_Math, 'Times New Roman', serif";
+  // runs: [text, italic?, colour?, 'sup' | 'sub'?, stacked under the previous script?]
+  // A script pair is written sup first, then the sub pulled back under it.
+  function math(g, x, y, runs, size, anchor) {
+    size = size || 34;
+    var t = g.appendChild(K.el('text', { x: x, y: y, 'font-size': size, 'font-family': ROMAN, fill: PAL.ink, 'text-anchor': anchor || 'middle' }));
+    runs.forEach(function (r, n) {
+      var sp = t.appendChild(K.el('tspan', { 'font-family': r[1] ? ITAL : null, 'font-style': r[1] ? 'italic' : null, fill: r[2] || null,
+        'baseline-shift': r[3] === 'sup' ? '50%' : r[3] === 'sub' ? '-36%' : null, 'font-size': r[3] ? '68%' : null,
+        dx: r[4] ? -0.38 * size : r[3] === 'sup' ? 0.12 * size : n && runs[n - 1][4] ? 0.1 * size : null }));
+      sp.textContent = r[0];
+    });
+    return t;
+  }
+  function Z(sub, col) { return [['Z', 1], ['2', 0, null, 'sup'], [sub, !/\d/.test(sub), col, 'sub', true]]; }
+
+  function show(node, on, instant) {
+    node.style.transition = instant ? 'none' : 'opacity 450ms ease';
+    node.style.opacity = on ? 1 : 0;
+  }
+  function halo(t) { t.setAttribute('stroke', PAL.white); t.setAttribute('stroke-width', 6); t.setAttribute('paint-order', 'stroke'); return t; }
+
+  var KS = [1, 2, 4, 10], YMAX = [0.5, 0.5, 0.2, 0.2];
+
+  function build(stage) {
+    var svg = K.canvas(stage, W, H), v;
+
+    var grid = svg.appendChild(K.el('g', {}));
+    for (v = XL; v <= XR; v += 2) grid.appendChild(K.el('line', { x1: px(v), y1: PT - 8, x2: px(v), y2: YB, stroke: PAL.rule, 'stroke-width': 1 }));
+    [0.5, 1].forEach(function (f) { grid.appendChild(K.el('line', { x1: X0, y1: YB - f * (YB - PT), x2: X1, y2: YB - f * (YB - PT), stroke: PAL.rule, 'stroke-width': 1 })); });
+    grid.appendChild(K.el('line', { x1: X0, y1: YB, x2: X1, y2: YB, stroke: PAL.inkSoft, 'stroke-width': 1.6 }));
+    grid.appendChild(K.el('line', { x1: X0, y1: PT - 8, x2: X0, y2: YB, stroke: PAL.inkSoft, 'stroke-width': 1.6 }));
+    for (v = XL; v <= XR; v += 2) grid.appendChild(K.txt(px(v), YB + 22, String(v), { size: 15, face: 'mono', anchor: 'middle' }));
+    // y numbers follow the scale
+    var yl = [0.5, 1].map(function (f) { return grid.appendChild(K.txt(X0 - 10, YB - f * (YB - PT) + 5, '', { size: 15, face: 'mono', anchor: 'end' })); });
+
+    var clip = svg.appendChild(K.el('clipPath', { id: 'chisq-clip' }));
+    // cut at the top of the y axis, so the k = 1 spike never rises past it
+    clip.appendChild(K.el('rect', { x: X0, y: PT - 8, width: X1 - X0, height: YB - PT + 10 }));
+    var plot = svg.appendChild(K.el('g', { 'clip-path': 'url(#chisq-clip)' }));
+    var ghosts = [0, 1].map(function () { return plot.appendChild(K.el('path', { fill: 'none', stroke: PAL.navy, 'stroke-opacity': 0.25, 'stroke-width': 2.4 })); });
+    var area = plot.appendChild(K.el('path', { fill: PAL.navy, 'fill-opacity': 0.14 }));
+    var curve = plot.appendChild(K.el('path', { fill: 'none', stroke: PAL.navy, 'stroke-width': 3.2, 'stroke-linejoin': 'round' }));
+    var norm = plot.appendChild(K.el('path', { fill: 'none', stroke: PAL.olive, 'stroke-width': 2.6, 'stroke-dasharray': '8 6' }));
+    var ghostLab = [halo(K.txt(0, 0, 'k = 1', { size: 16, face: 'mono' })), halo(K.txt(0, 0, 'k = 2', { size: 16, face: 'mono' }))];
+    ghostLab.forEach(function (t) { svg.appendChild(t); });
+
+    // the mean line at x = k
+    var mean = svg.appendChild(K.el('g', {}));
+    var ml = mean.appendChild(K.el('line', { stroke: PAL.brick, 'stroke-width': 2.4, y1: PT - 4, y2: YB }));
+    var mt = mean.appendChild(halo(K.txt(0, PT - 12, 'Mean', { size: 18, fill: 'brick', anchor: 'middle', weight: 700 })));
+    var nl = svg.appendChild(halo(K.txt(0, 0, 'N(k, 2k)', { size: 18, face: 'mono', fill: 'olive', weight: 700 })));
+
+    // formulas, centred at the top
+    var FY = 70, F = [];
+    function f(runs) { var g = svg.appendChild(K.el('g', {})); math(g, 500, FY, runs, 38); F.push(g); }
+    var CHI = function (sub, col) { return [['χ', 1], ['2', 0, null, 'sup'], [sub, !/\d/.test(sub), col, 'sub', true], ['  =  ']]; };
+    f(CHI('1').concat([['Z', 1], ['2', 0, null, 'sup']]));
+    f(CHI('2').concat(Z('1'), [['  +  ']], Z('2')));
+    var KK = CHI('k', PAL.orange).concat(Z('1'), [['  +  ']], Z('2'), [['  +  ⋯  +  ']], Z('k', PAL.orange));
+    f(KK); f(KK);
+
+    // readouts: k top left, the moments top right
+    var rk = svg.appendChild(K.el('g', {})), rkv = math(rk, X0, FY, [['k', 1, PAL.orange], ['  =  ']], 30, 'start').appendChild(K.el('tspan', {}));
+    var rmom = svg.appendChild(K.el('g', {}));
+    math(rmom, X1, FY - 14, [['Mean  =  '], ['k', 1, PAL.orange]], 24, 'end');
+    math(rmom, X1, FY + 20, [['Variance  =  2'], ['k', 1, PAL.orange]], 24, 'end');
+
+    // notes
+    function note(text, x, y) { return svg.appendChild(halo(K.txt(px(x), y, text, { size: 24, fill: 'ink' }))); }
+    // a body sentence under a note's title, justified to width w (last line ragged)
+    function para(g, x, y, text, w) {
+      var nodes = text.split(' ').map(function (t) { return g.appendChild(halo(K.txt(x, y, t, { size: 17 }))); });
+      var wide = nodes.map(function (t) { return t.getComputedTextLength() || 8 * t.textContent.length; });
+      var space = 4.5, rows = [], cur = [], used = 0;
+      wide.forEach(function (v, k) {
+        if (cur.length && used + space + v > w) { rows.push(cur); cur = []; used = 0; }
+        used += (cur.length ? space : 0) + v; cur.push(k);
+      });
+      rows.push(cur);
+      rows.forEach(function (ln, r) {
+        var sum = ln.reduce(function (a, k) { return a + wide[k]; }, 0);
+        var gap = r < rows.length - 1 && ln.length > 1 ? (w - sum) / (ln.length - 1) : space, xx = x;
+        ln.forEach(function (k) { nodes[k].setAttribute('x', xx.toFixed(1)); nodes[k].setAttribute('y', y + r * 23); xx += wide[k] + gap; });
+      });
+    }
+    function note2(a, b, x, y) {
+      var g = svg.appendChild(K.el('g', {}));
+      halo(g.appendChild(K.txt(px(x), y, a, { size: 24, fill: 'ink' })));
+      para(g, px(x), y + 28, b, X1 - px(x) - 10);
+      return g;
+    }
+    var N = [note2('The Y = X² from the last slide', 'One standard normal, squared.', 5, PT + 40),
+             note('Add a second square', 5, PT + 40),
+             note('More squares: The hump leaves 0', 9, PT + 40),
+             note2('A sum of many squares', 'So the CLT makes it a bell again.', 11, PT + 40)];
+
+    return { svg: svg, yl: yl, ghosts: ghosts, ghostLab: ghostLab, area: area, curve: curve, norm: norm, nl: nl,
+             mean: mean, ml: ml, mt: mt, F: F, rk: rk, rkv: rkv, rmom: rmom, N: N,
+             cur: XS.map(chi(1)), ymax: 0.5, k: 1, state: 0, tween: null };
+  }
+
+  function pathOf(ys, ymax) {
+    return ys.map(function (y, n) {
+      return (n ? 'L' : 'M') + px(XS[n]).toFixed(1) + ' ' + (YB - Math.min(y / ymax, 1.15) * (YB - PT)).toFixed(1);
+    }).join('');
+  }
+  function yOf(s, y) { return YB - Math.min(y / s.ymax, 1.15) * (YB - PT); }
+
+  function draw(s, i, ys) {
+    s.cur = ys;
+    var d = pathOf(ys, s.ymax);
+    s.curve.setAttribute('d', d);
+    s.area.setAttribute('d', d + 'L' + X1 + ' ' + YB + 'L' + px(XS[0]) + ' ' + YB + 'Z');
+    // ghosts: earlier k, faint, while the story is still adding squares
+    [1, 2].forEach(function (k, n) {
+      var on = i === 1 ? n === 0 : i === 2;
+      s.ghosts[n].setAttribute('d', on ? pathOf(XS.map(chi(k)), s.ymax) : '');
+      var gx = k === 1 ? 2.2 : 3.1;
+      s.ghostLab[n].setAttribute('x', px(gx) + 6); s.ghostLab[n].setAttribute('y', yOf(s, chi(k)(gx)) - 8);
+      s.ghostLab[n].style.opacity = on ? 0.7 : 0;
+    });
+    var k = s.k;
+    s.norm.setAttribute('d', i === 3 ? pathOf(XS.map(normal(k, 2 * k)), s.ymax) : '');
+    s.nl.setAttribute('x', px(k + Math.sqrt(2 * k) * 1.05) + 8); s.nl.setAttribute('y', yOf(s, normal(k, 2 * k)(k + Math.sqrt(2 * k))) - 10);
+    s.ml.setAttribute('x1', px(k)); s.ml.setAttribute('x2', px(k)); s.mt.setAttribute('x', px(k));
+    s.rkv.textContent = String(Math.round(k));
+    s.yl[0].textContent = String(+(s.ymax / 2).toFixed(2));
+    s.yl[1].textContent = String(+s.ymax.toFixed(2));
+  }
+
+  function stop(s) { if (s.tween) s.tween.pause(); s.tween = null; }
+
+  function place(s, i, instant) {
+    stop(s);
+    s.F.forEach(function (g, n) { show(g, n === i, instant); });
+    s.N.forEach(function (g, n) { show(g, n === i, instant); });
+    show(s.rk, i >= 2, instant); show(s.rmom, i >= 2, instant); show(s.mean, i >= 2, instant); show(s.nl, i === 3, instant);
+    var from = s.state; s.state = i;
+    var go = !instant && !K.REDUCE && K.animeReady() && i === from + 1;
+    if (!go) { s.k = KS[i]; s.ymax = YMAX[i]; draw(s, i, XS.map(chi(s.k))); return; }
+    if (i === 3) {
+      // the sweep: k climbs from 4 to 10 and the dashed normal follows
+      s.tween = window.anime.animate(s, { k: 10, duration: 3200, ease: 'inOutSine', onUpdate: function () { draw(s, 3, XS.map(chi(s.k))); } });
+      return;
+    }
+    var start = s.cur.slice(), target = XS.map(chi(KS[i])), y0 = s.ymax, t = { p: 0 };
+    s.k = KS[i];
+    s.tween = window.anime.animate(t, { p: 1, duration: 900, ease: 'inOutCubic',
+      onUpdate: function () {
+        s.ymax = y0 + (YMAX[i] - y0) * t.p;
+        draw(s, i, start.map(function (y, n) { return y + (target[n] - y) * t.p; }));
+      } });
+  }
+
+  K.register({
+    stage: 'chisq-stage',
+    frags: ['chisq-frag-1', 'chisq-frag-2', 'chisq-frag-3'],
+    build: build,
+    place: place,
+    stop: stop
+  });
+})();
+</script>

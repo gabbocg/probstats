@@ -1656,3 +1656,6 @@ $presentation-heading-line-height: 1.15;
 .fp-theme-minimal .fp-grid-major   { stroke: #E5E7EB; stroke-width: 1; }
 .fp-theme-minimal .fp-grid-minor   { stroke: #F0F2F5; stroke-width: 0.6; }
 .fp-theme-minimal .fp-leg-swatch   { fill: transparent; }
+
+// Title slide subtitle in grey, so it sits under the title instead of competing with it
+.reveal #title-slide .subtitle { color: var(--ink-soft); }

@@ -27,10 +27,10 @@
   var R_END = 3.5;                                // rings sweep r to 3.5, where the running area reads π to 4 dp
 
   var CAPS = [
-    'two bells at right angles make a round hill. What is its volume?',
-    'way 1: cut it like bread. Every slice is the bell, scaled down',
-    'way 2: peel it like an onion. Every ring is 2πr round',
-    'one hill, one volume, so the two answers must agree'
+    'Two bells at right angles make a round hill. What is its volume?',
+    'Way 1: Cut it like bread. Every slice is the bell, scaled down',
+    'Way 2: Peel it like an onion. Every ring is 2πr round',
+    'One hill, one volume, so the two answers must agree'
   ];
 
   function hill(x, y) { return Math.exp(-(x * x + y * y)); }
@@ -109,9 +109,9 @@
     // --- right-hand column ---
     var RX = 620;
     var litLab = svg.appendChild(K.rich(RX, 92, '', { size: 'label', face: 'mono', fill: 'orange' }));
-    var way1 = svg.appendChild(K.txt(RX, 130, 'bread:   V  =  C · C  =  C²',
+    var way1 = svg.appendChild(K.txt(RX, 130, 'Bread:   V  =  C · C  =  C²',
       { size: 'caption', face: 'mono', fill: 'ink', weight: 700 }));
-    var way2 = svg.appendChild(K.txt(RX, 172, 'onion:   V  =  π',
+    var way2 = svg.appendChild(K.txt(RX, 172, 'Onion:   V  =  π',
       { size: 'caption', face: 'mono', fill: 'navy', weight: 700 }));
 
     var graph = svg.appendChild(K.el('g', {}));
@@ -124,8 +124,8 @@
     var end = svg.appendChild(K.el('g', {}));
     end.appendChild(K.txt(RX, 250, 'C²  =  π,  so  C  =  √π',
       { size: 'readout', face: 'mono', fill: 'brick', weight: 700 }));
-    end.appendChild(K.rich(RX, 305, 'the area under e^{−x²} is √π ≈ 1.7725,', { size: 'label', fill: 'ink' }));
-    end.appendChild(K.txt(RX, 335, 'the number the normal divides by', { size: 'label', fill: 'ink' }));
+    end.appendChild(K.rich(RX, 305, 'The area under e^{−x²} is √π ≈ 1.7725.', { size: 'label', fill: 'ink' }));
+    end.appendChild(K.txt(RX, 335, 'That is the number the normal divides by.', { size: 'label', fill: 'ink' }));
 
     return { svg: svg, cap: cap, slices: slices, lit: lit, rim: rim, litLab: litLab,
              way1: way1, way2: way2, graph: graph, area: area, sofar: sofar, end: end,
@@ -151,7 +151,7 @@
     s.lit.setAttribute('d', r > SPAN ? '' : p.front);
     s.rim.setAttribute('d', r > SPAN ? '' : p.rim);
     s.area.setAttribute('d', ringCurve(Math.max(r, 1e-3), true));
-    s.sofar.textContent = 'area so far  ' + (Math.PI * (1 - Math.exp(-r * r))).toFixed(4);
+    s.sofar.textContent = 'Area so far  ' + (Math.PI * (1 - Math.exp(-r * r))).toFixed(4);
     setLab(s, 'r = ' + r.toFixed(2) + ':  2πr · e^{−r²} = ' + (2 * Math.PI * r * Math.exp(-r * r)).toFixed(2));
   }
 

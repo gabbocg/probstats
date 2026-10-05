@@ -1,0 +1,413 @@
+<script>
+/*
+  Expected value, variance and standard deviation — slide #moments.
+  One picture, after 3Blue1Brown, that ends where the intuition lives:
+    0. the lopsided die's histogram, large, a die under each bar
+    1. the mean: a red line at μ and, right, μ = E[X] = Σ x · P(X = x) = 2.24
+    2. the spread: orange lines at μ ± σ with arrows out from μ and, right,
+       Var(X) = E[(X − μ)²] = 1.92 and σ = √Var(X) = 1.39
+    3. adding dice: the histogram shrinks and slides into the top row of a
+       staircase, X₁, X₁ + X₂, … X₁ + ⋯ + X₇ (each the exact distribution of
+       the sum, the pmf convolved n times), every row with its mean nμ and
+       nμ ± σ√n; the formulas give way to the rule nμ, nσ², σ√n
+    4. the rows slide sideways until their centres line up; σ√n labels and
+       inward arrows show the spread still growing
+    5. each row is squeezed by 1/√n: the ±σ√n lines all coincide and the
+       shapes close in on one curve
+    6. the staircase slides left and, on the right, the curve it is closing in
+       on: the standard normal on −5..5, its formula boxed, a promise to
+       unpack it
+  The shrink is a real affine map of the bars onto row one, so the bars you
+  watch are the bars that land. All numbers are computed from P.
+
+  Built on StageKit (assets/js/stage-kit.html). Canvas 1000x445.
+*/
+(function () {
+  var K = window.StageKit, PAL = K.PAL;
+
+  var W = 1000, H = 445;
+  var P = [0.41, 0.25, 0.15, 0.10, 0.06, 0.03], PMAX = 0.41;
+  var MU = P.reduce(function (a, p, i) { return a + p * (i + 1); }, 0);
+  var VAR = P.reduce(function (a, p, i) { return a + p * (i + 1 - MU) * (i + 1 - MU); }, 0);
+  var SD = Math.sqrt(VAR);
+  var N = 7;
+
+  // phase one: the big histogram
+  var HX = 70, BW = 58, BY = 350, PH = 560;
+  function bx(v) { return HX + (v - 0.5) * BW; }
+  // phase two: the staircase
+  var X0 = 30, UX = 16.4, R0 = 58, RH = 56, BH = 42;
+  function sx(v) { return X0 + v * UX; }
+  // the map that carries the big bars onto row one: x' = A x + E, y' = D y + F
+  var A = UX / BW, E = X0 - A * (HX - 0.5 * BW), D = BH / (PMAX * PH), F = R0 - D * BY;
+
+  var FX = 500;                          // formulas; their numbered badges sit at FX - 30
+  var ROMAN = "MathJax_Main, 'Times New Roman', serif", ITAL = "MathJax_Math, 'Times New Roman', serif";
+
+  function f2(v) { return v.toFixed(2); }
+  function show(node, on, instant, ms) {
+    node.style.transition = instant ? 'none' : 'opacity ' + (ms || 450) + 'ms ease';
+    node.style.opacity = on ? 1 : 0;
+  }
+  function halo(t) {
+    t.setAttribute('stroke', PAL.white); t.setAttribute('stroke-width', 5); t.setAttribute('paint-order', 'stroke');
+    return t;
+  }
+  // a line of maths: [text] upright, [text,'i'] italic, then colour, then 'sub'/'super'
+  function math(g, x, y, runs, size, fill) {
+    var t = g.appendChild(K.el('text', { x: x, y: y, 'font-size': size || 26, 'font-family': ROMAN, fill: fill || PAL.ink }));
+    runs.forEach(function (r) {
+      var sp = t.appendChild(K.el('tspan', { 'font-family': r[1] === 'i' ? ITAL : null, 'font-style': r[1] === 'i' ? 'italic' : null,
+        fill: r[2] || null, 'baseline-shift': r[3] || null, 'font-size': r[3] ? '70%' : null }));
+      sp.textContent = r[0];
+    });
+    return t;
+  }
+  // a numbered badge, centred on the formula line's x-height
+  function badge(g, n, y, col) {
+    g.appendChild(K.el('circle', { cx: FX - 30, cy: y - 10, r: 15, fill: col }));
+    g.appendChild(K.txt(FX - 30, y - 3, String(n), { size: 19, fill: 'white', anchor: 'middle', weight: 700 }));
+  }
+  function arrows(g, m, lo, hi, ay, w) {
+    [[m - 5, lo + 3, -1], [m + 5, hi - 3, 1]].forEach(function (a) {
+      g.appendChild(K.el('line', { x1: a[0], y1: ay, x2: a[1] - 7 * a[2], y2: ay, stroke: PAL.orange, 'stroke-width': w }));
+      g.appendChild(K.el('path', { d: 'M' + (a[1] - 9 * a[2]) + ' ' + (ay - 6) + 'L' + a[1] + ' ' + ay + 'L' + (a[1] - 9 * a[2]) + ' ' + (ay + 6) + 'Z', fill: PAL.orange }));
+    });
+  }
+  function pmf(n) {
+    var out = [1];
+    for (var j = 0; j < n; j++) {
+      var nx = new Array(out.length + 6).fill(0);
+      out.forEach(function (q, a) { P.forEach(function (p, f) { nx[a + f + 1] += q * p; }); });
+      out = nx;
+    }
+    return out;
+  }
+  function label(n) {
+    var r = [], idx = n <= 5 ? [1, 2, 3, 4, 5].slice(0, n) : [1, 2, 0, n - 1, n];
+    idx.forEach(function (k, j) {
+      if (j) r.push(['  +  ']);
+      if (k === 0) { r.push(['⋯']); return; }
+      r.push(['X', 'i']); r.push([String(k), null, null, 'sub']);
+    });
+    return r;
+  }
+
+  function build(stage) {
+    var svg = K.canvas(stage, W, H), i, v;
+
+    // ---------- phase one ----------
+    var one = svg.appendChild(K.el('g', {}));
+    var axes = one.appendChild(K.el('g', {}));
+    axes.appendChild(K.el('line', { x1: HX - 12, y1: BY, x2: bx(6) + BW / 2 + 6, y2: BY, stroke: PAL.dim, 'stroke-width': 1.5 }));
+    for (i = 0; i < 6; i++) {
+      K.die(axes, bx(i + 1), BY + 24, 26, i + 1);
+    }
+    // the bars, in their own group so they can be carried to row one
+    var bars = svg.appendChild(K.el('g', {}));
+    for (i = 0; i < 6; i++) {
+      bars.appendChild(K.el('rect', { x: bx(i + 1) - BW / 2 + 1, y: BY - P[i] * PH, width: BW - 2, height: P[i] * PH, rx: 3, fill: PAL.navy, 'fill-opacity': 0.82 }));
+    }
+    // mean, then spread, drawn over the bars
+    var muG = one.appendChild(K.el('g', {}));
+    // everything above the bars rides well clear of the tallest bar's label
+    var top = BY - PMAX * PH - 74;
+    muG.appendChild(K.el('line', { x1: bx(MU), y1: top, x2: bx(MU), y2: BY, stroke: PAL.brick, 'stroke-width': 3 }));
+    halo(math(muG, bx(MU) - 12, top - 8, [['μ', 'i', PAL.brick]], 28));
+    var spG = one.appendChild(K.el('g', {}));
+    var lo = bx(MU - SD), hi = bx(MU + SD);
+    [lo, hi].forEach(function (x) { spG.appendChild(K.el('line', { x1: x, y1: top, x2: x, y2: BY, stroke: PAL.orange, 'stroke-width': 3 })); });
+    arrows(spG, bx(MU), lo, hi, top + 34, 3);
+    [(bx(MU) + lo) / 2, (bx(MU) + hi) / 2].forEach(function (x) { halo(math(spG, x - 7, top + 22, [['σ', 'i', PAL.orange]], 24)); });
+
+    // bar values last, so their white halo sits over the μ and σ lines
+    var labs = one.appendChild(K.el('g', {}));
+    for (i = 0; i < 6; i++) {
+      // a white backing, not just a halo: the halo hugs the glyphs and a line still shows between them
+      labs.appendChild(K.el('rect', { x: bx(i + 1) - 22, y: BY - P[i] * PH - 25, width: 44, height: 20, rx: 3, fill: PAL.white }));
+      labs.appendChild(K.txt(bx(i + 1), BY - P[i] * PH - 9, f2(P[i]), { size: 16, face: 'mono', fill: 'inkSoft', anchor: 'middle' }));
+    }
+
+    // the formulas
+    var fM = one.appendChild(K.el('g', {}));
+    badge(fM, 1, 112, PAL.brick);
+    math(fM, FX, 112, [['μ', 'i', PAL.brick], ['  =  E['], ['X', 'i'], [']  =  Σ  '], ['x', 'i'], ['  ·  '], ['P', 'i'], ['('], ['X', 'i'], ['  =  '], ['x', 'i'], [')  =  '], [f2(MU), null, PAL.brick]], 30);
+    fM.appendChild(K.txt(FX, 144, 'The balance point of the bars', { size: 'tick' }));
+    var fV = one.appendChild(K.el('g', {}));
+    badge(fV, 2, 214, PAL.orange);
+    badge(fV, 3, 306, PAL.orange);
+    math(fV, FX, 214, [['σ', 'i', PAL.orange], ['2', null, PAL.orange, 'super'], ['  =  Var('], ['X', 'i'], [')  =  E[('], ['X', 'i'], ['  −  '], ['μ', 'i', PAL.brick], [')'], ['2', null, null, 'super'], [']  =  '], [f2(VAR), null, PAL.orange]], 30);
+    fV.appendChild(K.txt(FX, 246, 'The average squared distance from μ', { size: 'tick' }));
+    math(fV, FX, 306, [['σ', 'i', PAL.orange], ['  =  √Var('], ['X', 'i'], [')  =  '], [f2(SD), null, PAL.orange]], 30);
+    fV.appendChild(K.txt(FX, 338, 'A typical distance from μ, in the units of X', { size: 'tick' }));
+
+    // ---------- phase two: the staircase ----------
+    var rows = [];
+    for (var n = 1; n <= N; n++) {
+      var q = pmf(n), tq = Math.max.apply(null, q), base = R0 + (n - 1) * RH, g = svg.appendChild(K.el('g', {}));
+      var m = n * MU, s = SD * Math.sqrt(n), end = sx(6 * n + 0.5);
+      g.appendChild(K.el('line', { x1: sx(0.5), y1: base, x2: end, y2: base, stroke: PAL.dim, 'stroke-width': 1.2 }));
+      if (n > 1) {                                   // row one's bars are the carried bars themselves
+        for (v = n; v <= 6 * n; v++) {
+          var h = q[v] / tq * BH;
+          if (h < 0.3) continue;
+          g.appendChild(K.el('rect', { x: sx(v - 0.5) + 0.4, y: base - h, width: UX - 0.8, height: h, fill: PAL.navy, 'fill-opacity': 0.82 }));
+        }
+      }
+      var l = sx(m - s), r = sx(m + s);
+      [l, r].forEach(function (x) { g.appendChild(K.el('line', { x1: x, y1: base - BH - 4, x2: x, y2: base, stroke: PAL.orange, 'stroke-width': 2.5 })); });
+      arrows(g, sx(m), l, r, base - BH * 0.55, 2.2);
+      g.appendChild(K.el('line', { x1: sx(m), y1: base - BH - 4, x2: sx(m), y2: base, stroke: PAL.brick, 'stroke-width': 2.5 }));
+      math(g, end + 14, base - 12, label(n), 22);
+      rows.push(g);
+    }
+    var rule = svg.appendChild(K.el('g', {}));
+    // A short paragraph, set as prose with the maths inline (sans text, italic
+    // serif symbols in their colours) and JUSTIFIED. SVG cannot justify, so:
+    // measure each word, fill lines greedily to PW, and hand every line but
+    // the last the leftover width, split evenly between its gaps.
+    var SANS = 'Roboto, sans-serif', PX = 600, PW = 385, LH = 27;
+    function word(runs, x, y) {
+      var t = K.el('text', { x: x, y: y, 'font-size': 19, 'font-family': SANS, fill: PAL.ink });
+      runs.forEach(function (r) {
+        var m = r[1] === 'm', sp = t.appendChild(K.el('tspan', { 'font-family': m ? ITAL : null, 'font-style': m ? 'italic' : null,
+          'font-size': m ? 21 : null, fill: r[2] || null }));
+        sp.textContent = r[0];
+      });
+      return t;
+    }
+    var T = function (t) { return [[t]]; }, M = function (t, c) { return [[t, 'm', c]]; };
+    var words = [T('Add'), T('up'), M('n'), T('independent'), T('throws'), T('of'), T('the'), T('die.'),
+      T('The'), T('mean'), T('grows'), M('n'), T('times,'), T('to'), [['nμ', 'm', PAL.brick], [',']], T('and'), T('so'),
+      T('does'), T('the'), T('variance,'), T('to'), [['nσ²', 'm', PAL.orange], ['.']],
+      T('The'), T('standard'), T('deviation'), T('grows'), T('only'), [['√'], ['n', 'm']], T('times,'), T('to'),
+      [['σ√n', 'm', PAL.orange], ['.']], T('So'), T('the'), T('centre'), T('moves'), M('n'), T('times'), T('as'), T('far,'),
+      T('but'), T('the'), T('spread'), T('only'), [['√'], ['n', 'm'], ['.']]];
+    var probe = rule.appendChild(word([['a a']], 0, -200)), probe2 = rule.appendChild(word([['aa']], 0, -200));
+    var space = (probe.getComputedTextLength() - probe2.getComputedTextLength()) || 5.5;
+    rule.removeChild(probe); rule.removeChild(probe2);
+    var nodes = words.map(function (w) { return rule.appendChild(word(w, 0, -200)); });
+    var wide = nodes.map(function (t) { return t.getComputedTextLength() || 10 * t.textContent.length; });
+    var lines = [], cur = [], used = 0;
+    wide.forEach(function (w, k) {
+      if (cur.length && used + space + w > PW) { lines.push(cur); cur = []; used = 0; }
+      used += (cur.length ? space : 0) + w; cur.push(k);
+    });
+    lines.push(cur);
+    lines.forEach(function (ln, row) {
+      var sum = ln.reduce(function (a, k) { return a + wide[k]; }, 0);
+      var gap = row < lines.length - 1 && ln.length > 1 ? (PW - sum) / (ln.length - 1) : space, x = PX;
+      ln.forEach(function (k) {
+        nodes[k].setAttribute('x', x.toFixed(1)); nodes[k].setAttribute('y', 30 + row * LH);
+        x += wide[k] + gap;
+      });
+    });
+
+    // ---------- phase three: line the rows up, then rescale them ----------
+    // One group redrawn per frame from two fractions: a (centres slide onto
+    // one line at XC) and b (each row squeezed by 1/√n about its centre, so
+    // every ±σ√n lands on the same pair of lines). At a = b = 0 it is the
+    // staircase exactly, so the swap at the start of step 4 is invisible.
+    var XC = 300, LBX = 600;
+    var clip = svg.appendChild(K.el('clipPath', { id: 'moments-clip' }));
+    clip.appendChild(K.el('rect', { x: 20, y: 0, width: 560, height: H }));
+    var aligned = svg.appendChild(K.el('g', {}));
+    var alignedRows = aligned.appendChild(K.el('g', { 'clip-path': 'url(#moments-clip)' }));
+    var alignedLabels = aligned.appendChild(K.el('g', {}));
+    var PM = [];
+    for (n = 1; n <= N; n++) PM.push(pmf(n));
+    var anno = svg.appendChild(K.el('g', {}));             // the σ√n labels (step 4)
+
+    // ---------- phase four: the standard normal ----------
+    // Drawn in the staircase's own language and on its grid: the same red
+    // mean and orange ±1, its baseline ON the bottom row's baseline and its
+    // card's top level with the top row, so the two blocks share a top and a
+    // bottom. No tick numbers: below the baseline they hung lower than the
+    // staircase. A large arrow leads across at the block's middle height.
+    var nrm = svg.appendChild(K.el('g', {}));
+    var TOPY = R0 - BH - 4, NB = R0 + (N - 1) * RH, MID = (TOPY + NB) / 2;
+    var NX0 = 655, NX1 = 975, PEAK = 222, NPY = (NB - PEAK) * Math.sqrt(2 * Math.PI);
+    function nx(z) { return NX0 + (z + 4) / 8 * (NX1 - NX0); }
+    var cd = '', z;
+    for (v = 0; v <= 160; v++) { z = -4 + v / 20; cd += (v ? 'L' : 'M') + nx(z).toFixed(1) + ' ' + (NB - Math.exp(-z * z / 2) / Math.sqrt(2 * Math.PI) * NPY).toFixed(1); }
+    nrm.appendChild(K.el('path', { d: cd + 'L' + nx(4) + ' ' + NB + 'L' + nx(-4) + ' ' + NB + 'Z', fill: PAL.navy, 'fill-opacity': 0.12 }));
+    nrm.appendChild(K.el('path', { d: cd, fill: 'none', stroke: PAL.navy, 'stroke-width': 3 }));
+    [-1, 1].forEach(function (u) { nrm.appendChild(K.el('line', { x1: nx(u), y1: PEAK - 6, x2: nx(u), y2: NB, stroke: PAL.orange, 'stroke-width': 2.5 })); });
+    nrm.appendChild(K.el('line', { x1: nx(0), y1: PEAK - 6, x2: nx(0), y2: NB, stroke: PAL.brick, 'stroke-width': 2.5 }));
+    nrm.appendChild(K.el('line', { x1: nx(-4), y1: NB, x2: nx(4), y2: NB, stroke: PAL.dim, 'stroke-width': 1.2 }));
+    // what the lines mean, read on the curve: mean 0, ±1 sd holds 68%
+    var hy = NB - 26;
+    nrm.appendChild(K.el('path', { d: 'M' + (nx(-1) + 4) + ' ' + hy + 'H' + (nx(1) - 4), stroke: PAL.orange, 'stroke-width': 1.6, fill: 'none' }));
+    var pct = nrm.appendChild(K.txt(nx(0), hy - 8, '68%', { size: 16, face: 'mono', fill: 'orange', anchor: 'middle', weight: 700 }));
+    pct.setAttribute('stroke', PAL.white); pct.setAttribute('stroke-width', 4); pct.setAttribute('paint-order', 'stroke');
+    // −1, 0, +1 under the baseline, in the lines' colours (only these three, so nothing hangs low)
+    [['−1', -1, PAL.orange], ['0', 0, PAL.brick], ['+1', 1, PAL.orange]].forEach(function (l) {
+      nrm.appendChild(K.txt(nx(l[1]), NB + 20, l[0], { size: 15, face: 'mono', fill: l[2], anchor: 'middle', weight: 700 }));
+    });
+
+    // the arrow across, centred between the two blocks, large
+    var AX1 = 565, AX2 = NX0 - 18;
+    nrm.appendChild(K.el('line', { x1: AX1, y1: MID, x2: AX2 - 12, y2: MID, stroke: PAL.inkSoft, 'stroke-width': 4, 'stroke-linecap': 'round' }));
+    nrm.appendChild(K.el('path', { d: 'M' + (AX2 - 22) + ' ' + (MID - 14) + 'L' + AX2 + ' ' + MID + 'L' + (AX2 - 22) + ' ' + (MID + 14) + 'Z', fill: PAL.inkSoft }));
+
+    // the formula card, top level with the staircase's top row, the promise inside it
+    var cx = nx(0), FBX = cx - 84, CT = TOPY, FBY = CT + 66;
+    nrm.appendChild(K.el('rect', { x: cx - 132, y: CT, width: 264, height: 150, rx: 10, fill: '#FAFBFC', stroke: PAL.rule, 'stroke-width': 1.5 }));
+    math(nrm, FBX + 30, FBY, [['1']], 32);
+    nrm.appendChild(K.el('line', { x1: FBX, y1: FBY + 12, x2: FBX + 80, y2: FBY + 12, stroke: PAL.ink, 'stroke-width': 1.8 }));
+    math(nrm, FBX + 4, FBY + 50, [['√2'], ['π', 'i']], 30);
+    math(nrm, FBX + 94, FBY + 24, [['e', 'i']], 36);
+    math(nrm, FBX + 115, FBY + 4, [['−½'], ['x', 'i'], ['²']], 22);
+    // name it first, so the curve is never anonymous
+    var nm = math(nrm, cx, CT + 28, [['The standard normal,  '], ['N', 'i', PAL.navy], ['(0, 1)', null, PAL.navy]], 19);
+    nm.setAttribute('text-anchor', 'middle');
+    // the two parameters, as maths in their colours rather than a sentence
+    // the parameters live in the figure, in the empty space above the left
+    // tail, stacked and right-aligned towards the curve
+    var tx = nx(-2.1), ty = NB - 0.66 * (NB - PEAK);
+    math(nrm, tx, ty, [['μ', 'i', PAL.brick], [' = 0', null, PAL.brick]], 22).setAttribute('text-anchor', 'end');
+    math(nrm, tx, ty + 28, [['σ', 'i', PAL.orange], [' = 1', null, PAL.orange]], 22).setAttribute('text-anchor', 'end');
+    nrm.appendChild(K.txt(cx, CT + 136, 'We’ll unpack this in a moment', { size: 15, anchor: 'middle' }));
+
+    // a one-line note per step, bottom right (steps 4 and 5)
+    var note4 = svg.appendChild(K.txt(LBX, 432, 'Line up the centres: the spread still grows like σ√n.', { size: 18, fill: 'ink' }));
+    var note5 = svg.appendChild(K.txt(LBX, 432, 'Divide by the spread: one shape emerges.', { size: 18, fill: 'ink' }));
+
+    return { one: one, axes: axes, labs: labs, bars: bars, muG: muG, spG: spG, fM: fM, fV: fV, rows: rows, rule: rule,
+             aligned: aligned, alignedRows: alignedRows, alignedLabels: alignedLabels, PM: PM, anno: anno, nrm: nrm,
+             note4: note4, note5: note5, XC: XC, LBX: LBX, state: 0, tween: null, timers: [] };
+  }
+
+  // bars at fraction t of the way to row one
+  function carry(s, t) {
+    var a = 1 + (A - 1) * t, e = E * t, d = 1 + (D - 1) * t, f = F * t;
+    s.bars.setAttribute('transform', 'matrix(' + a + ' 0 0 ' + d + ' ' + e + ' ' + f + ')');
+  }
+
+  // the lined-up staircase at fractions a (centres aligned) and b (rescaled)
+  function lineup(s, a, b, sh) {
+    sh = sh || 0;                                    // step 6: slide the whole staircase left
+    var XC = s.XC - 190 * sh, LBX = s.LBX - 300 * sh;
+    var R = s.alignedRows, L = s.alignedLabels, A2 = s.anno;
+    while (R.firstChild) R.removeChild(R.firstChild);
+    while (L.firstChild) L.removeChild(L.firstChild);
+    while (A2.firstChild) A2.removeChild(A2.firstChild);
+    for (var n = 1; n <= N; n++) {
+      var q = s.PM[n - 1], tq = Math.max.apply(null, q), base = R0 + (n - 1) * RH;
+      var m = n * MU, sd = SD * Math.sqrt(n), C = sx(m) + a * (XC - sx(m)), sc = UX * (1 + b * (1 / Math.sqrt(n) - 1));
+      var X = function (v) { return C + (v - m) * sc; };
+      R.appendChild(K.el('line', { x1: X(n - 0.5), y1: base, x2: X(6 * n + 0.5), y2: base, stroke: PAL.dim, 'stroke-width': 1.2 }));
+      for (var v = n; v <= 6 * n; v++) {
+        var h = q[v] / tq * BH;
+        if (h < 0.3) continue;
+        R.appendChild(K.el('rect', { x: X(v - 0.5) + 0.4, y: base - h, width: Math.max(sc - 0.8, 0.6), height: h, fill: PAL.navy, 'fill-opacity': 0.82 }));
+      }
+      [X(m - sd), X(m + sd)].forEach(function (x) { R.appendChild(K.el('line', { x1: x, y1: base - BH - 4, x2: x, y2: base, stroke: PAL.orange, 'stroke-width': 2.5 })); });
+      R.appendChild(K.el('line', { x1: C, y1: base - BH - 4, x2: C, y2: base, stroke: PAL.brick, 'stroke-width': 2.5 }));
+      var lx = (sx(6 * n + 0.5) + 14) * (1 - a) + LBX * a;
+      math(L, lx, base - 12, label(n), 22);
+      // σ√n labels with inward arrows, while the rows are lined up but not rescaled
+      if (a > 0.99 && b < 0.01) {
+        // labels near the top of the orange lines, clear of the bars
+        var lo = X(m - sd), hi = X(m + sd), ay = base - BH * 0.66, tag = n === 1 ? [['σ', 'i', PAL.orange]] : [['σ', 'i', PAL.orange], ['√' + n, null, PAL.orange]];
+        [[lo, -1], [hi, 1]].forEach(function (e) {
+          var x0 = e[0] + e[1] * 34, x1 = e[0] + e[1] * 5;
+          A2.appendChild(K.el('line', { x1: x0, y1: ay, x2: x1 + e[1] * 6, y2: ay, stroke: PAL.orange, 'stroke-width': 2 }));
+          A2.appendChild(K.el('path', { d: 'M' + (x1 + e[1] * 8) + ' ' + (ay - 5) + 'L' + x1 + ' ' + ay + 'L' + (x1 + e[1] * 8) + ' ' + (ay + 5) + 'Z', fill: PAL.orange }));
+          var t = math(A2, x0 + e[1] * 4, ay + 5, tag, 17);
+          t.setAttribute('text-anchor', e[1] < 0 ? 'end' : 'start');
+        });
+      }
+    }
+  }
+
+  function stop(s) {
+    if (s.tween) s.tween.pause();
+    s.timers.forEach(clearTimeout);
+    s.tween = null; s.timers = [];
+  }
+
+  function place(s, i, instant) {
+    stop(s);
+    // phases three and four (steps 4–6) own the stage once they start
+    var late = i >= 4;
+    show(s.aligned, late, instant);
+    show(s.anno, i === 4, instant);
+    show(s.note4, i === 4, instant);
+    show(s.note5, i === 5, instant);
+    show(s.nrm, i === 6, instant);
+    s.aligned.style.transition = instant ? 'none' : 'opacity 450ms ease';
+    if (late) {
+      s.rows.forEach(function (g) { show(g, false, true); });
+      show(s.bars, false, true); show(s.rule, false, instant);
+      show(s.muG, false, true); show(s.fM, false, true); show(s.spG, false, true); show(s.fV, false, true);
+      show(s.axes, false, true); show(s.labs, false, true);
+      var from4 = s.state;
+      s.state = i;
+      var go4 = !instant && !K.REDUCE && K.animeReady() && i === from4 + 1, p4 = { t: 0 };
+      if (i === 4) {
+        if (!go4) { lineup(s, 1, 0); return; }
+        lineup(s, 0, 0);
+        s.anno.style.opacity = 0;
+        s.tween = window.anime.animate(p4, { t: 1, duration: 1400, ease: 'inOutCubic',
+          onUpdate: function () { lineup(s, p4.t, 0); },
+          onComplete: function () { lineup(s, 1, 0); show(s.anno, true, false); } });
+      } else if (i === 5) {
+        if (!go4) { lineup(s, 1, 1); return; }
+        s.tween = window.anime.animate(p4, { t: 1, duration: 1400, ease: 'inOutCubic',
+          onUpdate: function () { lineup(s, 1, p4.t); } });
+      } else {
+        if (!go4) { lineup(s, 1, 1, 1); return; }
+        s.nrm.style.opacity = 0;
+        s.tween = window.anime.animate(p4, { t: 1, duration: 1200, ease: 'inOutCubic',
+          onUpdate: function () { lineup(s, 1, 1, p4.t); },
+          onComplete: function () { show(s.nrm, true, false, 700); } });
+      }
+      return;
+    }
+    show(s.bars, true, true);
+    show(s.muG, i >= 1 && i < 3, instant);
+    show(s.fM, i >= 1 && i < 3, instant);
+    show(s.spG, i === 2, instant);
+    show(s.fV, i === 2, instant);
+    show(s.axes, i < 3, instant);
+    show(s.labs, i < 3, instant);
+    var from = s.state;
+    s.state = i;
+
+    if (i < 3) {
+      carry(s, 0);
+      show(s.rule, false, instant);
+      s.rows.forEach(function (g) { show(g, false, instant); });
+      return;
+    }
+    // i === 3: carry the bars to row one, then build the staircase
+    var go = !instant && !K.REDUCE && K.animeReady() && from === 2;
+    if (!go) {
+      carry(s, 1);
+      show(s.rule, true, true);
+      s.rows.forEach(function (g) { show(g, true, true); });
+      return;
+    }
+    s.rows.forEach(function (g) { show(g, false, true); });
+    show(s.rule, false, true);
+    var p = { t: 0 };
+    s.tween = window.anime.animate(p, { t: 1, duration: 1300, delay: 300, ease: 'inOutCubic',
+      onUpdate: function () { carry(s, p.t); },
+      onComplete: function () {
+        s.rows.forEach(function (g, k) {
+          s.timers.push(setTimeout(function () { show(g, true, false, 450); }, k * 450));
+        });
+        s.timers.push(setTimeout(function () { show(s.rule, true, false, 600); }, N * 450));
+      } });
+  }
+
+  K.register({
+    stage: 'moments-stage',
+    frags: ['moments-frag-1', 'moments-frag-2', 'moments-frag-3', 'moments-frag-4', 'moments-frag-5', 'moments-frag-6'],
+    build: build,
+    place: place,
+    stop: stop
+  });
+})();
+</script>

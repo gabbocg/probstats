@@ -4,6 +4,7 @@ project:
   output-dir: _site
   resources:
     - assets/vendor/
+    - assets/img/
 
 filters:
   - webr
@@ -63,6 +64,12 @@ format:
       - file: assets/js/cltidea-anim.html
       - file: assets/js/cltdice-anim.html
       - file: assets/js/zstd-anim.html
+      - file: assets/js/moments-anim.html
+      - file: assets/js/lln-anim.html
+      - file: assets/js/normbuild-anim.html
+      - file: assets/js/chisq-anim.html
+      - file: assets/js/tdist-anim.html
+      - file: assets/js/cltproof-anim.html
       - file: assets/js/normale-anim.html
       - file: assets/js/normalpi-anim.html
       - file: assets/js/normalfull-anim.html
