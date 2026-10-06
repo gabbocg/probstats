@@ -26,3 +26,17 @@ date-format: "MMMM YYYY"
 {{< include sections/09-forecasting.qmd >}}
 
 -->
+
+# Thank You {.hero #thanks}
+
+::: {.credits}
+Some slides are based on the videos of [3Blue1Brown](https://www.3blue1brown.com).
+
+Slides created with [Quarto](https://quarto.org) and **reveal.js**.
+
+R runs in the browser via **webR** and the **quarto-webr** extension; interactive plots use **Observable JS**.
+
+This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License. To view a copy of this license, visit:
+
+<https://creativecommons.org/licenses/by-sa/4.0/>
+:::

@@ -1659,3 +1659,13 @@ $presentation-heading-line-height: 1.15;
 
 // Title slide subtitle in grey, so it sits under the title instead of competing with it
 .reveal #title-slide .subtitle { color: var(--ink-soft); }
+
+// Closing-slide credits: the hero <p> voice is sized for one tagline, not five.
+.reveal section.hero#thanks > * { text-align: center; }
+.reveal section.hero#thanks h1::after { display: none; }
+.reveal section.hero#thanks h1 { margin-bottom: 0.3em; }
+.reveal section.hero .credits p {
+  font-size: 0.6em;
+  color: var(--ink-soft);
+  margin: 1.1em 0;
+}
