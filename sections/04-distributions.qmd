@@ -84,6 +84,47 @@ The two examples ahead already have names. Heads in $n$ flips is the **binomial*
 :::
 
 
+## Three Attempts, One Constant {.ojs-slide #attempts-const}
+
+::: {.lede-min}
+A student passes each attempt with probability $p$ and gets three tries. Among those who **passed**, on which attempt did they do it?
+:::
+
+```{ojs}
+//| echo: false
+viewof atP = Inputs.range([0.1, 0.95], {value: 0.6, step: 0.05, label: "Pass rate per attempt"})
+```
+
+```{ojs}
+//| echo: false
+// Exercise 6 of the beamer Seminar 3, where p = 0.6 and the constant is 0.936.
+atRaw = [1, 2, 3].map(x => Math.pow(1 - atP, x - 1) * atP)   // pass first at x
+atC = d3.sum(atRaw)                                          // = 1 - (1 - p)^3
+atBars = [1, 2, 3].flatMap((x, i) => [
+  {x, kind: "before", v: atRaw[i]},
+  {x, kind: "after", v: atRaw[i] / atC}])
+Plot.plot({
+  width: 950, height: 224, marginLeft: 64, marginBottom: 28, marginTop: 22,
+  style: ({fontSize: "15px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"}),
+  fx: {label: null, padding: 0.25, tickFormat: d => `passed on attempt ${d}`},
+  x: {axis: null, domain: ["before", "after"], padding: 0.1},
+  y: {domain: [0, 1], grid: true, label: "probability", labelAnchor: "center", labelOffset: 56},
+  marks: [
+    Plot.barY(atBars, {fx: "x", x: "kind", y: "v",
+      fill: d => d.kind === "after" ? PPAL.olive : PPAL.dim}),
+    Plot.text(atBars, {fx: "x", x: "kind", y: "v", dy: -10,
+      text: d => d.v.toFixed(3), fill: PPAL.soft, fontSize: 14}),
+    Plot.ruleY([0], {stroke: PPAL.dim})
+  ]
+})
+```
+
+```{ojs}
+//| echo: false
+html`<div class="ojs-eq at-eq">${atRaw.map(v => v.toFixed(3)).join(" + ")} = <span class="rate">${atC.toFixed(3)}</span> &nbsp;→&nbsp; divide each by <span class="rate">${atC.toFixed(3)}</span> &nbsp;→&nbsp; <span class="hit">sum = 1</span></div>
+<div class="quiz-fb">The grey bars fall short of one by <b>${(1 - atC).toFixed(3)}</b>, the students who fail all three attempts and are not in the group you sampled from. Dividing by ${atC.toFixed(3)} is <b>conditioning on "passed"</b>, and it turns the green bars back into a distribution.</div>`
+```
+
 ## Which Seller Do You Trust? {.stage-slide #seller-intuition}
 
 ::: {.lede-min}
@@ -359,7 +400,7 @@ $$P(X = \color{#93C54B}{k}) \;=\; \frac{\color{#F47C3C}{\lambda}^{\,\color{#93C5
 Only the middle factor did any real work, since $(1-\lambda/n)^{n}$ *is* the definition of $e^{-\lambda}$. One parameter now does the job of two, and $\operatorname{E}[X] = \operatorname{Var}(X) = \color{#F47C3C}{\lambda}$.
 :::
 
-## Check the approximation {.sim-slide #pois-sim}
+## Check the Approximation {.sim-slide #pois-sim}
 
 ::: {.slide-kicker}
 Seminar 4 · exact vs approximate
@@ -807,6 +848,63 @@ For a normal these are exactly its two parameters: $\operatorname{E}[X] = \color
 :::
 
 -->
+
+## Two Couriers, One Formula {.ojs-slide #courier-moments}
+
+::: {.lede-min}
+Two firms, the same four delivery times, different probabilities. The red line is the mean and the orange lines sit one standard deviation either side.
+:::
+
+```{ojs}
+//| echo: false
+viewof crFirm = Inputs.radio(["Firm A", "Firm B"], {value: "Firm A", label: "Show the working for"})
+```
+
+```{ojs}
+//| echo: false
+// Exercise 7 of the beamer Seminar 3.
+crX = [0.5, 1, 1.5, 2]
+crP = ({"Firm A": [0.6, 0.1, 0.1, 0.2], "Firm B": [0.1, 0.7, 0.15, 0.05]})
+crMom = p => {
+  const mu = d3.sum(crX, (x, i) => x * p[i]);
+  const ex2 = d3.sum(crX, (x, i) => x * x * p[i]);
+  return {mu, ex2, v: ex2 - mu * mu, sd: Math.sqrt(ex2 - mu * mu)};
+}
+crPlot = firm => {
+  const p = crP[firm], m = crMom(p);
+  return Plot.plot({
+    width: 460, height: 190, marginLeft: 48, marginBottom: 30, marginTop: 26,
+    style: ({fontSize: "14px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"}),
+    x: {domain: [0, 2.5], label: null, ticks: crX, tickSize: 4, tickFormat: d => `${d} h`},
+    y: {domain: [0, 0.8], grid: true, ticks: [0, 0.4, 0.8], label: null},
+    marks: [
+      Plot.ruleX(crX, {x: d => d, y2: (d, i) => p[i], strokeWidth: 16,
+        stroke: firm === crFirm ? PPAL.navy : PPAL.dim}),
+      Plot.ruleX([m.mu - m.sd, m.mu + m.sd], {stroke: PPAL.orange, strokeWidth: 2, strokeDasharray: "5 4"}),
+      Plot.ruleX([m.mu], {stroke: PPAL.brick, strokeWidth: 2.5}),
+      Plot.text([firm], {frameAnchor: "top-right", dy: -18, text: d => d,
+        fill: firm === crFirm ? PPAL.navy : PPAL.soft, fontWeight: 700, fontSize: 16}),
+      Plot.ruleY([0], {stroke: PPAL.dim})
+    ]
+  });
+}
+```
+
+```{ojs}
+//| echo: false
+{
+  const p = crP[crFirm], m = crMom(p);
+  const f = v => +v.toFixed(4);
+  const terms = crX.map((x, i) => `${x}²×${p[i]}`).join(" + ");
+  return html`<div class="cr-row">${crPlot("Firm A")}${crPlot("Firm B")}</div>
+  <div class="ojs-eq cr-eqs">
+    <span>E[X]</span><span>= ${crX.map((x, i) => `${x}×${p[i]}`).join(" + ")} = <span class="miss">${f(m.mu)}</span></span>
+    <span>E[X²]</span><span>= ${terms} = ${f(m.ex2)}</span>
+    <span>Var(X)</span><span>= E[X²] − μ² = ${f(m.ex2)} − ${f(m.mu)}² = <span class="rate">${f(m.v)}</span></span>
+  </div>
+  <div class="quiz-fb">Firm A is quicker on average (0.95 h against 1.075 h), Firm B far steadier (variance 0.107 against 0.373). Which you hire depends on whether a late delivery costs more than a slower one, and these two numbers are what let you argue it.</div>`;
+}
+```
 
 ## The Law of Large Numbers, Intuitively {.stage-slide #lln}
 

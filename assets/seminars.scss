@@ -546,12 +546,14 @@
 // the cells on this slide define values and render nothing — zero height, but
 // they still spend their margins, which piled ~45px of emptiness between the
 // lede and the question. Spacing is carried by the elements instead.
-#chart-choice .cell { margin: 0; }
+#chart-choice .cell, #table-cond .cell, #taxi-indep .cell, #courier-moments .cell { margin: 0; }
 // Quarto gives OJS outputs overflow:auto, so nudging the figure 6px past its
 // cell raised a scrollbar down the right of the plot.
-#chart-choice .cell-output-display { overflow: visible; }
+#chart-choice .cell-output-display,
+#taxi-indep .cell-output-display, #table-cond .cell-output-display,
+#attempts-const .cell-output-display, #courier-moments .cell-output-display { overflow: visible; }
 
-#chart-choice form {
+#chart-choice form, #table-cond form, #courier-moments form {
   font-size: 21px;
   margin: 6px 0 10px;
   // display:block, not Observable's flex row: with the caption beside the
@@ -659,6 +661,78 @@
 .quiz-no  { border-color: rgba(185, 74, 72, 0.4); border-left-color: #B94A48;
             background: rgba(185, 74, 72, 0.07); }
 .quiz-fb b { color: var(--ink); }
+
+// ---- Two-way table (#table-cond) ----
+// The radios borrow the chart-choice quiz rules above. Navy is what you divide
+// by and orange is what goes on top, the same pair the hatched overlap uses on
+// #conditional-probabilities, so a cell that is both reads as both.
+#table-cond form { margin: 2px 0 6px; }
+#table-cond form > div { gap: 2px 22px; }
+#table-cond form > div > label { font-size: 19px; }
+.ct-wrap { margin-top: 6px; }
+// #table-cond: one 18px gap from the radios to the table, the table to the
+// fraction, and the fraction to the verdict.
+.reveal section#table-cond table.ct-table { margin-top: 12px; }
+.reveal section#table-cond .ct-eq { margin: 18px 0; }
+#table-cond .quiz-fb { font-size: 19px; padding: 8px 14px; }
+// The theme's "quiet editorial" table (navy heads over a navy rule) is kept;
+// only its size is set here. Scoped to the slide so it outranks
+// `.reveal table th`, which otherwise sets the heads at slide size.
+.reveal section.ojs-slide table.ct-table {
+  margin: 4px auto 0;
+  font-size: 22px;
+  th { font-size: 22px; padding: 6px 14px; text-align: center; white-space: nowrap; }
+  tbody th { text-align: left; }
+  td {
+    font-family: "JetBrains Mono", monospace;
+    color: var(--ink);
+    text-align: center;
+    min-width: 108px;
+    padding: 6px 14px;
+    font-size: 22px;
+  }
+  // Inset shadows rather than borders: the table collapses its borders, so a
+  // border here would shift the grid by a pixel every time the choice moved.
+  td.ct-den { background: rgba(50, 93, 136, 0.10); box-shadow: inset 0 0 0 1.5px rgba(50, 93, 136, 0.45); }
+  td.ct-top { background: rgba(244, 124, 60, 0.22); box-shadow: inset 0 0 0 2px #F47C3C; font-weight: 700; }
+  .ct-sum, tr.ct-sum td { color: var(--ink-soft); }
+}
+#taxi-indep .ct-table { th, td { font-size: 21px; white-space: nowrap; } td { min-width: 0; } }
+// The slide has room to spare, so the three controls, the table and the
+// verdict get air between them instead of stacking flush.
+#taxi-indep form { margin: 0 0 12px; }
+.reveal section#taxi-indep table.ct-table { margin-top: 14px; }
+#taxi-indep .quiz-fb { margin-top: 26px; font-size: 20px; }
+#attempts-const .quiz-fb, #courier-moments .quiz-fb { font-size: 19px; padding: 8px 14px; }
+// Same gap above and below the sum: the chart's trimmed bottom margin carries
+// the space above, this carries the space below.
+.reveal section.ojs-slide .ojs-eq.at-eq { margin: 0; }
+#attempts-const .quiz-fb { margin-top: 19px; }
+#courier-moments form { margin: 2px 0 4px; }
+.cr-row { display: flex; justify-content: center; gap: 24px; }
+// Two columns so the three lines align on their first "=": the left-hand
+// sides right-aligned against it, the working left-aligned after it.
+.reveal section.ojs-slide .ojs-eq.cr-eqs {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: center;
+  column-gap: 0.5em;
+  row-gap: 2px;
+  font-size: 19px;
+  text-align: left;
+  margin: 11px 0 2px;
+  > span:nth-child(odd) { text-align: right; }
+}
+#courier-moments .quiz-fb { margin-top: 19px; }
+.ct-eq {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 24px;
+  color: var(--ink);
+  text-align: center;
+  margin: 10px 0 8px;
+  .ct-num { color: #C4551A; font-weight: 700; }
+  .ct-dnm { color: var(--accent-1); font-weight: 700; }
+}
 
 // ---- Where to Find Me (#s00b-about) ----
 // The grid ships as `220px 1fr`, so the list stretched to the slide edge and

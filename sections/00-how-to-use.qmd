@@ -4,7 +4,7 @@
 Nine seminars, one idea each
 :::
 
-## The R runs here, in this page {#s00-webr}
+## The R Runs Here, in This Page {#s00-webr}
 
 ::: {.slide-kicker}
 No install · no account · nothing to download

@@ -49,7 +49,7 @@ Change the last salary to `96` and run it again. The mode and the median count p
 :::
 
 
-## A Bound that Holds for *Any* Shape {.sim-slide #cheb-sim}
+## A Bound That Holds for *Any* Shape {.sim-slide #cheb-sim}
 
 ::: {.slide-kicker}
 Seminar 2 · Chebyshev

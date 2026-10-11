@@ -39,11 +39,12 @@ for id in s00b-me s00b-about s00-how-to-use s00-webr \
           s02-descriptives mm-intuition cheb-sim \
           s03-probability prob-count combinatorics bayes-hook bayes-intuition bayeq-formula monty bayes-sim \
           space-intuition setops-intuition venn-intuition set-formal \
-          conditional-probabilities cond-intuition total-probability \
+          conditional-probabilities taxi-indep table-cond cond-intuition total-probability \
           s04-distributions random-variables distribution-fn binom-intuition seller-intuition laplace-intuition \
           pois-intuition pois-formal \
           likelihood-live binom-formal \
           pois-intuition expo-intuition expo-formal \
+          attempts-const courier-moments \
           normal-intuition galton clt-idea clt-dice normal-formula moments lln normal-build normal-pi normal-e box-normal funcrv chisq tdist dist-map pois-sim; do
   need "id=\"$id\"" "slide #$id"
 done

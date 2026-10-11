@@ -222,6 +222,151 @@ Here $\color{#93C54B}{A}$ is "the first die is a three". Reversing the bar asks 
 :::
 
 
+## Four Taxis, Four Coins {.ojs-slide #taxi-indep}
+
+::: {.lede-min}
+Each taxi breaks down on its own coin, so the chance of a particular combination is the product of its pieces. Set the rates, then put the two old taxis in the same garage.
+:::
+
+```{ojs}
+//| echo: false
+viewof txOld = Inputs.range([0.01, 0.5], {value: 0.10, step: 0.01, format: v => v.toFixed(2), label: "Old taxi breaks down"})
+```
+
+```{ojs}
+//| echo: false
+viewof txNew = Inputs.range([0.01, 0.5], {value: 0.05, step: 0.01, format: v => v.toFixed(2), label: "New taxi breaks down"})
+```
+
+```{ojs}
+//| echo: false
+viewof txShared = Inputs.toggle({label: "Old pair share a garage", value: false})
+```
+
+```{ojs}
+//| echo: false
+// Exercise 3 of the beamer Seminar 3. A million simulated days, redrawn on
+// every change. With the garage shared, the second old taxi breaks down
+// exactly when the first does, which is the simplest dependence there is.
+txDays = 1000000
+txSim = {
+  let all4 = 0, newOnly = 0;
+  for (let d = 0; d < txDays; d++) {
+    const o1 = Math.random() < txOld;
+    const o2 = txShared ? o1 : Math.random() < txOld;
+    const n1 = Math.random() < txNew, n2 = Math.random() < txNew;
+    if (o1 && o2 && n1 && n2) all4++;
+    if (!o1 && !o2 && n1 && n2) newOnly++;
+  }
+  return {all4: all4 / txDays, newOnly: newOnly / txDays};
+}
+txRule = ({all4: txOld * txOld * txNew * txNew,
+           newOnly: (1 - txOld) * (1 - txOld) * txNew * txNew})
+```
+
+```{ojs}
+//| echo: false
+{
+  const g = v => v.toFixed(6);   // one width for every cell, 0.000025 needs six
+  const o = txOld.toFixed(2), n = txNew.toFixed(2), q = (1 - txOld).toFixed(2);
+  const verdict = txShared
+    ? html`The rule still multiplies four coins, but now there are only three: the second old taxi copies the first. The simulation runs about <b>${(1 / txOld).toFixed(0)} times</b> above the rule for all four, so the product rule is only allowed once you have <b>assumed independence</b>. That is why the worksheet asks you to state it.`
+    : html`Rule and simulation agree, to the noise of a million days. Multiplying works because no taxi's breakdown tells you anything about another's.`;
+  return html`<div class="ct-wrap">
+    <table class="ct-table">
+      <thead><tr><th></th><th>Product rule</th><th>${d3.format(",")(txDays)} days simulated</th></tr></thead>
+      <tbody>
+        <tr><th>All four break down</th><td>${o} × ${o} × ${n} × ${n} = ${g(txRule.all4)}</td><td class=${txShared ? "ct-top" : ""}>${g(txSim.all4)}</td></tr>
+        <tr><th>Only the new ones break down</th><td>${q} × ${q} × ${n} × ${n} = ${g(txRule.newOnly)}</td><td class=${txShared ? "ct-top" : ""}>${g(txSim.newOnly)}</td></tr>
+      </tbody>
+    </table>
+    <div class="quiz-fb ${txShared ? "quiz-no" : "quiz-ok"}">${verdict}</div>
+  </div>`;
+}
+```
+
+## Reading a Two-Way Table {.ojs-slide #table-cond}
+
+::: {.lede-min}
+Every probability in the table is one count over another. Pick the event and what you are told, and see which cells go on top and which you divide by.
+:::
+
+```{ojs}
+//| echo: false
+// Exercise 4 of the beamer Seminar 3: 1,500 students by sex and course.
+ctCols = ["Accountancy", "Economics", "Finance", "Business Info"]
+ctRows = ["Male", "Female"]
+ctN = [[330, 360, 90, 120], [120, 390, 60, 30]]
+ctTotal = 1500
+// The cells an event covers, keyed "row,col".
+ctCells = ev => new Set(ctRows.includes(ev)
+  ? ctCols.map((_, j) => `${ctRows.indexOf(ev)},${j}`)
+  : ctRows.map((_, i) => `${i},${ctCols.indexOf(ev)}`))
+ctCount = s => [...s].reduce((t, k) => {
+  const [i, j] = k.split(",").map(Number);
+  return t + ctN[i][j];
+}, 0)
+```
+
+```{ojs}
+//| echo: false
+viewof ctA = Inputs.radio([...ctRows, ...ctCols],
+  {value: "Economics", label: "Probability of"})
+```
+
+```{ojs}
+//| echo: false
+viewof ctB = Inputs.radio(["Nothing", ...ctRows, ...ctCols],
+  {value: "Female", label: "Given"})
+```
+
+```{ojs}
+//| echo: false
+ctView = {
+  const A = ctCells(ctA);
+  const B = ctB === "Nothing" ? null : ctCells(ctB);
+  const top = B ? new Set([...A].filter(k => B.has(k))) : A;
+  const num = ctCount(top), den = B ? ctCount(B) : ctTotal;
+  // Navy marks what you divide by; orange, the deck's "the part you want",
+  // marks what goes on top. A cell can be both.
+  const cls = (i, j) => {
+    const k = `${i},${j}`;
+    return [top.has(k) ? "ct-top" : "", (!B || B.has(k)) ? "ct-den" : ""].join(" ");
+  };
+  const rowSum = i => ctN[i].reduce((a, b) => a + b, 0);
+  const colSum = j => ctN[0][j] + ctN[1][j];
+  const f3 = v => v.toFixed(3);
+  const lhs = B ? `P(${ctA} | ${ctB})` : `P(${ctA})`;
+  let verdict;
+  if (!B) {
+    verdict = html`Nothing is given, so you divide by all ${ctTotal} students.`;
+  } else if (num === 0) {
+    verdict = html`No student is both. The two events are <b>mutually exclusive</b>, so knowing one rules the other out.`;
+  } else if (ctA === ctB) {
+    verdict = html`Told it happened, it is certain.`;
+  } else {
+    const pA = ctCount(A) / ctTotal;
+    const same = Math.abs(num / den - pA) < 0.0005;
+    verdict = html`Without the condition, P(${ctA}) = ${ctCount(A)} / ${ctTotal} = ${f3(pA)}.
+      ${same ? html`The same, so the two are <b>independent</b>.`
+             : html`Knowing ${ctB} changes it, so the two are <b>not independent</b>.`}`;
+  }
+  return html`<div class="ct-wrap">
+    <table class="ct-table">
+      <thead><tr><th></th>${ctCols.map(c => html`<th>${c}</th>`)}<th class="ct-sum">Total</th></tr></thead>
+      <tbody>
+        ${ctRows.map((r, i) => html`<tr><th>${r}</th>
+          ${ctCols.map((_, j) => html`<td class=${cls(i, j)}>${ctN[i][j]}</td>`)}
+          <td class="ct-sum">${rowSum(i)}</td></tr>`)}
+        <tr class="ct-sum"><th>Total</th>${ctCols.map((_, j) => html`<td>${colSum(j)}</td>`)}<td>${ctTotal}</td></tr>
+      </tbody>
+    </table>
+    <div class="ct-eq">${lhs} = <span class="ct-num">${num}</span> / <span class="ct-dnm">${den}</span> = ${f3(num / den)}</div>
+    <div class="quiz-fb">${verdict}</div>
+  </div>`;
+}
+```
+
 ## Conditioning Narrows the Sample Space {.stage-slide #cond-intuition}
 
 ::: {.lede-min}
@@ -337,7 +482,7 @@ The description never changes; the answer does — because of a number that is n
 The base rate is how common each job is, before you read a word about Steve. His description fits librarians four times better. But there are twenty times more farmers, so he is still five times more likely to be one.
 :::
 
-## The Formula is Just That Picture {.stage-slide #bayeq-formula}
+## The Formula Is Just That Picture {.stage-slide #bayeq-formula}
 
 ::: {.stage-wrap .stage-wrap-std}
 <div id="bayeq-stage" class="stage"></div>
