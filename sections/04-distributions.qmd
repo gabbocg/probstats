@@ -559,6 +559,75 @@ The first two count and the third measures, so only the third has no $n$ and no 
 
 
 -->
+## Equally Likely Anywhere {.ojs-slide #uniform-dist}
+
+::: {.lede-min}
+When every value between $a$ and $b$ is equally likely, the density is flat. A probability is then a length times the height, and the height is whatever makes the whole area one.
+:::
+
+```{ojs}
+//| echo: false
+// The three dials on one row, like the number boxes on #normal-area.
+viewof unIn = Inputs.form({
+  a: Inputs.range([-5, -1], {value: -2, step: 1, label: "Lower end a"}),
+  b: Inputs.range([1, 6], {value: 4, step: 1, label: "Upper end b"}),
+  c: Inputs.range([-5, 6], {value: 0, step: 1, label: "Cut-off c"})
+}, {template: ins => html`<div class="un-dials">${Object.values(ins)}</div>`})
+unA = unIn.a
+unB = unIn.b
+unC = unIn.c
+```
+
+```{ojs}
+//| echo: false
+// Exercise 1 of the beamer Seminar 4: a return equally likely anywhere in
+// [-2%, 4%]. Every input moves in whole steps so the height stays a clean
+// fraction, 1/(b - a), and the working reads like the worksheet's.
+unW = unB - unA
+unH = 1 / unW
+unLo = Math.min(Math.max(unC, unA), unB)            // the part of [c, b] inside [a, b]
+unP = (unB - unLo) / unW
+unMu = (unA + unB) / 2
+unVar = unW * unW / 12
+unSd = Math.sqrt(unVar)
+unFrac = (n, d) => d === 1 ? `${n}` : `${n}/${d}`
+// A block, not `unGcd = (x, y) => ... unGcd(...)`: an OJS cell that names
+// itself is a circular definition.
+unGcd = { const g = (x, y) => y ? g(y, x % y) : Math.abs(x); return g; }
+unPf = unFrac((unB - unLo) / unGcd(unB - unLo, unW), unW / unGcd(unB - unLo, unW))
+Plot.plot({
+  width: 950, height: 181, marginLeft: 72, marginBottom: 30, marginTop: 15,
+  style: ({fontSize: "15px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"}),
+  x: {domain: [-6, 7], label: null, ticks: d3.range(-6, 8), tickSize: 4},
+  // a <= -1 and b >= 1 keep the width at 2 or more, so the height never
+  // passes 0.5 and one fixed axis shows it rise as the interval narrows.
+  y: {domain: [0, 0.75], grid: true, ticks: [0, 0.25, 0.5], tickFormat: d => d, label: "f(x)", labelAnchor: "center", labelOffset: 58},
+  marks: [
+    // the shaded probability, olive like every "the part you want" on these slides
+    Plot.rectY([0], {x1: unLo, x2: unB, y: unH, fill: PPAL.olive, fillOpacity: 0.35}),
+    Plot.line([[-6, 0], [unA, 0], [unA, unH], [unB, unH], [unB, 0], [7, 0]],
+      {stroke: PPAL.navy, strokeWidth: 2.5}),
+    Plot.ruleX([unMu - unSd, unMu + unSd], {y1: 0, y2: unH + 0.12, stroke: PPAL.orange, strokeWidth: 1.5, strokeDasharray: "5 4"}),
+    Plot.ruleX([unMu], {y1: 0, y2: unH + 0.12, stroke: PPAL.brick, strokeWidth: 2}),
+    Plot.text(["μ"], {x: unMu, y: unH + 0.12, dy: -10, text: d => d, fill: PPAL.brick, fontSize: 18, fontWeight: 700}),
+    Plot.ruleX([unC], {stroke: PPAL.soft, strokeDasharray: "2 3"}),
+    // the y axis drawn as a line, so the ticks hang off something
+    Plot.ruleX([-6], {stroke: PPAL.dim}),
+    Plot.ruleY([0], {stroke: PPAL.dim})
+  ]
+})
+```
+
+```{ojs}
+//| echo: false
+html`<div class="ojs-eq cr-eqs un-eqs">
+  <span>f(x)</span><span>= 1 / (b − a) = 1 / (${unB} − (${unA})) = 1/${unW}</span>
+  <span>P(X ≥ ${unC})</span><span>= length × height = ${unB - unLo} × 1/${unW} = <span class="hit">${unPf}</span></span>
+  <span>E[X]</span><span>= (a + b) / 2 = <span class="miss">${unMu}</span></span>
+  <span>Var(X)</span><span>= (b − a)² / 12 = ${unW * unW} / 12 = <span class="rate">${+unVar.toFixed(4)}</span></span>
+</div>`
+```
+
 ## The Limit of a Binomial Distribution for Large n {.ojs-slide #normal-intuition}
 
 ::: {.lede-min}
@@ -807,6 +876,141 @@ Plot.plot({
 ```
 :::
 ::::
+
+## Areas Under the Normal {.ojs-slide #normal-area}
+
+::: {.lede-min}
+A probability is an area under the bell. Standardising only relabels the axis.
+:::
+
+```{ojs}
+//| echo: false
+// Phi by Abramowitz and Stegun 7.1.26, good to 1.5e-7, so every value the
+// Z table prints comes back to four places.
+naErf = x => { const t = 1 / (1 + 0.3275911 * x);
+  return 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x); }
+Phi = z => 0.5 * (1 + Math.sign(z) * naErf(Math.abs(z) / Math.SQRT2))
+naKinds = ["X < a", "X > a", "a < X < b", "X < a or X > b"]
+```
+
+```{ojs}
+//| echo: false
+// Numbers rather than sliders: any normal at all, typed in. The defaults are
+// the last part of the worksheet's N(100, 64) question, as a starting point.
+viewof naIn = Inputs.form({
+  mu: Inputs.number({value: 100, step: 1, label: "Mean μ"}),
+  sd: Inputs.number({value: 8, step: 0.5, min: 0.1, label: "SD σ"}),
+  a:  Inputs.number({value: 90, step: 0.5, label: "a"}),
+  b:  Inputs.number({value: 100, step: 0.5, label: "b"})
+}, {template: ins => html`<div class="na-dials">${Object.values(ins)}</div>`})
+```
+
+```{ojs}
+//| echo: false
+viewof naKind = Inputs.radio(naKinds, {value: "a < X < b", label: "Probability"})
+```
+
+```{ojs}
+//| echo: false
+{
+  const mu = naIn.mu, sd = Math.max(naIn.sd || 1, 0.1);
+  const a = Math.min(naIn.a, naIn.b), b = Math.max(naIn.a, naIn.b);   // typed either way round
+  const one = naKind === "X < a" || naKind === "X > a";
+  const z = x => (x - mu) / sd, za = z(a), zb = z(b);
+  const f = v => +v.toFixed(4), fz = v => (Math.abs(v) < 5e-4 ? 0 : +v.toFixed(3));
+  const pa = Phi(za), pb = Phi(zb);
+  const [p, xl, zl, route] = {
+    "X < a":          [pa, `P(X < ${a})`, `P(Z < ${fz(za)})`, `${f(pa)}`],
+    "X > a":          [1 - pa, `P(X > ${a})`, `P(Z > ${fz(za)})`, `1 − P(Z < ${fz(za)}) = 1 − ${f(pa)}`],
+    "a < X < b":      [pb - pa, `P(${a} < X < ${b})`, `P(${fz(za)} < Z < ${fz(zb)})`, `P(Z < ${fz(zb)}) − P(Z < ${fz(za)}) = ${f(pb)} − ${f(pa)}`],
+    "X < a or X > b": [1 - (pb - pa), `P(X < ${a} or X > ${b})`, `P(Z < ${fz(za)} or Z > ${fz(zb)})`, `1 − (${f(pb)} − ${f(pa)})`]
+  }[naKind];
+  const lo = mu - 4 * sd, hi = mu + 4 * sd;
+  const pieces = {"X < a": [[lo, a]], "X > a": [[a, hi]], "a < X < b": [[a, b]],
+                  "X < a or X > b": [[lo, a], [b, hi]]}[naKind];
+  const dens = x => Math.exp(-0.5 * z(x) ** 2) / (sd * Math.sqrt(2 * Math.PI));
+  const grid = d3.range(0, 401).map(i => lo + (hi - lo) * i / 400);
+  const tk = v => +v.toFixed(2);
+  const plot = Plot.plot({
+    width: 950, height: 236, marginLeft: 64, marginBottom: 46, marginTop: 22,
+    style: ({fontSize: "15px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"}),
+    // Ticks at mu + k sigma, so the z under each is a whole number: two rulers, one area.
+    x: {domain: [lo, hi], label: null, ticks: d3.range(-3, 4).map(k => mu + k * sd), tickSize: 4,
+        tickFormat: d => `${tk(d)}\nz = ${Math.round((d - mu) / sd)}`},
+    y: {domain: [0, 1.15 * dens(mu)], axis: null},
+    marks: [
+      ...pieces.map(([u, v]) => Plot.areaY(grid.filter(x => x >= u && x <= v), {x: d => d, y: dens,
+        fill: PPAL.olive, fillOpacity: 0.35})),
+      Plot.line(grid, {x: d => d, y: dens, stroke: PPAL.navy, strokeWidth: 2.5}),
+      Plot.ruleX([mu], {y1: 0, y2: dens(mu), stroke: PPAL.brick, strokeWidth: 2}),
+      Plot.ruleX(one ? [a] : [a, b], {stroke: PPAL.soft, strokeDasharray: "2 3", clip: true}),
+      Plot.ruleY([0], {stroke: PPAL.dim})
+    ]
+  });
+  // One [left, right] pair per line of working; flattened, since each is two grid cells.
+  const rows = [
+    [xl, `= ${zl}, with z = (x − ${mu}) / ${sd}`],
+    ["", `= ${route}`],
+    ["", html`= <span class="hit">${p.toFixed(4)}</span>`]
+  ];
+  return html`${plot}<div class="ojs-eq cr-eqs na-eqs">
+    ${rows.flatMap(([l, r]) => [html`<span>${l}</span>`, html`<span>${r}</span>`])}
+  </div>`;
+}
+```
+
+## Finding a Cut-Off {.ojs-slide #normal-critical}
+
+::: {.lede-min}
+Run the table backwards. Fix the area in the middle, split what is left between the two tails, and read off where the tail begins.
+:::
+
+```{ojs}
+//| echo: false
+viewof ncC = Inputs.range([0.5, 0.98], {value: 0.8, step: 0.01, format: v => v.toFixed(2), label: "Central area"})
+```
+
+```{ojs}
+//| echo: false
+// Exercise 4 of the beamer Seminar 4: X ~ N(4, 1.5^2), find a with
+// P(4 - a < X < 4 + a) = 0.8. Phi is inverted by bisection, which is all a
+// student does scanning the body of the table for 0.90.
+ncMu = 4
+ncSd = 1.5
+ncB = { let lo = -8, hi = 8; const t = (1 + ncC) / 2;
+        for (let i = 0; i < 80; i++) { const m = (lo + hi) / 2; Phi(m) < t ? lo = m : hi = m; }
+        return (lo + hi) / 2; }
+ncA = ncSd * ncB
+{
+  const lo = ncMu - 4 * ncSd, hi = ncMu + 4 * ncSd, tail = (1 - ncC) / 2;
+  const dens = x => Math.exp(-0.5 * ((x - ncMu) / ncSd) ** 2) / (ncSd * Math.sqrt(2 * Math.PI));
+  const grid = d3.range(0, 401).map(i => lo + (hi - lo) * i / 400);
+  const top = dens(ncMu);
+  const lo2 = Math.floor(ncB * 100) / 100, hi2 = lo2 + 0.01;   // the two table entries either side
+  const plot = Plot.plot({
+    width: 950, height: 260, marginLeft: 64, marginBottom: 28, marginTop: 4,
+    style: ({fontSize: "15px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"}),
+    x: {domain: [lo, hi], label: null, tickSize: 4},
+    y: {domain: [0, top * 1.12], axis: null},
+    marks: [
+      Plot.areaY(grid.filter(x => Math.abs(x - ncMu) <= ncA), {x: d => d, y: dens, fill: PPAL.olive, fillOpacity: 0.35}),
+      Plot.line(grid, {x: d => d, y: dens, stroke: PPAL.navy, strokeWidth: 2.5}),
+      Plot.ruleX([ncMu], {y1: 0, y2: top, stroke: PPAL.brick, strokeWidth: 2}),
+      Plot.ruleX([ncMu - ncA, ncMu + ncA], {y1: 0, y2: top * 0.75, stroke: PPAL.orange, strokeWidth: 2}),
+      Plot.text([ncMu - ncA, ncMu + ncA], {x: d => d, y: top * 0.75, dy: -10, fill: PPAL.orange, fontSize: 16, fontWeight: 700,
+        text: (d, i) => i ? "4 + a" : "4 − a"}),
+      Plot.text([ncMu], {x: d => d, y: top * 0.35, text: () => `${(100 * ncC).toFixed(0)}%`, fill: "#3E3F3A", fontSize: 18, fontWeight: 700}),
+      Plot.text([lo + 1.2 * ncSd, hi - 1.2 * ncSd], {x: d => d, y: top * 0.18, text: () => `${(100 * tail).toFixed(1)}%`, fill: PPAL.soft, fontSize: 16}),
+      Plot.ruleY([0], {stroke: PPAL.dim})
+    ]
+  });
+  return html`${plot}<div class="ojs-eq cr-eqs na-eqs nc-eqs">
+    <span>P(Z &lt; b)</span><span>= (1 + ${ncC.toFixed(2)}) / 2 = ${((1 + ncC) / 2).toFixed(3)}, with b = a / ${ncSd}</span>
+    <span>b</span><span>= <span class="rate">${ncB.toFixed(4)}</span> &nbsp;<span class="na-note">Table: P(Z &lt; ${lo2.toFixed(2)}) = ${Phi(lo2).toFixed(4)}, P(Z &lt; ${hi2.toFixed(2)}) = ${Phi(hi2).toFixed(4)}</span></span>
+    <span>a</span><span>= ${ncSd} × ${ncB.toFixed(4)} = <span class="hit">${ncA.toFixed(2)}</span></span>
+  </div>`;
+}
+```
 
 ## Expected Value, Variance and Standard Deviation {.stage-slide #moments}
 

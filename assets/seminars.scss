@@ -546,14 +546,17 @@
 // the cells on this slide define values and render nothing — zero height, but
 // they still spend their margins, which piled ~45px of emptiness between the
 // lede and the question. Spacing is carried by the elements instead.
-#chart-choice .cell, #table-cond .cell, #taxi-indep .cell, #courier-moments .cell { margin: 0; }
+#chart-choice .cell, #table-cond .cell, #taxi-indep .cell, #courier-moments .cell,
+#uniform-dist .cell, #normal-area .cell, #normal-critical .cell { margin: 0; }
 // Quarto gives OJS outputs overflow:auto, so nudging the figure 6px past its
 // cell raised a scrollbar down the right of the plot.
 #chart-choice .cell-output-display,
 #taxi-indep .cell-output-display, #table-cond .cell-output-display,
-#attempts-const .cell-output-display, #courier-moments .cell-output-display { overflow: visible; }
+#attempts-const .cell-output-display, #courier-moments .cell-output-display,
+#uniform-dist .cell-output-display, #normal-area .cell-output-display,
+#normal-critical .cell-output-display { overflow: visible; }
 
-#chart-choice form, #table-cond form, #courier-moments form {
+#chart-choice form, #table-cond form, #courier-moments form, #normal-area form {
   font-size: 21px;
   margin: 6px 0 10px;
   // display:block, not Observable's flex row: with the caption beside the
@@ -724,6 +727,34 @@
   > span:nth-child(odd) { text-align: right; }
 }
 #courier-moments .quiz-fb { margin-top: 19px; }
+// #uniform-dist, #normal-area, #normal-critical: the working under each plot,
+// aligned on its first "=" like the couriers'.
+.reveal section.ojs-slide .ojs-eq.un-eqs,
+.reveal section.ojs-slide .ojs-eq.na-eqs { font-size: 21px; row-gap: 4px; margin: 14px 0 0; }
+.reveal section.ojs-slide .ojs-eq.un-eqs { margin-top: 22px; }
+#uniform-dist form, #normal-critical form { margin: 0 0 6px; }
+// #uniform-dist: label over number-and-slider, three across.
+.reveal section#uniform-dist .un-dials {
+  display: flex; gap: 40px; margin: 4px 0 14px;
+  form { flex-direction: column; align-items: flex-start; gap: 4px; margin: 0; --label-width: auto; }
+  form > label { font-size: 20px; }
+  input[type="range"] { width: 170px; }
+}
+#normal-area form { margin: 4px 0 8px; }
+#normal-area form > div > label { font-size: 19px; }
+// The four number boxes on one row. Each is its own Inputs form inside the
+// Inputs.form, so the label track is shrunk to its text.
+.reveal section#normal-area .na-dials {
+  display: flex; gap: 34px; margin: 2px 0 6px;
+  form { margin: 0; --label-width: auto; }
+  // Not the quiz's uppercase caption: that turns μ into M and σ into Σ.
+  form > label { font-size: 20px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--ink-soft); }
+}
+// #normal-critical has the slide to itself below one slider, so it spends it.
+#normal-critical form { margin: 18px 0 0; }
+.reveal section.ojs-slide .ojs-eq.nc-eqs { font-size: 23px; row-gap: 10px; margin-top: 22px; }
+.nc-eqs .na-note { font-size: 17px; }
+.na-note { font-size: 16px; color: var(--ink-soft); }
 .ct-eq {
   font-family: "JetBrains Mono", monospace;
   font-size: 24px;

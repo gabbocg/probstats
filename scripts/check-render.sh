@@ -44,7 +44,7 @@ for id in s00b-me s00b-about s00-how-to-use s00-webr \
           pois-intuition pois-formal \
           likelihood-live binom-formal \
           pois-intuition expo-intuition expo-formal \
-          attempts-const courier-moments \
+          attempts-const courier-moments uniform-dist normal-area normal-critical \
           normal-intuition galton clt-idea clt-dice normal-formula moments lln normal-build normal-pi normal-e box-normal funcrv chisq tdist dist-map pois-sim; do
   need "id=\"$id\"" "slide #$id"
 done
