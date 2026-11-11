@@ -67,9 +67,9 @@
   // the mu rule runs down through all of them so any lane can be read against
   // it by eye — "does this bracket contain the dashed line?" is the question
   // the whole slide is asking.
-  var LANE_A = { br: 291, lab: 316 };            // the band around mu
-  var LANE_B = { br: 352, lab: 376 };            // the interval around XBAR_HIT
-  var LANE_C = { br: 396, lab: 421 };            // the interval around XBAR_MISS
+  var LANE_A = { br: 291, lab: 322 };            // the band around mu
+  var LANE_B = { br: 352, lab: 382 };            // the interval around XBAR_HIT
+  var LANE_C = { br: 400, lab: 431 };            // the interval around XBAR_MISS
   var TICK = 7;                                  // bracket end-tick length
                                                   // stroke lengths, deliberately not scaled by 1.1125
 
@@ -125,15 +125,17 @@
   var SHIFT_X = px(XBAR_HIT) - px(MU);
   var SHIFT_Y = LANE_B.br - LANE_A.br;
 
-  // Keep these SHORT. The caption is left-anchored at x=40, y=28; at 24px
-  // Roboto (~12px per character) anything much past ~40 characters runs
-  // under the right-hand furniture.
+  // The caption is left-anchored at x=40, y=28; at 24px Roboto (~12px per
+  // character) it has the full width since SE moved to the left shoulder, but
+  // keep it under ~70 characters.
+  // Read in order, the four captions are the argument in words.
   var CAPTIONS = {
-    0: 'where sample means land',
-    1: PCT + '% of them land in this band',
-    2: 'the same distance, from x̄ instead',
-    3: 'the ' + TAIL + '% is exactly this case'
+    0: 'Sample means x̄ scatter around μ, with SE = ' + tidy(SE),
+    1: PCT + '% of them land within ' + Z.toFixed(2) + ' × ' + tidy(SE) + ' = ' + HALF.toFixed(2) + ' of μ',
+    2: 'Turn it around: the same ± ' + HALF.toFixed(2) + ' around your x̄ reaches μ',
+    3: 'An x̄ in the outer ' + TAIL + '% gives an interval that misses μ'
   };
+  function iv(c) { return '(' + (c - HALF).toFixed(2) + ', ' + (c + HALF).toFixed(2) + ')'; }
 
   // JetBrains Mono does not compose U+0304, so a typed "x̄" renders as an "x"
   // with a stray macron beside it. Emit a bare "x" and draw the bar instead —
@@ -144,11 +146,22 @@
     var ADV = K.TYPE.label * 0.6, OVER = K.TYPE.label * (11.5 / 15);
     var str = 'x = ' + value.toFixed(1);
     var x0 = cx - str.length * ADV / 2;
-    parent.appendChild(K.txt(x0, y, str, { size: 'label', face: 'mono', fill: colour }));
+    // The miss label sits on the curve's right shoulder, so it gets a halo;
+    // the hit label sits on the shaded band, where a halo would show as a patch.
+    var t = K.txt(x0, y, str, { size: 'label', face: 'mono', fill: colour });
+    parent.appendChild(colour === BRICK ? halo(t) : t);
     parent.appendChild(K.el('line', {
       x1: x0 + ADV * 0.12, y1: y - OVER, x2: x0 + ADV * 0.88, y2: y - OVER,
       stroke: colour, 'stroke-width': 1.6, 'stroke-linecap': 'round'
     }));
+  }
+
+  // The mu rule runs through every lane label; a halo in the page colour
+  // lets the type sit on top of it cleanly.
+  function halo(t) {
+    t.setAttribute('stroke', '#FFFFFF'); t.setAttribute('stroke-width', 6);
+    t.setAttribute('paint-order', 'stroke'); t.setAttribute('stroke-linejoin', 'round');
+    return t;
   }
 
   function build(stage) {
@@ -200,7 +213,7 @@
 
     // The one number the students have to carry into every other slide, put
     // where the right shoulder leaves room for it.
-    svg.appendChild(K.txt(720, 167, 'SE = σ/√n = ' + tidy(SE),
+    svg.appendChild(K.txt(X0, 150, 'SE = σ/√n = ' + tidy(SE),
       { size: 'label', face: 'mono', fill: SOFT }));
 
     // --- lane A: the band around mu ---
@@ -208,9 +221,9 @@
     gA.appendChild(K.el('path', {
       d: bracket(MU, LANE_A.br), fill: 'none', stroke: NAVY, 'stroke-width': 2
     }));
-    gA.appendChild(K.txt(mid(MU), LANE_A.lab,
-      PCT + '% of x̄ land within ' + HALF.toFixed(2) + ' of μ',
-      { size: 'label', anchor: 'middle', fill: NAVY }));
+    gA.appendChild(halo(K.txt(mid(MU), LANE_A.lab,
+      'μ ± ' + HALF.toFixed(2) + ': where ' + PCT + '% of x̄ land',
+      { size: 'label', anchor: 'middle', fill: NAVY })));
 
     // --- lane C: the interval that misses (drawn under the dots) ---
     var gC = svg.appendChild(K.el('g', { opacity: 0, class: 'ciflip-lane-c' }));
@@ -218,10 +231,10 @@
       d: bracket(XBAR_MISS, LANE_C.br), fill: 'none', stroke: BRICK,
       'stroke-width': 2
     }));
-    gC.appendChild(K.txt(mid(XBAR_MISS), LANE_C.lab,
-      'x̄ fell ' + (covers(XBAR_MISS) ? 'inside' : 'outside') +
-      ' the band — μ is ' + (covers(XBAR_MISS) ? 'in it' : 'not in it'),
-      { size: 'label', anchor: 'middle', fill: BRICK }));
+    gC.appendChild(K.el('circle', { cx: px(XBAR_MISS), cy: LANE_C.br + TICK, r: 5, fill: BRICK }));
+    gC.appendChild(halo(K.txt(mid(XBAR_MISS), LANE_C.lab,
+      iv(XBAR_MISS) + (covers(XBAR_MISS) ? ' contains μ' : ' misses μ'),
+      { size: 'label', anchor: 'middle', fill: BRICK })));
 
     // --- lane B: the flip. The bracket lives in its own group so it can be
     // translated as a rigid body; its label is a separate node that stays put
@@ -232,10 +245,11 @@
       d: bracket(XBAR_HIT, LANE_B.br), fill: 'none', stroke: OLIVE,
       'stroke-width': 2
     }));
-    var labB = svg.appendChild(K.txt(mid(XBAR_HIT), LANE_B.lab,
-      'same width, now centred on x̄ — μ is ' +
-      (covers(XBAR_HIT) ? 'inside' : 'outside'),
-      { size: 'label', anchor: 'middle', fill: OLIVE }));
+    // The bracket's centre, marked: it travels with the bracket from μ to x̄.
+    gB.appendChild(K.el('circle', { cx: px(XBAR_HIT), cy: LANE_B.br + TICK, r: 5, fill: NAVY }));
+    var labB = svg.appendChild(halo(K.txt(mid(XBAR_HIT), LANE_B.lab,
+      iv(XBAR_HIT) + (covers(XBAR_HIT) ? ' contains μ' : ' misses μ'),
+      { size: 'label', anchor: 'middle', fill: OLIVE })));
     labB.setAttribute('opacity', 0);
 
     // --- the two samples, on top of everything ---

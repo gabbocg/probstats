@@ -4,27 +4,87 @@
 Seminar 5 · Confidence intervals
 :::
 
-The interval is random. The truth is not.
+## Three Properties of the Sample Mean {.qcard-slide #xbar-properties}
 
-::: {.lede}
-The formula $\bar x \pm z\,\sigma/\sqrt n$ looks like it was handed down. It was not — it is one geometric move, performed on the distribution of $\bar x$, and once you have seen the move the algebra is a transcript of it.
+::: {.lede-min}
+The sample mean $\bar X$ changes from sample to sample, so it is itself a random variable. Three properties make it a good guess at $\mu$.
 :::
 
-## The move that builds the interval {.stage-slide #ciflip-intuition}
+:::: {.prop-grid}
+
+::: {.prop-card .prop-unbiased .fragment}
+[Unbiased]{.prop-name}
+
+[$\operatorname{E}[\bar X] = \mu$]{.prop-math}
+
+[On average it hits the target.]{.prop-q}
+:::
+
+::: {.prop-card .prop-efficient .fragment}
+[Efficient]{.prop-name}
+
+[$\operatorname{Var}(\bar X) = \dfrac{\sigma^2}{n}$]{.prop-math}
+
+[The smallest variance of any unbiased guess.]{.prop-q}
+:::
+
+::: {.prop-card .prop-consistent .fragment}
+[Consistent]{.prop-name}
+
+[$\bar X \xrightarrow[n \to \infty]{p} \mu$]{.prop-math}
+
+[More data, a closer guess: $\sigma^2/n \to 0$.]{.prop-q}
+:::
+
+::::
+
+::: {.slide-footer .fragment}
+The next slide proves the first and the third; the simulation at the end of this section shows them at work.
+:::
+
+## Proving Unbiasedness and Consistency {.formula-slide #xbar-proof}
+
+::: {.lede-min}
+Let $X_1, \dots, X_n$ be independent, each with mean $\mu$ and variance $\sigma^2$.
+:::
+
+$$\textstyle \operatorname{E}[\bar X] \;=\; \frac{1}{n}\sum_{i=1}^n \operatorname{E}[X_i] \;=\; \frac{1}{n}\, n\mu \;=\; \color{#B94A48}{\mu} \qquad \color{#6E7681}{\text{unbiased}}$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Independence lets the variances add; the $\frac{1}{n}$ comes out squared]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle \operatorname{Var}(\bar X) \;=\; \frac{1}{n^2}\sum_{i=1}^n \operatorname{Var}(X_i) \;=\; \frac{1}{n^2}\, n\sigma^2 \;=\; \color{#325D88}{\frac{\sigma^2}{n}}$$
+:::
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Chebyshev (Seminar 2), $\Pr(|Y - \operatorname{E}[Y]| \ge \varepsilon) \le \operatorname{Var}(Y)/\varepsilon^2$, with $Y = \bar X$]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle \Pr\big(|\bar X - \mu| \ge \varepsilon\big) \;\le\; \frac{\sigma^2}{n\,\varepsilon^2} \;\xrightarrow[\;n \to \infty\;]{}\; 0 \qquad \color{#6E7681}{\text{consistent}}$$
+:::
+
+::: {.slide-footer .fragment}
+However small $\varepsilon$, the chance that $\bar X$ misses $\mu$ by more than $\varepsilon$ vanishes.
+:::
+
+## The Move That Builds the Interval {.stage-slide #ciflip-intuition}
 
 ::: {.stage-wrap .stage-wrap-std}
 <div id="ciflip-stage" class="stage"></div>
 :::
 
-[]{.fragment .fi-frag id="ciflip-frag-1"}
-[]{.fragment .fi-frag id="ciflip-frag-2"}
-[]{.fragment .fi-frag id="ciflip-frag-3"}
+[]{.fragment .fi-frag id="ciflip-frag-1" data-fragment-index="1"}
+[]{.fragment .fi-frag id="ciflip-frag-2" data-fragment-index="2"}
+[]{.fragment .fi-frag id="ciflip-frag-3" data-fragment-index="3"}
 
-::: {.slide-footer}
-Nothing new is built at the flip: the bracket is the *same width*, slid from $\mu$ to $\bar x$, so "$\bar x$ within 5.88 of $\mu$" and "$\mu$ within 5.88 of $\bar x$" are one statement, and the second is the interval.
+::: {.slide-footer .fragment data-fragment-index="3"}
+A sample mean $\bar x$ is within 5.88 of $\mu$ exactly when $\mu$ is within 5.88 of $\bar x$. So 95% of the intervals $\bar x \pm 5.88$ contain $\mu$.
 :::
 
-## Four parts, one interval {.stage-slide #cieq-formula}
+## Four Parts, One Interval {.stage-slide #cieq-formula}
 
 ::: {.stage-wrap .stage-wrap-std}
 <div id="cieq-stage" class="stage"></div>
@@ -39,7 +99,7 @@ Nothing new is built at the flip: the bracket is the *same width*, slid from $\m
 Only $\bar x$ came from your sample; $z$ you chose, $\sigma$ and $n$ you knew, so the half-width 5.88 was fixed *before you collected anything*: every interval on the next slide is exactly the same length.
 :::
 
-## What is actually random here? {.stage-slide #ci-intuition}
+## What Is Actually Random Here? {.stage-slide #ci-intuition}
 
 ::: {.stage-wrap .stage-wrap-ci}
 <div id="ci-stage" class="stage"></div>
@@ -50,73 +110,117 @@ Only $\bar x$ came from your sample; $z$ you chose, $\sigma$ and $n$ you knew, s
 ::: {.claim-cell .claim-wrong}
 [Tempting]{.claim-tag}
 
-"There is a 95% probability that $\mu$ lies in **my** interval."
-
-$\mu$ is a fixed number. It is either in there or it is not — no probability left to speak of.
+"**My** interval contains $\mu$ with 95% probability."
 :::
 
 ::: {.claim-cell .claim-right}
 [Correct]{.claim-tag}
 
 "95% of intervals **built this way** contain $\mu$."
-
-The randomness is in the sampling, so it lives in the interval's endpoints — never in $\mu$.
 :::
 
 ::::
 
-## Check the 95% yourself {.sim-slide #ci-sim}
+## Simulate the Sample Mean and Its Interval {.ojs-slide #ci-lab}
 
-::: {.slide-kicker}
-Seminar 5 · coverage
-:::
-
-::: {.sim-card .sim-plot}
-```{webr-r}
-#| fig-width: 5.7
-#| fig-height: 4.3
-#| out-width: "100%"
-mu <- 100; sigma <- 15; reps <- 100  # the truth
-n <- 25; conf <- 0.95                # <-- knobs
-se   <- sigma / sqrt(n)
-half <- qnorm(1 - (1 - conf)/2) * se
-xbar <- replicate(reps, mean(rnorm(n,mu,sigma)))
-hit  <- abs(xbar - mu) <= half
-plot(NA, ylim = c(1, reps), xlim=mu+c(-4,4)*se,
-     xlab = "interval", ylab = "sample", las=1)
-abline(v = mu, lty = 2, lwd=2, col = "#325D88")
-segments(xbar-half, 1:reps, xbar+half, 1:reps,
-        col = ifelse(hit, "#9FB6CC", "#B94A48"))
-mean(hit)
+```{ojs}
+//| echo: false
+viewof clIn = Inputs.form({
+  n: Inputs.range([2, 200], {value: 10, step: 1, label: html`Sample size <i style="text-transform: none">n</i>`}),
+  conf: Inputs.range([0.8, 0.99], {value: 0.95, step: 0.01, label: "Confidence"}),
+  rule: Inputs.radio(["Known σ: x̄ ± z·σ/√n", "Unknown σ: x̄ ± z·s/√n", "Unknown σ: x̄ ± t·s/√n"], {value: "Known σ: x̄ ± z·σ/√n", label: "Interval"}),
+  again: Inputs.button("New samples")
+}, {template: ins => html`<div class="cl-dials">${ins.n}${ins.conf}${ins.again}</div><div class="cl-dials cl-rule">${ins.rule}</div>`})
 ```
-:::
 
-::: {.try-this}
-Run it a few times — the red misses wander around 5, they are not pinned to it. Then set `conf <- 0.80`: shorter intervals, more misses. **Precision is bought with coverage.**
-:::
-
-## Why the worksheet makes you switch to $t$ {.sim-slide #ci-t-vs-z}
-
-::: {.slide-kicker}
-Seminar 5 · $\sigma$ known vs unknown
-:::
-
-::: {.sim-card .sim-text}
-```{webr-r}
-n <- 5            # <-- try 5, then 25, then 100
-mu <- 100; sigma <- 15; reps <- 2000
-# same sample sd; only the cut-off differs
-z_rule <- function(x) qnorm(.975)*sd(x)/sqrt(n)
-t_rule <- function(x) qt(.975,n-1)*sd(x)/sqrt(n)
-cover <- function(rule) mean(replicate(reps, {
-  x <- rnorm(n, mu, sigma)
-  abs(mean(x) - mu) <= rule(x)
-}))
-round(c(used_z = cover(z_rule),
-        used_t = cover(t_rule)), 3)
+```{ojs}
+//| echo: false
+// The t quantile is exact: the regularized incomplete beta (Numerical Recipes'
+// continued fraction) inverted by bisection. It matches R's qt() to 4 places
+// for df from 1 to 100, so the t row agrees with the table on the worksheet.
+clLgam = x => { const c = [76.18009172947146, -86.50532032941677, 24.01409824083091,
+    -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+  let y = x, t = x + 5.5, s = 1.000000000190015; t -= (x + 0.5) * Math.log(t);
+  for (const ci of c) s += ci / ++y;
+  return -t + Math.log(2.5066282746310005 * s / x); }
+clBetacf = (a, b, x) => { let c = 1, d = 1 / (1 - (a + b) * x / (a + 1)), h = d;
+  for (let m = 1; m < 200; m++) { const m2 = 2 * m;
+    let aa = m * (b - m) * x / ((a + m2 - 1) * (a + m2));
+    d = 1 / (1 + aa * d); c = 1 + aa / c; h *= d * c;
+    aa = -(a + m) * (a + b + m) * x / ((a + m2) * (a + m2 + 1));
+    d = 1 / (1 + aa * d); c = 1 + aa / c; const del = d * c; h *= del;
+    if (Math.abs(del - 1) < 1e-12) break; }
+  return h; }
+clIbeta = (a, b, x) => { if (x <= 0) return 0; if (x >= 1) return 1;
+  const bt = Math.exp(clLgam(a + b) - clLgam(a) - clLgam(b) + a * Math.log(x) + b * Math.log(1 - x));
+  return x < (a + 1) / (a + b + 2) ? bt * clBetacf(a, b, x) / a : 1 - bt * clBetacf(b, a, 1 - x) / b; }
+clTcdf = (t, df) => { const p = 0.5 * clIbeta(df / 2, 0.5, df / (df + t * t)); return t > 0 ? 1 - p : p; }
+clInv = cdf => p => { let lo = 0, hi = 1000;
+  for (let i = 0; i < 100; i++) { const m = (lo + hi) / 2; cdf(m) < p ? lo = m : hi = m; }
+  return (lo + hi) / 2; }
+clMu = 100
+clSd = 15
+clReps = 2000
+// Seeded from the button count, so moving the confidence slider or the
+// interval rule re-draws the SAME samples: only the intervals change.
+clSim = {
+  const n = clIn.n, rnd = d3.randomNormal.source(d3.randomLcg(((clIn.again + 1) * 0.6180339887) % 1))(clMu, clSd);
+  const xbar = [], s = [], row = new Float64Array(n);
+  for (let r = 0; r < clReps; r++) {
+    for (let i = 0; i < n; i++) row[i] = rnd();
+    xbar.push(d3.mean(row)); s.push(d3.deviation(row));
+  }
+  return {n, xbar, s};
+}
 ```
-:::
 
-::: {.try-this}
-At `n <- 5` the $z$ rule lands near 87%, not 95% — you paid for confidence you never received. The $t$ correction buys it back. Push `n` to 100 and the two rules converge, which is why the distinction stops mattering for large samples.
-:::
+```{ojs}
+//| echo: false
+{
+  const {n, xbar, s} = clSim, p = (1 + clIn.conf) / 2, rn = Math.sqrt(n);
+  const crit = clIn.rule === "Unknown σ: x̄ ± t·s/√n" ? clInv(t => clTcdf(t, n - 1))(p) : clInv(Phi)(p);
+  const half = xbar.map((_, r) => crit * (clIn.rule === "Known σ: x̄ ± z·σ/√n" ? clSd : s[r]) / rn);
+  const hit = xbar.map((x, r) => Math.abs(x - clMu) <= half[r]);
+  const cover = d3.mean(hit, h => +h);
+  const style = ({fontSize: "14px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"});
+  const T = d3.range(clMu - 25, clMu + 25.01, 1);
+  const dist = Plot.plot({
+    width: 490, height: 245, marginLeft: 12, marginBottom: 28, marginTop: 42, style,
+    x: {domain: [clMu - 25, clMu + 25], label: null, tickSize: 4},
+    y: {axis: null, insetTop: 18},   // headroom so the peak clears the title
+    marks: [
+      Plot.lineY(xbar, Plot.binX({y: "proportion"}, {x: d => d, thresholds: T, stroke: PPAL.navy, strokeWidth: 2.5})),
+      Plot.ruleX([clMu], {stroke: "#3E3F3A", strokeWidth: 1.5, strokeDasharray: "5 4"}),
+      Plot.ruleY([0], {stroke: PPAL.dim}),
+      Plot.text(["Means of 2,000 samples from N(100, 15²)"], {frameAnchor: "top-left", dy: -30, text: d => d, fill: PPAL.navy, stroke: "white", strokeWidth: 6, fontWeight: 700, fontSize: 16})
+    ]
+  });
+  const idx = d3.range(50);
+  const ints = Plot.plot({
+    width: 490, height: 245, marginLeft: 12, marginBottom: 28, marginTop: 42, style,
+    x: {domain: [clMu - 30, clMu + 30], label: null, tickSize: 4},
+    y: {domain: [-1, 50], axis: null},
+    marks: [
+      Plot.ruleY(idx, {y: i => i, x1: i => xbar[i] - half[i], x2: i => xbar[i] + half[i], clip: true,
+        stroke: i => hit[i] ? "#9FB6CC" : PPAL.brick, strokeWidth: 2}),
+      Plot.dot(idx, {y: i => i, x: i => xbar[i], r: 1.8, fill: i => hit[i] ? PPAL.navy : PPAL.brick}),
+      Plot.text(["The first 50 intervals"], {frameAnchor: "top-left", dy: -30, text: d => d, fill: PPAL.navy, stroke: "white", strokeWidth: 6, fontWeight: 700, fontSize: 16}),
+      Plot.ruleX([clMu], {stroke: "#3E3F3A", strokeWidth: 1.5, strokeDasharray: "5 4"})
+    ]
+  });
+  const f = (v, k = 2) => v.toFixed(k);
+  // The verdict reads the run, so it changes as the controls do.
+  const pct = v => `<b>${f(100 * v, 1)}%</b>`, target = `${Math.round(100 * clIn.conf)}%`;
+  const verdict = (n, c) => clIn.rule === "Unknown σ: x̄ ± z·s/√n" && c < clIn.conf - 0.02
+    ? `With s in place of σ and n = ${n}, the z cut-off is too narrow: only ${pct(c)} of the intervals contain μ, not ${target}. <b>Switch to t</b> to pay for not knowing σ.`
+    : `The mean x̄ centres on μ (<b>unbiased</b>) and its variance σ²/n shrinks as n grows (<b>consistent</b>). ${pct(c)} of the intervals contain μ, close to the ${target} you asked for.`;
+  return html`<div class="cr-row">${dist}${ints}</div>
+  <div class="ojs-eq cl-stats">
+    <span>Mean of <span class="cl-bar">x</span> = ${f(d3.mean(xbar))} <span class="na-note">(μ = ${clMu})</span></span>
+    <span>Var(<span class="cl-bar">x</span>) = <span class="cl-navy">${f(d3.variance(xbar))}</span> <span class="na-note">(σ²/n = ${f(clSd ** 2 / n)})</span></span>
+    <span>Coverage = <span class="${Math.abs(cover - clIn.conf) < 0.02 ? "hit" : "miss"}">${f(100 * cover, 1)}%</span> <span class="na-note">(cut-off ${f(crit, 3)})</span></span>
+  </div>
+  <div class="quiz-fb">${verdict(n, cover)}</div>`;
+}
+```
+

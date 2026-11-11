@@ -31,7 +31,7 @@
 (function () {
   var K = window.StageKit;
 
-  var W = 1000, H = 445;
+  var W = 1000, H = 320;
   var INK = K.PAL.ink, SOFT = K.PAL.inkSoft;
   var NAVY = K.PAL.navy, OLIVE = K.PAL.olive, ORANGE = K.PAL.orange, BRICK = K.PAL.brick;
   var MONO = K.FONT.mono, SANS = K.FONT.sans;
@@ -59,15 +59,15 @@
   function txt(attrs, s) { var t = K.el('text', attrs); t.textContent = s; return t; }
 
   // --- character-grid layout ---------------------------------------------
-  var FS = K.TYPE.readout, ADV = FS * 0.6;     // JetBrains Mono advance
+  var FS = 40, ADV = FS * 0.6;                 // JetBrains Mono advance; the slide's one equation, so set large
   // SVG <text> collapses leading/trailing whitespace, so a separator token
   // written as ' · ' renders one glyph wide while the character grid has
   // already reserved three — every token after it lands short. Non-breaking
   // spaces are real glyphs at the same mono advance, so the grid stays honest.
   var NB = ' ';
-  var CX = W / 2, Y_EQ = 195;
-  var Y_ABOVE = 154, Y_BELOW = 228;            // bracket rails
-  var Y_BAR = Y_EQ - 20;                       // the x-bar overline
+  var CX = W / 2, Y_EQ = 140;
+  var Y_ABOVE = 92, Y_BELOW = 156;             // bracket rails
+  var Y_BAR = Y_EQ - 28;                       // the x-bar overline
 
   // A row is a list of {s, c} tokens laid on the character grid, centred on cx.
   // Returns the token nodes plus each one's [x0, x1] so a bracket can span it.
@@ -103,21 +103,21 @@
   function trim(v) { return String(+v.toFixed(4)); }
 
   var CAPTIONS = {
-    0: 'four parts, one interval',
-    1: 'the estimate',
-    2: 'the confidence you asked for',
-    3: 'the standard error',
-    4: 'the half-width, and the interval'
+    0: 'Four parts, one interval',
+    1: 'The estimate',
+    2: 'The confidence you asked for',
+    3: 'The standard error',
+    4: 'The half-width, and the interval'
   };
 
   // Annotation under the equation: what the bracketed piece MEANS, in words,
   // coloured to match the token it belongs to.
   var NOTES = {
     0: { t: '', c: SOFT },
-    1: { t: "your sample's centre — the only random part", c: NAVY },
-    2: { t: 'how many SEs wide — you choose this', c: ORANGE },
-    3: { t: 'the standard error — how much x̄ wobbles', c: OLIVE },
-    4: { t: 'the half-width: ' + Z.toFixed(2) + ' × ' + trim(SE) +
+    1: { t: "Your sample's centre — the only random part", c: NAVY },
+    2: { t: 'How many SEs wide — you choose this', c: ORANGE },
+    3: { t: 'The standard error — how much x̄ wobbles', c: OLIVE },
+    4: { t: 'The half-width: ' + Z.toFixed(2) + ' × ' + trim(SE) +
            ' = ' + HALF.toFixed(2), c: BRICK }
   };
 
@@ -126,7 +126,7 @@
   // so an unreliable advance shifts nothing downstream of it.
   var MATHS = {
     0: '',
-    1: 'x̄ = ' + XBAR.toFixed(2),
+    1: 'x = ' + XBAR.toFixed(2),     // the x gets a true overline in place(), not a combining macron
     2: 'z = ' + Z.toFixed(2) + NB + NB + '(for 95%)',
     3: 'σ/√n = ' + SIGMA + '/√' + N + ' = ' + SE.toFixed(2),
     4: XBAR.toFixed(2) + ' ± ' + HALF.toFixed(2) + NB + NB + '→' + NB + NB +
@@ -169,12 +169,12 @@
       4: bracket(svg, zed.x0, se.x1, Y_BELOW, 0, BRICK)
     };
 
-    var note = K.txt(CX, 306, '',
+    var note = K.txt(CX, 222, '',
       { size: 'label', face: 'sans', fill: SOFT, anchor: 'middle' });
     note.setAttribute('opacity', 0);
     svg.appendChild(note);
 
-    var sum = K.txt(CX, 362, '',
+    var sum = K.txt(CX, 272, '',
       { size: 'label', face: 'mono', fill: INK, anchor: 'middle' });
     sum.setAttribute('opacity', 0);
     svg.appendChild(sum);
@@ -196,6 +196,15 @@
     s.note.textContent = NOTES[st].t;
     s.note.setAttribute('fill', NOTES[st].c);
     s.sum.textContent = MATHS[st];
+    // JetBrains Mono misplaces a combining U+0304, so the estimate's bar is an
+    // SVG overline on the x itself.
+    if (st === 1) {
+      s.sum.textContent = '';
+      var bar = K.el('tspan', { 'text-decoration': 'overline' });
+      bar.textContent = 'x';
+      s.sum.appendChild(bar);
+      s.sum.appendChild(document.createTextNode(MATHS[1].slice(1)));
+    }
 
     var fast = instant || K.REDUCE || !K.animeReady();
 

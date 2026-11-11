@@ -1248,6 +1248,11 @@
   .qcard-binom { border-left-color: #93C54B; .qcard-name { color: #93C54B; } }
   .qcard-pois  { border-left-color: #F47C3C; .qcard-name { color: #F47C3C; } }
   .qcard-expo  { border-left-color: #B94A48; .qcard-name { color: #B94A48; } }
+  // The three properties of the sample mean (05-estimation): the deck's brick,
+  // navy and orange, as on the formula slides.
+  .qcard-unbiased   { border-left-color: #B94A48; .qcard-name { color: #B94A48; } }
+  .qcard-efficient  { border-left-color: #325D88; .qcard-name { color: #325D88; } }
+  .qcard-consistent { border-left-color: #F47C3C; .qcard-name { color: #F47C3C; } }
 
   // No navy bar on this one: the three coloured card rules directly beneath
   // it already carry that job, and a fourth vertical line above them read as
@@ -1497,3 +1502,84 @@
 
 // #dist-map: the relationships chart fills the width under the lede
 .reveal section#dist-map svg.dist-map { display: block; height: 470px; width: auto; max-width: 100%; margin: 34px auto 0; }
+
+// ---- 05-estimation ----------------------------------------------------------
+// #xbar-properties: the lede and footer as on the formula slides — full width,
+// justified — instead of the qcard slide's narrower ragged column.
+.reveal section#xbar-properties .lede-min,
+.reveal section#xbar-properties .slide-footer {
+  max-width: none; text-align: justify; hyphens: auto;
+  p { text-align: justify; }
+}
+// A fixed gap under the title, not the qcard slide's centring auto margin.
+.reveal section#xbar-properties .lede-min { font-size: 26px; margin-top: 48px !important; }
+.reveal section#xbar-properties .slide-footer { font-size: 22px; }
+// #ci-lab: n and confidence sliders, the rule and the button on one row.
+.reveal section#ci-lab .cl-dials {
+  display: flex; align-items: flex-end; gap: 12px; margin: 22px 0 8px; overflow: hidden;
+  form { flex-direction: column; align-items: flex-start; gap: 2px; margin: 0; --label-width: auto; }
+  // Labels keep the deck's small navy caps, as on #courier-moments.
+  // Inputs only gives radio groups that style, so the sliders get it here.
+  form > label { font-size: 17px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #325D88; }
+  input[type="range"] { width: 92px; }
+  input[type="number"] { width: 56px; }
+  // Reveal's body size reaches the radio options and the button unless set here.
+  form div label, button { font-size: 18px; white-space: nowrap; }
+  form div { display: flex; gap: 8px; }
+}
+.reveal section.ojs-slide .ojs-eq.cl-eqs { font-size: 18px; margin-top: 6px; }
+// #xbar-proof: three lines of working, so the arrow notes between them are
+// held to the height #moments-formal gives its own.
+.reveal section#xbar-proof .deriv-arrow { height: 40px; }
+// #ci-lab: an overline, not a combining macron, which the mono face misplaces;
+// and air between the two plots so their axes do not read as one.
+// The bar is drawn just above the x's x-height; text-decoration: overline
+// puts it at the ascender line, too high over a lowercase letter.
+.cl-bar { position: relative; }
+.cl-bar::before { content: ""; position: absolute; left: 12%; right: 12%; top: 0.24em; border-top: 1.5px solid currentColor; }
+#ci-lab .cr-row { gap: 56px; }
+// #xbar-properties: three cards side by side, each a property, its formula and
+// what it means, in the deck's brick, navy and orange.
+.reveal section#xbar-properties .prop-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin: 22px 0 18px;
+}
+.reveal section#xbar-properties .prop-card {
+  background: var(--bg-elev); border: 1px solid var(--rule); border-top: 5px solid var(--rule);
+  border-radius: 6px; padding: 18px 18px 16px; text-align: center;
+  p { margin: 0; }
+}
+.prop-name { font-size: 18px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+// A fixed height so the three formulas share a baseline whatever their shape.
+.prop-math { display: flex; align-items: center; justify-content: center; min-height: 78px; font-size: 30px; margin: 10px 0 8px; color: var(--ink); }
+.prop-q { display: block; font-size: 19px; line-height: 1.4; color: var(--ink-soft); }
+.prop-unbiased   { border-top-color: #B94A48 !important; .prop-name { color: #B94A48; } }
+.prop-efficient  { border-top-color: #325D88 !important; .prop-name { color: #325D88; } }
+.prop-consistent { border-top-color: #F47C3C !important; .prop-name { color: #F47C3C; } }
+// #xbar-proof: display maths at 80%, as the other derivation slides shrink theirs.
+.reveal section#xbar-proof {
+  .MJXp-math.MJXp-display { font-size: 0.8em; }
+  .MathJax_Display { zoom: 0.8; }
+}
+// #cieq-formula: the stage is drawn 320 units tall, not 445 (see cieq-anim).
+#cieq-formula .stage-wrap { height: 336px; margin-top: 96px; }
+#cieq-formula .slide-footer, #cieq-formula .slide-footer p { text-align: justify !important; hyphens: auto; }
+#ciflip-intuition .stage-wrap { margin-top: 28px; }
+#ci-intuition .stage-wrap { margin-top: 84px; }
+#xbar-proof .lede-min { margin-top: 44px; }
+.cl-navy { color: #325D88; }
+#ci-lab .quiz-fb { font-size: 19px; padding: 8px 14px; margin-top: 10px; }
+// #ci-lab: the interval rule on its own row, its label beside the three
+// formulas rather than above them.
+.reveal section#ci-lab .cl-rule {
+  margin: 20px 0 22px;
+  form { flex-direction: row; align-items: center; gap: 18px; }
+  form div { gap: 26px; }
+  form div label { font-size: 21px; }
+}
+// #ci-intuition: the quoted claims set justified, like the deck's other prose blocks.
+.reveal section#ci-intuition .claim-cell p { text-align: justify; hyphens: auto; }
+// #ci-lab: the three readouts on one line under the plots.
+.reveal section.ojs-slide .ojs-eq.cl-stats {
+  display: flex; justify-content: center; gap: 40px; font-size: 19px; margin: 8px 0 0;
+  .na-note { font-size: 15px; }
+}
