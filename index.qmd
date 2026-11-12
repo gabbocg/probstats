@@ -20,9 +20,9 @@ date-format: "MMMM YYYY"
 {{< include sections/05-estimation.qmd >}}
 {{< include sections/06-testing.qmd >}}
 {{< include sections/07-two-populations.qmd >}}
-<!-- commented out: seminars 8 and 9
-
 {{< include sections/08-regression.qmd >}}
+<!-- commented out: seminar 9
+
 {{< include sections/09-forecasting.qmd >}}
 
 -->

@@ -78,7 +78,6 @@ format:
       - file: assets/js/ci-anim.html
       - file: assets/js/pval-anim.html
       - file: assets/js/pair-anim.html
-      - file: assets/js/ls-anim.html
       - file: assets/js/smooth-anim.html
       - file: assets/js/webr-layout.html
       # sim-tune polls for Monaco instances rather than depending on load order; last only for readability.
