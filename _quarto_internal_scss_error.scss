@@ -1,0 +1,5978 @@
+// quarto-scss-analysis-annotation { "quarto-version": "1.9.38" }
+
+// quarto-scss-analysis-annotation { "origin": "'use' section from format" }
+
+
+
+// quarto-scss-analysis-annotation { "origin": "'use' section from Quarto" }
+
+@use "sass:color" as quarto-color;
+@use "sass:map" as quarto-map;
+@use "sass:math" as quarto-math;
+
+
+// this file is currently intentionally empty
+
+
+// quarto-scss-analysis-annotation { "origin": "'use' section from user-defined SCSS" }
+
+
+
+// quarto-scss-analysis-annotation { "origin": "'functions' section from format" }
+
+
+
+// quarto-scss-analysis-annotation { "origin": "'functions' section from Quarto" }
+
+@function colorToRGB($color) {
+  @return "rgb(" + red($color) + ", " + green($color) + ", " + blue($color) +
+    ")";
+}
+
+@function colorToRGBA($color) {
+  @return "rgba(" + red($color) + ", " + green($color) + ", " + blue($color) +
+    ", " + alpha($color) + ")";
+}
+
+@function str-replace($string, $search, $replace: "") {
+  $index: str-index($string, $search);
+  @if $index {
+    @return str-slice($string, 1, $index - 1) + $replace +
+      str-replace(
+        str-slice($string, $index + str-length($search)),
+        $search,
+        $replace
+      );
+  }
+  @return $string;
+}
+
+
+@function colorToRGB($color) {
+  @return "rgb(" + red($color) + ", " + green($color) + ", " + blue($color) +
+    ")";
+}
+
+@function tint-color($color, $weight) {
+  @return mix(white, $color, $weight);
+}
+
+@function shade-color($color, $weight) {
+  @return mix(black, $color, $weight);
+}
+
+@function shift-color($color, $weight) {
+  @return if(
+    $weight > 0,
+    shade-color($color, $weight),
+    tint-color($color, -$weight)
+  );
+}
+
+
+// quarto-scss-analysis-annotation { "origin": "'functions' section from user-defined SCSS" }
+
+
+
+// quarto-scss-analysis-annotation { "origin": "Defaults from user-defined SCSS" }
+
+
+// Sandstone-inspired palette on a pure-white ground
+$body-bg: #FFFFFF;
+$body-color: #3E3F3A;
+$link-color: #325D88;
+$link-color-hover: #2A4E72;
+$selection-bg: rgba(50, 93, 136, 0.22);
+$selection-color: #FFFFFF;
+
+// Code blocks
+$code-bg: #FFFFFF;
+$code-color: #3E3F3A;
+$code-block-bg: #F6F8FA;
+$code-block-border-color: #E5E7EB;
+
+// Typography — Roboto body, JetBrains Mono code
+$font-family-sans-serif: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+$font-family-monospace: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+$presentation-font-size-root: 36px;
+$presentation-line-height: 1.5;
+$presentation-h1-font-size: 2em;
+$presentation-h2-font-size: 1.35em;
+$presentation-h3-font-size: 1.05em;
+$presentation-heading-font-weight: 700;
+$presentation-heading-color: #3E3F3A;
+$presentation-heading-line-height: 1.15;
+
+$code-block-bg: #F6F8FA !default;
+$btn-code-copy-color: #8E8C84 !default;
+$btn-code-copy-color-active: #325D88 !default;
+
+// quarto-scss-analysis-annotation { "origin": "Defaults from Quarto's SCSS" }
+
+
+@import url(./fonts/source-sans-pro/source-sans-pro.css);
+
+// fonts
+$font-family-sans-serif: "Source Sans Pro", Helvetica, sans-serif !default;
+$font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas,
+  "Liberation Mono", "Courier New", monospace !default;
+$presentation-font-size-root: 40px !default;
+$presentation-font-smaller: 0.7 !default;
+$presentation-line-height: 1.3 !default;
+
+// Default variables which exist in bootstrap themes
+// and are here to simplify the implementation of _brand.yml and
+// user theming customization in general
+$font-weight-base: 400 !default;
+$code-font-size: 1em !default;
+$font-family-monospace-block: $font-family-monospace !default;
+$font-family-monospace-inline: $font-family-monospace !default;
+$link-weight: $font-weight-base !default;
+$link-color-bg: transparent !default;
+$link-decoration: inherit !default;
+$font-weight-monospace: $font-weight-base !default;
+$font-weight-monospace-block: $font-weight-monospace !default;
+$font-weight-monospace-inline: $font-weight-monospace !default;
+
+// main colors
+$body-bg: #fff !default;
+$body-color: #222 !default;
+$text-muted: lighten($body-color, 30%) !default;
+
+// grey colors (like in bootstrap)
+$gray-200: #e9ecef !default;
+$gray-100: #f8f9fa !default;
+$gray-900: #212529 !default;
+
+// link colors
+$primary: #2a76dd !default;
+$link-color: $primary !default;
+$link-color-hover: lighten($link-color, 10%) !default;
+
+// selection colors
+$selection-bg: lighten($link-color, 25%) !default;
+$selection-color: $body-bg !default;
+
+// border colors
+$border-color: lighten($body-color, 30%) !default;
+$border-width: 1px !default;
+$border-radius: 4px !default;
+
+// headings
+$presentation-heading-font: $font-family-sans-serif !default;
+$presentation-heading-color: $body-color !default;
+$presentation-heading-line-height: 1.2 !default;
+$presentation-heading-letter-spacing: normal !default;
+$presentation-heading-text-transform: none !default;
+$presentation-heading-text-shadow: none !default;
+$presentation-h1-text-shadow: none !default;
+$presentation-heading-font-weight: 600 !default;
+$presentation-h1-font-size: 2.5em !default;
+$presentation-h2-font-size: 1.6em !default;
+$presentation-h3-font-size: 1.3em !default;
+$presentation-h4-font-size: 1em !default;
+
+// margins
+$presentation-block-margin: 12px !default;
+
+// text alignment
+$presentation-slide-text-align: left !default;
+$presentation-title-slide-text-align: center !default;
+$reveal-slide-text-align: $presentation-slide-text-align !default;
+$reveal-title-slide-text-align: $presentation-title-slide-text-align !default;
+
+// Lists
+$presentation-list-bullet-color: $body-color !default;
+
+// code blocks
+$code-block-bg: $body-bg !default;
+$code-block-border-color: lighten($body-color, 60%) !default;
+$code-block-font-size: $code-font-size * 0.55 !default;
+$code-block-height: 500px !default;
+$code-block-theme-dark-threshhold: 40% !default;
+$code-block-line-height: $presentation-line-height !default;
+$code-block-color: $body-color !default;
+
+// inline code
+$code-inline-font-size: $code-font-size * 0.875 !default;
+$code-color: var(--quarto-hl-fu-color) !default;
+$code-bg: transparent !default;
+
+// tabset
+$tabset-border-color: $code-block-border-color !default;
+
+// table
+$table-border-color: $code-block-border-color !default;
+
+// input panel
+$input-panel-border-color: $code-block-border-color !default;
+$input-panel-border-width: $border-width !default;
+$input-panel-border-radius: $border-radius !default;
+$input-panel-bg: rgba(248, 249, 250, 1) !default;
+
+// Callouts
+$callout-border-width: 0.3rem !default;
+$callout-border-scale: 0% !default;
+$callout-icon-scale: 10% !default;
+$callout-margin-top: 1rem !default;
+$callout-margin-bottom: 1rem !default;
+$callout-color-note: #0d6efd !default;
+$callout-color-tip: #198754 !default;
+$callout-color-important: #dc3545 !default;
+$callout-color-caution: #fd7e14 !default;
+$callout-color-warning: #ffc107 !default;
+
+// alternate colors for when the background changes
+$light-bg-text-color: #222 !default;
+$dark-bg-text-color: #fff !default;
+$light-bg-link-color: #2a76dd !default;
+$dark-bg-link-color: #42affa !default;
+$light-bg-code-color: #4758ab !default;
+$dark-bg-code-color: #ffa07a !default;
+
+// KBD variables
+$kbd-padding-y: 0.4rem !default;
+$kbd-padding-x: 0.4rem !default;
+$kbd-font-size: $presentation-font-size-root !default;
+$kbd-color: $body-color !default;
+$kbd-bg: $gray-100 !default; // like in bootstrap style
+
+// --- derive reveal versions of presentation variables for finer-grained override ---
+
+$revealjs-font-size-root: $presentation-font-size-root !default;
+$revealjs-h1-font-size: $presentation-h1-font-size !default;
+$revealjs-h2-font-size: $presentation-h2-font-size !default;
+$revealjs-h3-font-size: $presentation-h3-font-size !default;
+$revealjs-h4-font-size: $presentation-h4-font-size !default;
+$revealjs-heading-font: $presentation-heading-font !default;
+$revealjs-heading-color: $presentation-heading-color !default;
+$revealjs-heading-line-height: $presentation-heading-line-height !default;
+$revealjs-heading-letter-spacing: $presentation-heading-letter-spacing !default;
+$revealjs-heading-text-transform: $presentation-heading-text-transform !default;
+$revealjs-heading-text-shadow: $presentation-heading-text-shadow !default;
+$revealjs-h1-text-shadow: $presentation-h1-text-shadow !default;
+
+$revealjs-heading-font-weight: $presentation-heading-font-weight !default;
+$revealjs-block-margin: $presentation-block-margin !default;
+$revealjs-line-height: $presentation-line-height !default;
+$revealjs-list-bullet-color: $presentation-list-bullet-color !default;
+
+$revealjs-code-inline-font-size: $code-inline-font-size !default;
+$revealjs-code-block-font-size: $code-block-font-size !default;
+
+// ---- map to reveal scss variables ---
+// ---- This is based from the revealjs setting.scss
+// -- START setting.scss --
+// Background of the presentation
+$backgroundColor: $body-bg !default;
+
+// Primary/body text
+$mainFont: $font-family-sans-serif !default;
+$mainFontSize: $revealjs-font-size-root !default;
+$mainColor: $body-color !default;
+
+// Vertical spacing between blocks of text
+$blockMargin: $revealjs-block-margin !default;
+
+// Headings
+$headingMargin: 0 0 $blockMargin 0 !default;
+$headingFont: $revealjs-heading-font !default;
+$headingColor: $revealjs-heading-color !default;
+$headingLineHeight: $revealjs-heading-line-height !default;
+$headingLetterSpacing: $revealjs-heading-letter-spacing !default;
+$headingTextTransform: $revealjs-heading-text-transform !default;
+$headingTextShadow: $revealjs-heading-text-shadow !default;
+$heading1TextShadow: $revealjs-h1-text-shadow !default;
+$headingFontWeight: $revealjs-heading-font-weight !default;
+
+$heading1Size: $revealjs-h1-font-size !default;
+$heading2Size: $revealjs-h2-font-size !default;
+$heading3Size: $revealjs-h3-font-size !default;
+$heading4Size: $revealjs-h4-font-size !default;
+
+$codeFont: $font-family-monospace !default;
+
+// Links and actions
+$linkColor: $link-color !default;
+$linkColorHover: $link-color-hover !default;
+
+// Text selection
+$selectionBackgroundColor: $selection-bg !default;
+$selectionColor: $selection-color !default;
+
+// Colors used for UI elements that are overlaid on top of
+// the presentation
+$overlayElementBgColor: 240, 240, 240 !default;
+$overlayElementFgColor: 0, 0, 0 !default;
+
+// -- END setting.scss --
+
+$code-copy-selector: "" !default;
+$code-white-space: pre !default;
+$tbl-cap-location: top !default;
+// main colors
+$body-bg: #fff !default;
+$body-color: #222 !default;
+$text-muted: lighten($body-color, 30%) !default;
+
+// border colors
+$border-color: lighten($body-color, 30%) !default;
+$table-border-color: $border-color !default;
+$border-width: 1px !default;
+$border-radius: 4px !default;
+
+// code block colors
+$btn-code-copy-color: if(
+  variable-exists(text-muted),
+  $text-muted,
+  if(variable-exists(body-color), $body-color, $gray-900)
+) !default;
+
+$btn-code-copy-color-active: if(
+  variable-exists(link-color),
+  $link-color,
+  #0d6efd
+) !default;
+
+
+// quarto-scss-analysis-annotation { "origin": "Defaults from the format SCSS" }
+
+
+
+// quarto-scss-analysis-annotation { "origin": "'mixins' section from format" }
+
+@mixin vertical-gradient( $top, $bottom ) {
+	background: $top;
+	background: -moz-linear-gradient( top, $top 0%, $bottom 100% );
+	background: -webkit-gradient( linear, left top, left bottom, color-stop(0%,$top), color-stop(100%,$bottom) );
+	background: -webkit-linear-gradient( top, $top 0%, $bottom 100% );
+	background: -o-linear-gradient( top, $top 0%, $bottom 100% );
+	background: -ms-linear-gradient( top, $top 0%, $bottom 100% );
+	background: linear-gradient( top, $top 0%, $bottom 100% );
+}
+
+@mixin horizontal-gradient( $top, $bottom ) {
+	background: $top;
+	background: -moz-linear-gradient( left, $top 0%, $bottom 100% );
+	background: -webkit-gradient( linear, left top, right top, color-stop(0%,$top), color-stop(100%,$bottom) );
+	background: -webkit-linear-gradient( left, $top 0%, $bottom 100% );
+	background: -o-linear-gradient( left, $top 0%, $bottom 100% );
+	background: -ms-linear-gradient( left, $top 0%, $bottom 100% );
+	background: linear-gradient( left, $top 0%, $bottom 100% );
+}
+
+@mixin radial-gradient( $outer, $inner, $type: circle ) {
+	background: $outer;
+	background: -moz-radial-gradient( center, $type cover,  $inner 0%, $outer 100% );
+	background: -webkit-gradient( radial, center center, 0px, center center, 100%, color-stop(0%,$inner), color-stop(100%,$outer) );
+	background: -webkit-radial-gradient( center, $type cover,  $inner 0%, $outer 100% );
+	background: -o-radial-gradient( center, $type cover,  $inner 0%, $outer 100% );
+	background: -ms-radial-gradient( center, $type cover,  $inner 0%, $outer 100% );
+	background: radial-gradient( center, $type cover,  $inner 0%, $outer 100% );
+}
+
+@mixin light-bg-text-color( $color ) {
+	section.has-light-background {
+		&, h1, h2, h3, h4, h5, h6 {
+			color: $color;
+		}
+	}
+}
+
+@mixin dark-bg-text-color( $color ) {
+	section.has-dark-background {
+		&, h1, h2, h3, h4, h5, h6 {
+			color: $color;
+		}
+	}
+}
+
+// quarto-scss-analysis-annotation { "origin": "'mixins' section from Quarto" }
+
+
+@mixin shift_to_dark($property, $colorDark, $colorLight) {
+  @if (
+    quarto-color.blackness($backgroundColor) > $code-block-theme-dark-threshhold
+  ) {
+    #{$property}: $colorDark;
+  } @else {
+    #{$property}: $colorLight;
+  }
+}
+
+// Make the font size smaller by a factor of $times
+// Useful for font-size defined in px inside smaller font size controled by em
+// as they would not be impacted by the smaller font size
+@mixin make-smaller-font-size($element, $times: 1) {
+  font-size: calc(
+    #{$element} * #{quarto-math.pow($presentation-font-smaller, $times)}
+  );
+}
+
+// Undo the smaller font size
+// Useful for font-size in em already that should not be impacted by smaller font size controled by em
+@mixin undo-smaller-font-size($element) {
+  font-size: calc(#{$element} / #{$presentation-font-smaller});
+}
+
+// -- START setting.scss --
+
+// Generates the presentation background, can be overridden
+// to return a background image or gradient
+@mixin bodyBackground() {
+  background: $backgroundColor;
+}
+
+// -- END setting.scss --
+
+
+// quarto-scss-analysis-annotation { "origin": "'mixins' section from user-defined SCSS" }
+
+
+
+// quarto-scss-analysis-annotation { "origin": "'rules' section from format" }
+
+// Base theme template for reveal.js
+
+/*********************************************
+ * GLOBAL STYLES
+ *********************************************/
+
+@import "./exposer";
+
+.reveal-viewport {
+	@include bodyBackground();
+	background-color: var(--r-background-color);
+}
+
+.reveal {
+	font-family: var(--r-main-font);
+	font-size: var(--r-main-font-size);
+	font-weight: normal;
+	color: var(--r-main-color);
+}
+
+.reveal ::selection {
+	color: var(--r-selection-color);
+	background: var(--r-selection-background-color);
+	text-shadow: none;
+}
+
+.reveal ::-moz-selection {
+	color: var(--r-selection-color);
+	background: var(--r-selection-background-color);
+	text-shadow: none;
+}
+
+.reveal .slides section,
+.reveal .slides section>section {
+	line-height: 1.3;
+	font-weight: inherit;
+}
+
+/*********************************************
+ * HEADERS
+ *********************************************/
+
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
+	margin: var(--r-heading-margin);
+	color: var(--r-heading-color);
+
+	font-family: var(--r-heading-font);
+	font-weight: var(--r-heading-font-weight);
+	line-height: var(--r-heading-line-height);
+	letter-spacing: var(--r-heading-letter-spacing);
+
+	text-transform: var(--r-heading-text-transform);
+	text-shadow: var(--r-heading-text-shadow);
+
+	word-wrap: break-word;
+}
+
+.reveal h1 {font-size: var(--r-heading1-size); }
+.reveal h2 {font-size: var(--r-heading2-size); }
+.reveal h3 {font-size: var(--r-heading3-size); }
+.reveal h4 {font-size: var(--r-heading4-size); }
+
+.reveal h1 {
+	text-shadow: var(--r-heading1-text-shadow);
+}
+
+
+/*********************************************
+ * OTHER
+ *********************************************/
+
+.reveal p {
+	margin: var(--r-block-margin) 0;
+	line-height: 1.3;
+}
+
+/* Remove trailing margins after titles */
+.reveal h1:last-child,
+.reveal h2:last-child,
+.reveal h3:last-child,
+.reveal h4:last-child,
+.reveal h5:last-child,
+.reveal h6:last-child {
+	margin-bottom: 0;
+}
+
+/* Ensure certain elements are never larger than the slide itself */
+.reveal img,
+.reveal video,
+.reveal iframe {
+	max-width: 95%;
+	max-height: 95%;
+}
+.reveal strong,
+.reveal b {
+	font-weight: bold;
+}
+
+.reveal em {
+	font-style: italic;
+}
+
+.reveal ol,
+.reveal dl,
+.reveal ul {
+	display: inline-block;
+
+	text-align: left;
+	margin: 0 0 0 1em;
+}
+
+.reveal ol {
+	list-style-type: decimal;
+}
+
+.reveal ul {
+	list-style-type: disc;
+}
+
+.reveal ul ul {
+	list-style-type: square;
+}
+
+.reveal ul ul ul {
+	list-style-type: circle;
+}
+
+.reveal ul ul,
+.reveal ul ol,
+.reveal ol ol,
+.reveal ol ul {
+	display: block;
+	margin-left: 40px;
+}
+
+.reveal dt {
+	font-weight: bold;
+}
+
+.reveal dd {
+	margin-left: 40px;
+}
+
+.reveal blockquote {
+	display: block;
+	position: relative;
+	width: 70%;
+	margin: var(--r-block-margin) auto;
+	padding: 5px;
+
+	font-style: italic;
+	background: rgba(255, 255, 255, 0.05);
+	box-shadow: 0px 0px 2px rgba(0,0,0,0.2);
+}
+	.reveal blockquote p:first-child,
+	.reveal blockquote p:last-child {
+		display: inline-block;
+	}
+
+.reveal q {
+	font-style: italic;
+}
+
+.reveal pre {
+	display: block;
+	position: relative;
+	width: 90%;
+	margin: var(--r-block-margin) auto;
+
+	text-align: left;
+	font-size: 0.55em;
+	font-family: var(--r-code-font);
+	line-height: 1.2em;
+
+	word-wrap: break-word;
+
+	box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.reveal code {
+	font-family: var(--r-code-font);
+	text-transform: none;
+	tab-size: 2;
+}
+
+.reveal pre code {
+	display: block;
+	padding: 5px;
+	overflow: auto;
+	max-height: 400px;
+	word-wrap: normal;
+}
+
+.reveal .code-wrapper {
+	white-space: normal;
+}
+
+.reveal .code-wrapper code {
+	white-space: pre;
+}
+
+.reveal table {
+	margin: auto;
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+.reveal table th {
+	font-weight: bold;
+}
+
+.reveal table th,
+.reveal table td {
+	text-align: left;
+	padding: 0.2em 0.5em 0.2em 0.5em;
+	border-bottom: 1px solid;
+}
+
+.reveal table th[align="center"],
+.reveal table td[align="center"] {
+	text-align: center;
+}
+
+.reveal table th[align="right"],
+.reveal table td[align="right"] {
+	text-align: right;
+}
+
+.reveal table tbody tr:last-child th,
+.reveal table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.reveal sup {
+	vertical-align: super;
+	font-size: smaller;
+}
+.reveal sub {
+	vertical-align: sub;
+	font-size: smaller;
+}
+
+.reveal small {
+	display: inline-block;
+	font-size: 0.6em;
+	line-height: 1.2em;
+	vertical-align: top;
+}
+
+.reveal small * {
+	vertical-align: top;
+}
+
+.reveal img {
+	margin: var(--r-block-margin) 0;
+}
+
+
+/*********************************************
+ * LINKS
+ *********************************************/
+
+.reveal a {
+	color: var(--r-link-color);
+	text-decoration: none;
+	transition: color .15s ease;
+}
+	.reveal a:hover {
+		color: var(--r-link-color-hover);
+		text-shadow: none;
+		border: none;
+	}
+
+.reveal .roll span:after {
+	color: #fff;
+	// background: darken( var(--r-link-color), 15% );
+	 background: var(--r-link-color-dark);
+
+}
+
+
+/*********************************************
+ * Frame helper
+ *********************************************/
+
+.reveal .r-frame {
+	border: 4px solid var(--r-main-color);
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+}
+
+.reveal a .r-frame {
+	transition: all .15s linear;
+}
+
+.reveal a:hover .r-frame {
+	border-color: var(--r-link-color);
+	box-shadow: 0 0 20px rgba(0, 0, 0, 0.55);
+}
+
+
+/*********************************************
+ * NAVIGATION CONTROLS
+ *********************************************/
+
+.reveal .controls {
+	color: var(--r-link-color);
+}
+
+
+/*********************************************
+ * PROGRESS BAR
+ *********************************************/
+
+.reveal .progress {
+	background: rgba(0,0,0,0.2);
+	color: var(--r-link-color);
+}
+
+/*********************************************
+ * PRINT BACKGROUND
+ *********************************************/
+ @media print {
+    .backgrounds {
+        background-color: var(--r-background-color);
+    }
+}
+
+
+// quarto-scss-analysis-annotation { "origin": "'rules' section from Quarto" }
+
+// floating
+
+.top-right {
+  position: absolute;
+  top: 1em;
+  right: 1em;
+}
+
+// hidden
+
+// https://github.com/quarto-dev/quarto-cli/issues/5403#issuecomment-1533791947
+.visually-hidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: auto;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+  white-space: nowrap;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.zindex-bottom {
+  z-index: -1 !important;
+}
+
+// layout and figures
+
+figure.figure {
+  display: block;
+}
+
+.quarto-layout-panel {
+  margin-bottom: 1em;
+}
+
+.quarto-layout-panel > figure {
+  width: 100%;
+}
+.quarto-layout-panel > figure > figcaption,
+.quarto-layout-panel > .panel-caption {
+  margin-top: 10pt;
+}
+
+.quarto-layout-panel > .table-caption {
+  margin-top: 0px;
+}
+
+.table-caption p {
+  margin-bottom: 0.5em;
+}
+
+.quarto-layout-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+.quarto-layout-valign-top {
+  align-items: flex-start;
+}
+.quarto-layout-valign-bottom {
+  align-items: flex-end;
+}
+.quarto-layout-valign-center {
+  align-items: center;
+}
+.quarto-layout-cell {
+  position: relative;
+  margin-right: 20px;
+}
+.quarto-layout-cell:last-child {
+  margin-right: 0;
+}
+.quarto-layout-cell figure,
+.quarto-layout-cell > p {
+  margin: 0.2em;
+}
+.quarto-layout-cell img {
+  max-width: 100%;
+}
+.quarto-layout-cell .html-widget {
+  width: 100% !important;
+}
+.quarto-layout-cell div figure p {
+  margin: 0;
+}
+.quarto-layout-cell figure {
+  display: block;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+}
+.quarto-layout-cell table {
+  display: inline-table;
+}
+.quarto-layout-cell-subref figcaption,
+figure .quarto-layout-row figure figcaption {
+  text-align: center;
+  font-style: italic;
+}
+.quarto-figure {
+  position: relative;
+  margin-bottom: 1em;
+}
+
+.quarto-figure > figure {
+  width: 100%;
+  margin-bottom: 0;
+}
+.quarto-figure-left > figure > p,
+.quarto-figure-left > figure > div /* for mermaid and dot diagrams */ {
+  text-align: left;
+}
+.quarto-figure-center > figure > p,
+.quarto-figure-center > figure > div /* for mermaid and dot diagrams */ {
+  text-align: center;
+}
+.quarto-figure-right > figure > p,
+.quarto-figure-right > figure > div /* for mermaid and dot diagrams */ {
+  text-align: right;
+}
+
+.quarto-figure > figure > div.cell-annotation,
+.quarto-figure > figure > div code {
+  text-align: left; /* override align center for code blocks */
+}
+
+figure > p:empty {
+  display: none;
+}
+figure > p:first-child {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+figure > figcaption.quarto-float-caption-bottom {
+  margin-bottom: 0.5em;
+}
+figure > figcaption.quarto-float-caption-top {
+  margin-top: 0.5em;
+}
+
+// anchor
+
+// anchor js
+
+div[id^="tbl-"] {
+  position: relative;
+}
+
+.quarto-figure > .anchorjs-link {
+  position: absolute;
+  top: 0.6em;
+  right: 0.5em;
+}
+
+div[id^="tbl-"] > .anchorjs-link {
+  position: absolute;
+  top: 0.7em;
+  right: 0.3em;
+}
+
+/* workaround for anchorjs not hitting on generic :hover selector */
+.quarto-figure:hover > .anchorjs-link,
+div[id^="tbl-"]:hover > .anchorjs-link,
+h2:hover > .anchorjs-link,
+h3:hover > .anchorjs-link,
+h4:hover > .anchorjs-link,
+h5:hover > .anchorjs-link,
+h6:hover > .anchorjs-link,
+.reveal-anchorjs-link > .anchorjs-link {
+  opacity: 1;
+}
+
+#title-block-header {
+  margin-block-end: 1rem;
+  position: relative;
+  margin-top: -1px; // Chrome draws 1px white line between navbar and title block
+}
+
+#title-block-header .abstract {
+  margin-block-start: 1rem;
+}
+
+#title-block-header .abstract .abstract-title {
+  font-weight: 600;
+}
+
+#title-block-header a {
+  text-decoration: none;
+}
+
+#title-block-header .author,
+#title-block-header .date,
+#title-block-header .doi {
+  margin-block-end: 0.2rem;
+}
+
+#title-block-header .quarto-title-block > div {
+  display: flex;
+}
+
+#title-block-header .quarto-title-block > div > h1 {
+  flex-grow: 1;
+}
+
+#title-block-header .quarto-title-block > div > button {
+  flex-shrink: 0;
+  height: 2.25rem;
+  margin-top: 0;
+}
+
+#title-block-header .quarto-title-block > div > button {
+  @if mixin-exists(media-breakpoint-up) {
+    @include media-breakpoint-up(lg) {
+      margin-top: 5px;
+    }
+  }
+}
+
+// (Remove bottom margin from paragraphs in table headers)
+tr.header > th > p:last-of-type {
+  margin-bottom: 0px;
+}
+
+table,
+table.table {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+caption,
+.table-caption {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  text-align: center;
+}
+
+figure.quarto-float-tbl figcaption.quarto-float-caption-top {
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+  text-align: center;
+}
+
+figure.quarto-float-tbl figcaption.quarto-float-caption-bottom {
+  padding-top: 0.25rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+// utterances
+.utterances {
+  max-width: none;
+  margin-left: -8px;
+}
+
+// iframe
+iframe {
+  margin-bottom: 1em;
+}
+
+// details
+details {
+  margin-bottom: 1em;
+}
+details[show] {
+  margin-bottom: 0;
+}
+
+details > summary {
+  @if variable-exists(text-muted) {
+    color: $text-muted;
+  }
+}
+
+details > summary > p:only-child {
+  display: inline;
+}
+
+// codeCopy
+div.code-copy-outer-scaffold {
+  position: relative;
+}
+
+// Inline code should wrap
+// See https://github.com/quarto-dev/quarto-cli/issues/2649
+dd code:not(.sourceCode),
+p code:not(.sourceCode) {
+  white-space: pre-wrap;
+}
+
+// default to scrolling <code> output rather than wrapping, since
+// multi-column tabular output (very common for R & Python) is
+// unreadable when wrapped.
+code {
+  white-space: pre;
+}
+@media print {
+  code {
+    white-space: pre-wrap;
+  }
+}
+pre > code {
+  display: block;
+}
+
+pre > code.sourceCode {
+  white-space: $code-white-space;
+}
+
+pre > code.sourceCode > span > a:first-child::before {
+  text-decoration: none;
+}
+
+pre.code-overflow-wrap > code.sourceCode {
+  white-space: pre-wrap;
+}
+
+pre.code-overflow-scroll > code.sourceCode {
+  white-space: pre;
+}
+
+// code linking (pkgdown style)
+code a:any-link {
+  color: inherit;
+  text-decoration: none;
+}
+code a:hover {
+  color: inherit;
+  text-decoration: underline;
+}
+
+// task lists
+ul.task-list {
+  padding-left: 1em;
+}
+
+// tippy
+
+[data-tippy-root] {
+  display: inline-block;
+}
+
+.tippy-content .footnote-back {
+  display: none;
+}
+
+.footnote-back {
+  margin-left: 0.2em;
+}
+
+.tippy-content {
+  overflow-x: auto;
+}
+
+// embedded source code
+.quarto-embedded-source-code {
+  display: none;
+}
+
+// unresolved crossrefs
+.quarto-unresolved-ref {
+  font-weight: 600;
+}
+
+// html cover image injection
+.quarto-cover-image {
+  max-width: 35%;
+  float: right;
+  margin-left: 30px;
+}
+
+// provide margin below jupyter widgets
+.cell-output-display .widget-subarea {
+  margin-bottom: 1em;
+}
+
+// fix for selectize inputs getting their contents clipped
+// this also works for knitr sql cells (see github issue #3497)
+.cell-output-display:not(.no-overflow-x),
+.knitsql-table:not(.no-overflow-x) {
+  overflow-x: auto;
+}
+
+.panel-input {
+  margin-bottom: 1em;
+}
+
+.panel-input > div,
+.panel-input > div > div {
+  display: inline-block;
+  vertical-align: top;
+  padding-right: 12px;
+}
+
+.panel-input > p:last-child {
+  margin-bottom: 0;
+}
+
+.layout-sidebar {
+  margin-bottom: 1em;
+}
+
+.layout-sidebar .tab-content {
+  border: none;
+}
+
+.tab-content > .page-columns.active {
+  display: grid;
+}
+
+// default styling for .code-preview=".." iframes
+div.sourceCode > iframe {
+  width: 100%;
+  height: 300px;
+
+  // this negative-margin hack works around the rendering issue with
+  // iframes and parent elements with rounded corners if the border
+  // radius for (eg) div.sourceCode is changed, this is likely going
+  // to need changing as well.
+  @if variable-exists(code-preview-margin-bottom) {
+    margin-bottom: $code-preview-margin-bottom;
+  } @else {
+    margin-bottom: -0.5em;
+  }
+  @if variable-exists(code-preview-border-color) {
+    border: $code-preview-border-color;
+  }
+}
+
+// link styling
+a {
+  text-underline-offset: 3px;
+}
+
+/* Callout styling */
+
+.callout pre.sourceCode {
+  padding-left: 0;
+}
+
+// ansi escaping
+div.ansi-escaped-output {
+  font-family: monospace;
+  display: block;
+}
+
+/*!
+*
+* ansi colors from IPython notebook's
+*
+* we also add `bright-[color]-` synonyms for the `-[color]-intense` classes since
+* that seems to be what ansi_up emits
+*
+*/
+/* CSS font colors for translated ANSI escape sequences */
+/* The color values are a mix of
+   http://www.xcolors.net/dl/baskerville-ivorylight and
+   http://www.xcolors.net/dl/euphrasia */
+.ansi-black-fg {
+  color: #3e424d;
+}
+.ansi-black-bg {
+  background-color: #3e424d;
+}
+.ansi-black-intense-black,
+.ansi-bright-black-fg {
+  color: #282c36;
+}
+.ansi-black-intense-black,
+.ansi-bright-black-bg {
+  background-color: #282c36;
+}
+.ansi-red-fg {
+  color: #e75c58;
+}
+.ansi-red-bg {
+  background-color: #e75c58;
+}
+.ansi-red-intense-red,
+.ansi-bright-red-fg {
+  color: #b22b31;
+}
+.ansi-red-intense-red,
+.ansi-bright-red-bg {
+  background-color: #b22b31;
+}
+.ansi-green-fg {
+  color: #00a250;
+}
+.ansi-green-bg {
+  background-color: #00a250;
+}
+.ansi-green-intense-green,
+.ansi-bright-green-fg {
+  color: #007427;
+}
+.ansi-green-intense-green,
+.ansi-bright-green-bg {
+  background-color: #007427;
+}
+.ansi-yellow-fg {
+  color: #ddb62b;
+}
+.ansi-yellow-bg {
+  background-color: #ddb62b;
+}
+.ansi-yellow-intense-yellow,
+.ansi-bright-yellow-fg {
+  color: #b27d12;
+}
+.ansi-yellow-intense-yellow,
+.ansi-bright-yellow-bg {
+  background-color: #b27d12;
+}
+.ansi-blue-fg {
+  color: #208ffb;
+}
+.ansi-blue-bg {
+  background-color: #208ffb;
+}
+.ansi-blue-intense-blue,
+.ansi-bright-blue-fg {
+  color: #0065ca;
+}
+.ansi-blue-intense-blue,
+.ansi-bright-blue-bg {
+  background-color: #0065ca;
+}
+.ansi-magenta-fg {
+  color: #d160c4;
+}
+.ansi-magenta-bg {
+  background-color: #d160c4;
+}
+.ansi-magenta-intense-magenta,
+.ansi-bright-magenta-fg {
+  color: #a03196;
+}
+.ansi-magenta-intense-magenta,
+.ansi-bright-magenta-bg {
+  background-color: #a03196;
+}
+.ansi-cyan-fg {
+  color: #60c6c8;
+}
+.ansi-cyan-bg {
+  background-color: #60c6c8;
+}
+.ansi-cyan-intense-cyan,
+.ansi-bright-cyan-fg {
+  color: #258f8f;
+}
+.ansi-cyan-intense-cyan,
+.ansi-bright-cyan-bg {
+  background-color: #258f8f;
+}
+.ansi-white-fg {
+  color: #c5c1b4;
+}
+.ansi-white-bg {
+  background-color: #c5c1b4;
+}
+.ansi-white-intense-white,
+.ansi-bright-white-fg {
+  color: #a1a6b2;
+}
+.ansi-white-intense-white,
+.ansi-bright-white-bg {
+  background-color: #a1a6b2;
+}
+.ansi-default-inverse-fg {
+  color: #ffffff;
+}
+.ansi-default-inverse-bg {
+  background-color: #000000;
+}
+.ansi-bold {
+  font-weight: bold;
+}
+.ansi-underline {
+  text-decoration: underline;
+}
+
+:root {
+  --quarto-body-bg: #{$body-bg};
+  --quarto-body-color: #{$body-color};
+  --quarto-text-muted: #{$text-muted};
+  --quarto-border-color: #{$table-border-color};
+  --quarto-border-width: #{$border-width};
+  @if not variable-exists(enable-rounded) or $enable-rounded == true {
+    --quarto-border-radius: #{$border-radius};
+  }
+}
+
+/* rules to support GT table styling */
+table.gt_table {
+  color: var(--quarto-body-color);
+  font-size: 1em;
+  width: 100%; // to match other table styling
+  background-color: transparent;
+  border-top-width: inherit;
+  border-bottom-width: inherit;
+  border-color: var(--quarto-border-color);
+}
+
+table.gt_table th.gt_column_spanner_outer {
+  color: var(--quarto-body-color);
+  background-color: transparent;
+  border-top-width: inherit;
+  border-bottom-width: inherit;
+  border-color: var(--quarto-border-color);
+}
+
+table.gt_table th.gt_col_heading {
+  color: var(--quarto-body-color);
+  font-weight: bold;
+  background-color: transparent;
+}
+
+table.gt_table thead.gt_col_headings {
+  border-bottom: 1px solid currentColor;
+  border-top-width: inherit;
+  border-top-color: var(--quarto-border-color);
+}
+
+table.gt_table thead.gt_col_headings:not(:first-child) {
+  border-top-width: 1px;
+  border-top-color: var(--quarto-border-color);
+}
+
+table.gt_table td.gt_row {
+  border-bottom-width: 1px;
+  border-bottom-color: var(--quarto-border-color);
+  border-top-width: 0px;
+}
+
+table.gt_table tbody.gt_table_body {
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+  border-bottom-color: var(--quarto-border-color);
+  border-top-color: currentColor;
+}
+
+/* restore previous pandoc columns behavior 
+   (too many reports of slide layout breaking)
+   see https://github.com/jgm/pandoc/pull/8237
+*/
+div.columns {
+  display: initial;
+  gap: initial;
+}
+div.column {
+  display: inline-block;
+  overflow-x: initial;
+  vertical-align: top;
+  width: 50%;
+}
+
+// Code Annotation LayoutBoot
+.code-annotation-tip-content {
+  word-wrap: break-word;
+}
+
+.code-annotation-container-hidden {
+  display: none !important;
+}
+
+dl.code-annotation-container-grid {
+  display: grid;
+  grid-template-columns: min-content auto;
+  dt {
+    grid-column: 1;
+  }
+  dd {
+    grid-column: 2;
+  }
+}
+
+pre.sourceCode.code-annotation-code {
+  padding-right: 0;
+}
+
+code.sourceCode .code-annotation-anchor {
+  z-index: 100;
+  position: relative;
+  float: right;
+  background-color: transparent;
+}
+
+// Add a bit of margin to the right of a checkbox
+// https://github.com/quarto-dev/quarto-cli/issues/6627
+input[type="checkbox"] {
+  margin-right: 0.5ch;
+}
+
+// Mermaid Theming
+// if none come from theme, we need these
+$body-color: #222 !default;
+$body-bg: #fff !default;
+$primary: #468 !default;
+$secondary: #999 !default;
+$font-family-sans-serif: sans-serif !default;
+$font-weight-base: 400 !default;
+
+/* SCSS variables
+
+   These are documented in quarto-cli/quarto-web:docs/authoring/_mermaid-theming.qmd
+
+   Make sure to update the docs if you change these.
+*/
+$mermaid-bg-color: $body-bg !default;
+$mermaid-edge-color: $secondary !default;
+$mermaid-node-fg-color: $body-color !default;
+$mermaid-fg-color: $body-color !default;
+$mermaid-fg-color--lighter: lighten($body-color, 10%) !default;
+$mermaid-fg-color--lightest: lighten($body-color, 20%) !default;
+$mermaid-font-family: $font-family-sans-serif !default;
+$mermaid-font-weight: $font-weight-base !default;
+$mermaid-label-bg-color: $body-bg !default;
+$mermaid-label-fg-color: $primary !default;
+$mermaid-node-bg-color: rgba($primary, 0.1) !default;
+$mermaid-node-fg-color: $primary !default;
+
+/* CSS variables */
+:root {
+  --mermaid-bg-color: #{$mermaid-bg-color};
+  --mermaid-edge-color: #{$mermaid-edge-color};
+  --mermaid-node-fg-color: #{$mermaid-node-fg-color};
+  --mermaid-fg-color: #{$mermaid-fg-color};
+  --mermaid-fg-color--lighter: #{$mermaid-fg-color--lighter};
+  --mermaid-fg-color--lightest: #{$mermaid-fg-color--lightest};
+  --mermaid-font-family: #{$mermaid-font-family};
+  --mermaid-label-bg-color: #{$mermaid-label-bg-color};
+  --mermaid-label-fg-color: #{$mermaid-label-fg-color};
+  --mermaid-node-bg-color: #{$mermaid-node-bg-color};
+  --mermaid-node-fg-color: #{$mermaid-node-fg-color};
+}
+
+@media print {
+  :root {
+    font-size: 11pt;
+  }
+  #quarto-sidebar,
+  #TOC,
+  .nav-page {
+    display: none;
+  }
+  .page-columns .content {
+    grid-column-start: page-start;
+  }
+  .fixed-top {
+    position: relative;
+  }
+  .panel-caption,
+  .figure-caption,
+  figcaption {
+    color: #666;
+  }
+}
+
+// light and dark content
+
+body.quarto-light .dark-content {
+  display: none !important;
+}
+
+body.quarto-dark .light-content {
+  display: none !important;
+}
+
+.code-copy-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: 0;
+  margin-top: 5px;
+  margin-right: 5px;
+  background-color: transparent;
+  z-index: 3;
+}
+
+.code-copy-button-tooltip {
+  font-size: 0.75em;
+}
+
+#{$code-copy-selector} .code-copy-button > .bi::before {
+  display: inline-block;
+  height: 1rem;
+  width: 1rem;
+  content: "";
+  vertical-align: -0.125em;
+  @if variable-exists(btn-code-copy-color) {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#{colorToRGB($btn-code-copy-color)}" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>');
+  } @else {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>');
+  }
+  background-repeat: no-repeat;
+  background-size: 1rem 1rem;
+}
+
+#{$code-copy-selector} .code-copy-button-checked > .bi::before {
+  @if variable-exists(btn-code-copy-color) {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#{colorToRGB($btn-code-copy-color)}" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>');
+  } @else {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>');
+  }
+}
+
+@if variable-exists(btn-code-copy-color-active) {
+  #{$code-copy-selector} .code-copy-button:hover > .bi::before {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#{colorToRGB($btn-code-copy-color-active)}" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>');
+  }
+  #{$code-copy-selector} .code-copy-button-checked:hover > .bi::before {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#{colorToRGB($btn-code-copy-color-active)}"  viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>');
+  }
+}
+
+$body-bg: #fff !default;
+$tabset-border-color: rgb(222, 226, 230) !default;
+
+.panel-tabset [role="tablist"] {
+  border-bottom: 1px solid $tabset-border-color;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.panel-tabset [role="tablist"] * {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+@media (min-width: 30em) {
+  .panel-tabset [role="tablist"] li {
+    display: inline-block;
+  }
+}
+
+.panel-tabset [role="tab"] {
+  border: 1px solid transparent;
+  border-top-color: $tabset-border-color;
+  display: block;
+  padding: 0.5em 1em;
+  text-decoration: none;
+}
+
+@media (min-width: 30em) {
+  .panel-tabset [role="tab"] {
+    border-top-color: transparent;
+    display: inline-block;
+    margin-bottom: -1px;
+  }
+}
+
+.panel-tabset [role="tab"][aria-selected="true"] {
+  background-color: $tabset-border-color;
+}
+
+@media (min-width: 30em) {
+  .panel-tabset [role="tab"][aria-selected="true"] {
+    background-color: transparent;
+    border: 1px solid $tabset-border-color;
+    border-bottom-color: $body-bg;
+  }
+}
+
+@media (min-width: 30em) {
+  .panel-tabset [role="tab"]:hover:not([aria-selected="true"]) {
+    border: 1px solid $tabset-border-color;
+  }
+}
+
+.code-with-filename .code-with-filename-file {
+  margin-bottom: 0;
+  padding-bottom: 2px;
+  padding-top: 2px;
+  padding-left: 0.7em;
+  border: var(--quarto-border-width) solid var(--quarto-border-color);
+  border-radius: var(--quarto-border-radius);
+  border-bottom: 0;
+  border-bottom-left-radius: 0%;
+  border-bottom-right-radius: 0%;
+}
+
+.code-with-filename div.sourceCode,
+.reveal .code-with-filename div.sourceCode {
+  margin-top: 0;
+  border-top-left-radius: 0%;
+  border-top-right-radius: 0%;
+}
+
+.code-with-filename .code-with-filename-file pre {
+  margin-bottom: 0;
+}
+
+.code-with-filename .code-with-filename-file {
+  background-color: rgba(219, 219, 219, 0.8);
+}
+
+.quarto-dark .code-with-filename .code-with-filename-file {
+  background-color: #555;
+}
+
+.code-with-filename .code-with-filename-file strong {
+  font-weight: 400;
+}
+
+
+.reveal.center .slide aside,
+.reveal.center .slide div.aside {
+  position: initial;
+}
+
+section.has-light-background {
+  &,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: $light-bg-text-color;
+  }
+  a,
+  a:hover {
+    color: $light-bg-link-color;
+  }
+  code {
+    color: $light-bg-code-color;
+  }
+}
+
+section.has-dark-background {
+  &,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: $dark-bg-text-color;
+  }
+  a,
+  a:hover {
+    color: $dark-bg-link-color;
+  }
+  code {
+    color: $dark-bg-code-color;
+  }
+}
+
+#title-slide,
+/* for when hash-type: number as identifier removed*/
+div.reveal div.slides section.quarto-title-block {
+  text-align: $presentation-title-slide-text-align;
+  .subtitle {
+    margin-bottom: 2.5rem;
+  }
+}
+
+.reveal .slides {
+  text-align: $reveal-slide-text-align;
+}
+
+.reveal .title-slide h1 {
+  font-size: $revealjs-h2-font-size;
+}
+
+.reveal[data-navigation-mode="linear"] .title-slide h1 {
+  font-size: $revealjs-h1-font-size;
+}
+
+.reveal div.sourceCode {
+  border: $border-width solid $code-block-border-color;
+  border-radius: $border-radius;
+}
+
+.reveal pre {
+  width: 100%;
+  box-shadow: none;
+  background-color: $code-block-bg;
+  border: none;
+  margin: 0;
+  font-size: $revealjs-code-block-font-size;
+  line-height: $code-block-line-height;
+  font-family: $font-family-monospace-block;
+
+  code {
+    background-color: $body-bg; // Insure we color output and code cell differently
+    font-size: inherit;
+    color: $code-block-color;
+    font-family: inherit;
+  }
+
+  &.sourceCode code {
+    color: $code-block-color;
+    font-size: inherit;
+    background-color: inherit;
+    white-space: pre;
+    font-family: inherit;
+    padding: 6px 9px;
+    max-height: $code-block-height;
+  }
+}
+
+// Inside code-file-name div, we want to use the same background color as decorated codeblock header
+// https://github.com/quarto-dev/quarto-cli/issues/9560
+.reveal .code-with-filename .code-with-filename-file pre {
+  background-color: unset;
+}
+
+.reveal code {
+  color: $code-color;
+  font-size: $revealjs-code-inline-font-size;
+  background-color: $code-bg;
+  white-space: pre-wrap;
+  font-family: $font-family-monospace-inline;
+}
+
+.reveal .column-output-location {
+  display: flex;
+  align-items: stretch;
+}
+
+.reveal .column-output-location .column:first-of-type div.sourceCode {
+  height: 100%;
+  background-color: $code-block-bg;
+}
+
+.reveal blockquote {
+  display: block;
+  position: relative;
+  color: $border-color;
+  width: unset;
+  margin: var(--r-block-margin) auto;
+  padding: 0.625rem 1.75rem;
+  border-left: 0.25rem solid $text-muted;
+  font-style: normal;
+  background: none;
+  box-shadow: none;
+}
+.reveal blockquote p:first-child,
+.reveal blockquote p:last-child {
+  display: block;
+}
+
+.reveal .slide aside,
+.reveal .slide div.aside {
+  position: absolute;
+  bottom: 20px;
+  font-size: #{$presentation-font-smaller}em;
+  color: $text-muted;
+}
+
+.reveal .slide sup {
+  font-size: #{$presentation-font-smaller}em;
+}
+
+.reveal .slide.scrollable aside,
+.reveal .slide.scrollable div.aside {
+  position: relative;
+  margin-top: 1em;
+}
+
+.reveal .slide aside .aside-footnotes {
+  margin-bottom: 0;
+}
+
+.reveal .slide aside .aside-footnotes li:first-of-type {
+  margin-top: 0;
+}
+
+$panel-sidebar-width: 270px;
+$panel-sidebar-padding: 0.5em;
+
+.reveal .layout-sidebar {
+  display: flex;
+  width: 100%;
+  margin-top: 0.8em;
+}
+
+.reveal .layout-sidebar .panel-sidebar {
+  width: $panel-sidebar-width;
+}
+
+.reveal .layout-sidebar-left .panel-sidebar {
+  margin-right: calc(#{$panel-sidebar-padding} * 2);
+}
+
+.reveal .layout-sidebar-right .panel-sidebar {
+  margin-left: calc(#{$panel-sidebar-padding} * 2);
+}
+
+.reveal .layout-sidebar .panel-fill,
+.reveal .layout-sidebar .panel-center,
+.reveal .layout-sidebar .panel-tabset {
+  flex: 1;
+}
+
+.reveal .panel-input,
+.reveal .panel-sidebar {
+  font-size: 0.5em;
+  padding: $panel-sidebar-padding;
+  border-style: solid;
+  border-color: $input-panel-border-color;
+  border-width: $input-panel-border-width;
+  border-radius: $input-panel-border-radius;
+  background-color: $input-panel-bg;
+}
+
+.reveal .panel-sidebar :first-child,
+.reveal .panel-fill :first-child {
+  margin-top: 0;
+}
+
+.reveal .panel-sidebar :last-child,
+.reveal .panel-fill :last-child {
+  margin-bottom: 0;
+}
+
+.panel-input > div,
+.panel-input > div > div {
+  vertical-align: middle;
+  padding-right: 1em;
+}
+
+.reveal p,
+.reveal .slides section,
+.reveal .slides section > section {
+  line-height: $revealjs-line-height;
+}
+
+// Smaller font size logic
+.reveal {
+  // When smaller is set globally
+  &.smaller {
+    .slides {
+      // We make the all slide font-size smaller by a factor of $presentation-font-smaller
+      section {
+        font-size: #{$presentation-font-smaller}em;
+
+        // avoid applying twice the reduction when using nested section
+        section {
+          font-size: inherit;
+        }
+      }
+
+      // But we don't want headers to change size and they are in em
+      h1 {
+        @include undo-smaller-font-size($revealjs-h1-font-size);
+      }
+      h2 {
+        @include undo-smaller-font-size($revealjs-h2-font-size);
+      }
+      h3 {
+        @include undo-smaller-font-size($revealjs-h3-font-size);
+      }
+    }
+  }
+
+  .slides section {
+    // when  smaller is set on slide
+    &.smaller {
+      font-size: #{$presentation-font-smaller}em;
+
+      // But we don't want headers to change size and they are in em
+      h1 {
+        @include undo-smaller-font-size($revealjs-h1-font-size);
+      }
+      h2 {
+        @include undo-smaller-font-size($revealjs-h2-font-size);
+      }
+      h3 {
+        @include undo-smaller-font-size($revealjs-h3-font-size);
+      }
+    }
+
+    // On callout we want to make the font-size smaller too
+    div.callout {
+      font-size: #{$presentation-font-smaller}em;
+
+      // But we don't want headers to change size and they are in em
+      h1 {
+        @include undo-smaller-font-size($revealjs-h1-font-size);
+      }
+      h2 {
+        @include undo-smaller-font-size($revealjs-h2-font-size);
+      }
+      h3 {
+        @include undo-smaller-font-size($revealjs-h3-font-size);
+      }
+    }
+  }
+}
+
+.reveal .columns > .column > :not(ul, ol) {
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+}
+
+.reveal .columns > .column:first-child > :not(ul, ol) {
+  margin-right: 0.5rem;
+  margin-left: 0;
+}
+.reveal .columns > .column:last-child > :not(ul, ol) {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+
+.reveal .slide-number {
+  color: $linkColorHover;
+  background-color: $body-bg;
+}
+
+.reveal .footer {
+  color: $text-muted;
+
+  a {
+    color: $linkColor;
+  }
+
+  &.has-dark-background {
+    color: quarto-color.scale($dark-bg-text-color, $whiteness: 30%);
+
+    a {
+      color: quarto-color.scale($dark-bg-link-color, $whiteness: 30%);
+    }
+  }
+
+  &.has-light-background {
+    color: quarto-color.scale($light-bg-text-color, $whiteness: 30%);
+
+    a {
+      color: quarto-color.scale($light-bg-link-color, $whiteness: 30%);
+    }
+  }
+}
+
+.reveal .slide-number {
+  color: $text-muted;
+
+  &.has-dark-background {
+    color: quarto-color.scale($dark-bg-text-color, $whiteness: 30%);
+  }
+
+  &.has-light-background {
+    color: quarto-color.scale($light-bg-text-color, $whiteness: 30%);
+  }
+}
+
+// handle caption for figures
+.reveal .slide {
+  figure > figcaption,
+  img.stretch + p.caption,
+  img.r-stretch + p.caption {
+    font-size: #{$presentation-font-smaller}em;
+  }
+}
+
+@media screen and (min-width: 500px) {
+  $arrow-spacing: 0.2em;
+  $control-arrow-spacing: 1.4em;
+
+  .reveal .controls[data-controls-layout="edges"] .navigate-left {
+    left: $arrow-spacing;
+  }
+
+  .reveal .controls[data-controls-layout="edges"] .navigate-right {
+    right: $arrow-spacing;
+  }
+
+  .reveal .controls[data-controls-layout="edges"] .navigate-up {
+    top: $arrow-spacing * 2;
+  }
+
+  .reveal .controls[data-controls-layout="edges"] .navigate-down {
+    bottom: $arrow-spacing - $control-arrow-spacing + 3.5em;
+  }
+}
+
+.tippy-box[data-theme~="light-border"] {
+  background-color: $backgroundColor;
+  color: $mainColor;
+  border-radius: $border-radius;
+  border: solid $border-width $border-color;
+  font-size: 0.6em;
+}
+
+.tippy-box[data-theme~="light-border"] .tippy-arrow {
+  color: $border-color;
+}
+
+.tippy-box[data-placement^="bottom"] > .tippy-content {
+  padding: 7px 10px;
+  z-index: 1;
+}
+
+.reveal .panel-tabset [role="tab"] {
+  padding: 0.25em 0.7em;
+}
+
+.reveal .slide-menu-button .fa-bars::before {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#{colorToRGB($linkColor)}" class="bi bi-list" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/></svg>');
+}
+
+.reveal .slide-chalkboard-buttons .fa-easel2::before {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#{colorToRGB($linkColor)}" class="bi bi-easel2" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 0a.5.5 0 0 1 .447.276L8.81 1h4.69A1.5 1.5 0 0 1 15 2.5V11h.5a.5.5 0 0 1 0 1h-2.86l.845 3.379a.5.5 0 0 1-.97.242L12.11 14H3.89l-.405 1.621a.5.5 0 0 1-.97-.242L3.36 12H.5a.5.5 0 0 1 0-1H1V2.5A1.5 1.5 0 0 1 2.5 1h4.691l.362-.724A.5.5 0 0 1 8 0ZM2 11h12V2.5a.5.5 0 0 0-.5-.5h-11a.5.5 0 0 0-.5.5V11Zm9.61 1H4.39l-.25 1h7.72l-.25-1Z"/></svg>');
+}
+
+.reveal .slide-chalkboard-buttons .fa-brush::before {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#{colorToRGB($linkColor)}" class="bi bi-brush" viewBox="0 0 16 16"><path d="M15.825.12a.5.5 0 0 1 .132.584c-1.53 3.43-4.743 8.17-7.095 10.64a6.067 6.067 0 0 1-2.373 1.534c-.018.227-.06.538-.16.868-.201.659-.667 1.479-1.708 1.74a8.118 8.118 0 0 1-3.078.132 3.659 3.659 0 0 1-.562-.135 1.382 1.382 0 0 1-.466-.247.714.714 0 0 1-.204-.288.622.622 0 0 1 .004-.443c.095-.245.316-.38.461-.452.394-.197.625-.453.867-.826.095-.144.184-.297.287-.472l.117-.198c.151-.255.326-.54.546-.848.528-.739 1.201-.925 1.746-.896.126.007.243.025.348.048.062-.172.142-.38.238-.608.261-.619.658-1.419 1.187-2.069 2.176-2.67 6.18-6.206 9.117-8.104a.5.5 0 0 1 .596.04zM4.705 11.912a1.23 1.23 0 0 0-.419-.1c-.246-.013-.573.05-.879.479-.197.275-.355.532-.5.777l-.105.177c-.106.181-.213.362-.32.528a3.39 3.39 0 0 1-.76.861c.69.112 1.736.111 2.657-.12.559-.139.843-.569.993-1.06a3.122 3.122 0 0 0 .126-.75l-.793-.792zm1.44.026c.12-.04.277-.1.458-.183a5.068 5.068 0 0 0 1.535-1.1c1.9-1.996 4.412-5.57 6.052-8.631-2.59 1.927-5.566 4.66-7.302 6.792-.442.543-.795 1.243-1.042 1.826-.121.288-.214.54-.275.72v.001l.575.575zm-4.973 3.04.007-.005a.031.031 0 0 1-.007.004zm3.582-3.043.002.001h-.002z"/></svg>');
+}
+
+// This is a sentinel value that renderers can use to determine
+// whether the theme is dark or light
+@if (
+  quarto-color.blackness($backgroundColor) > $code-block-theme-dark-threshhold
+) {
+  /*! dark */
+} @else {
+  /*! light */
+}
+
+/* override theme.scss style for the default styles
+ 
+  Note the need for both the case sensitive flag and the
+  case-oblivious selectors. This is a workaround for what's
+  apparently a Chrome and Safari bug:
+
+  https://github.com/quarto-dev/quarto-cli/issues/1902#issuecomment-1219783059
+ */
+
+.reveal ol[type="a"] {
+  list-style-type: lower-alpha;
+}
+
+.reveal ol[type="a" s] {
+  list-style-type: lower-alpha;
+}
+
+.reveal ol[type="A" s] {
+  list-style-type: upper-alpha;
+}
+
+.reveal ol[type="i"] {
+  list-style-type: lower-roman;
+}
+
+.reveal ol[type="i" s] {
+  list-style-type: lower-roman;
+}
+
+.reveal ol[type="I" s] {
+  list-style-type: upper-roman;
+}
+
+.reveal ol[type="1"] {
+  list-style-type: decimal;
+}
+
+// https://github.com/quarto-dev/quarto-cli/issues/2834
+// temporary workaround while we come up with a pure CSS solution
+
+.reveal ul.task-list {
+  list-style: none;
+}
+.reveal ul.task-list li input[type="checkbox"] {
+  width: 2em;
+  height: 2em;
+  margin: 0 1em 0.5em -1.6em;
+  vertical-align: middle;
+}
+
+// https://github.com/quarto-dev/quarto-cli/issues/3380
+
+div.cell-output-display div.pagedtable-wrapper table.table {
+  font-size: 0.6em;
+}
+
+.reveal .code-annotation-container-hidden {
+  display: none;
+}
+
+.reveal code.sourceCode button.code-annotation-anchor,
+.reveal code.sourceCode .code-annotation-anchor {
+  font-family: $font-family-monospace;
+  color: var(--quarto-hl-co-color);
+  border: solid var(--quarto-hl-co-color) 1px;
+  border-radius: 50%;
+  font-size: 0.7em;
+  line-height: 1.2em;
+  margin-top: 2px;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+}
+
+.reveal code.sourceCode button.code-annotation-anchor {
+  cursor: pointer;
+}
+
+.reveal code.sourceCode a.code-annotation-anchor {
+  text-align: center;
+  vertical-align: middle;
+  text-decoration: none;
+  cursor: default;
+  height: 1.2em;
+  width: 1.2em;
+}
+
+.reveal code.sourceCode.fragment a.code-annotation-anchor {
+  left: auto;
+}
+
+.reveal #code-annotation-line-highlight-gutter {
+  width: 100%;
+  border-top: solid var(--quarto-hl-co-color) 1px;
+  border-bottom: solid var(--quarto-hl-co-color) 1px;
+  z-index: 2;
+}
+
+.reveal #code-annotation-line-highlight {
+  margin-left: -8em;
+  width: calc(100% + 4em);
+  border-top: solid var(--quarto-hl-co-color) 1px;
+  border-bottom: solid var(--quarto-hl-co-color) 1px;
+  z-index: 2;
+  margin-bottom: -2px;
+}
+
+.reveal code.sourceCode .code-annotation-anchor.code-annotation-active {
+  background-color: var(--quarto-hl-normal-color, #aaaaaa);
+  border: solid var(--quarto-hl-normal-color, #aaaaaa) 1px;
+  color: rgb(red($code-block-bg), green($code-block-bg), blue($code-block-bg));
+  font-weight: bolder;
+}
+
+.reveal pre.code-annotation-code {
+  padding-top: 0;
+  padding-bottom: 0;
+  code {
+    z-index: 3;
+    padding-left: 0px;
+  }
+}
+
+.reveal dl.code-annotation-container-grid {
+  margin-left: 0.1em;
+  dt {
+    margin-top: 0.65rem;
+    font-family: $font-family-monospace;
+    border: solid $body-color 1px;
+    border-radius: 50%;
+    height: 1.3em;
+    width: 1.3em;
+    line-height: 1.3em;
+    font-size: 0.5em;
+    text-align: center;
+    vertical-align: middle;
+
+    text-decoration: none;
+  }
+
+  dd {
+    margin-left: 0.25em;
+  }
+}
+
+/*
+
+  https://github.com/quarto-dev/quarto-cli/issues/4283
+
+  The trick itself is from here:
+
+  https://stackoverflow.com/questions/8720931/can-css-detect-the-number-of-children-an-element-has
+
+*/
+
+.reveal .scrollable ol li:first-child:nth-last-child(n + 10),
+.reveal .scrollable ol li:first-child:nth-last-child(n + 10) ~ li {
+  margin-left: 1em;
+}
+
+/* kbd rules */
+
+kbd {
+  font-family: $font-family-monospace;
+  font-size: $kbd-font-size;
+  color: $kbd-color;
+  @include shift_to_dark(
+    "background-color",
+    shift-color($kbd-bg, 70%),
+    $kbd-bg
+  );
+  border: 1px solid;
+  border-color: $code-block-border-color;
+  border-radius: 5px;
+  padding: $kbd-padding-y $kbd-padding-x;
+}
+
+:root {
+  --r-inline-code-font: #{$font-family-monospace-inline};
+  --r-block-code-font: #{$font-family-monospace-block};
+  --r-inline-code-font-size: #{$revealjs-code-inline-font-size};
+  --r-block-code-font-size: #{$revealjs-code-block-font-size};
+}
+
+// _brand.yml rules
+
+.reveal a {
+  font-weight: $link-weight;
+  background-color: $link-color-bg;
+  text-decoration: $link-decoration;
+}
+
+/* Callout styles */
+
+.reveal div.callout {
+  margin-top: $callout-margin-top;
+  margin-bottom: $callout-margin-bottom;
+  border-radius: $border-radius;
+  overflow-wrap: break-word;
+
+  // Rules for both styles
+  &.callout-style-simple,
+  &.callout-style-default {
+    border-left: $callout-border-width solid #acacac;
+    border-right: solid 1px $table-border-color;
+    border-top: solid 1px $table-border-color;
+    border-bottom: solid 1px $table-border-color;
+
+    div {
+      &.callout-body,
+      &.callout-title {
+        // Font size is inherited from the parent div.callout
+        // which is scaled down like .smaller
+        font-size: inherit;
+        border-bottom: none;
+        font-weight: 600;
+      }
+
+      &.callout-title {
+        display: flex;
+        align-items: center;
+
+        p {
+          margin-top: 0.5em;
+          margin-bottom: 0.5em;
+          color: var(--r-main-color);
+        }
+      }
+    }
+
+    .callout-icon::before {
+      height: 1.25em;
+      width: 1.25em;
+      background-size: 1.25em 1.25em;
+    }
+
+    &.callout-titled {
+      .callout-body {
+        > .callout-content {
+          > :last-child {
+            margin-bottom: var(--r-block-margin);
+          }
+          > :last-child:not(div.sourceCode) {
+            padding-bottom: 0.5rem;
+            margin-bottom: 0;
+          }
+        }
+      }
+      .callout-icon::before {
+        margin-top: 0.25em;
+        padding-right: 0.25em;
+      }
+    }
+
+    &.no-icon::before {
+      display: none !important;
+    }
+  }
+
+  // Apply only to simple callout style which could have
+  // - a title or not
+  // - an icon or not
+  &.callout-style-simple {
+    padding: 0em 0.5em;
+    display: flex;
+
+    &.callout-titled {
+      .callout-body {
+        margin-top: 0.2em;
+      }
+      &:not(.no-icon) {
+        .callout-content {
+          padding-left: 1.6em;
+        }
+      }
+      .callout-content {
+        p {
+          margin-top: 0;
+        }
+      }
+    }
+
+    &:not(.callout-titled) {
+      .callout-body {
+        display: flex;
+      }
+      .callout-icon::before {
+        margin-top: var(--r-block-margin);
+        padding-right: 0.5em;
+      }
+      .callout-body {
+        > .callout-content {
+          // Margin needs to be added when last child is div.sourceCode
+          // Other code cell border is mixed with callout border
+          > div.sourceCode:last-child {
+            margin-bottom: 1rem;
+          }
+          > :first-child {
+            margin-top: var(--r-block-margin);
+          }
+        }
+      }
+    }
+
+    .callout-icon::before {
+      display: inline-block;
+      content: "";
+      background-repeat: no-repeat;
+    }
+
+    div {
+      &.callout-title {
+        opacity: 75%;
+      }
+      &.callout-body {
+        font-weight: 400;
+      }
+    }
+  }
+
+  // Apply only to default callout style which could have
+  // - a title (can't have no title)
+  // - an icon or not
+  &.callout-style-default {
+    &.callout-titled {
+      .callout-content {
+        p {
+          margin-top: 0.7em;
+        }
+      }
+    }
+
+    .callout-icon::before {
+      display: inline-block;
+      content: "";
+      background-repeat: no-repeat;
+    }
+
+    div {
+      &.callout-body {
+        font-weight: 400;
+      }
+      &.callout-title {
+        opacity: 85%;
+        padding-left: 0.5em;
+        padding-right: 0.5em;
+      }
+      &.callout-content {
+        padding-left: 0.5em;
+        padding-right: 0.5em;
+      }
+    }
+  }
+
+  // FIXME: There is no body-container in revealjs so remove but before find what it was suppose to do
+  .callout-body-container {
+    flex-grow: 1;
+  }
+}
+
+/* Callout Types */
+
+// Generate per callout type css to customize their appearance
+// Define the callouts for which we should define styles
+$callouts: (
+  // NOTE
+  "note":
+    (
+      "color": $callout-color-note,
+      "icon":
+        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>',
+    ),
+  // TIP
+  "tip":
+    (
+      "color": $callout-color-tip,
+      "icon":
+        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lightbulb" viewBox="0 0 16 16"><path d="M2 6a6 6 0 1 1 10.174 4.31c-.203.196-.359.4-.453.619l-.762 1.769A.5.5 0 0 1 10.5 13a.5.5 0 0 1 0 1 .5.5 0 0 1 0 1l-.224.447a1 1 0 0 1-.894.553H6.618a1 1 0 0 1-.894-.553L5.5 15a.5.5 0 0 1 0-1 .5.5 0 0 1 0-1 .5.5 0 0 1-.46-.302l-.761-1.77a1.964 1.964 0 0 0-.453-.618A5.984 5.984 0 0 1 2 6zm6-5a5 5 0 0 0-3.479 8.592c.263.254.514.564.676.941L5.83 12h4.342l.632-1.467c.162-.377.413-.687.676-.941A5 5 0 0 0 8 1z"/></svg>',
+    ),
+  // WARNING
+  "warning":
+    (
+      "color": $callout-color-warning,
+      "icon":
+        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16"><path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566z"/><path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z"/></svg>',
+    ),
+  // CAUTION
+  "caution":
+    (
+      "color": $callout-color-caution,
+      "icon":
+        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cone-striped" viewBox="0 0 16 16"><path d="M9.97 4.88l.953 3.811C10.158 8.878 9.14 9 8 9c-1.14 0-2.159-.122-2.923-.309L6.03 4.88C6.635 4.957 7.3 5 8 5s1.365-.043 1.97-.12zm-.245-.978L8.97.88C8.718-.13 7.282-.13 7.03.88L6.274 3.9C6.8 3.965 7.382 4 8 4c.618 0 1.2-.036 1.725-.098zm4.396 8.613a.5.5 0 0 1 .037.96l-6 2a.5.5 0 0 1-.316 0l-6-2a.5.5 0 0 1 .037-.96l2.391-.598.565-2.257c.862.212 1.964.339 3.165.339s2.303-.127 3.165-.339l.565 2.257 2.391.598z"/></svg>',
+    ),
+  // IMPORTANT
+  "important":
+    (
+      "color": $callout-color-important,
+      "icon":
+        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-circle" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/></svg>',
+    )
+);
+
+@each $name, $info in $callouts {
+  $shifted-color: #{shift-color(
+      quarto-map.get($info, "color"),
+      $callout-icon-scale
+    )};
+  $shifted-color-svg: str-replace($shifted-color, "#", "%23");
+
+  .reveal div.callout {
+    &.callout-#{$name} {
+      border-left-color: shift-color(
+        quarto-map.get($info, "color"),
+        $callout-border-scale
+      );
+      &.callout-style-default {
+        .callout-title {
+          @include shift_to_dark(
+            "background-color",
+            shift-color(quarto-map.get($info, "color"), 70%),
+            shift-color(quarto-map.get($info, "color"), -90%)
+          );
+        }
+      }
+      .callout-icon::before {
+        background-image: #{"url('data:image/svg+xml," +
+          str-replace(
+            quarto-map.get($info, "icon"),
+            'fill="currentColor"',
+            'style="fill: #{$shifted-color-svg}"'
+          ) +
+          "');"};
+      }
+    }
+  }
+}
+
+
+// quarto-scss-analysis-annotation { "origin": "'rules' section from user-defined SCSS" }
+
+$presentation-author-block-padding-left: if(
+  $presentation-title-slide-text-align != left,
+  0.5em,
+  0
+);
+$presentation-author-block-padding-right: if(
+  $presentation-title-slide-text-align != right,
+  0.5em,
+  0
+);
+
+.reveal {
+  .quarto-title-block {
+    .quarto-title-authors {
+      display: flex;
+      justify-content: $presentation-title-slide-text-align;
+
+      .quarto-title-author {
+        padding-left: $presentation-author-block-padding-left;
+        padding-right: $presentation-author-block-padding-right;
+
+        a,
+        a:hover,
+        a:visited,
+        a:active {
+          color: inherit;
+          text-decoration: none;
+        }
+
+        .quarto-title-author-name {
+          margin-bottom: 0.1rem;
+        }
+
+        .quarto-title-author-email {
+          margin-top: 0px;
+          margin-bottom: 0.4em;
+          font-size: 0.6em;
+        }
+
+        .quarto-title-author-orcid {
+          img {
+            margin-bottom: 4px;
+          }
+        }
+
+        .quarto-title-affiliation {
+          font-size: 0.7em;
+          margin-top: 0px;
+          margin-bottom: 8px;
+        }
+
+        .quarto-title-affiliation:first {
+          margin-top: 12px;
+        }
+      }
+    }
+  }
+}
+
+
+:root {
+  --bg: #FFFFFF;
+  --bg-elev: #FFFFFF;
+  --bg-soft: #F6F8FA;       // GitHub-docs grey for code/output panels
+  --ink: #3E3F3A;
+  --ink-soft: #6E7681;
+  --ink-dim: #B0B7C0;
+  --accent-1: #325D88;      // navy — primary
+  --accent-1-deep: #2A4E72;
+  --accent-2: #93C54B;      // olive — success / output
+  --accent-3: #F47C3C;      // orange — warn / attention
+  --accent-4: #B94A48;      // brick — logical/factor tokens
+  --rule: #E5E7EB;
+  --rule-soft: #F0F2F5;
+}
+
+// Global reveal tuning
+.reveal {
+  letter-spacing: -0.005em;
+  font-weight: 400;
+}
+.reveal h1, .reveal h2, .reveal h3 {
+  letter-spacing: -0.018em;
+  font-weight: 700;
+}
+
+// Slide title underline — accent bar
+.reveal section > h2::after {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 3px;
+  margin-top: 0.55em;
+  background: var(--accent-1);
+  border-radius: 2px;
+}
+// Inline code inside a slide title (e.g. `library()` on the R-scripts slide)
+// otherwise carries vertical padding from `.reveal :not(pre) > code`, which
+// bumps the line box taller and drops the ::after underline a few pixels lower
+// than titles without inline code. Zero the vertical padding and pin the line
+// height so the underline lands at the same offset for every h2.
+.reveal section > h2 > code,
+.reveal section > h2 code {
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 1;
+  vertical-align: baseline;
+}
+
+// Section badge — small uppercase label above a title
+.section-badge {
+  font-size: 0.42em;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+  font-weight: 600;
+  margin-bottom: 0.5em;
+}
+
+// Hero slide — full-bleed cream, oversized title, muted framing.
+// Flex-column-center fills the vertical space so short hero content
+// doesn't leave the bottom two-thirds of the slide empty.
+.reveal section.hero {
+  background: var(--bg);
+  min-height: 100%;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+.reveal section.hero > * {
+  text-align: left;
+  width: 100%;
+}
+.reveal section.hero h1 {
+  font-size: 2.4em;
+  color: var(--ink);
+  margin-top: 0.15em;
+  margin-bottom: 0;
+  line-height: 1.05;
+}
+.reveal section.hero h1::after {
+  content: "";
+  display: block;
+  width: 56px;
+  height: 3px;
+  background: var(--accent-1);
+  margin-top: 0.5em;
+  border-radius: 2px;
+}
+.reveal section.hero .section-badge {
+  color: var(--accent-1);
+  font-size: 0.4em;
+  margin-bottom: 0.1em;
+}
+// Hero tagline: the bare paragraph that sits between .section-badge and
+// .lede in every module hero. Without dedicated styling it renders as an
+// orphan body <p> that looks like a duplicate heading. Give it a proper
+// subtitle voice — Roboto medium, prominent but clearly not another H2.
+.reveal section.hero > p {
+  font-size: 1.15em;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin: 0.45em 0 0.1em 0;
+  max-width: 78%;
+}
+.reveal section.hero .lede {
+  font-style: italic;
+  color: var(--ink-soft);
+  margin-top: 0.7em;
+  max-width: 78%;
+}
+
+// Code blocks — soft grey inset panel, navy left ledger (code = "input")
+.reveal pre {
+  background: var(--bg-soft);
+  border: none;
+  border-left: 3px solid var(--accent-1);
+  border-radius: 0 4px 4px 0;
+  padding: 0.5em 0.9em;
+  box-shadow: none;
+  margin: 0.4em 0;
+  overflow: visible;
+}
+.reveal code {
+  font-family: $font-family-monospace;
+  font-size: 0.78em;
+  line-height: 1.55;
+}
+.reveal pre code {
+  padding: 0;
+  color: var(--ink);
+  background: transparent;
+}
+// Kill Quarto's outer sourceCode div wrapper (scope to div so it doesn't
+// clobber the <pre class="sourceCode"> background)
+.reveal div.sourceCode {
+  background: transparent;
+  border: none;
+}
+// Force soft grey on any pre that carries .sourceCode
+.reveal pre.sourceCode {
+  background: var(--bg-soft);
+}
+// Ensure code + output wrappers stretch full-width so widths line up
+.reveal .code-copy-outer-scaffold,
+.reveal .cell,
+.reveal .cell > .cell-output,
+.reveal div.sourceCode.cell-code {
+  display: block;
+  width: 100%;
+  padding-right: 0;
+  margin-right: 0;
+}
+
+// Force code + output <pre> to identical width — override Reveal default (90%)
+.reveal pre.sourceCode,
+.reveal .cell-output pre,
+.reveal .cell-output-stdout pre,
+.reveal .cell-output-display pre {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  box-sizing: border-box;
+}
+
+// Kill Quarto's copy button — visual noise on projected slides
+.reveal .code-copy-button,
+.reveal .code-copy-outer-scaffold > button {
+  display: none !important;
+}
+
+// Kill line numbers from executed chunks
+.reveal pre.numberSource code > span > a[href=""] {
+  display: none;
+}
+.reveal pre.numberSource {
+  padding-left: 0.75em;
+}
+.reveal pre.numberSource code > span {
+  padding-left: 0 !important;
+  border-left: none !important;
+}
+
+// Executed-chunk wrapper: strip extra padding so it matches static ```r blocks
+.reveal .cell {
+  margin: 0.4em 0;
+}
+.reveal .cell .sourceCode {
+  margin: 0;
+}
+
+// R output blocks — same panel style as code, olive left border
+.reveal .cell-output {
+  margin-top: 0.1em;
+}
+.reveal .cell-output pre,
+.reveal .cell-output-stdout pre,
+.reveal .cell-output-display pre {
+  background: var(--bg-soft);
+  border: none;
+  border-left: 3px solid var(--accent-2);
+  border-radius: 0 4px 4px 0;
+  color: var(--ink);
+  box-shadow: none;
+  padding: 0.5em 0.9em;
+  margin: 0.2em 0 0.4em 0;
+}
+
+// Inline code — thin outline, palette-consistent
+.reveal :not(pre) > code {
+  background: var(--bg-soft);
+  color: var(--accent-1);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.82em;
+}
+
+// Progress bar — accent color
+.reveal .progress {
+  color: var(--accent-1);
+  height: 4px;
+}
+.reveal .progress span {
+  background: var(--accent-1);
+}
+
+// Reveal.js navigation arrows — match the palette
+.reveal .controls {
+  color: var(--accent-1);
+  opacity: 0.75;
+}
+.reveal .controls:hover {
+  opacity: 1;
+}
+.reveal .controls button.enabled {
+  color: var(--accent-1);
+}
+.reveal .controls button.enabled:hover {
+  color: var(--accent-1-deep);
+}
+.reveal .controls button.enabled.fragmented {
+  color: var(--accent-1);
+}
+
+// Slide number chrome — quiet
+.reveal .slide-number {
+  color: var(--ink-dim);
+  background: transparent;
+  font-family: $font-family-monospace;
+  font-size: 0.55em;
+  letter-spacing: 0.06em;
+}
+
+// ---- Ordered + unordered lists: symmetric, roomier vertical rhythm ----
+// Reveal's theme sets `.reveal ol/ul { display: inline-block }`, which anchors
+// the list to the surrounding line's baseline and yields asymmetric space
+// above vs. below. Force a proper block with a slightly larger top/bottom
+// margin so paragraphs collapse symmetrically around the list.
+.reveal section ol,
+.reveal section ul {
+  display: block;
+  margin: 0.6em 0 1.6em 1em;
+}
+
+// Tables share the same vertical rhythm as lists so a mixed slide
+// (paragraph → list → table → paragraph) reads with consistent spacing.
+.reveal section table {
+  margin: 0.6em auto 1.6em auto;
+}
+
+// Slide 15 (Dimensionality & homogeneity) — the table sits inside a <li>,
+// so the neighbouring bullet's tight flow makes the top and bottom gaps
+// feel cramped. Give this specific table extra room above and below.
+.reveal section#dimensionality-homogeneity li table {
+  margin: 1.2em auto 1.2em auto;
+}
+
+// ---- Slide 15: styled dimensionality/homogeneity grid ----
+.reveal section .dh-intro {
+  max-width: 640px;
+  margin: 0.4em 0 0.8em;   // left-anchored (was auto/center)
+  font-size: 0.72em;
+  color: var(--ink);
+  line-height: 1.5;
+  text-align: left;
+}
+.dh-grid {
+  display: grid;
+  grid-template-columns: 68px 1fr 1fr;
+  grid-template-rows: auto repeat(3, 1fr);
+  gap: 8px 12px;
+  max-width: 560px;         // smaller table per user request
+  margin: 0 auto;
+  font-family: $font-family-sans-serif;
+}
+.dh-corner {}
+.dh-col-head {
+  padding: 7px 10px;
+  font-size: 0.34em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.dh-col-head.dh-homo   { background: rgba(147, 197, 75, 0.16); color: #4E6B33; }
+.dh-col-head.dh-hetero { background: rgba(50, 93, 136, 0.14); color: #2A4E72; }
+.dh-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.dh-homo-dot   { background: #93C54B; }
+.dh-hetero-dot { background: #325D88; }
+.dh-row-head {
+  align-self: center;
+  justify-self: end;
+  padding-right: 4px;
+  font-weight: 700;
+  color: var(--accent-1);
+  font-size: 0.72em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.dh-row-head-d { font-weight: 400; color: var(--ink-soft); font-size: 0.82em; margin-left: 1px; }
+.dh-cell {
+  padding: 10px 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  font-weight: 600;
+  text-align: center;
+  font-size: 0.55em;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+}
+.dh-cell.dh-homo   { border-left: 3px solid #93C54B; }
+.dh-cell.dh-hetero { border-left: 3px solid #325D88; }
+.dh-cell.dh-empty {
+  color: var(--ink-dim);
+  font-size: 1.1em;
+  font-weight: 300;
+  background: transparent;
+  border-style: dashed;
+  border-left-style: dashed;
+  border-left-color: var(--rule);
+}
+// Styled after Quarto's `::: {.callout-note}` blocks: light navy tint,
+// accent-1 left border, circular info-icon marker at the left.
+.reveal section .dh-note {
+  margin: 1.8em 0 0.4em;    // extra top gap so the note detaches cleanly from the block above it
+  padding: 10px 14px 10px 44px;
+  background: rgba(50, 93, 136, 0.07);
+  border: 1px solid rgba(50, 93, 136, 0.18);
+  border-left: 4px solid var(--accent-1);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.6em;
+  color: var(--ink);
+  line-height: 1.55;
+  font-style: normal;
+  position: relative;
+}
+.reveal section .dh-note::before {
+  content: "i";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);   // vertically centre the icon in the note
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: 0.85em;
+  line-height: 1;
+}
+.reveal section .dh-note p { margin: 0; }
+.reveal section .dh-note p + p { margin-top: 0.3em; }
+.reveal section .dh-note strong { color: var(--accent-1); }
+
+// ---- Slide 16: type-card two-column layout (Vectors & lists) ----
+.type-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 26px;
+  max-width: 100%;
+  margin-top: 0.4em;
+}
+.type-card {
+  padding: 16px 20px 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(20, 28, 45, 0.03);
+  overflow: hidden;         // still clip horizontal escape
+  min-width: 0;
+  box-sizing: border-box;
+}
+// Inner qwebr containers — keep them from pushing the card wider, but do NOT
+// cap heights: the compact stdout line-height (below) makes the list output
+// short enough to display in full without a scrollbar.
+.type-card .qwebr-editor,
+.type-card div.sourceCode,
+.type-card .qwebr-output-code-area,
+.type-card .qwebr-output-graph-area,
+.type-card pre {
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+.type-card .qwebr-editor { font-size: 0.85em; }
+
+// ---- Slide 17: Equivalent verbs comparison ----
+.reveal section .verb-intro {
+  font-size: 0.72em;
+  color: var(--ink);
+  margin: 0.2em 0 0.7em;
+  line-height: 1.45;
+}
+.verb-table {
+  margin: 0 auto 0.8em;
+  max-width: 760px;             // caps overall footprint so the table doesn't fill the whole slide
+}
+.verb-table table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.48em;            // aggressive shrink — was 0.6 originally
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.verb-table thead th {
+  background: var(--bg-soft);
+  color: var(--accent-1);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85em;
+  padding: 5px 9px;
+  text-align: left;
+  border-bottom: 2px solid var(--accent-1);
+}
+.verb-table thead th:nth-child(2) { background: rgba(147, 197, 75, 0.16); color: #4E6B33; }
+.verb-table thead th:nth-child(3) { background: rgba(50, 93, 136, 0.14);  color: #2A4E72; }
+.verb-table thead th:nth-child(4) { background: rgba(85, 122, 62, 0.16);  color: #3E5B2C; }
+.verb-table tbody tr:nth-child(even) td { background: var(--bg-soft); }
+.verb-table tbody td {
+  padding: 4px 9px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: middle;
+  line-height: 1.35;
+}
+.verb-table tbody tr:last-child td { border-bottom: none; }
+.verb-table tbody td:first-child { font-weight: 700; color: var(--ink); }
+.verb-table code {
+  font-size: 0.94em;
+  background: transparent;
+  color: var(--accent-1);
+  padding: 0;
+}
+// Single full-width type-card sitting under the verb table.
+.reveal section > .type-card {
+  max-width: 100%;
+  margin-top: 0.4em;
+}
+
+// h3 headings inside type-cards render tighter — the tag already carries the
+// kicker, so the h3 acts as the concept title.
+.type-card h3 {
+  font-size: 0.9em;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0.15em 0 0.4em;
+  line-height: 1.2;
+}
+
+// Subtle footer hint inside a type-card (e.g. "Create it — File → …" on the
+// R scripts slide). Sits below the main body copy with a soft rule above it.
+.script-hint {
+  margin-top: 0.6em;
+  padding-top: 0.5em;
+  border-top: 1px dashed var(--rule);
+  font-size: 0.62em;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+.script-hint .kbd { font-size: 0.9em; }
+
+// Chalkboard buttons ship in the bottom-left by default. Quarto Drop's
+// bottom-left webR terminal button sits at `left: 54px`; its own CSS pushes
+// the chalkboard controls to `left: 95px` when the plugin is loaded, so no
+// extra work is needed here.
+
+// The chalkboard palette lives inside the chalkboard container, whose
+// visibility the plugin toggles on `c` (showChalkboard/closeChalkboard); the
+// notes-canvas palette is toggled explicitly by the plugin on `b`. So we only
+// need to fix the swatch colours — each swatch is
+// `<li style="color: …"><i class="fa fa-square"></i>`, and our
+// `.reveal i { color: var(--ink) }` emphasis rule below would otherwise paint
+// every square ink-black against the chalkboard's black background. Let the
+// icon inherit its `<li>`'s inline colour instead.
+.reveal .palette li i { color: inherit; }
+
+// Pen strokes drawn via reveal-chalkboard live on the #notescanvas (z:24)
+// and #chalkboard (z:26) containers — both above the r-wasm/drop terminal
+// panel (z:5), so the strokes stay painted over the terminal when it slides
+// up. Rather than push the drop panel above every other reveal UI element
+// (menu, controls, toggle buttons), tuck the canvases *below* the drop just
+// while the terminal is active. Drawings reappear at the same z-index the
+// moment the terminal is closed. Needs !important because the plugin sets
+// z-index inline on these containers via `container.style.zIndex = …`.
+.reveal:has(.drop.active) #notescanvas,
+.reveal:has(.drop.active) #chalkboard {
+  z-index: 1 !important;
+}
+
+// While the terminal is open, the chalkboard + notes-canvas overlays are
+// tucked behind the slides — pressing the easel/brush toggles would still
+// fire but produce no visible feedback. Dim the two buttons and disable
+// them so the state reads as inactive. Match the drop panel's 0.25s ease.
+.reveal .slide-chalkboard-buttons {
+  transition: opacity 0.25s ease-in-out;
+}
+.reveal:has(.drop.active) .slide-chalkboard-buttons {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+// ---- Slides 4–5: numbered install-step list ----
+// Replaces the plain ol markers with round accent-coloured badges. The wrapper
+// resets the counter so each list is independent.
+.step-list ol {
+  counter-reset: step-counter;
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0.3em 0 0.2em;    // tighter — was 0.4em 0
+}
+.step-list ol li {
+  counter-increment: step-counter;
+  position: relative;
+  padding: 3px 0 3px 50px;
+  min-height: 32px;
+  font-size: 0.7em;
+  line-height: 1.4;
+  margin: 0;
+}
+.step-list ol li::before {
+  content: counter(step-counter);
+  position: absolute;
+  left: 6px;
+  top: 1px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $font-family-monospace;
+  font-weight: 700;
+  font-size: 0.82em;
+  box-shadow: 0 1px 2px rgba(20, 28, 45, 0.15);
+}
+// Slightly airier variant — used on slide 4 where the step list sits next to
+// an image and can afford more vertical breathing room.
+.step-list.step-list-spaced ol li {
+  padding: 10px 0 10px 54px;
+  min-height: 42px;
+}
+.step-list.step-list-spaced ol li::before {
+  top: 6px;
+}
+
+// ---- Slides 4, 5 & 6: install-step steps + logo two-column layout ----
+// Quarto's Reveal theme rule `div.columns { display: initial }` has
+// specificity (0,1,1) — higher than our old `.install-r-columns` (0,1,0),
+// so it silently killed the flex layout and stacked the columns. Prefix with
+// `.reveal` to lift specificity to (0,2,0) and beat the theme rule.
+.reveal .install-r-columns,
+.reveal .install-rstudio-columns,
+.reveal .install-posit-columns {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.reveal .install-r-columns > .column,
+.reveal .install-rstudio-columns > .column,
+.reveal .install-posit-columns > .column {
+  display: block;
+}
+.reveal .install-r-columns > .column:nth-child(2),
+.reveal .install-rstudio-columns > .column:nth-child(2),
+.reveal .install-posit-columns > .column:nth-child(2) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.reveal img.install-r-logo,
+.reveal img.install-rstudio-logo,
+.reveal img.install-posit-logo {
+  display: block;
+  margin: 0;
+  height: auto;
+}
+.reveal img.install-r-logo       { max-width: 260px; }
+.reveal img.install-rstudio-logo { max-width: 240px; }
+.reveal img.install-posit-logo   { max-width: 100%; width: 400px; }
+
+// ---- Slide 6: Posit Cloud free-tier stat block ----
+// The .stat-block wraps a small uppercase title above the three-cell grid so
+// the "Free tier" context reads without needing its own paragraph.
+.stat-block {
+  margin: 0.6em 0 0.4em;
+  padding: 14px 18px 12px;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--accent-1);
+  border-radius: 6px;
+}
+.stat-block-title {
+  font-size: 0.38em;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+  margin-bottom: 10px;
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 0.4em 0 0.3em;   // tighter — was 0.8em 0
+}
+// Inside a .stat-block, the stat-grid loses its own vertical margin so the
+// group reads as one panel.
+.stat-block .stat-grid { margin: 0; }
+.stat-cell {
+  padding: 12px 12px 10px;
+  background: var(--bg-soft);
+  border-radius: 6px;
+  border-top: 3px solid var(--accent-1);
+  text-align: center;
+}
+.stat-cell .stat-num {
+  display: block;
+  font-family: $font-family-monospace;
+  font-size: 1.3em;
+  font-weight: 700;
+  color: var(--accent-1);
+  line-height: 1.05;
+}
+.stat-cell .stat-label {
+  display: block;
+  font-size: 0.38em;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 6px;
+  line-height: 1.3;
+}
+
+// ---- Slide 8: importer package pills ----
+.pkg-pills {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0.35em 0 0.2em;  // tighter — was 0.6em 0
+}
+.pkg-pill {
+  padding: 8px 12px;
+  background: var(--bg-soft);
+  border-left: 3px solid var(--accent-1);
+  border-radius: 3px;
+  font-size: 0.58em;
+  line-height: 1.45;
+}
+.pkg-pill code {
+  display: block;
+  color: var(--accent-1);
+  background: transparent;
+  padding: 0;
+  font-weight: 700;
+  font-size: 1.1em;
+  margin-bottom: 3px;
+}
+.pkg-pill .pkg-desc { color: var(--ink-soft); }
+
+// ---- Slides 20 / 21: subsetting operators — bulleted list next to code ----
+// Two-column layout: left column is a plain bullet list mapping each
+// operator to its effect, right column holds the webR code chunk. No cards,
+// no pills — just a lightweight side-by-side that visually anchors the code
+// against its explanation.
+.reveal .subset-columns {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  margin: 0.4em 0 0.6em;
+}
+.reveal .subset-columns > .column {
+  display: block;
+  min-width: 0;
+}
+.reveal .subset-columns > .column:first-child ul {
+  margin: 0;
+  padding-left: 1.1em;
+  font-size: 0.6em;
+  line-height: 1.7;
+}
+.reveal .subset-columns > .column:first-child ul li { margin: 0; }
+.reveal .subset-columns > .column:first-child ul li code {
+  color: var(--accent-1);
+  background: transparent;
+  padding: 0;
+  font-weight: 700;
+  font-size: 1em;
+}
+
+// Small section divider used on slide 8 above the importer pills — an
+// uppercase kicker with a soft rule under it.
+.section-mini {
+  font-size: 0.48em;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+  margin: 1em 0 0.35em;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--rule);
+}
+
+// ---- Slide 8: numbered "step-mark" kickers to connect the two halves ----
+// Numbered navy badge + uppercase kicker text, joined by a soft rule that
+// bridges the badge to the right slide edge. Reads as "1 — Install" and
+// "2 — Explore importers", giving the slide an unambiguous top-to-bottom flow.
+.step-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0.8em 0 0.4em;
+  font-size: 0.5em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+}
+.step-mark::before {
+  content: attr(data-step);
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $font-family-monospace;
+  font-size: 1.1em;
+  letter-spacing: 0;
+  box-shadow: 0 1px 2px rgba(20, 28, 45, 0.15);
+}
+.step-mark::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--rule), transparent);
+}
+// Pandoc wraps fenced-div text content in <p> — inherit the kicker styling
+// so the paragraph doesn't fight it.
+.step-mark p {
+  margin: 0;
+  font-size: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  font-weight: inherit;
+  line-height: 1;
+}
+
+// ---- Slide 9: two-step "keep packages current" workflow ----
+.pkg-workflow { margin: 0.4em 0 0.2em; }
+.pkg-step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: var(--bg-soft);
+  border-left: 3px solid var(--accent-1);
+  border-radius: 3px;
+  margin-bottom: 10px;
+}
+.pkg-step-num {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $font-family-monospace;
+  font-weight: 700;
+  font-size: 0.6em;
+  flex-shrink: 0;
+}
+.pkg-step-content code {
+  color: var(--accent-1);
+  background: transparent;
+  padding: 0;
+  font-weight: 700;
+  font-size: 0.7em;
+}
+.pkg-step-desc {
+  font-size: 0.5em;
+  color: var(--ink-soft);
+  line-height: 1.4;
+  margin-top: 3px;
+}
+
+// ---- Slide 11: problem-vs-solution comparison ----
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin: 0.6em 0 0.4em;
+  align-items: stretch;
+}
+.compare-cell {
+  padding: 14px 18px 12px;
+  border-radius: 6px;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  font-size: 0.6em;
+  line-height: 1.5;
+}
+.compare-cell.compare-bad  { border-left: 4px solid var(--accent-4); }
+.compare-cell.compare-good { border-left: 4px solid var(--accent-2); }
+// Pandoc wraps the bracketed span in a <p> — flatten that paragraph so the
+// tag pill sits tight at the top and doesn't push the content down.
+.compare-cell > p:first-child {
+  margin: 0 0 8px;
+  line-height: 1;
+}
+.compare-cell > p { margin: 0 0 6px; }
+.compare-cell > p:last-child { margin-bottom: 0; }
+// Code block inside a compare cell — pure white pane on the tinted cell so it
+// visually reads as "code sample" not a nested cell.
+.compare-cell pre,
+.compare-cell div.sourceCode pre {
+  margin: 4px 0 8px !important;
+  padding: 6px 10px !important;
+  background: #FFFFFF !important;
+  border-left: 3px solid var(--accent-1) !important;
+  font-size: 1em;
+  width: 100%;
+  box-sizing: border-box;
+}
+.compare-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 3px;
+}
+.compare-bad  .compare-tag { background: rgba(185, 74, 72, 0.14); color: #8A3937; }
+.compare-good .compare-tag { background: rgba(147, 197, 75, 0.18); color: #4E6B33; }
+
+// Slides 4–11 keep a single-column flow — tighten paragraph margins that
+// sit adjacent to a step-list, stat-grid, pkg-pills, or dh-note so the
+// vertical rhythm doesn't stack blank slabs of space.
+.reveal .slide > .step-list,
+.reveal .slide > .stat-grid,
+.reveal .slide > .pkg-pills,
+.reveal .slide > .script-hint,
+.reveal .slide > .dh-note {
+  & + p { margin-top: 0.35em; }
+}
+.reveal .slide > p + .step-list,
+.reveal .slide > p + .stat-grid,
+.reveal .slide > p + .pkg-pills,
+.reveal .slide > p + .dh-note { margin-top: 0.25em; }
+
+// ---- Slide 17: Matrices & arrays animation ----
+// Full-width SVG stage above the two code-cards. Cell transforms drive the
+// vector → matrix → cube transition (see assets/js/matrix-anim.html).
+.reveal section.mx-slide {
+  display: block !important;
+  text-align: left !important;
+}
+// SVG is drawn at a fixed 1100×320 coordinate space so CSS transforms on the
+// <g> cells use pixel units that match the viewBox 1:1. The whole stage is
+// then scaled via CSS transform to fit inside the slide — same technique as
+// the other animation stages in this deck.
+.mx-stage-wrap {
+  position: relative;
+  margin: 0 auto 12px;         // sits above the code cards
+  height: 322px;               // matches 460 × 0.7 = 322
+  overflow: visible;
+}
+#mx-stage {
+  position: relative;
+  width: 1100px;
+  height: 460px;
+  margin: 0 auto;
+  display: block;
+  transform: scale(0.7);       // 1100 × 0.7 = 770 wide, 460 × 0.7 = 322 tall
+  transform-origin: top center;
+}
+#mx-stage svg {
+  display: block;
+  width: 1100px;
+  height: 460px;
+}
+.mx-cell {
+  will-change: transform, opacity;
+}
+.mx-cell rect {
+  filter: drop-shadow(0 1px 2px rgba(20, 28, 45, 0.06));
+}
+// Tighten the stdout print so the blank lines R inserts between list
+// elements ($dbl, $int, ...) don't take a full leaded line each.
+.type-card .qwebr-output-code-area pre,
+.type-card pre.qwebr-output-code,
+.type-card code.qwebr-output-code-stdout,
+.type-card code.qwebr-output-code-stderr {
+  line-height: 1.0;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+// Cap the RUN output height so long stdout (matrices with dimnames,
+// data.frame prints, etc.) can't grow the card past the slide bottom.
+.type-card .qwebr-output-code-area,
+.type-card .qwebr-output-graph-area {
+  max-height: 200px;
+  overflow-y: auto;
+}
+// Two-column code layout: editor on the left, output on the right.
+// The qwebr DOM nests both inside `.qwebr-console-area`, so grid-splitting
+// that node cleanly places the editor + output side-by-side while leaving
+// the toolbar (with the Run button) full-width above.
+.type-card.code-2col .qwebr-console-area {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-items: start;
+}
+.type-card.code-2col .qwebr-console-area > * { min-width: 0; }
+.type-card.code-2col .qwebr-output-code-area {
+  min-height: 60px;             // reserves a visible target before Run is clicked
+  background: var(--bg-soft);
+  border: 1px dashed var(--rule);
+  border-radius: 4px;
+}
+.type-vector { border-top: 3px solid #93C54B; }
+.type-list   { border-top: 3px solid #325D88; }
+.type-card-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 0.42em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  background: var(--rule);
+  color: var(--accent-1);
+  margin-bottom: 8px;
+}
+.type-vector .type-card-tag { background: rgba(147, 197, 75, 0.18); color: #4E6B33; }
+.type-list   .type-card-tag { background: rgba(50, 93, 136, 0.14); color: #2A4E72; }
+.type-card h3 {
+  margin: 4px 0 6px;
+  font-size: 0.85em;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+// Pandoc wraps a bracketed span placed on its own line in a paragraph, so
+// the tag sits in the FIRST <p>; the descriptive prose sits in the paragraph
+// that follows the <h3>. Target them separately so the tag isn't shrunk twice.
+.type-card > p:first-of-type {
+  margin: 0 0 6px;
+  line-height: 1;
+}
+.type-card > h3 + p {
+  margin: 0 0 12px;
+  font-size: 0.7em;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+// Bullet lists inside a type-card (e.g. "Reproducible / Version-controllable /
+// Re-runnable" on slide 12) inherit the deck's default reveal ul size, which
+// renders bigger than the card's h3. Pin them to the same 0.7em as the
+// descriptive paragraph so they read at the right scale.
+.type-card > ul,
+.type-card > ol {
+  font-size: 0.7em;
+  line-height: 1.55;
+  margin: 0.2em 0 0.8em 1em;
+  color: var(--ink);
+}
+.type-card > ul li,
+.type-card > ol li { margin: 0.1em 0; }
+.type-card .cell { margin-bottom: 0; }
+
+// ---- Minimalist aesthetic accents (slides 18/19, reusable elsewhere) ----
+// A slide can now stay single-column and card-free but still feel deliberate
+// via three tiny helpers: a kicker under the h2, a lightly-emphasised lead
+// paragraph, and a muted one-line footer. Zero boxes, zero pills.
+.slide-kicker {
+  font-size: 0.4em;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+  margin: 0.3em 0 0.75em;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--rule);
+  max-width: 640px;
+}
+.slide-kicker p { margin: 0; font-size: inherit; letter-spacing: inherit; }
+
+.lede-min {
+  margin: 0.4em 0 0.6em;
+  font-size: 0.78em;
+  line-height: 1.55;
+  color: var(--ink);
+  max-width: 780px;
+  padding-left: 14px;
+  border-left: 2px solid var(--accent-1);
+}
+.lede-min p { margin: 0; font-size: inherit; }
+
+.slide-footer {
+  margin: 0.7em 0 0;
+  font-size: 0.56em;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  max-width: 780px;
+}
+.slide-footer p { margin: 0; font-size: inherit; }
+
+// ---- About-me slide (slide 2) ----
+.reveal section.about-slide {
+  display: block !important;
+  text-align: left !important;
+}
+.about-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 44px;
+  align-items: center;
+  margin-top: 24px;
+}
+.about-avatar img {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--rule);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+.about-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 0.85em;
+  line-height: 1.7;
+}
+.about-list li {
+  padding-left: 0 !important;
+  margin-bottom: 0.4em;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.about-list li::before { content: none !important; }
+.about-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--accent-1);
+  flex-shrink: 0;
+}
+.about-icon svg { width: 20px; height: 20px; }
+.about-list a {
+  color: var(--accent-1);
+  border-bottom: none;
+  text-decoration: underline;
+  text-decoration-color: rgba(50, 93, 136, 0.25);
+  text-underline-offset: 3px;
+}
+.about-list a:hover {
+  color: var(--accent-1-deep);
+  text-decoration-color: var(--accent-1);
+}
+.about-hint {
+  color: var(--ink-soft);
+  font-size: 0.85em;
+  margin-left: 6px;
+}
+
+// Footer (persistent at bottom of every slide)
+.reveal .footer {
+  color: var(--ink-soft);
+  font-size: 0.5em;
+  letter-spacing: 0.06em;
+  font-family: $font-family-monospace;
+  bottom: 12px;
+}
+.reveal .footer a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  border-bottom: none;
+}
+.reveal .footer a:hover {
+  color: var(--accent-1);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-1);
+}
+
+// Title slide — ORCID icon as a superscript right after the author name:
+//   "Gabriel Cabrera^{ORCID}"
+.reveal #title-slide .quarto-title-authors {
+  margin-top: 0.8em;
+  // The trailing ‡ superscript + ORCID icon add ~24px of visual weight
+  // to the right of the name. Nudge the whole authors block right so the
+  // NAME TEXT sits on the geometric centerline rather than the whole line.
+  // 28.1px, not 26: the exact offset that puts the NAME TEXT's midpoint on
+  // the title's, measured with a Range over the text node alone.
+  padding-left: 28.1px;
+}
+// The parent padding-left above also drags the affiliation right, but the
+// affiliation has its own leading "‡ " marker — so we need to pull it back
+// LEFT to visually center the "The University of Manchester" text.
+.reveal #title-slide .quarto-title-affiliation {
+  position: relative;
+  left: -20px;
+}
+// Push the date down a touch so it sits clear of the affiliation line above it.
+.reveal #title-slide .date {
+  margin-top: 1em;
+}
+.reveal #title-slide .quarto-title-author-name {
+  display: inline;
+  font-family: $font-family-sans-serif;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+// Hide Quarto's default low-res PNG icon
+.reveal #title-slide .quarto-title-author a[href*="orcid.org"] img {
+  display: none;
+}
+// Replace with a crisp inline SVG via background-image
+.reveal #title-slide .quarto-title-author a[href*="orcid.org"] {
+  display: inline-block;
+  // negative margin eats the HTML whitespace between </a>(name) and <a>(orcid)
+  margin-left: -4px;
+  // Placed against the double dagger beside it, measured rather than
+  // eyeballed: the glyph's own ink (canvas actualBoundingBox, NOT its line
+  // box, which is three times taller) runs 491 to 504 on a 1.245 scale.
+  // `vertical-align: super` alone left the badge 2.45 slide px low at the
+  // centre, so it hung below the dagger. -4px rather than the -2.45px that
+  // centres it exactly: the dagger is a thin tall glyph and the badge a solid
+  // disc, so dead-centre still reads as sitting low next to it.
+  width: 16px;
+  height: 16px;
+  vertical-align: super;
+  position: relative;
+  top: -5.5px;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><circle cx='128' cy='128' r='128' fill='%23A6CE39'/><g fill='%23FFFFFF'><path d='M86.3 186.2H70.9V79.1h15.4v107.1z'/><path d='M108.9 79.1h41.6c39.6 0 57 28.3 57 53.6 0 27.5-21.5 53.6-56.8 53.6h-41.8V79.1zm15.4 93.3h24.5c34.9 0 42.9-26.5 42.9-39.7 0-21.5-13.7-39.7-43.7-39.7h-23.7v79.4z'/><circle cx='78.6' cy='56.8' r='10.1'/></g></svg>") no-repeat center / contain;
+}
+
+// Utilities
+.lede {
+  font-size: 1.05em;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+.muted { color: var(--ink-soft); }
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.55em;
+  background: var(--rule);
+  color: var(--accent-1);
+  border-radius: 3px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  font-family: $font-family-monospace;
+  font-size: 0.82em;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  color: var(--ink);
+}
+
+// Emphasis
+.reveal em, .reveal i { color: var(--ink); }
+.reveal strong, .reveal b { color: var(--ink); }
+
+// Links — subtle underline via text-decoration, not a heavy border-bottom
+.reveal a {
+  color: var(--accent-1);
+  text-decoration: underline;
+  text-decoration-color: rgba(50, 93, 136, 0.28);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  border-bottom: none;
+}
+.reveal a:hover {
+  color: var(--accent-1-deep);
+  text-decoration-color: var(--accent-1);
+}
+
+// Tables — quiet editorial look
+.reveal table {
+  border-collapse: collapse;
+  font-size: 0.68em;
+}
+.reveal table th {
+  background: var(--bg-soft);
+  color: var(--accent-1);
+  border-bottom: 2px solid var(--accent-1);
+  padding: 6px 12px;
+  text-align: left;
+  font-weight: 600;
+}
+.reveal table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--rule);
+}
+
+// Animation helpers (from T5)
+.vec-cell, .mat-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4em;
+  height: 2.4em;
+  margin: 0 4px;
+  background: var(--bg-soft);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font-family: $font-family-monospace;
+  font-weight: 600;
+  color: var(--accent-1);
+}
+.vec-row { display: flex; gap: 8px; justify-content: center; }
+.mat-grid { display: grid; gap: 6px; justify-content: center; }
+.bracket-target { position: relative; display: inline-block; padding: 0 2px; border-radius: 4px; }
+
+// JS sets stroke-dasharray + dashoffset from getTotalLength() on dispatch.
+// Until then, hide via opacity so the path doesn't flash visible.
+.line-draw-svg path.draw { opacity: 0; }
+.line-draw-svg path.draw[style*="stroke-dashoffset"] { opacity: 1; }
+
+.count-up { font-variant-numeric: tabular-nums; color: var(--accent-1); font-weight: 700; }
+.pipe-stage {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 88px;
+  padding: 10px 14px;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font-family: $font-family-monospace;
+  font-size: 0.72em;
+  color: var(--accent-1);
+  font-weight: 600;
+}
+.pipe-arrow { color: var(--ink-soft); font-size: 1.2em; margin: 0 6px; }
+
+// mutate() animation demo (Emil-style TM.gate pattern, our palette)
+// Override Quarto's title-slide centering for the demo slide
+.reveal section.mu-slide {
+  display: block !important;
+  text-align: left !important;
+}
+.reveal section.mu-slide h1 {
+  font-size: 1.4em;
+  text-align: left;
+  margin-bottom: 0.6em;
+}
+// mutate/filter/pivot/ggplot demos share the same Emil-style stage geometry.
+// The JS animations hardcode pixel coordinates inside a 1100x560 stage; we keep
+// that internal coordinate system and scale the whole stage via CSS transform
+// to fit inside the slide (1050x700, minus title/badge/footer).
+#mu-stage, #pl-stage, #pw-stage, #gg-stage,
+#fp1-stage, #fp2-stage, #fp3-stage, #fp4-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  display: block;
+  transform: scale(0.82);
+  transform-origin: top center;
+}
+// All demos share identical row height, font size, and cell padding —
+// column widths are set per demo in JS via inline style
+.reveal section.pl-slide .fi-cell,
+.reveal section.pw-slide .fi-cell {
+  font-size: 22px;
+}
+
+// ---- dplyr / tidyr / ggplot2 demos — Emil-style cleanliness ----
+// All demos share these classes; only the stage id differs
+.reveal section.fi-slide,
+.reveal section.mu-slide,
+.reveal section.pl-slide,
+.reveal section.pw-slide,
+.reveal section.gg-slide,
+.reveal section.fp1-slide,
+.reveal section.fp2-slide,
+.reveal section.fp3-slide,
+.reveal section.fp4-slide {
+  display: block !important;
+  text-align: left !important;
+}
+.reveal section.fi-slide h1,
+.reveal section.mu-slide h1,
+.reveal section.pl-slide h1,
+.reveal section.pw-slide h1,
+.reveal section.gg-slide h1,
+.reveal section.fp1-slide h1,
+.reveal section.fp2-slide h1,
+.reveal section.fp3-slide h1,
+.reveal section.fp4-slide h1 {
+  font-size: 1.4em;
+  text-align: left;
+  margin-bottom: 0.4em;
+}
+// Buggy `:has()` in the previous rule (a section doesn't :has itself) — the
+// slide class IS on the section, so target it directly.
+.reveal section.fi-slide,
+.reveal section.mu-slide,
+.reveal section.pl-slide,
+.reveal section.pw-slide,
+.reveal section.gg-slide,
+.reveal section.fp1-slide,
+.reveal section.fp2-slide,
+.reveal section.fp3-slide,
+.reveal section.fp4-slide { overflow: hidden; }
+// Wrap collapses to the visual height of the scaled stage (560 * 0.82 ≈ 460)
+// so the slide's title/badge sit tight against it instead of leaving a gap
+// equal to the un-scaled 560px layout box.
+.fi-stage-wrap {
+  position: relative;
+  margin-top: 4px;
+  height: 460px;
+  overflow: visible;
+}
+#fi-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  transform: scale(0.82);
+  transform-origin: top center;
+}
+// Invisible gating fragments — Emil's convention
+.fi-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+// Title code line — no box, no border, just monospaced text with the
+// condition substrings absorbing the highlight
+.fi-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-family: $font-family-monospace;
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.fi-code-cond {
+  border-radius: 5px;
+  padding: 1px 4px;
+  background-color: rgba(50, 93, 136, 0);
+  will-change: background-color, color;
+}
+
+// Rows: NO borders, rounded row background for the passing-row highlight
+.fi-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  border-radius: 6px;
+  background-color: rgba(50, 93, 136, 0);
+  will-change: transform, opacity, background-color;
+}
+
+// Cells: NO borders, individual rounded backgrounds (become pill highlights)
+.fi-cell {
+  font-size: 24px;
+  color: var(--ink);
+  padding: 0 12px;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+}
+.fi-cell.fi-species {
+  width: 158px;
+  text-align: left;
+  border-radius: 8px;
+  background-color: rgba(50, 93, 136, 0);
+  will-change: background-color, color;
+}
+.fi-cell.fi-value {
+  width: 148px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  border-radius: 8px;
+  background-color: rgba(50, 93, 136, 0);
+  will-change: background-color, color;
+}
+
+// Header row — muted grey (not accent-navy — that's for highlights)
+.fi-row.fi-head .fi-cell {
+  font-size: 22px;
+  font-weight: 600;
+  color: #6B7280;
+  background: transparent;
+}
+
+// SVG arrows overlay
+.fi-arrows-svg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1100px; height: 560px;
+  pointer-events: none;
+  overflow: visible;
+}
+.fi-arrow {
+  fill: none;
+  stroke: var(--accent-1);
+  stroke-width: 1.3;
+  will-change: stroke-dashoffset, opacity;
+}
+
+// ---- ggplot2 deconstructed variant (tilt + explode 4 SVG planes) ----
+#gg-stage {
+  position: relative;
+}
+// Code panel (this slide only) — pure white surface, quiet border.
+// Scoped to `.reveal pre.gg-code` so it beats the deck's global `.reveal pre`
+// grey-panel style on specificity.
+.reveal pre.gg-code {
+  position: absolute;
+  left: 20px;
+  top: 100px;
+  width: 530px;
+  margin: 0;
+  padding: 14px 18px;
+  background: #FFFFFF;
+  border: none;
+  border-left: 3px solid var(--accent-1);
+  border-radius: 0 4px 4px 0;
+  box-shadow: none;
+  box-sizing: border-box;
+  font-family: $font-family-monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink);
+  white-space: pre;
+  overflow: visible;
+}
+.gg-code [data-blk] {
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+.gg-code [data-blk].gg-hot {
+  background: rgba(50, 93, 136, 0.18);
+  box-shadow: 0 0 0 4px rgba(50, 93, 136, 0.18);
+}
+.gg-fn  { color: #325D88; font-weight: 600; }
+.gg-arg { color: #6E7681; }
+.gg-num { color: #B5762A; }
+.gg-str { color: #7A8B4D; }
+
+// Right-side plot area — 4 SVG planes stack here
+#gg-plot {
+  position: absolute;
+  left: 470px;
+  top: 10px;
+  width: 640px;
+  height: 460px;
+}
+// gg-slide (slide 34) uses the same Emil-style code-panel treatment as fp1..4:
+// flush against the left edge, navy accent line, 19px monospace, no card fill.
+.reveal section.gg-slide pre.gg-code {
+  left: -70px;
+  top: 60px;
+  width: 520px;
+  padding: 0 0 0 16px;
+  background: transparent;
+  border-left: 3px solid var(--accent-1);
+  border-radius: 0;
+  font-size: 19px;
+  line-height: 1.65;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+// Outer plane: carries perspective for the tilt to project through
+.gg-plane {
+  perspective: 1600px;
+  will-change: transform;
+}
+// Inner: the element that actually rotates in 3D
+.gg-tilt {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+// Translucent card backing — invisible when flat, fades in on explode so
+// the planes read as physical cards floating apart
+.gg-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(160, 168, 184, 0.55);
+  border-radius: 6px;
+  box-shadow: 0 12px 30px rgba(20, 28, 45, 0.12);
+  opacity: 0;
+  will-change: opacity;
+}
+
+// ---- Module 2 first-plot animations (tidyquant fp1..fp4) ----
+// Layout modelled after Emil Hvitfeldt's tidy-animations slides
+// (https://emilhvitfeldt.github.io/tidy-animations/examples/ggplot2-deconstructed-2.html):
+//   landscape plot on the right (600x380 in Emil's 1200x600 stage), code panel
+//   as flat monospaced text on the left with NO card background — the "hot"
+//   block gets highlighted by the existing .fp-hot rule instead. Positions
+//   below are scaled to our 1100x560 stage (≈91% of Emil's).
+.fp-plot {
+  position: absolute;
+  left: 470px;
+  top: 10px;
+  width: 640px;
+  height: 460px;
+}
+.reveal section.fp1-slide pre.gg-code,
+.reveal section.fp2-slide pre.gg-code,
+.reveal section.fp3-slide pre.gg-code,
+.reveal section.fp4-slide pre.gg-code {
+  left: -70px;
+  top: 60px;
+  width: 520px;
+  padding: 0 0 0 16px;
+  background: transparent;
+  border-left: 3px solid var(--accent-1);
+  border-radius: 0;
+  font-size: 19px;
+  line-height: 1.65;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+// Code block state — highlight the layer whose visual just appeared,
+// dim earlier layers, keep upcoming layers as ghosts.
+.gg-code [data-blk] {
+  transition: color 0.35s ease, opacity 0.35s ease;
+}
+.gg-code [data-blk].fp-future { opacity: 0.28; }
+.gg-code [data-blk].fp-past   { opacity: 0.55; }
+.gg-code [data-blk].fp-hot {
+  background: rgba(50, 93, 136, 0.18);
+  box-shadow: 0 0 0 4px rgba(50, 93, 136, 0.18);
+  border-radius: 4px;
+}
+// theme_minimal swap — coord plane background changes from ggplot's grey
+// canvas to white, and gridlines thin out to a soft neutral. Because the
+// class is toggled on every plane div, the geom/labs planes also apply it,
+// but their SVGs don't contain .fp-bg / .fp-grid-* elements so those rules
+// no-op there.
+.fp-plane {
+  transition: opacity 0.55s ease;
+}
+.fp-plane .fp-bg          { transition: fill 0.4s ease; }
+.fp-plane .fp-grid-major,
+.fp-plane .fp-grid-minor  { transition: stroke 0.4s ease, stroke-width 0.4s ease; }
+.fp-theme-minimal .fp-bg           { fill: #FFFFFF; }
+.fp-theme-minimal .fp-grid-major   { stroke: #E5E7EB; stroke-width: 1; }
+.fp-theme-minimal .fp-grid-minor   { stroke: #F0F2F5; stroke-width: 0.6; }
+.fp-theme-minimal .fp-leg-swatch   { fill: transparent; }
+
+// Title slide subtitle in grey, so it sits under the title instead of competing with it
+.reveal #title-slide .subtitle { color: var(--ink-soft); }
+
+// Closing-slide credits: the hero <p> voice is sized for one tagline, not five.
+.reveal section.hero#thanks > * { text-align: center; }
+.reveal section.hero#thanks h1::after { display: none; }
+.reveal section.hero#thanks h1 { margin-bottom: 0.3em; }
+.reveal section.hero .credits p {
+  font-size: 0.6em;
+  color: var(--ink-soft);
+  margin: 1.1em 0;
+}
+
+
+// Layer on top of assets/theme.scss. Only what the seminar deck adds:
+// animation stages, the "turn this knob" prompt, webR cards sized to run
+// full-width on a projected slide, and the hero/sim chrome overrides.
+// Every override for this deck lives here; theme.scss is shared history
+// with the intro-r deck and is not edited.
+
+// ---- Slide grid (spec §4) ----
+// Title band 0–80: pull the accent bar up. Must out-rank theme.scss's
+// `.reveal section > h2::after` (0,1,3), hence the full selector.
+// The same tightening applies to sim slides, whose line budget (§4.3) assumes an 80px title band.
+// The bar read as floating: the margin hangs off the LINE BOX, not the
+// baseline, so several px of half-leading sit in the gap before the margin
+// even starts. What limits how far it comes up is NOT the title's
+// descenders in general — the bar is only 48/56px wide and flush left, so
+// it passes under the first three or four characters and nothing else.
+// A title starting with a p/g/y is the case to re-check by eye. The hero
+// floor is set by "Hypothesis testing", whose 'y' IS the second character:
+// at 0.07em its tail clears the bar, at 0.04em the bar runs through it.
+// Deck-wide, not per slide class. It was scoped to .stage-slide and
+// .sim-slide, which left .formula-slide, .ojs-slide, .about-slide and the
+// unclassed slides on theme.scss's 0.55em — 26.7px against 7.3px, so the bar
+// hung visibly low on those and the title band ran to 86px instead of 80.
+// Checked before widening: the only titles with a descender in the first five
+// characters (Sample Spaces, Monty Hall, Laplace's, Why the, Why the) are all
+// stage or sim slides, so they were already at 0.15em and already reviewed.
+.reveal .slides section > h2::after { margin-top: 0.15em; }
+.reveal section.hero h1::after { margin-top: 0.07em; }
+
+// ---- Animation stages ----
+// Every stage is authored in a fixed 1000-wide pixel space (445 tall by
+// default, 330 for the coverage stage) and shown at 105% so it spans the
+// full 1050px slide width. Heights are on the wrapper so the absolute
+// fragments and the takeaway line flow correctly.
+.reveal section.stage-slide {
+  display: block !important;
+  text-align: left !important;
+  overflow: hidden;
+}
+.stage-wrap {
+  position: relative;
+  margin: 8px auto 0;
+  overflow: visible;
+}
+.stage-wrap-std { height: 468px; }   // 445 * 1.05
+.stage-wrap-about { height: 452px; }  // 430 * 1.05
+.stage-wrap-ci  { height: 347px; }   // 330 * 1.05 — leaves room for .claim-pair
+.stage-wrap-prior { height: 315px; }  // 300 * 1.05 — leaves room for .lede-min above
+
+// The dice board stops at y = 400 of its 445-unit canvas, and both set-theory
+// slides carry a lede AND a takeaway, so the wrap hands the rest back.
+#space-intuition .stage-wrap,
+#setops-intuition .stage-wrap { height: 424px; }
+
+// The Venn drawing starts at y = 30 and stops at 338. The wrap follows it up
+// rather than leaving a band of nothing under the lede, and carries 34 units
+// past the ink so the takeaway is not sitting on the box.
+#venn-intuition .stage-wrap { height: 392px; }
+
+// The drawing sat 25px under the title and 87px off the slide floor; the
+// extra top margin splits the slack so the stage is centred in what the
+// title leaves behind.
+#mm-intuition .stage-wrap { margin-top: 57px; }
+
+// #cond-intuition's readout sits at y = 435 of its 445-unit canvas, so it can
+// give back 7px and no more — measured, not guessed. It needs every one of
+// the rest, which is why its lede and takeaway are one and two lines.
+// The unit square and its readout were set at the deck's usual 1.05 and read
+// as the biggest thing in Seminar 3. 0.90 brings the whole drawing down by a
+// sixth, readout included, and `transform-origin: top center` means it stays
+// centred and top-anchored while it shrinks. Ink runs to y = 423, so the wrap
+// is 423 * 0.90 rounded up with a few px of air.
+#cond-intuition .stage { transform: scale(0.90); }
+// #clt-intuition came back with a lede; its drawing ends at y = 416 of 445,
+// so 0.95 and a 420px wrap buy the takeaway its line back with air above it.
+#clt-intuition .stage { transform: scale(0.95); }
+#clt-intuition .stage-wrap { height: 420px; }
+// #clt-idea has no lede and, since its takeaway went, no footer: the grid sat
+// hard under the title with ~120px spare below. A bit over half goes on top.
+#clt-idea .stage-wrap { margin-top: 72px; }
+#cond-intuition .stage-wrap { height: 388px; }
+// 362, not 366 * 1.05: the drawing only reaches y = 345 of the 366-unit
+// canvas, so the extra 1.05 of slack all piled up BELOW it — 29px of air
+// above the marks against 51px beneath them. Measured from the SVG's own
+// bbox, not the wrapper, which is why the box gaps (13 and 12) looked even.
+// Shared by #seller-intuition and #laplace-intuition so their blocks line up.
+.stage-wrap-seller { height: 362px; }
+
+// #laplace-intuition draws the same lattice PLUS the ghost pair on its own
+// row, so its ink runs 27px lower than #seller-intuition's and the shared
+// 362 left its marks almost touching the takeaway. The SVG is fixed-size and
+// top-aligned, so a taller wrap only lengthens the empty tail — the blocks on
+// the two slides still register at identical coordinates.
+#laplace-intuition .stage-wrap { height: 389px; }
+.stage-wrap-monty {
+  height: 435px;      // 414 * 1.05
+}
+// #bayeq-formula is the one stage slide with no .slide-footer, so its 595px
+// of space below the title is all stage. At the shared 8px top margin the
+// drawing sat 31px under the title with 200px of white beneath it. Optically
+// centred rather than arithmetically: dead centre put it low on the slide,
+// so it sits above the midpoint. Remove this rule if the slide gains a footer.
+#bayeq-formula .stage-wrap { margin-top: 62px; }
+
+// #binom-intuition carries a .lede-min stating the model AND a takeaway, so it
+// cannot use the shared 468px wrap without pushing its footer onto the 700px
+// projection line. Its canvas is 439 units. NB measure this with
+// offsetTop + offsetHeight, not getBoundingClientRect: Reveal scales the deck
+// (often ~1.24x) and the rects are in screen pixels.
+#binom-intuition .stage-wrap { height: 461px; }
+
+// The deck-wide 240px label track is sized for #likelihood-live's "true
+// success rate s"; these two labels are half that, so the sliders sat with a
+// visible gutter in front of them. Scoped, not lowered globally.
+#pois-intuition .observablehq form { --label-width: 130px; }
+#normal-intuition .observablehq form { --label-width: 160px; }  // "Success rate p"
+#expo-intuition .observablehq form { --label-width: 175px; }  // "Rate λ per minute" is 157
+
+.stage-wrap-bayes { height: 424px; }  // 358 * 1.05 = 376 of drawing + 48 of breathing room
+
+// Steve's description above the prior bar. The deck's 780px .lede-min width
+// would run it to five lines and push the stage off the bottom of the slide.
+.reveal section.stage-slide .lede-min,
+.reveal section.ojs-slide .lede-min,
+.reveal section.sim-slide .lede-min,
+.reveal section.formula-slide .lede-min {
+  font-size: 26px;
+  max-width: 980px;
+  // 24px, not the theme's 0.25em: a .lede-min on a stage slide is what
+  // follows the title, so it carries the gap under it. Deck-wide on
+  // purpose — scoped to one slide it left the other visibly tighter.
+  margin: 24px 0 0.5em;
+  // Justified because this one is a quoted description read as a block, not
+  // a caption. Hyphenation keeps the word gaps from opening up at 26px.
+  text-align: justify;
+  hyphens: auto;
+}
+
+.stage {
+  position: relative;
+  margin: 0 auto;
+  display: block;
+  width: 1000px;
+  transform-origin: top center;
+  transform: scale(1.05);
+}
+.stage svg { display: block; }
+
+// Takeaway line under a stage: ink, 24px, two lines max. #binom-formal has no
+// stage but ends with the same kind of line, and at the theme's default size
+// it set smaller than the note above it — which read as a caption rather than
+// as the slide's conclusion.
+.reveal section.stage-slide .slide-footer,
+.reveal section.formula-slide .slide-footer {
+  font-size: 24px;
+  color: var(--ink);
+  max-width: 980px;
+  margin-top: 0.45em;
+}
+
+// Takeaways set as a justified block, matching the .lede-min above them on
+// the same slide. Opted into per slide, not deck-wide, because every other
+// stage footer in the deck stays ragged-right. Every seminar-4 slide built
+// this way is listed, so the run from 17 to 29 reads consistently.
+#space-intuition .slide-footer,
+#setops-intuition .slide-footer,
+#venn-intuition .slide-footer,
+#set-formal .slide-footer,
+#cond-intuition .slide-footer,
+#bayes-intuition .slide-footer,
+#seller-intuition .slide-footer,
+#laplace-intuition .slide-footer,
+#binom-formal .slide-footer,
+#pois-intuition .slide-footer,
+#pois-formal .slide-footer,
+#expo-formal .slide-footer,
+#moments-formal .slide-footer,
+#dist-questions .slide-footer,
+#normal-intuition .slide-footer,
+#clt-intuition .slide-footer,
+#prob-count .slide-footer,
+#funcrv .slide-footer { text-align: justify; hyphens: auto; }
+
+// Every sim slide ends on a .try-this box. They were ragged-right while the
+// ledes above them were justified, so the two blocks of prose on the same
+// slide disagreed. One rule for all fifteen keeps them consistent with each
+// other rather than justifying two of them by hand.
+.reveal .try-this { text-align: justify; hyphens: auto; }
+
+// #s00-webr carries none of the slide classes that justify .lede-min, so its
+// three blocks of prose were the only ragged-right text in the deck.
+#s00-webr {
+  .lede-min, .try-this, .slide-footer { text-align: justify; hyphens: auto; }
+  // The card and the try-this run the full 1050, so a lede stopping at the
+  // default 780 read as a cut line once it was justified. All four edges
+  // now agree.
+  .lede-min, .slide-footer { max-width: none; }
+}
+
+// ---- Pitfall callout ----
+// The mirror image of .try-this, in brick rather than orange: that box says
+// "your turn", this one says "here is where the room goes wrong". Same
+// geometry and same marker treatment so the deck has one callout language.
+.pitfall {
+  margin: 0.1em 0 0.2em;
+  padding: 10px 18px 10px 46px;
+  background: rgba(185, 74, 72, 0.06);
+  border: 1px solid rgba(185, 74, 72, 0.22);
+  border-left: 4px solid var(--accent-4);
+  border-radius: 0 6px 6px 0;
+  font-size: 21px;
+  line-height: 1.5;
+  color: var(--ink);
+  position: relative;
+  text-align: justify;
+  hyphens: auto;
+}
+.pitfall::before {
+  content: "!";
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-4);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.66em;
+  font-weight: 700;
+  line-height: 1;
+}
+.pitfall p { margin: 0; }
+
+// The third member of the callout family. .try-this is orange and says "your
+// turn"; .pitfall is brick and says "this is where the room goes wrong";
+// .note is navy and says "here is the connection". Same geometry, same
+// marker treatment, so which one is speaking is a colour and a glyph.
+.note-box {
+  margin: 0.1em 0 0.2em;
+  padding: 10px 18px 10px 46px;
+  background: rgba(50, 93, 136, 0.05);
+  border: 1px solid rgba(50, 93, 136, 0.2);
+  border-left: 4px solid var(--accent-1);
+  border-radius: 0 6px 6px 0;
+  font-size: 21px;
+  line-height: 1.5;
+  color: var(--ink);
+  position: relative;
+  text-align: justify;
+  hyphens: auto;
+}
+.note-box::before {
+  content: "i";
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  // The nudge rides on the transform, NOT on padding. Flex centres the text
+  // box, not the ink, and an italic 'i' leans right — measured on a canvas,
+  // its ink centre sits 0.75px right of the box centre. Correcting that with
+  // padding-right made the element 22x20, so the circle became an ellipse.
+  transform: translateY(-50%) translateX(-0.75px);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.66em;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
+}
+.note-box p { margin: 0; }
+
+// ---- Two worked examples side by side (#prob-count) ----
+// Built on the .deck-facts idiom from #s00-webr rather than inventing a
+// second column style: a hairline ABOVE the whole block, a navy small-caps
+// head on each column, and no vertical rule. A divider between two columns
+// was the only one in the deck and it read as a table.
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 52px;
+  margin-top: 4px;
+  border-top: 1px solid var(--rule);
+  padding-top: 10px;
+}
+.col-head {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+  margin-bottom: 6px;
+}
+// The line under a column head. Two of the three heads on #combinatorics
+// read "Without replacement", which is the point — the split between them
+// is the order, and that has to sit directly underneath.
+.col-sub {
+  display: block;
+  font-size: 17px;
+  color: var(--ink-soft);
+  margin: -4px 0 4px;
+}
+
+// The named concept. Olive, because it is the term the module will use from
+// here on, not another descriptor of the case above it.
+.col-term {
+  display: block;
+  font-size: 17px;
+  font-weight: 700;
+  color: #6E9A2E;
+  margin-top: 2px;
+}
+
+// One level of small caps per slide. The sub-labels stay sentence case so
+// the column head is unambiguously the heading.
+.col-lab {
+  display: block;
+  font-size: 18px;
+  color: var(--ink-soft);
+  margin-top: 8px;
+}
+#prob-count {
+  .two-col p { margin: 4px 0; font-size: 20px; }
+  // The headline formula is the definition, not the working — it does not
+  // need to shout over two columns of it. Both MathJax spellings, since
+  // which one lays the slide out flips between loads (see #set-formal).
+  // Centred and small. This is the ONE slide in the deck whose display
+  // equation is centred rather than flush left: it is a definition standing
+  // over two columns of worked examples, not a line of working that has to
+  // align with a left edge the way #set-formal's arrays do.
+  .MJXp-math.MJXp-display { font-size: 0.64em; }
+  .MathJax_Display { zoom: 0.64; }
+  span.math.display { margin: 16px 0 24px; }
+  .pitfall { margin-top: 16px; }
+  // The four outcomes drawn, since a coin CAN be drawn and 36 dice rolls
+  // cannot. Heads olive because A is olive two lines down, so "at least one
+  // head" is visible in the picture before it is stated.
+  .coin-row { margin: 6px 0 2px; line-height: 0; }
+  // Floated, not stacked: the three text lines beside it are taller than the
+  // grid, so the picture costs the slide no height at all. Rows are die one,
+  // columns die two; the eleven olive cells are the event, and the single
+  // cell at their corner is why the answer is 11 and not 12.
+  .dice-grid { float: right; margin: 6px 6px 4px 14px; line-height: 0; }
+  // .stage is authored for the deck's 1000-unit canvases and hard-codes that
+  // width and a 1.05 scale; this pair of dice is 77 units wide.
+  .dice-grid .stage { width: auto; transform: none; margin: 0; }
+
+}
+
+// ---- Conditional probability: the picture beside the formula ----
+// The two panels and the definition say the same thing, so they share a row
+// rather than stacking — which is also the only way both fit the slide.
+.cond-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 44px;
+  margin: 10px 0 4px;
+}
+.cond-row p { margin: 0; }
+
+// ---- Random variables (#random-variables) ----
+// The .two-col base rule carries no type sizing — each slide that uses it
+// sets its own, or the column prose comes out at the slide's 36px and the
+// block runs to 588px a column.
+// The 97px grid in a 480px column left the paragraph stacked underneath and
+// 380px of nothing beside it. Floated, the text wraps into that gap and the
+// column loses a third of its height.
+.die-grid { float: left; margin: 0 16px 4px 0; line-height: 0; }
+// The wrapped text starts level with the grid's top row of numbers, which
+// reads as high. PADDING, not margin: a margin here collapses with the
+// sub-label's above it and moves nothing.
+#conditional-probabilities .die-grid + p { padding-top: 6px; }
+
+// The raw <svg> is a direct child of the section, so it sits left-aligned
+// with the slack piled on the right. margin:auto centres it.
+#box-normal svg { display: block; margin: 8px auto 4px; }
+
+#total-probability {
+  // Both blocks of maths came out at the slide's base size: the sum stood
+  // taller than the figure beside it, and the three products were the
+  // loudest thing on the slide. WHICH MathJax box lays the slide out flips
+  // between loads, so both spellings are set and the wrapper carries the gaps.
+  .cond-row .MJXp-math.MJXp-display { font-size: 0.56em; }
+  .cond-row .MathJax_Display { zoom: 0.56; }
+  .cond-row span.math.display { margin: 0; }
+
+  // Grid items do not collapse margins, so row spacing is row-gap and every
+  // child's own vertical margin is zeroed.
+  // The products measured dead centre of their columns already (offset 0 on
+  // all three), but they sat under a left-aligned heading, so the eye read
+  // them as pushed right. Centring the whole column puts head, sub and
+  // number on one axis and the centring becomes visible.
+  .three-col { row-gap: 6px; }
+  .three-col p { margin: 0; font-size: 19px; text-align: center; }
+  // em here resolves against the COLUMN's 19px, not the slide's base size, so
+  // a factor under 1 lands at nine pixels. #combinatorics sits at 0.95.
+  .three-col .MJXp-math.MJXp-display { font-size: 1.1em; }
+  .three-col .MathJax_Display { zoom: 1.1; }
+  .three-col span.math.display { margin: 8px 0 0; }
+  .note-box { margin-top: 16px; }
+}
+
+#random-variables,
+#conditional-probabilities,
+#distribution-fn {
+  // Justified, with hyphenation on. At a 480px column three words a line
+  // open real gaps without it — the same lesson as the deck-facts strip.
+  .two-col p {
+    margin: 6px 0;
+    font-size: 20px;
+    text-align: justify;
+    hyphens: auto;
+  }
+  .two-col .col-sub { margin-bottom: 8px; }
+  .MJXp-math.MJXp-display { font-size: 0.62em; }
+  .MathJax_Display { zoom: 0.62; }
+  span.math.display { margin: 14px 0 18px; }
+  .perm-row { margin: 8px 0 10px; }
+  .perm-row span { font-size: 16px; }
+  .note-box { margin-top: 16px; }
+  .two-col strong { color: var(--accent-1); }
+}
+
+// ---- Permutation chips (#combinatorics) ----
+// The same job the coin row does on #prob-count: show the thing being
+// counted rather than assert how many there are. Six chips, six orderings.
+.perm-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 2px;
+}
+.perm-row span {
+  font-family: $font-family-monospace;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--accent-1);
+  background: rgba(50, 93, 136, 0.07);
+  border: 1px solid rgba(50, 93, 136, 0.2);
+  border-radius: 4px;
+  padding: 3px 7px;
+}
+
+// Three columns rather than two: the board this slide follows splits the
+// counting into repeats-allowed, no-repeats-in-order and no-repeats-any-
+// order, and collapsing that to two loses the middle case.
+.three-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  // Grid items stretch to their row by default, which blew the KQ chips up
+  // to the height of the card working beside them.
+  align-items: start;
+  gap: 0 38px;
+  margin-top: 4px;
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+}
+// The three columns SHARE grid rows. Without this each column stacks
+// independently, so a one-line formula like n^r leaves its example label
+// 25px higher than the two-line fractions beside it and the rows across the
+// slide never line up. display:contents dissolves the wrapper divs into the
+// grid, and pinning each one's children to a column makes item k of every
+// column land in row k, which is row height by the tallest of the three.
+// Rows must be pinned as well as columns. With grid-auto-flow: row the
+// placement cursor only ever moves FORWARD, so giving the children a column
+// alone put column one in rows 1-6 and then started column two at row 7 —
+// a 1144px slide. Naming the row for each child index fixes item k of every
+// column into row k, whose height is the tallest of the three.
+.three-col > div { display: contents; }
+// A column wrapper is display: contents, so a fragment's fade on it reaches
+// nothing; fade its children instead (visibility already passes down).
+.three-col > div.fragment > * { opacity: 0; transition: opacity 0.4s ease; }
+.three-col > div.fragment.visible > * { opacity: 1; }
+.three-col > div:nth-child(1) > * { grid-column: 1; }
+.three-col > div:nth-child(2) > * { grid-column: 2; }
+.three-col > div:nth-child(3) > * { grid-column: 3; }
+.three-col > div > *:nth-child(1) { grid-row: 1; }
+.three-col > div > *:nth-child(2) { grid-row: 2; }
+.three-col > div > *:nth-child(3) { grid-row: 3; }
+.three-col > div > *:nth-child(4) { grid-row: 4; }
+.three-col > div > *:nth-child(5) { grid-row: 5; }
+.three-col > div > *:nth-child(6) { grid-row: 6; }
+
+#combinatorics {
+  // Grid items do not collapse margins, so row spacing comes from row-gap
+  // and every child's own vertical margin is zeroed. Leaving them on took
+  // the slide to 773px.
+  .three-col { row-gap: 8px; }
+  .three-col p { margin: 0; font-size: 19px; }
+  .three-col .col-lab { margin-top: 0; }
+  // Air above the formula only. row-gap is uniform across the grid, so the
+  // one gap that wants to be bigger is set on the item itself — which works
+  // here precisely because grid items keep their margins.
+  .three-col > div > p:nth-child(2) { margin-top: 6px; }
+  .three-col .perm-row { margin: 0; }
+  // The chips and the count they explain are ONE grid item, so the
+  // count follows the chips instead of being pushed into the next
+  // shared row by the tall card working in column two.
+  .stack p { margin: 13px 0 0; }
+  // The definition at the top is scene-setting; the three formulas in the
+  // columns are the slide. They set LARGER than it, not the same size, and
+  // they stand on their own line instead of hanging off a blackboard "#",
+  // which typeset in a serif face reads as a stray glyph rather than "the
+  // number of".
+  > p .MJXp-math.MJXp-display { font-size: 0.60em; }
+  > p .MathJax_Display { zoom: 0.60; }
+  > p span.math.display { margin: 20px 0 20px; }   // even air above and below
+  // em inside a column resolves against .three-col p's 19px, not the slide's
+  // 36px — an earlier 0.78 here came out half the size of the definition it
+  // was meant to outrank. Centred in the column, unlike the rest of the deck,
+  // because each one is the answer to the heading directly above it.
+  // Flush left, on the column's own edge. Centring the formula inside a
+  // left-aligned column was tried and it reads as a misplaced element
+  // rather than a centred one — there is no axis for it to be centred on.
+  .three-col .MJXp-math.MJXp-display { font-size: 0.95em; }
+  .three-col .MathJax_Display { zoom: 0.95; }
+  .three-col span.math.display { margin: 0; }
+  .three-col .MJXp-math.MJXp-display,
+  .three-col .MathJax_Display,
+  .three-col .MathJax_Display > .MathJax { text-align: left !important; }
+  .three-col .MJXp-math.MJXp-display,
+  .three-col .MathJax_Display { margin-left: 0; }
+
+  .note-box { margin-top: 16px; }
+  .perm-row span { font-size: 15px; letter-spacing: 0.04em; }
+}
+
+// ---- Chart-choice quiz (#chart-choice) ----
+// Observable Inputs names its <form> with a per-build hash (oi-3a86ea), so
+// everything here is matched STRUCTURALLY. The options row is a flex line
+// that does not wrap by default, which clipped the last two choices off the
+// right edge of the slide.
+// Quarto gives every {ojs} cell 14.4px of margin top and bottom, and four of
+// the cells on this slide define values and render nothing — zero height, but
+// they still spend their margins, which piled ~45px of emptiness between the
+// lede and the question. Spacing is carried by the elements instead.
+#chart-choice .cell, #table-cond .cell, #taxi-indep .cell, #courier-moments .cell,
+#uniform-dist .cell, #normal-area .cell, #normal-critical .cell { margin: 0; }
+// Quarto gives OJS outputs overflow:auto, so nudging the figure 6px past its
+// cell raised a scrollbar down the right of the plot.
+#chart-choice .cell-output-display,
+#taxi-indep .cell-output-display, #table-cond .cell-output-display,
+#attempts-const .cell-output-display, #courier-moments .cell-output-display,
+#uniform-dist .cell-output-display, #normal-area .cell-output-display,
+#normal-critical .cell-output-display { overflow: visible; }
+
+#chart-choice form, #table-cond form, #courier-moments form, #normal-area form {
+  font-size: 21px;
+  margin: 6px 0 10px;
+  // display:block, not Observable's flex row: with the caption beside the
+  // options the row started 120px in and the last choice ran off the slide.
+  // Stacked, the options get the full width and wrap cleanly.
+  display: block;
+  // Observable Inputs ships the form at max-width 640px, which is what kept
+  // the five options on two rows however short their labels got.
+  max-width: none;
+  > label {                       // the group caption, e.g. "Suitable display"
+    display: block;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-1);
+    margin-bottom: 4px;
+    width: auto;
+  }
+  > div {
+    display: flex;
+    flex-wrap: wrap;      // a safety net; at 21px the five fit on one line
+    gap: 4px 26px;
+    max-width: 100%;
+  }
+  > div > label {
+    font-size: 21px;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  input { margin-right: 7px; }
+}
+.quiz-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  vertical-align: middle;
+}
+.quiz-opt svg { flex-shrink: 0; }
+
+// The question and the verdict are the two things read from the back of the
+// room, so they set larger than the input that sits between them.
+// The item being answered sits in a card so it reads as the thing on the
+// table, distinct from the .lede-min above it, which is the instruction. A
+// neutral border rather than the lede's navy bar, or the two would compete.
+.quiz-q {
+  font-size: 25px;
+  color: var(--ink);
+  margin: 6px 0 14px;
+  // No max-width. At 980 the card stopped 28 units short of the verdict box
+  // and the options row below it, which both run the full 1050.
+  padding: 14px 20px;
+  background: #F7F8F9;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  text-align: justify;
+  hyphens: auto;
+}
+// The verdict and an example of the chart that was picked, side by side.
+.quiz-answer {
+  display: flex;
+  align-items: stretch;
+  gap: 24px;
+  margin-top: 12px;
+}
+.quiz-fb {
+  font-size: 20px;
+  line-height: 1.45;
+  padding: 12px 16px;
+  border: 1px solid var(--rule);
+  border-left-width: 4px;
+  border-radius: 6px;
+  flex: 1 1 auto;
+  text-align: justify;
+  hyphens: auto;
+  color: var(--ink-soft);
+}
+.quiz-plot {
+  flex: 0 0 400px;
+  margin: 0;
+  // The svg's own bottom edge already meets the verdict box's, but the axis
+  // label sits 6.3 units above it in the plot's trailing space. Relative
+  // positioning drops the figure by exactly that, so the LABEL lines up with
+  // the box while the layout height is untouched.
+  position: relative;
+  top: 6px;
+}
+// Scoped to the slide id for SPECIFICITY, not out of habit: Quarto ships
+// `.reveal .slide figure > figcaption { font-size: 0.7em }` at (0,2,2), which
+// beat a plain `.quiz-plot figcaption` and rendered this at 25px.
+#chart-choice .quiz-plot figcaption {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+  margin-bottom: 2px;
+}
+.quiz-idle { font-style: italic; }
+// Olive for a right answer, brick for a wrong one — the same two colours the
+// tick/cross lattice uses in Seminar 4, so the deck only ever has one green
+// and one red.
+.quiz-ok  { border-color: rgba(147, 197, 75, 0.45); border-left-color: #93C54B;
+            background: rgba(147, 197, 75, 0.08); }
+.quiz-no  { border-color: rgba(185, 74, 72, 0.4); border-left-color: #B94A48;
+            background: rgba(185, 74, 72, 0.07); }
+.quiz-fb b { color: var(--ink); }
+
+// ---- Two-way table (#table-cond) ----
+// The radios borrow the chart-choice quiz rules above. Navy is what you divide
+// by and orange is what goes on top, the same pair the hatched overlap uses on
+// #conditional-probabilities, so a cell that is both reads as both.
+#table-cond form { margin: 2px 0 6px; }
+#table-cond form > div { gap: 2px 22px; }
+#table-cond form > div > label { font-size: 19px; }
+.ct-wrap { margin-top: 6px; }
+// #table-cond: one 18px gap from the radios to the table, the table to the
+// fraction, and the fraction to the verdict.
+.reveal section#table-cond table.ct-table { margin-top: 12px; }
+.reveal section#table-cond .ct-eq { margin: 18px 0; }
+#table-cond .quiz-fb { font-size: 19px; padding: 8px 14px; }
+// The theme's "quiet editorial" table (navy heads over a navy rule) is kept;
+// only its size is set here. Scoped to the slide so it outranks
+// `.reveal table th`, which otherwise sets the heads at slide size.
+.reveal section.ojs-slide table.ct-table {
+  margin: 4px auto 0;
+  font-size: 22px;
+  th { font-size: 22px; padding: 6px 14px; text-align: center; white-space: nowrap; }
+  tbody th { text-align: left; }
+  td {
+    font-family: "JetBrains Mono", monospace;
+    color: var(--ink);
+    text-align: center;
+    min-width: 108px;
+    padding: 6px 14px;
+    font-size: 22px;
+  }
+  // Inset shadows rather than borders: the table collapses its borders, so a
+  // border here would shift the grid by a pixel every time the choice moved.
+  td.ct-den { background: rgba(50, 93, 136, 0.10); box-shadow: inset 0 0 0 1.5px rgba(50, 93, 136, 0.45); }
+  td.ct-top { background: rgba(244, 124, 60, 0.22); box-shadow: inset 0 0 0 2px #F47C3C; font-weight: 700; }
+  .ct-sum, tr.ct-sum td { color: var(--ink-soft); }
+}
+#taxi-indep .ct-table { th, td { font-size: 21px; white-space: nowrap; } td { min-width: 0; } }
+// The slide has room to spare, so the three controls, the table and the
+// verdict get air between them instead of stacking flush.
+#taxi-indep form { margin: 0 0 12px; }
+.reveal section#taxi-indep table.ct-table { margin-top: 14px; }
+#taxi-indep .quiz-fb { margin-top: 26px; font-size: 20px; }
+#attempts-const .quiz-fb, #courier-moments .quiz-fb { font-size: 19px; padding: 8px 14px; }
+// Same gap above and below the sum: the chart's trimmed bottom margin carries
+// the space above, this carries the space below.
+.reveal section.ojs-slide .ojs-eq.at-eq { margin: 0; }
+#attempts-const .quiz-fb { margin-top: 19px; }
+#courier-moments form { margin: 2px 0 4px; }
+.cr-row { display: flex; justify-content: center; gap: 24px; }
+// Two columns so the three lines align on their first "=": the left-hand
+// sides right-aligned against it, the working left-aligned after it.
+.reveal section.ojs-slide .ojs-eq.cr-eqs {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: center;
+  column-gap: 0.5em;
+  row-gap: 2px;
+  font-size: 19px;
+  text-align: left;
+  margin: 11px 0 2px;
+  > span:nth-child(odd) { text-align: right; }
+}
+#courier-moments .quiz-fb { margin-top: 19px; }
+// #uniform-dist, #normal-area, #normal-critical: the working under each plot,
+// aligned on its first "=" like the couriers'.
+.reveal section.ojs-slide .ojs-eq.un-eqs,
+.reveal section.ojs-slide .ojs-eq.na-eqs { font-size: 21px; row-gap: 4px; margin: 14px 0 0; }
+.reveal section.ojs-slide .ojs-eq.un-eqs { margin-top: 22px; }
+#uniform-dist form, #normal-critical form { margin: 0 0 6px; }
+// #uniform-dist: label over number-and-slider, three across.
+.reveal section#uniform-dist .un-dials {
+  display: flex; gap: 40px; margin: 4px 0 14px;
+  form { flex-direction: column; align-items: flex-start; gap: 4px; margin: 0; --label-width: auto; }
+  form > label { font-size: 20px; }
+  input[type="range"] { width: 170px; }
+}
+#normal-area form { margin: 4px 0 8px; }
+#normal-area form > div > label { font-size: 19px; }
+// The four number boxes on one row. Each is its own Inputs form inside the
+// Inputs.form, so the label track is shrunk to its text.
+.reveal section#normal-area .na-dials {
+  display: flex; gap: 34px; margin: 2px 0 6px;
+  form { margin: 0; --label-width: auto; }
+  // Not the quiz's uppercase caption: that turns μ into M and σ into Σ.
+  form > label { font-size: 20px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--ink-soft); }
+}
+// #normal-critical has the slide to itself below one slider, so it spends it.
+#normal-critical form { margin: 18px 0 0; }
+.reveal section.ojs-slide .ojs-eq.nc-eqs { font-size: 23px; row-gap: 10px; margin-top: 22px; }
+.nc-eqs .na-note { font-size: 17px; }
+.na-note { font-size: 16px; color: var(--ink-soft); }
+.ct-eq {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 24px;
+  color: var(--ink);
+  text-align: center;
+  margin: 10px 0 8px;
+  .ct-num { color: #C4551A; font-weight: 700; }
+  .ct-dnm { color: var(--accent-1); font-weight: 700; }
+}
+
+// ---- Where to Find Me (#s00b-about) ----
+// The grid ships as `220px 1fr`, so the list stretched to the slide edge and
+// the block sat hard left with 250 units of nothing on the right. Sizing both
+// columns to their content lets the pair centre as one object.
+#s00b-about .about-grid {
+  grid-template-columns: auto auto;
+  justify-content: center;
+  width: max-content;
+  max-width: 100%;
+  // Dropped down the slide rather than sitting right under the title: the
+  // block is 392 tall in 614 of space below the title, so the arithmetic
+  // centre is 111. 96 sits a shade above it, which reads as centred.
+  margin: 96px auto 0;
+}
+
+// ---- Deck facts strip (#s00-webr) ----
+// Three short columns under the R demo. Same shape as the SAY / WRITE strip
+// on #s00b-me: a navy small-caps label over one sentence, so the two opening
+// slides read as one voice.
+.deck-facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0 34px;
+  margin: 18px 0 0;
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--rule);
+  padding-top: 16px;
+  // Justified like every other block of prose on the two opening slides.
+  // Hyphenation is not optional at this column width — three words per line
+  // open ugly gaps without it.
+  text-align: justify;
+  hyphens: auto;
+}
+.deck-facts span {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-1);
+  margin-bottom: 6px;
+}
+// Without this the footer reads as a fourth line of the strip's first column.
+#s00-webr .slide-footer { margin-top: 16px; }
+.deck-facts kbd {
+  font-family: $font-family-monospace;
+  font-size: 0.86em;
+  background: var(--rule);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--ink);
+}
+
+// Invisible fragments used purely to gate animation steps.
+.fi-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+// ---- "Turn this knob" prompt ----
+// Orange (accent-3) rather than navy: navy is the deck's voice, orange is
+// the student's turn to act. One per interactive slide, never more.
+.try-this {
+  // The gap above this box is the LARGER of this margin-top and .sim-card's
+  // own margin-bottom (adjacent margins collapse); trimmed alongside that
+  // margin (Task 25b) to close a 12px overflow measured live on the
+  // tallest cell (a plot with a two-line result and this two-line box).
+  margin: 0.1em 0 0.2em;
+  padding: 8px 16px 8px 46px;
+  background: rgba(244, 124, 60, 0.07);
+  border: 1px solid rgba(244, 124, 60, 0.22);
+  border-left: 4px solid var(--accent-3);
+  border-radius: 0 6px 6px 0;
+  font-size: 23px;
+  line-height: 1.55;
+  color: var(--ink);
+  position: relative;
+}
+.try-this::before {
+  content: "▶";
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-3);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6em;
+  line-height: 1;
+  padding-left: 2px;
+}
+.try-this p { margin: 0; }
+.try-this p + p { margin-top: 0.3em; }
+.try-this strong { color: #C4551A; }
+.try-this code {
+  background: rgba(255, 255, 255, 0.7);
+  color: #C4551A;
+  font-weight: 600;
+}
+
+// ---- Sim slides: chrome sized for the room (spec §4.3, §7) ----
+.reveal section.sim-slide {
+  display: block !important;
+  text-align: left !important;
+}
+// Deck-wide (every slide type uses .slide-kicker), not only sim slides; do not scope it.
+.slide-kicker { font-size: 17px; }
+.reveal section.sim-slide .slide-kicker { margin: 0.2em 0 0.4em; }
+
+// #bayes-sim only: 24px under the title (matching the stage slides' .lede-min)
+// and 24px above the prompt, so the orange box reads as separate from the
+// card rather than stuck to it. NOT deck-wide, and not because of the usual
+// scoping laziness — measured, this slide has 119px of headroom while
+// cond-sim and pois-sim have under 4px, so the same rule on .sim-slide would
+// push those two past 700. Re-measure before widening it.
+#bayes-sim .slide-kicker { margin-top: 24px; }
+#bayes-sim .try-this { margin-top: 24px; }
+.reveal section.sim-slide .lede-min {
+  font-size: 26px;
+  margin: 0.25em 0 0.4em;
+}
+
+// ---- Full-width webR card ----
+// Same surface treatment as the base theme's .type-card, wider, and the
+// output pane is tall enough for a base-graphics plot.
+// Padding is tight on purpose: a 12-line plot cell with a two-line printed
+// result and a two-line prompt is the tallest sim slide and must fit 700px.
+// That budget was never checked against a live run (the static check only
+// counts code lines): run in the browser (Task 25b) it actually came to
+// 712px. margin and padding trimmed below to close the gap; the collapsed
+// margin above .try-this is whichever of this margin-bottom and .try-this's
+// own margin-top is larger, so both had to shrink together.
+.sim-card {
+  padding: 8px 18px 8px;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--accent-1);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(20, 28, 45, 0.03);
+  margin: 0.1em 0 0.05em;
+  min-width: 0;
+}
+// qwebr's real DOM (verified in the browser, not assumed):
+//   .qwebr-interactive-area
+//     .qwebr-editor-toolbar        <- the Run button
+//     .qwebr-console-area          <- editor + text output, stacked
+//     .qwebr-output-graph-area     <- SIBLING of the console, not a child
+// So a plot has to be split off at the interactive-area level; text output
+// is split off one level deeper. Hence two variants below.
+//
+// Font sizes: the extension reads the computed font-size of the editor div
+// and of the output div and multiplies by editor-font-scale (1, set in
+// _quarto.yml), so these px values ARE the Monaco font size and the printed
+// output size. Line height for Monaco is set in assets/js/sim-tune.html.
+.sim-card .qwebr-editor { font-size: 20px; }
+.sim-card .qwebr-output-code-area { font-size: 22px; }
+
+.sim-card .qwebr-output-code-area,
+.sim-card .qwebr-output-graph-area {
+  min-height: 70px;
+  overflow: auto;
+  background: var(--bg-soft);
+  border: 1px dashed var(--rule);
+  border-radius: 4px;
+}
+.sim-card .qwebr-output-code-area pre,
+.sim-card pre.qwebr-output-code {
+  line-height: 1.25;
+  // Quarto's reveal theme gives every .reveal pre a block margin and 90%
+  // width (`.reveal pre { width: 90%; margin: var(--r-block-margin) auto }`);
+  // inside the output box that is dead space.
+  margin: 0;
+  width: 100%;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  // A separate, less specific `.reveal pre` rule (Quarto's theme) sets
+  // padding: .5em .9em, so this element inherits ~19.8px of left/right
+  // padding at 22px font that this rule never overrides. With the default
+  // content-box model that padding sat OUTSIDE the 100% width, overflowing
+  // the card by ~40px and forcing a permanent horizontal scrollbar even for
+  // a one-line result. border-box folds that inherited padding back inside
+  // the 100%.
+  box-sizing: border-box;
+}
+
+// --- .sim-plot: code on the left, the figure on the right ---
+// 1.5fr/1fr, the same split as text cells: 599px of code. Monaco's padding
+// eats about 10px, so 590px (1.45fr) wrapped 48-character lines; 599 fits.
+// The plot column is 399px; the 410px bitmap is shown at 100% of it.
+.sim-card.sim-plot .qwebr-interactive-area {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  grid-template-areas:
+    "toolbar toolbar"
+    "console graph";
+  column-gap: 16px;
+  align-items: start;
+}
+.sim-card.sim-plot .qwebr-editor-toolbar   { grid-area: toolbar; }
+.sim-card.sim-plot .qwebr-console-area     { grid-area: console; min-width: 0; }
+.sim-card.sim-plot .qwebr-output-graph-area { grid-area: graph; min-width: 0; }
+.sim-card.sim-plot .qwebr-output-graph-area canvas,
+.sim-card.sim-plot .qwebr-output-graph-area img,
+.sim-card.sim-plot .qwebr-output-graph-area svg {
+  max-width: 100%;
+  height: auto;
+}
+// The console column carries the editor with the printed value beneath it.
+.sim-card.sim-plot .qwebr-output-code-area { margin-top: 6px; min-height: 0; }
+
+// --- .sim-text: code on the left, printed output on the right ---
+// 1.5fr/1fr: 599px of code (49 chars), 399px of output (30 chars at 22px).
+.sim-card.sim-text .qwebr-console-area {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.sim-card.sim-text .qwebr-console-area > * { min-width: 0; }
+.sim-card.sim-text .qwebr-output-graph-area { display: none; }
+
+// The hidden setup cell (plot text hook, spec §6.2) renders a "Loading
+// webR…" stub until the extension's hidden-cell pass runs. Never show it.
+.qwebr-noninteractive-setup-area { display: none; }
+
+// ---- Seminar marker on hero slides ----
+// Mono numeral + rule, so the deck reads as an ordered sequence of nine.
+.sem-mark {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  // Bottom margin dropped to 0 (Task 5b step a): the enlarged hero (numeral
+  // 4.4em, tagline 1.3em) still ran 26-30px over 700 after the line-height
+  // and lede fixes, so this squeezes the remaining slack above the h1.
+  //
+  // The top margin makes the accent bar read as a RULE: title above it,
+  // numeral and label below it. At 0 the numeral's ink starts ~5px under
+  // the bar and the two merge into one shape (they share a left edge);
+  // this opens that to ~10px, which is the smallest gap that still reads
+  // as a break. Judge it by eye in the browser, not by measuring line
+  // boxes — canvas text metrics do not match how the webfont paints.
+  margin: 0.5em 0 0;
+  color: var(--accent-1);
+}
+.sem-mark::before {
+  content: attr(data-sem);
+  font-family: "JetBrains Mono", monospace;
+  // Trimmed from 4.4em (Task 5b step c): three heroes (long tagline/lede
+  // pairs) still ran 13px over 700 after the lede, .sem-mark and tagline
+  // tightening above; still visibly larger than pre-§4.4 (was smaller
+  // still), and still dominates the small uppercase label beside it.
+  font-size: 4em;
+  font-weight: 700;
+  // Digits have no descenders, so the line box (144px at 4em: 36px * 4) is
+  // mostly dead space below the glyph; 0.8 tightens that box to ~115px
+  // without shrinking the glyph itself, buying back ~29px of hero height.
+  line-height: 0.8;
+  color: rgba(50, 93, 136, 0.18);
+}
+.sem-mark p {
+  margin: 0;
+  font-size: 0.42em;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+// Hero weight (spec §4.4): tagline up one step, lede in ink.
+// margin and max-width tightened/widened (Task 5b step b): theme.scss's
+// 0.45em/0.1em margins and 78% max-width wrapped the enlarged 1.3em
+// tagline onto an extra line on four heroes; wider (88%) wraps fewer
+// lines and the tighter margins recover more vertical space.
+.reveal section.hero > p { font-size: 1.3em; margin: 0.3em 0 0.05em; max-width: 88%; }
+// theme.scss sets margin-top: 0.7em here; tightened to 0.4em to help the
+// enlarged hero (numeral 4.4em, tagline 1.3em) fit inside 700px (Task 5b).
+// After steps (a)-(c) below, three heroes with the longest tagline+lede
+// pairs (s02, s03, s07) still measured 702px — 0.3em closes that last 2px
+// without touching any §4.4-mandated size or color.
+.reveal section.hero .lede { color: var(--ink); margin-top: 0.3em; }
+
+// ---- Stepped formula, annotated back to the picture ----
+// Each row is `expression | plain-English note`, so the algebra is read as a
+// caption on the geometry rather than as a new object to memorise. The token
+// colours match the Bayes grid exactly: navy = prior, orange = likelihood.
+.formula-steps {
+  margin: 0.5em 0 0.3em;
+  font-family: "JetBrains Mono", monospace;
+}
+.formula-row {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 22px;
+  align-items: baseline;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--rule-soft);
+  font-size: 0.6em;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.formula-row:last-child { border-bottom: none; }
+.formula-row .fx-note {
+  font-family: "Roboto", sans-serif;
+  font-size: 0.88em;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+.fx-prior { color: var(--accent-1); font-weight: 700; }
+.fx-like  { color: var(--accent-3); font-weight: 700; }
+.fx-post  { color: var(--accent-4); font-weight: 700; }
+
+// ---- Two-up claim/answer for intuition slides ----
+.claim-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 0.5em 0 0.3em;
+}
+.claim-cell {
+  padding: 14px 18px 12px;
+  border-radius: 6px;
+  background: var(--bg-elev);
+  border: 1px solid var(--rule);
+  font-size: 0.6em;
+  line-height: 1.55;
+}
+.claim-cell.claim-wrong { border-left: 4px solid var(--accent-4); }
+.claim-cell.claim-right { border-left: 4px solid var(--accent-2); }
+.claim-cell > p:first-child { margin: 0 0 8px; line-height: 1; }
+.claim-cell > p { margin: 0 0 6px; }
+.claim-cell > p:last-child { margin-bottom: 0; }
+.claim-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 3px;
+}
+.claim-wrong .claim-tag { background: rgba(185, 74, 72, 0.14); color: #8A3937; }
+.claim-right .claim-tag { background: rgba(147, 197, 75, 0.18); color: #4E6B33; }
+
+
+// ---- OJS interactive slide (#likelihood-live) ------------------------------
+// Observable Inputs renders  <form class="oi-HASH"><label></label>
+//   <div class="oi-HASH-input"><input type=number><input type=range></div>
+// </form>.  That class is a per-build hash, so everything below is targeted
+// structurally instead. Without it the controls inherit Reveal's display type
+// size and the label wraps over two lines at 40px.
+.reveal section.ojs-slide {
+  display: block !important;
+  text-align: left !important;
+
+  .observablehq { font-family: "Roboto", sans-serif; }
+
+  // The cell after the lede stands in for .stage-wrap on this slide, so it
+  // carries the same 8px top margin and collapses against the lede's 0.5em
+  // exactly as the stage slides do. Quarto ships .cell with a 14.4px top
+  // margin, which otherwise wins the collapse and leaves the text-to-content
+  // gap a pixel adrift from slides 17-19 — invisible alone, not in sequence.
+  // NB an adjacent-sibling selector, not :first-of-type: .lede-min is a div
+  // too, so it IS the first div and no .cell would ever match.
+  .lede-min + .cell { margin-top: 8px; }
+  .cell-output-display { margin: 0; }
+  .observablehq svg { display: block; }
+
+  // --- the dial ---
+  .observablehq form {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 0 0 2px;
+    // Observable Inputs lays the label out in a fixed track and clips the
+    // overflow; these are its own knobs, and the only reliable way to widen
+    // it without depending on the per-build hashed class name.
+    --label-width: 210px;
+    --input-width: 110px;
+  }
+  .observablehq form > label {
+    font-size: 22px;
+    color: var(--ink-soft);
+    white-space: nowrap;      // "true success rate s" must not wrap
+    flex: 0 0 auto;           // ...and flex must not clip it either
+  }
+  .observablehq form > div {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 0 0 auto;
+  }
+  .observablehq input[type="number"] {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 24px;
+    color: var(--ink);
+    width: 104px;
+    min-width: 104px;         // Observable sets its own; override both
+    flex: 0 0 auto;
+    text-align: center;
+    padding: 2px 6px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: #fff;
+  }
+  .observablehq input[type="range"] {
+    width: 520px;
+    height: 24px;
+    accent-color: var(--accent-3);   // orange — the one thing you turn
+  }
+
+  // --- the reading, between the two plots ---
+  .ojs-eq {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 26px;
+    color: var(--ink);
+    text-align: center;
+    margin: 4px 0 2px;
+
+    .hit  { color: var(--accent-2); }   // olive, like the ticks
+    .miss { color: var(--accent-4); }   // brick, like the crosses
+    .rate { color: var(--accent-3); }   // orange, like s everywhere else
+  }
+}
+
+
+// ---- #binom-formal: the binomial written out -------------------------------
+// A definitions slide: two display equations with a line of prose between
+// them. At the deck's body size that prose sets larger than the maths it is
+// annotating and takes the eye first, so it is stepped down to sit under the
+// equations rather than over them.
+// --- #dist-questions -------------------------------------------------------
+// One row per distribution: a coloured rule, its name, and the single question
+// it answers. The colours are the deck's own — olive for the binomial's
+// successes, orange for the Poisson's rate, brick for the exponential's wait —
+// so the rows key back to the plots on slides 22 and 24.
+.reveal section.qcard-slide {
+  // A flex column with auto margins top and bottom of the group BELOW the
+  // title: the free space splits evenly, so the rows sit in the middle of
+  // the slide while the title stays pinned where every other slide puts it.
+  display: flex !important;
+  flex-direction: column;
+  height: 700px;
+  text-align: left !important;
+
+  > h2 { flex: 0 0 auto; }
+  > h2 + * { margin-top: auto; }
+  > :last-child { margin-bottom: auto; }
+
+  .qcard {
+    border-left: 4px solid var(--rule);
+    // The padding is the coloured rule's height; the margin is the gap
+    // between rows. Keep them separate — 60px of gap read as three unrelated
+    // lines rather than one list.
+    padding: 12px 0 12px 20px;
+    // Indented and set smaller than the lede above: the rows are the answer
+    // to the line that introduces them, so they read as subordinate to it.
+    margin: 0 0 32px 36px;
+  }
+  // The spans land inside a <p>, so the flex row has to live there.
+  .qcard p {
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+    margin: 0;
+  }
+  .qcard-name {
+    flex: 0 0 198px;
+    font-size: 22px;
+    .math { color: inherit; }   // inline MathJax does not inherit on its own
+  }
+  // 30px, not 33: at 33 the two longer questions wrap, and a wrapped
+  // question stops reading as one line.
+  .qcard-q { font-size: 24px; color: var(--ink); }
+
+  .qcard-binom { border-left-color: #93C54B; .qcard-name { color: #93C54B; } }
+  .qcard-pois  { border-left-color: #F47C3C; .qcard-name { color: #F47C3C; } }
+  .qcard-expo  { border-left-color: #B94A48; .qcard-name { color: #B94A48; } }
+  // The three properties of the sample mean (05-estimation): the deck's brick,
+  // navy and orange, as on the formula slides.
+  .qcard-unbiased   { border-left-color: #B94A48; .qcard-name { color: #B94A48; } }
+  .qcard-efficient  { border-left-color: #325D88; .qcard-name { color: #325D88; } }
+  .qcard-consistent { border-left-color: #F47C3C; .qcard-name { color: #F47C3C; } }
+
+  // No navy bar on this one: the three coloured card rules directly beneath
+  // it already carry that job, and a fourth vertical line above them read as
+  // a fourth row. The 14px padding stays so the text still lines up with the
+  // card names.
+  .lede-min { border-left: none; margin-bottom: 34px; }
+
+  .slide-footer { margin-top: 16px; }
+}
+
+.reveal section.formula-slide {
+  display: block !important;
+  text-align: left !important;
+
+  // The one line of prose between the two equations. At the deck's body size
+  // it sets larger than the maths it annotates and takes the eye first, so it
+  // steps down — and justifies, like every other block of prose on slides
+  // 17-21, so the left and right edges line up down the whole sequence.
+  .note {
+    font-size: 28px;
+    color: var(--ink);
+    max-width: 980px;
+    margin: 4px 0 2px;
+    text-align: justify;
+    hyphens: auto;
+  }
+
+  // Display maths carries its own leading; the theme's paragraph margins
+  // stack on top and push the takeaway off the bottom.
+  p:has(.math.display) { margin: 2px 0; }
+
+  // --- the binomial -> Poisson chain ---
+  // One row per step: a big navy arrow, then the reason for the step beside
+  // it. The arrow is MathJax's \downarrow rather than a bare glyph so it
+  // sits on the same baseline grid as the equations it joins.
+  // Centred, not left-indented: the equations are centred, so an arrow parked
+  // at the left margin floats away from the chain it is supposed to join and
+  // the step reads as a caption rather than a link. Arrow and its reason ride
+  // together down the middle.
+  .deriv-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin: 0;
+    line-height: 1;
+  }
+
+  // MathJax gives every display 1em top and bottom; three equations and two
+  // arrow rows on one slide cannot afford six of those.
+  .MathJax_Display { margin: 4px 0; }
+  // A literal glyph, not $\downarrow$: MathJax's inline box for it is 42px
+  // tall and dragged the whole row to 78.
+  .deriv-glyph { color: var(--navy); font-size: 32px; line-height: 1; }
+  .deriv-note {
+    font-size: 21px;
+    color: var(--ink-soft);
+    .math { color: var(--ink-soft); }
+  }
+
+  // Spacing lives on span.math.display — Quarto's wrapper — NOT on either of
+  // MathJax's own boxes. Which of those two actually lays a slide out flips
+  // between loads (its fast PREVIEW, .MJXp-math, until MathJax typesets that
+  // slide; .MathJax_Display after), so a margin set on one of them silently
+  // vanishes half the time. Both are zeroed; the wrapper carries the space.
+  .MJXp-math.MJXp-display,
+  .MathJax_Display { margin: 0; }
+  span.math.display { display: block; margin: 36px 0; }
+
+  // #binom-formal: the lede sat 36px off its equation, which reads as one
+  // block rather than a statement followed by its formula.
+  // One rhythm, no special first gap: 88 under the lede against 26 everywhere
+  // else read as a hole rather than a break. 42 is the same total height and
+  // an even step down the slide.
+  // #set-formal is three flat rules, not a dense chain, so it keeps full size
+  // — the 0.88 it wore briefly was paying for stacked fractions that are now
+  // written with a slash. Only its margins are scoped.
+  // Flush left, not centred. Everything else on the slide — title, lede,
+  // takeaway — starts at the same edge, and a centred block of rules floated
+  // in the middle of all of it. The 16px matches the .lede-min's rule plus
+  // its padding, so the first P lines up with the first word above it.
+  &#set-formal {
+    .MJXp-math.MJXp-display { font-size: 0.84em; }
+    .MathJax_Display { zoom: 0.84; }
+    // The two lines of a rule are one statement, so they sit close; the gap
+    // that separates the rules lives on the label above each pair instead.
+    span.math.display { margin: 6px 0; }
+
+    // The labels are HTML, so they keep the deck's sans. The two pairs are
+    // separate arrays, which would leave their '=' columns a few px apart —
+    // the \phantom in each second row is the WIDEST left-hand side, so both
+    // first columns size to it and the equals signs land in one column.
+    .rule-label {
+      font-size: 23px;
+      font-weight: 700;
+      margin: 26px 0 2px;
+      .math { color: inherit; }
+    }
+    .rule-or  { color: #93C54B; }
+    .rule-and { color: #325D88; }
+    // "Either" is 12 units wider than "Both", which left A ∪ B and A ∩ B
+    // starting at different x in the two headings. A fixed track on the word
+    // puts the notation in one column without reordering the label.
+    // A fixed gap after the word, not a fixed track. The track version lined
+    // the two middots up in one column, so A u B and A n B started at the
+    // same x, but it had to leave more air after "Both" (48 units of ink)
+    // than after "Either" (59) to do it. Equal gaps were asked for instead,
+    // which means the notation no longer aligns between the two rows.
+    .rw { display: inline-block; min-width: 0; margin-right: 3px; }
+    // No indent. The slide's left margin is the one the title and the
+    // takeaway sit on; the lede only looks inset because of its navy rule.
+    // Indenting the maths to match the LEDE put it out of line with the
+    // other two, which is three edges on one slide.
+    // The equations sit one step in from "Either" and "Both", so the label
+    // reads as a heading over its pair rather than as another line of the
+    // rule. 40 + the array's own 4px sliver of padding lands them at 44.
+    // !important is not laziness here. MathJax 2.7 writes text-align:center
+    // as an INLINE style on .MathJax_Display, which no amount of selector
+    // specificity can beat. Without it the two arrays stayed centred, and
+    // since they are different widths (668 and 587 units) they started at
+    // different x — which is invisible in the MJXp preview, where the rule
+    // does apply, so it only showed up in a browser that had typeset.
+    // The inner box needs it too: the outer can be left-aligned while
+    // MathJax centres the .MathJax span inside it, which is the same bug
+    // one node down.
+    .MJXp-math.MJXp-display,
+    .MathJax_Display,
+    .MathJax_Display > .MathJax { text-align: left !important; }
+    .MJXp-math.MJXp-display,
+    .MathJax_Display { margin-left: 40px; }
+    .slide-footer { margin-top: 36px; }   // was 11px off the last equation
+
+  }
+
+  &#binom-formal {
+    // 0.82em, between full size and the 0.72 the three-step chains use: this
+    // slide carries three displays now, and at full size they dominated the
+    // prose that explains them. BOTH spellings — whichever of MathJax's two
+    // boxes lays the slide out, the size has to follow.
+    .MJXp-math.MJXp-display { font-size: 0.82em; }
+    .MathJax_Display { zoom: 0.82; }
+    span.math.display { margin: 30px 0; }
+  }
+
+  // #pois-formal carries three display equations and two arrow rows under a
+  // title; at the deck's display size that measures 917 of 700. Everything
+  // below buys the 230px back. Scoped so #binom-formal keeps full size.
+  // #pois-formal and #expo-formal are the same object: a three-step derivation
+  // chain with arrow rows between. They share the sizing so the two read as a
+  // pair when the room sees them minutes apart.
+  &#pois-formal,
+  &#expo-formal,
+  &#moments-formal,
+  &#funcrv {
+    // The three gaps the animation slides define — 24 under the title, 13
+    // from the lede to the content, 12 from the content to the takeaway —
+    // so this slide sits in the 17-23 sequence like the rest. Only the gap
+    // BETWEEN derivation steps is this slide's own (18), because the stage
+    // slides have no equivalent of it.
+    .lede-min { margin-bottom: 0; }     // 24px top comes from the deck rule
+    p:has(.math.display):first-of-type span.math.display { margin-top: 24px; }
+    p:has(.math.display):last-of-type  span.math.display { margin-bottom: 36px; }
+
+    // Every gap on this slide is one MathJax display margin. The arrow rows
+    // carry none of their own, so an arrow sits between two equal 6px
+    // margins and the three equations step down evenly by construction —
+    // the one way to keep them even when each equation is a different height.
+    // Style .MJXp-display, NOT .MathJax_Display. In this deck MathJax's real
+    // output ends up 0-height and what actually lays out (and what you see)
+    // is its fast PREVIEW — which ships `margin: 36px 0`. Every rule aimed at
+    // .MathJax_Display here was a silent no-op. Corollary: a height measured
+    // while `.MathJax_Processing` is still on the node is fiction.
+    p:has(.math.display) { margin: 0; line-height: 1; }
+    span.math.display { margin: 18px 0; }
+    .MJXp-math.MJXp-display { font-size: 0.72em; }
+    .MathJax_Display { zoom: 0.72; }   // MathJax writes glyph sizes as inline px
+    .deriv-arrow { height: 40px; }
+    .slide-footer { margin-top: 10px; }
+  }
+
+  // NB the maths is coloured in the .qmd with MathJax's \color{}{} and the
+  // palette hexes, NOT with classes: MathJax 2.7 here does apply \class{}{}
+  // to inline maths but silently ignores it inside $$ ... $$, so half the
+  // equation came out plain ink. If that is ever fixed, move the colours back
+  // out of the source and into rules here.
+}
+
+// #normal-formula: the formula across the top, then the dials stacked in a
+// left column and the plot on the right. Each dial sets its label above the
+// number box and track, so the column stays narrow.
+.reveal section#normal-formula {
+  // the headline formula a touch smaller (both MathJax boxes, see #pois-formal)
+  > p span.math.display { font-size: 0.9em; }
+  // centred as one unit: neither column stretches, the row's slack goes to its sides
+  // the same light rule as .two-col (slide 29) between the formula and the row
+  .nf-row { display: flex; align-items: center; justify-content: center; gap: 40px; margin-top: 0;
+            border-top: 1px solid var(--rule); padding-top: 10px; }
+  .nf-left { flex: 0 0 300px; }
+  .nf-right { flex: 0 0 auto; }
+  .nf-dials { display: flex; flex-direction: column; gap: 22px; }
+  .observablehq form {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    --label-width: auto;
+    width: auto; max-width: none;
+    input[type="range"] { width: 170px; }
+  }
+  .cell-output-display { overflow: hidden; }
+  .cell.hidden { display: none; }        // the value-only cell: its empty box still carried 29px of margin
+  .nf-left .cell + .cell { margin-top: 18px; }
+  .nf-card {
+    background: #FAFBFC;
+    border: 1.5px solid var(--rule);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 18px;
+    color: var(--ink-soft);
+    div { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; }
+    div + div { border-top: 1px solid var(--rule); }
+    b { font-family: "JetBrains Mono", monospace; color: var(--navy); }
+    b.nf-band { color: var(--accent-3); }
+  }
+}
+
+// #box-normal: a little air between the lede and the figure, which also
+// lowers the note box under it.
+.reveal section#box-normal svg { margin-top: 22px; }
+.reveal section#box-normal .note-box { margin-top: 26px; }
+
+// #conditional-probabilities, #total-probability: the opening picture gets
+// the same 22px above (from the lede) and below (to the columns' rule).
+#conditional-probabilities .cond-row { margin-top: 22px; margin-bottom: 22px; }
+// #total-probability's picture carries empty space at its top inside the box,
+// so equal box gaps read as 49px above and 32px below: shift 8px across.
+#total-probability .cond-row { margin-top: 14px; margin-bottom: 30px; }
+
+// #moments has no lede: the stage gets the room above it instead
+#moments .stage-wrap { margin-top: 95px; }   // about equal air above and below
+// #lln has no lede either: room above the stage so it sits mid-slide
+#lln .stage-wrap { margin-top: 80px; }
+// #normal-build: the formula sits high in its canvas, with room under it for the plot
+#normal-build .stage-wrap { margin-top: -2px; }
+
+// #chisq, #tdist: the formula sits high in its canvas, with room under it for the plot
+#chisq .stage-wrap, #tdist .stage-wrap { margin-top: -5px; }
+
+// #dist-map: the relationships chart fills the width under the lede
+.reveal section#dist-map svg.dist-map { display: block; height: 470px; width: auto; max-width: 100%; margin: 34px auto 0; }
+
+// ---- 05-estimation ----------------------------------------------------------
+// #xbar-properties: the lede and footer as on the formula slides — full width,
+// justified — instead of the qcard slide's narrower ragged column.
+.reveal section#xbar-properties .lede-min,
+.reveal section#xbar-properties .slide-footer,
+.reveal section#two-mean-tests .lede-min,
+.reveal section#two-mean-tests .slide-footer {
+.reveal section:is(#xbar-properties, #fit-quality) .lede-min,
+.reveal section:is(#xbar-properties, #fit-quality) .slide-footer {
+  max-width: none; text-align: justify; hyphens: auto;
+  p { text-align: justify; }
+}
+// A fixed gap under the title, not the qcard slide's centring auto margin.
+.reveal section#xbar-properties .lede-min, .reveal section#two-mean-tests .lede-min { font-size: 26px; margin-top: 48px !important; }
+.reveal section#xbar-properties .slide-footer, .reveal section#two-mean-tests .slide-footer { font-size: 22px; }
+.reveal section:is(#xbar-properties, #fit-quality) .lede-min { font-size: 26px; margin-top: 48px !important; }
+.reveal section:is(#xbar-properties, #fit-quality) .slide-footer { font-size: 22px; }
+// #ci-lab: n and confidence sliders, the rule and the button on one row.
+.reveal section#ci-lab .cl-dials, .reveal section#pair-lab .cl-dials {
+  display: flex; align-items: flex-end; gap: 12px; margin: 22px 0 8px; overflow: hidden;
+  form { flex-direction: column; align-items: flex-start; gap: 2px; margin: 0; --label-width: auto; }
+  // Labels keep the deck's small navy caps, as on #courier-moments.
+  // Inputs only gives radio groups that style, so the sliders get it here.
+  form > label { font-size: 17px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #325D88; }
+  input[type="range"] { width: 92px; }
+  input[type="number"] { width: 56px; }
+  // Reveal's body size reaches the radio options and the button unless set here.
+  form div label, button { font-size: 18px; white-space: nowrap; }
+  form div { display: flex; gap: 8px; }
+}
+.reveal section.ojs-slide .ojs-eq.cl-eqs { font-size: 18px; margin-top: 6px; }
+// #xbar-proof: three lines of working, so the arrow notes between them are
+// held to the height #moments-formal gives its own.
+.reveal section#xbar-proof .deriv-arrow { height: 40px; }
+// #ci-lab: an overline, not a combining macron, which the mono face misplaces;
+// and air between the two plots so their axes do not read as one.
+// The bar is drawn just above the x's x-height; text-decoration: overline
+// puts it at the ascender line, too high over a lowercase letter.
+.cl-bar { position: relative; }
+.cl-bar::before { content: ""; position: absolute; left: 12%; right: 12%; top: 0.24em; border-top: 1.5px solid currentColor; }
+#ci-lab .cr-row { gap: 56px; }
+// #xbar-properties: three cards side by side, each a property, its formula and
+// what it means, in the deck's brick, navy and orange.
+.reveal section#xbar-properties .prop-grid, .reveal section#two-mean-tests .prop-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin: 22px 0 18px;
+}
+.reveal section#xbar-properties .prop-card, .reveal section#two-mean-tests .prop-card {
+.reveal section:is(#xbar-properties, #fit-quality) .prop-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin: 22px 0 18px;
+}
+.reveal section:is(#xbar-properties, #fit-quality) .prop-card {
+  background: var(--bg-elev); border: 1px solid var(--rule); border-top: 5px solid var(--rule);
+  border-radius: 6px; padding: 18px 18px 16px; text-align: center;
+  p { margin: 0; }
+}
+.prop-name { font-size: 18px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+// A fixed height so the three formulas share a baseline whatever their shape.
+.prop-math { display: flex; align-items: center; justify-content: center; min-height: 78px; font-size: 30px; margin: 10px 0 8px; color: var(--ink); }
+.prop-q { display: block; font-size: 19px; line-height: 1.4; color: var(--ink-soft); }
+.prop-unbiased   { border-top-color: #B94A48 !important; .prop-name { color: #B94A48; } }
+.prop-efficient  { border-top-color: #325D88 !important; .prop-name { color: #325D88; } }
+.prop-consistent { border-top-color: #F47C3C !important; .prop-name { color: #F47C3C; } }
+// #xbar-proof: display maths at 80%, as the other derivation slides shrink theirs.
+.reveal section#xbar-proof {
+  .MJXp-math.MJXp-display { font-size: 0.8em; }
+  .MathJax_Display { zoom: 0.8; }
+}
+// #cieq-formula: the stage is drawn 320 units tall, not 445 (see cieq-anim).
+#cieq-formula .stage-wrap { height: 336px; margin-top: 96px; }
+#cieq-formula .slide-footer, #cieq-formula .slide-footer p { text-align: justify !important; hyphens: auto; }
+#ciflip-intuition .stage-wrap { margin-top: 28px; }
+#ci-intuition .stage-wrap { margin-top: 84px; }
+#xbar-proof .lede-min { margin-top: 44px; }
+.cl-navy { color: #325D88; }
+#ci-lab .quiz-fb { font-size: 19px; padding: 8px 14px; margin-top: 10px; }
+// #ci-lab: the interval rule on its own row, its label beside the three
+// formulas rather than above them.
+.reveal section#ci-lab .cl-rule {
+  margin: 20px 0 22px;
+  form { flex-direction: row; align-items: center; gap: 18px; }
+  form div { gap: 26px; }
+  form div label { font-size: 21px; }
+}
+// #ci-intuition: the quoted claims set justified, like the deck's other prose blocks.
+.reveal section#ci-intuition .claim-cell p { text-align: justify; hyphens: auto; }
+// #ci-lab: the three readouts on one line under the plots.
+.reveal section.ojs-slide .ojs-eq.cl-stats {
+  display: flex; justify-content: center; gap: 40px; font-size: 19px; margin: 8px 0 0;
+  .na-note { font-size: 15px; }
+}
+
+// ---- 06-testing -------------------------------------------------------------
+// #test-steps: the #xbar-properties layout with four cards instead of three.
+.reveal section#test-steps .lede-min,
+.reveal section#test-steps .slide-footer {
+  max-width: none; text-align: justify; hyphens: auto;
+  p { text-align: justify; }
+}
+.reveal section#test-steps .lede-min { font-size: 26px; margin-top: 48px !important; border-left: none; }
+.reveal section#test-steps .slide-footer { font-size: 22px; }
+.reveal section#test-steps .prop-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin: 22px 0 18px;
+}
+.reveal section#test-steps .prop-card {
+  background: var(--bg-elev); border: 1px solid var(--rule); border-top: 5px solid var(--rule);
+  border-radius: 6px; padding: 16px 14px 14px; text-align: center;
+  p { margin: 0; }
+  .prop-math { font-size: 26px; }
+  .prop-q { font-size: 18px; }
+}
+.prop-hyp  { border-top-color: #325D88 !important; .prop-name { color: #325D88; } }
+.prop-stat { border-top-color: #F47C3C !important; .prop-name { color: #F47C3C; } }
+.prop-crit { border-top-color: #B94A48 !important; .prop-name { color: #B94A48; } }
+.prop-pval { border-top-color: #93C54B !important; .prop-name { color: #93C54B; } }
+// #test-stats: display maths at 80%, as on #xbar-proof.
+.reveal section#test-stats {
+  .lede-min { margin-top: 44px; }
+  .MJXp-math.MJXp-display { font-size: 0.8em; }
+  .MathJax_Display { zoom: 0.8; }
+  .deriv-arrow { height: 40px; }
+  .slide-footer, .slide-footer p { text-align: justify; hyphens: auto; }
+}
+#pval-intuition .stage-wrap { margin-top: 28px; }
+// #reject-lab, #power-lab: the #ci-lab control rows.
+.reveal section#reject-lab .rj-dials,
+.reveal section#power-lab .rj-dials {
+  display: flex; align-items: flex-end; gap: 28px; margin: 14px 0 6px; overflow: hidden;
+  form { flex-direction: column; align-items: flex-start; gap: 2px; margin: 0; --label-width: auto; }
+  form > label { font-size: 17px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #325D88; }
+  input[type="range"] { width: 150px; }
+  input[type="number"] { width: 92px; min-width: 92px; font-size: 20px; }
+  form div label { font-size: 18px; white-space: nowrap; }
+  form div { display: flex; gap: 10px; }
+}
+.reveal section#power-lab .rj-dials { margin-top: 26px; input[type="range"] { width: 200px; } }
+#reject-lab .quiz-fb, #power-lab .quiz-fb { font-size: 19px; padding: 8px 14px; margin-top: 8px; }
+// ---- 07-two-populations -----------------------------------------------------
+// #two-mean-tests: the #xbar-properties cards (selectors shared above), in
+// navy, olive and orange. The three statistics are fractions with roots, so
+// they set smaller than the 30px of the one-line properties.
+#two-mean-tests .prop-math { font-size: 24px; min-height: 96px; }
+#two-mean-tests .prop-q { text-align: center; hyphens: none; }   // as the #xbar-properties cards
+.prop-pooled { border-top-color: #325D88 !important; .prop-name { color: #325D88; } }
+.prop-welch  { border-top-color: #93C54B !important; .prop-name { color: #93C54B; } }
+.prop-paired { border-top-color: #F47C3C !important; .prop-name { color: #F47C3C; } }
+// #pooled-formula: three lines of working at 80%, as on #xbar-proof.
+.reveal section#pooled-formula {
+  .MJXp-math.MJXp-display { font-size: 0.8em; }
+  .MathJax_Display { zoom: 0.8; }
+  .lede-min { margin-top: 44px; }
+  .deriv-arrow { height: 40px; }
+}
+#pooled-formula .slide-footer, #pooled-formula .slide-footer p,
+#pair-intuition .slide-footer, #pair-intuition .slide-footer p { text-align: justify; hyphens: auto; }
+#pair-intuition .stage-wrap { margin-top: 28px; }
+// #pair-lab: the two radio groups side by side, label beside the options.
+.reveal section#pair-lab .pl-dials {
+  gap: 60px; margin: 22px 0 18px;
+  form { flex-direction: row; align-items: center; gap: 16px; }
+  form div { gap: 22px; }
+  form div label { font-size: 21px; }
+}
+#pair-lab .cr-row { gap: 56px; }
+.reveal section.ojs-slide .ojs-eq.pl-stats { font-size: 18px; gap: 48px; margin-top: 10px; }
+.pl-on  { color: var(--ink); font-weight: 700; }
+.pl-off { color: var(--ink-soft); }
+#pair-lab .quiz-fb { font-size: 19px; padding: 8px 14px; margin-top: 12px; }
+// ---- 08-regression ----------------------------------------------------------
+// The value-only cells render nothing but would still spend Quarto's 14.4px
+// margins; spacing is carried by the elements instead.
+.reveal section:is(#ad-scatter, #cor-test, #ls-fit, #ls-formula, #ls-accuracy, #multi-reg) {
+  .cell { margin: 0; }
+  .cell-output-display { overflow: visible; }
+  .quiz-fb { font-size: 19px; padding: 8px 14px; margin-top: 10px; }
+}
+// One row of controls, label over input, as on #ci-lab.
+.reveal section:is(#ad-scatter, #cor-test, #ls-fit, #ls-formula, #ls-accuracy, #multi-reg) .rg-dials {
+  display: flex; align-items: flex-end; gap: 30px; margin: 18px 0 8px;
+}
+.reveal section:is(#ad-scatter, #cor-test, #ls-fit, #ls-formula, #ls-accuracy, #multi-reg) form {
+  flex-direction: column; align-items: flex-start; gap: 2px; margin: 0; --label-width: auto; max-width: none;
+  // The deck's small navy caps (#ci-lab); a maths letter keeps its case.
+  > label { font-size: 17px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #325D88; width: auto; }
+  input[type="range"] { width: 200px; }
+  input[type="number"] { width: 84px; min-width: 84px; font-size: 20px; }
+  div label, button { font-size: 19px; white-space: nowrap; }
+  div { display: flex; gap: 10px 22px; }
+}
+.reveal section#cor-test .rg-dials { gap: 60px; margin: 12px 0 4px; }
+.reveal section#cor-test .rg-dials-2 { margin: 6px 0 4px; }
+// A standalone input (not inside .rg-dials) gets the dials' top gap itself.
+.reveal section:is(#ad-scatter, #ls-formula, #multi-reg) .lede-min + .cell form { margin-top: 16px; }
+#ls-formula .cell + .cell form { margin-top: 10px; }
+// The readouts under a plot, on one line.
+.reveal section.ojs-slide .ojs-eq.rg-stats {
+  display: flex; justify-content: center; gap: 36px; font-size: 19px; margin: 8px 0 0;
+  .na-note { font-size: 15px; }
+}
+#ls-fit .cr-row, #ls-accuracy .cr-row { gap: 40px; }
+// #ls-formula: the two estimates in one display, a touch smaller; the working
+// aligned on its "=" like #courier-moments.
+.reveal section#ls-formula {
+  span.math.display { display: block; margin: 14px 0 0; }
+  .MJXp-math.MJXp-display { font-size: 0.85em; }
+  .MathJax_Display { zoom: 0.85; margin: 0; }
+}
+.reveal section.ojs-slide .ojs-eq.rg-eqs { font-size: 21px; row-gap: 6px; margin: 16px 0 4px; }
+// A hat drawn over the letter: a combining circumflex is misplaced in the mono face.
+.rg-hat { position: relative; }
+.rg-hat::before {
+  content: "^"; position: absolute; left: 0; right: 0; top: -0.62em;
+  text-align: center; font-family: "Roboto", sans-serif; font-size: 0.8em;
+}
+// #fit-quality: the three cards, in the deck's brick, navy and orange.
+.prop-rse { border-top-color: #B94A48 !important; .prop-name { color: #B94A48; } }
+.prop-r2  { border-top-color: #325D88 !important; .prop-name { color: #325D88; } }
+.prop-adj { border-top-color: #F47C3C !important; .prop-name { color: #F47C3C; } }
+#fit-quality .prop-math { font-size: 26px; }
+// #multi-reg: the coefficient table and the correlation matrix side by side.
+.rg-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 28px; margin-top: 14px; }
+.reveal section.ojs-slide table.rg-table {
+  margin: 0; font-size: 18px; border-collapse: collapse;
+  th { font-size: 18px; padding: 5px 10px; text-align: center; white-space: nowrap; }
+  tbody th { text-align: left; }
+  td { font-family: "JetBrains Mono", monospace; color: var(--ink); text-align: right; padding: 5px 10px; font-size: 18px; }
+  tr.rg-news td, tr.rg-news th { background: rgba(244, 124, 60, 0.12); }
+  td.ct-top { background: rgba(244, 124, 60, 0.22); box-shadow: inset 0 0 0 2px #F47C3C; font-weight: 700; }
+  &.rg-cor { th, td { font-size: 16px; padding: 4px 7px; } }
+}
+
+
+// quarto-scss-analysis-annotation { "origin": null }
