@@ -45,7 +45,7 @@ The next slide builds the pooled test and its interval; the two after it show wh
 ## Pooling the Two Variances {.formula-slide #pooled-formula}
 
 ::: {.lede-min}
-Two independent samples from normal populations that share one variance $\sigma^2$. Each sample estimates it, so we average the two estimates, weighting each by its degrees of freedom.
+Both samples estimate one shared variance $\sigma^2$, so we pool them, weighting each by its degrees of freedom.
 :::
 
 $$\textstyle s_p^2 \;=\; \frac{(n_1 - 1)\,s_1^2 \;+\; (n_2 - 1)\,s_2^2}{n_1 + n_2 - 2}$$
@@ -66,9 +66,6 @@ $$\textstyle t \;=\; \frac{(\bar x_1 - \bar x_2) \,-\, (\mu_1 - \mu_2)}{\sqrt{s_
 $$\textstyle \mu_1 - \mu_2 \;\in\; (\bar x_1 - \bar x_2) \;\pm\; \color{#B94A48}{t_{\alpha/2,\; n_1 + n_2 - 2}}\, \sqrt{s_p^2\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}$$
 :::
 
-::: {.slide-footer .fragment}
-Each sample spends one degree of freedom on its own mean, which is why the test has $n_1 + n_2 - 2$ of them.
-:::
 
 ## The Same Data, Twice {.stage-slide #pair-intuition}
 

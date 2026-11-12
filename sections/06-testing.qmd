@@ -205,7 +205,7 @@ viewof pwIn = Inputs.form({
       Plot.line(grid, {x: d => d, y: d1, stroke: PPAL.olive, strokeWidth: 2.5}),
       Plot.line(grid, {x: d => d, y: d0, stroke: PPAL.navy, strokeWidth: 2.5, strokeDasharray: same ? "6 4" : null}),
       Plot.ruleX([c], {y1: 0, y2: top * 1.05, stroke: "#3E3F3A", strokeWidth: 1.5, strokeDasharray: "5 4"}),
-      Plot.text([c], {x: d => d, y: top * 1.05, dx: 6, textAnchor: "start", text: d => `Cut-off ${f(d)}`, fill: "#3E3F3A", fontSize: 15, ...halo}),
+      Plot.text([c], {x: d => d, y: top * 0.55, dx: 6, textAnchor: "start", text: d => `Cut-off ${f(d)}`, fill: "#3E3F3A", fontSize: 15, ...halo}),
       Plot.text([pwMu0], {x: d => d, y: top, dy: -10, text: d => `H₀: μ = ${d}`, fill: PPAL.navy, fontSize: 15, fontWeight: 700, ...halo}),
       ...(same ? [] : [Plot.text([mu], {x: d => d, y: top, dy: -10, text: d => `True μ = ${d}`, fill: PPAL.olive, fontSize: 15, fontWeight: 700, ...halo})]),
       Plot.ruleY([0], {stroke: PPAL.dim}),

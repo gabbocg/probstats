@@ -1625,7 +1625,7 @@
   form { flex-direction: column; align-items: flex-start; gap: 2px; margin: 0; --label-width: auto; }
   form > label { font-size: 17px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #325D88; }
   input[type="range"] { width: 150px; }
-  input[type="number"] { width: 70px; min-width: 70px; font-size: 20px; }
+  input[type="number"] { width: 92px; min-width: 92px; font-size: 20px; }
   form div label { font-size: 18px; white-space: nowrap; }
   form div { display: flex; gap: 10px; }
 }
@@ -1636,7 +1636,7 @@
 // navy, olive and orange. The three statistics are fractions with roots, so
 // they set smaller than the 30px of the one-line properties.
 #two-mean-tests .prop-math { font-size: 24px; min-height: 96px; }
-#two-mean-tests .prop-q { text-align: justify; hyphens: auto; }
+#two-mean-tests .prop-q { text-align: center; hyphens: none; }   // as the #xbar-properties cards
 .prop-pooled { border-top-color: #325D88 !important; .prop-name { color: #325D88; } }
 .prop-welch  { border-top-color: #93C54B !important; .prop-name { color: #93C54B; } }
 .prop-paired { border-top-color: #F47C3C !important; .prop-name { color: #F47C3C; } }

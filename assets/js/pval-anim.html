@@ -138,7 +138,8 @@
         res.appendChild(K.txt(970, 176 + i * 20, line,
           { size: 'label', fill: 'inkSoft', anchor: 'end' }));
       });
-    res.appendChild(K.txt(970, 236, 'Table: Pr(Z > ' + ZOBS + ') = ' + (1 - Phi(ZOBS)).toFixed(4),
+    res.appendChild(K.txt(970, 236, // Short, so it stays right of the observed-z rule.
+      'Table: ' + (1 - Phi(ZOBS)).toFixed(4),
       { size: 'label', face: 'mono', fill: 'ink', anchor: 'end' }));
     svg.appendChild(res);
 
