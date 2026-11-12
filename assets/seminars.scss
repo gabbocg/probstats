@@ -1507,15 +1507,17 @@
 // #xbar-properties: the lede and footer as on the formula slides — full width,
 // justified — instead of the qcard slide's narrower ragged column.
 .reveal section#xbar-properties .lede-min,
-.reveal section#xbar-properties .slide-footer {
+.reveal section#xbar-properties .slide-footer,
+.reveal section#two-mean-tests .lede-min,
+.reveal section#two-mean-tests .slide-footer {
   max-width: none; text-align: justify; hyphens: auto;
   p { text-align: justify; }
 }
 // A fixed gap under the title, not the qcard slide's centring auto margin.
-.reveal section#xbar-properties .lede-min { font-size: 26px; margin-top: 48px !important; }
-.reveal section#xbar-properties .slide-footer { font-size: 22px; }
+.reveal section#xbar-properties .lede-min, .reveal section#two-mean-tests .lede-min { font-size: 26px; margin-top: 48px !important; }
+.reveal section#xbar-properties .slide-footer, .reveal section#two-mean-tests .slide-footer { font-size: 22px; }
 // #ci-lab: n and confidence sliders, the rule and the button on one row.
-.reveal section#ci-lab .cl-dials {
+.reveal section#ci-lab .cl-dials, .reveal section#pair-lab .cl-dials {
   display: flex; align-items: flex-end; gap: 12px; margin: 22px 0 8px; overflow: hidden;
   form { flex-direction: column; align-items: flex-start; gap: 2px; margin: 0; --label-width: auto; }
   // Labels keep the deck's small navy caps, as on #courier-moments.
@@ -1540,10 +1542,10 @@
 #ci-lab .cr-row { gap: 56px; }
 // #xbar-properties: three cards side by side, each a property, its formula and
 // what it means, in the deck's brick, navy and orange.
-.reveal section#xbar-properties .prop-grid {
+.reveal section#xbar-properties .prop-grid, .reveal section#two-mean-tests .prop-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin: 22px 0 18px;
 }
-.reveal section#xbar-properties .prop-card {
+.reveal section#xbar-properties .prop-card, .reveal section#two-mean-tests .prop-card {
   background: var(--bg-elev); border: 1px solid var(--rule); border-top: 5px solid var(--rule);
   border-radius: 6px; padding: 18px 18px 16px; text-align: center;
   p { margin: 0; }
@@ -1583,3 +1585,35 @@
   display: flex; justify-content: center; gap: 40px; font-size: 19px; margin: 8px 0 0;
   .na-note { font-size: 15px; }
 }
+
+// ---- 07-two-populations -----------------------------------------------------
+// #two-mean-tests: the #xbar-properties cards (selectors shared above), in
+// navy, olive and orange. The three statistics are fractions with roots, so
+// they set smaller than the 30px of the one-line properties.
+#two-mean-tests .prop-math { font-size: 24px; min-height: 96px; }
+#two-mean-tests .prop-q { text-align: justify; hyphens: auto; }
+.prop-pooled { border-top-color: #325D88 !important; .prop-name { color: #325D88; } }
+.prop-welch  { border-top-color: #93C54B !important; .prop-name { color: #93C54B; } }
+.prop-paired { border-top-color: #F47C3C !important; .prop-name { color: #F47C3C; } }
+// #pooled-formula: three lines of working at 80%, as on #xbar-proof.
+.reveal section#pooled-formula {
+  .MJXp-math.MJXp-display { font-size: 0.8em; }
+  .MathJax_Display { zoom: 0.8; }
+  .lede-min { margin-top: 44px; }
+  .deriv-arrow { height: 40px; }
+}
+#pooled-formula .slide-footer, #pooled-formula .slide-footer p,
+#pair-intuition .slide-footer, #pair-intuition .slide-footer p { text-align: justify; hyphens: auto; }
+#pair-intuition .stage-wrap { margin-top: 28px; }
+// #pair-lab: the two radio groups side by side, label beside the options.
+.reveal section#pair-lab .pl-dials {
+  gap: 60px; margin: 22px 0 18px;
+  form { flex-direction: row; align-items: center; gap: 16px; }
+  form div { gap: 22px; }
+  form div label { font-size: 21px; }
+}
+#pair-lab .cr-row { gap: 56px; }
+.reveal section.ojs-slide .ojs-eq.pl-stats { font-size: 18px; gap: 48px; margin-top: 10px; }
+.pl-on  { color: var(--ink); font-weight: 700; }
+.pl-off { color: var(--ink-soft); }
+#pair-lab .quiz-fb { font-size: 19px; padding: 8px 14px; margin-top: 12px; }
