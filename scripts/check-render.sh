@@ -47,7 +47,8 @@ for id in s00b-me s00b-about s00-how-to-use s00-webr \
           attempts-const courier-moments uniform-dist normal-area normal-critical \
           normal-intuition galton clt-idea clt-dice normal-formula moments lln normal-build normal-pi normal-e box-normal funcrv chisq tdist dist-map pois-sim \
           s05-estimation xbar-properties xbar-proof ciflip-intuition cieq-formula ci-intuition ci-lab \
-          s06-testing test-steps test-stats pval-intuition reject-lab power-lab; do
+          s06-testing test-steps test-stats pval-intuition reject-lab power-lab \
+          s07-two-populations two-mean-tests pooled-formula pair-intuition pair-lab; do
   need "id=\"$id\"" "slide #$id"
 done
 
@@ -57,22 +58,22 @@ done
 # uncommented again this list is where the ids come back from.
 for id in bins-intuition bins-sim dist-questions \
           clt-intuition clt-sim clt-proof moments-formal normal-full zstd-intuition \
-          s07-two-populations pair-intuition pair-sim \
           s08-regression ls-intuition ols-sim ovb-sim \
           s09-forecasting smooth-intuition smooth-sim; do
   if grep -qF "id=\"$id\"" "$OUT"; then
     echo "FAIL: slide #$id is commented out in sections/ but rendered anyway"; fail=1
   fi
 done
-echo "OK:   19 commented-out slides stayed out"
+echo "OK:   16 commented-out slides stayed out"
 
 echo "── animation stages ───────────────────────────────"
 # pois and expo dropped: #pois-intuition and #expo-intuition are {ojs}
 # slides now, not stages.
-# bins, clt, zstd, pair, ls and smooth belong to slides commented
-# out on 2026-09-23; put them back here when those return. ciflip, cieq and
-# ci came back with the estimation section on 2026-11-11, pval with testing.
-STAGES="about dicegrid mm space setops venn prior bayes bayeq monty cond binom seller laplace galton cltidea cltdice moments lln normbuild normalpi normale chisq tdist ciflip cieq ci pval"
+# bins, clt, zstd, ls and smooth belong to slides commented out on
+# 2026-09-23; put them back here when those return. ciflip, cieq and ci came
+# back with estimation on 2026-11-11, pval with testing and pair with
+# two-populations on 2026-11-12.
+STAGES="about dicegrid mm space setops venn prior bayes bayeq monty cond binom seller laplace galton cltidea cltdice moments lln normbuild normalpi normale chisq tdist ciflip cieq ci pval pair"
 for s in $STAGES; do
   need "id=\"$s-stage\"" "stage #$s-stage"
 done
@@ -142,7 +143,8 @@ for f in prior-frag-1 prior-frag-2 \
          tdist-frag-1 tdist-frag-2 tdist-frag-3 \
          ciflip-frag-1 ciflip-frag-2 ciflip-frag-3 \
          cieq-frag-1 cieq-frag-2 cieq-frag-3 cieq-frag-4 \
-         pval-frag-1 pval-frag-2 pval-frag-3; do
+         pval-frag-1 pval-frag-2 pval-frag-3 \
+         pair-frag-1 pair-frag-2; do
   need "id=\"$f\"" "fragment $f"
 done
 

@@ -1,49 +1,172 @@
 # Comparing Two Populations {.hero #s07-two-populations}
 
 ::: {.sem-mark data-sem="7"}
-Seminar 7 · Paired vs independent
+Seminar 7 · Comparing two means
 :::
 
-The design decides the test, and the test decides the answer.
+## Three Ways to Compare Two Means {.qcard-slide #two-mean-tests}
 
-::: {.lede}
-The worksheet gives you two-sample tests and paired tests as separate recipes. They are not interchangeable — run the wrong one on the same numbers and a real effect can vanish completely.
+::: {.lede-min}
+Each test divides the gap between two sample means by its standard error. How the data were collected decides which standard error to use.
 :::
 
-## The same data, twice {.stage-slide #pair-intuition}
+:::: {.prop-grid}
+
+::: {.prop-card .prop-pooled .fragment}
+[Pooled t]{.prop-name}
+
+[$t = \dfrac{\bar x_1 - \bar x_2}{\sqrt{s_p^2\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}}$]{.prop-math}
+
+[Independent samples, normal, equal variances. Compare with $t_{n_1 + n_2 - 2}$.]{.prop-q}
+:::
+
+::: {.prop-card .prop-welch .fragment}
+[Large samples]{.prop-name}
+
+[$z = \dfrac{\bar x_1 - \bar x_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}}$]{.prop-math}
+
+[Independent samples, unequal variances, large $n$. Compare with $N(0, 1)$.]{.prop-q}
+:::
+
+::: {.prop-card .prop-paired .fragment}
+[Paired t]{.prop-name}
+
+[$t = \dfrac{\bar d}{s_d / \sqrt{n}}$]{.prop-math}
+
+[The same units measured twice. Test the differences $d$ against $t_{n - 1}$.]{.prop-q}
+:::
+
+::::
+
+::: {.slide-footer .fragment}
+The next slide builds the pooled test and its interval; the two after it show why paired data must not be treated as independent.
+:::
+
+## Pooling the Two Variances {.formula-slide #pooled-formula}
+
+::: {.lede-min}
+Two independent samples from normal populations that share one variance $\sigma^2$. Each sample estimates it, so we average the two estimates, weighting each by its degrees of freedom.
+:::
+
+$$\textstyle s_p^2 \;=\; \frac{(n_1 - 1)\,s_1^2 \;+\; (n_2 - 1)\,s_2^2}{n_1 + n_2 - 2}$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Put $s_p^2$ in place of $\sigma^2$ in the standard error of $\bar x_1 - \bar x_2$]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle t \;=\; \frac{(\bar x_1 - \bar x_2) \,-\, (\mu_1 - \mu_2)}{\sqrt{s_p^2\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}} \;\sim\; \color{#325D88}{t_{\,n_1 + n_2 - 2}}$$
+:::
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Turn the test around, as the intervals of Seminar 5 did]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle \mu_1 - \mu_2 \;\in\; (\bar x_1 - \bar x_2) \;\pm\; \color{#B94A48}{t_{\alpha/2,\; n_1 + n_2 - 2}}\, \sqrt{s_p^2\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}$$
+:::
+
+::: {.slide-footer .fragment}
+Each sample spends one degree of freedom on its own mean, which is why the test has $n_1 + n_2 - 2$ of them.
+:::
+
+## The Same Data, Twice {.stage-slide #pair-intuition}
 
 ::: {.stage-wrap .stage-wrap-std}
 <div id="pair-stage" class="stage"></div>
 :::
 
-[]{.fragment .fi-frag id="pair-frag-1"}
-[]{.fragment .fi-frag id="pair-frag-2"}
+[]{.fragment .fi-frag id="pair-frag-1" data-fragment-index="1"}
+[]{.fragment .fi-frag id="pair-frag-2" data-fragment-index="2"}
 
-::: {.slide-footer}
-The left picture is honest and useless: firms differ hugely, and that between-firm spread drowns the effect. Pairing subtracts it away; every firm becomes its own control.
+::: {.slide-footer .fragment data-fragment-index="2"}
+Firms differ a lot in their cost of equity, and that spread hides the change. A firm's difference subtracts its own level, so each firm becomes its own control.
 :::
 
-## Watch the signal appear {.sim-slide #pair-sim}
+## One Data Set, Two Tests {.ojs-slide #pair-lab}
 
-::: {.slide-kicker}
-Seminar 7 · same numbers, two tests
-:::
-
-::: {.sim-card .sim-text}
-```{webr-r}
-before <- c(3, 15, 8, 19, 5, 12, 17, 7,
-            14, 10, 6, 16, 9, 13, 11)
-after  <- c(1, 13, 5, 17, 4, 9, 16, 4,
-            12, 7, 5, 13, 7, 10, 9)
-ind <- t.test(after, before, var.equal = TRUE)
-par <- t.test(after, before, paired = TRUE)
-row <- function(r) c(t = unname(r$statistic),
-                     p = r$p.value)
-round(rbind(independent = row(ind),
-            paired      = row(par)), 4)
+```{ojs}
+//| echo: false
+viewof plIn = Inputs.form({
+  mode: Inputs.radio(["Paired", "Independent"], {value: "Paired", label: "Treat the data as"}),
+  alpha: Inputs.radio(["α = 1%", "α = 5%"], {value: "α = 1%", label: "Significance level"})
+}, {template: ins => html`<div class="cl-dials pl-dials">${ins.mode}${ins.alpha}</div>`})
 ```
-:::
 
-::: {.try-this}
-Identical numbers, identical difference in means of $-2.2$ — but the independent test cannot see it and the paired test finds it overwhelming. **The information was in which rows belong together, and the independent test throws that away.**
-:::
+```{ojs}
+//| echo: false
+// Table 1 of beamer Seminar 6, Exercise 3: cost of equity (%) of 15 firms.
+plPre  = [3, 5, 4, 1, 4, 8, 10, 15, 2, 9, 6, 3, 8, 11, 10]
+plPost = [1, 6, 3, 2, 7, 3, 5, 8, 4, 7, 4, 2, 5, 7, 5]
+plDif  = plPost.map((v, i) => v - plPre[i])
+// H1: the cost fell, so both tests are left-tailed. The density reuses
+// clLgam and the CDF clTcdf, both from #ci-lab.
+plTpdf = (t, df) => Math.exp(clLgam((df + 1) / 2) - clLgam(df / 2) - 0.5 * Math.log(df * Math.PI)
+  - (df + 1) / 2 * Math.log(1 + t * t / df))
+plTests = {
+  const n = plPre.length, est = d3.mean(plDif);
+  const vPre = d3.variance(plPre), vPost = d3.variance(plPost), vDif = d3.variance(plDif);
+  const sp2 = ((n - 1) * vPre + (n - 1) * vPost) / (2 * n - 2);
+  const mk = (se, df) => ({se, df, t: est / se, p: clTcdf(est / se, df)});
+  return {n, est, vPre, vPost, vDif,
+    Paired: mk(Math.sqrt(vDif / n), n - 1),
+    Independent: mk(Math.sqrt(sp2 * 2 / n), 2 * n - 2)};
+}
+```
+
+```{ojs}
+//| echo: false
+{
+  const T = plTests, paired = plIn.mode === "Paired", cur = T[plIn.mode];
+  const a = plIn.alpha === "α = 1%" ? 0.01 : 0.05, crit = -clInv(t => clTcdf(t, cur.df))(1 - a);
+  const style = ({fontSize: "14px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"});
+  const title = s => Plot.text([s], {frameAnchor: "top-left", dy: -30, text: d => d, fill: PPAL.navy, stroke: "white", strokeWidth: 6, fontWeight: 700, fontSize: 16});
+  const neg = s => s.replace("-", "−");
+  // Ties fan out sideways (0, -1, +1, -2, ...) so no dot hides another.
+  const jit = vals => { const seen = {}; return vals.map(v => { const j = seen[v] = (seen[v] || 0) + 1; return ((j - 1) % 2 ? -1 : 1) * Math.ceil((j - 1) / 2) * 0.07; }); };
+  const jPre = jit(plPre), jPost = jit(plPost), jDif = jit(plDif);
+  const idx = d3.range(T.n), XD = 2.3;
+  const names = new Map([[0, "Pre 2020"], [1, "Post 2020"], [XD, "Post − pre"]]);
+  const data = Plot.plot({
+    width: 470, height: 290, marginLeft: 34, marginBottom: 30, marginTop: 42, style,
+    x: {domain: [-0.5, XD + 0.6], ticks: [0, 1, XD], tickFormat: v => names.get(v), label: null, tickSize: 0},
+    y: {domain: [-8, 16], ticks: [-8, -4, 0, 4, 8, 12, 16], tickFormat: v => neg(String(v)), label: null, insetTop: 18},
+    marks: [
+      title(`The ${T.n} firms, pre and post 2020`),
+      Plot.ruleY([0], {x1: XD - 0.5, x2: XD + 0.5, stroke: PPAL.soft, strokeDasharray: "5 4"}),
+      paired ? Plot.link(idx, {x1: i => jPre[i], y1: i => plPre[i], x2: i => 1 + jPost[i], y2: i => plPost[i], stroke: PPAL.dim, strokeWidth: 1.2}) : null,
+      Plot.dot(idx, {x: i => jPre[i], y: i => plPre[i], r: 5, fill: PPAL.navy, fillOpacity: 0.6}),
+      Plot.dot(idx, {x: i => 1 + jPost[i], y: i => plPost[i], r: 5, fill: PPAL.olive, fillOpacity: 0.7}),
+      Plot.ruleY([d3.mean(plPre)], {x1: -0.3, x2: 0.3, stroke: PPAL.navy, strokeWidth: 3}),
+      Plot.ruleY([d3.mean(plPost)], {x1: 0.7, x2: 1.3, stroke: PPAL.olive, strokeWidth: 3}),
+      paired ? Plot.dot(idx, {x: i => XD + jDif[i], y: i => plDif[i], r: 5, fill: PPAL.orange, fillOpacity: 0.7}) : null,
+      Plot.ruleY([T.est], {x1: XD - 0.3, x2: XD + 0.3, stroke: PPAL.orange, strokeWidth: 3})
+    ]
+  });
+  const G = d3.range(-4.5, 4.501, 0.05), tail = G.filter(t => t <= crit);
+  const dist = Plot.plot({
+    width: 470, height: 290, marginLeft: 12, marginRight: 12, marginBottom: 30, marginTop: 42, style,
+    x: {domain: [-4.5, 4.5], label: null, tickSize: 4, tickFormat: v => neg(String(v))},
+    y: {domain: [0, 0.42], axis: null, insetTop: 18},
+    marks: [
+      title(`The statistic against t with ${cur.df} df`),
+      Plot.areaY(tail, {x: t => t, y: t => plTpdf(t, cur.df), fill: PPAL.brick, fillOpacity: 0.3}),
+      Plot.lineY(G, {x: t => t, y: t => plTpdf(t, cur.df), stroke: PPAL.soft, strokeWidth: 2}),
+      Plot.ruleY([0], {stroke: PPAL.dim}),
+      Plot.ruleX([crit], {y1: 0, y2: 0.3, stroke: PPAL.brick, strokeDasharray: "5 4"}),
+      Plot.ruleX([cur.t], {y1: 0, y2: 0.36, stroke: "#3E3F3A", strokeWidth: 2.5}),
+      Plot.text([cur.t], {x: t => t, y: 0.36, dy: -10, dx: -12, textAnchor: "start", text: t => `t = ${neg(t.toFixed(3))}`,
+        fill: "#3E3F3A", stroke: "white", strokeWidth: 6, fontSize: 16, fontWeight: 700})
+    ]
+  });
+  const m = v => neg(v.toFixed(3)), f4 = v => v.toFixed(4);
+  const row = k => html`<span class="${k === plIn.mode ? "pl-on" : "pl-off"}">${k}: SE = ${m(T[k].se)}, t = ${m(T[k].t)}, p = ${f4(T[k].p)}</span>`;
+  const rej = cur.p < a, cov2 = T.vPre + T.vPost - T.vDif;
+  const why = paired
+    ? `Firms that start high stay high, so the differences vary far less than the two groups put together: <b>s<sub>d</sub><sup>2</sup> = ${T.vDif.toFixed(2)}</b> against s<sub>pre</sub><sup>2</sup> + s<sub>post</sub><sup>2</sup> = ${(T.vPre + T.vPost).toFixed(2)}. Pairing removes twice the covariance, ${cov2.toFixed(2)}.`
+    : `Treated as independent, the firm-to-firm spread stays in the standard error, <b>${m(T.Independent.se)}</b> instead of ${m(T.Paired.se)}. These are the same firms measured twice, so this test throws that information away.`;
+  return html`<div class="cr-row pl-row">${data}${dist}</div>
+  <div class="ojs-eq cl-stats pl-stats">${row("Paired")}${row("Independent")}</div>
+  <div class="quiz-fb">The p-value ${f4(cur.p)} is ${rej ? "below" : "above"} ${plIn.alpha}, so we <b>${rej ? "reject" : "do not reject"} H<sub>0</sub></b> (cut-off ${m(crit)}). ${why}</div>`;
+}
+```

@@ -2,15 +2,14 @@
 /*
   Pairing animation — slide #pair-intuition.
 
-  Teaching point: the SAME 15 firms are measured twice (cost of equity before
-  and after 2020). Seen as two independent clouds the groups overlap almost
-  perfectly and look identical — the between-firm spread (3% to 19%) swamps
-  everything. But firm by firm the move is always down, and always by about
-  the same 2 points. Pairing throws away the between-subject noise and what
-  is left is a tight cluster sitting clearly below zero.
+  Teaching point: the SAME 15 firms are measured twice (cost of equity pre
+  and post 2020, Table 1 of beamer Seminar 6, Exercise 3). Seen as two
+  independent clouds the groups overlap — the between-firm spread (1% to 15%)
+  swamps the change. Firm by firm, most lines slope down. Pairing subtracts
+  each firm's own level and what is left sits below zero.
 
     0. two unpaired strips, wide and overlapping
-    1. connecting lines drawn in  — same firms, every line slopes down
+    1. connecting lines drawn in  — same firms, most lines slope down
     2. the differences fly out to their own axis on the right
 
   Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
@@ -19,18 +18,17 @@
 (function () {
   var K = window.StageKit;
 
-  // [before 2020, after 2020] cost of equity, %. Wide between-firm spread,
-  // consistent within-firm drop of ~2.
-  var PAIRS = [[3, 1], [15, 13], [8, 5], [19, 17], [5, 4],
-               [12, 9], [17, 16], [7, 4], [14, 12], [10, 7],
-               [6, 5], [16, 13], [9, 7], [13, 10], [11, 9]];
+  // [pre 2020, post 2020] cost of equity, %, firms 1-15 of the worksheet.
+  var PAIRS = [[3, 1], [5, 6], [4, 3], [1, 2], [4, 7],
+               [8, 3], [10, 5], [15, 8], [2, 4], [9, 7],
+               [6, 4], [3, 2], [8, 5], [11, 7], [10, 5]];
 
   // Stage geometry — fixed 1000x445 space, scaled to the slide via CSS.
   var W = 1000, H = 445, TOP = 67, BOT = 378;
   var BEF_X = 210, AFT_X = 400, DIF_X = 800;      // strip centres
   var L_AXIS = 140, R_AXIS = 720;                 // the two y-axes
-  var LMIN = 0, LMAX = 22;                        // level scale (left)
-  var DMIN = -6, DMAX = 2;                        // difference scale (right)
+  var LMIN = 0, LMAX = 16;                        // level scale (left)
+  var DMIN = -8, DMAX = 4;                        // difference scale (right)
   var DOT_R = 9, MEAN_HALF = 30, DODGE = 16;
 
   var INK_SOFT = K.PAL.inkSoft, RULE = K.PAL.rule, GREY = K.PAL.dim;
@@ -70,7 +68,7 @@
       svg.appendChild(K.el('line', {
         x1: x - 6, y1: ymap(v), x2: x, y2: ymap(v), stroke: GREY, 'stroke-width': 1
       }));
-      svg.appendChild(K.txt(x - 12, ymap(v) + 5, String(v),
+      svg.appendChild(K.txt(x - 12, ymap(v) + 5, String(v).replace('-', '\u2212'),
         { size: 'tick', face: 'mono', anchor: 'end' }));
     });
   }
@@ -88,9 +86,9 @@
     var dif = lay(DIF, DIF_X, yD);
 
     // --- left region: the unpaired view -------------------------------------
-    axis(svg, L_AXIS, [0, 5, 10, 15, 20], yL);
-    stripLabel(svg, BEF_X, 'Before 2020');
-    stripLabel(svg, AFT_X, 'After 2020');
+    axis(svg, L_AXIS, [0, 4, 8, 12, 16], yL);
+    stripLabel(svg, BEF_X, 'Pre 2020');
+    stripLabel(svg, AFT_X, 'Post 2020');
 
     // Connecting lines go in first so the dots sit on top of them.
     var links = PAIRS.map(function (p, i) {
@@ -126,7 +124,7 @@
     diffG.style.opacity = 0;
     svg.appendChild(diffG);
 
-    axis(diffG, R_AXIS, [-6, -4, -2, 0, 2], yD);
+    axis(diffG, R_AXIS, [-8, -4, 0, 4], yD);
     diffG.appendChild(K.el('line', {
       x1: R_AXIS + 10, y1: yD(0), x2: DIF_X + 120, y2: yD(0),
       stroke: GREY, 'stroke-width': 1.5, 'stroke-dasharray': '6 5'
@@ -136,14 +134,13 @@
       y2: yD(M_DIF), stroke: BRICK, 'stroke-width': 2.5, 'stroke-linecap': 'round'
     }));
 
-    // The headline number. It sits below the bracket and the dot cluster,
-    // centred on the diff strip, rather than hugging the bracket's right end
-    // — at readout size the "mean -2.2" string is wider than the room to the
-    // bracket's right within the 1000-wide canvas.
-    diffG.appendChild(K.txt(DIF_X, 330, 'mean ' + M_DIF.toFixed(1),
-      { size: 'readout', face: 'mono', anchor: 'middle', fill: 'brick', weight: 700 }));
+    // The headline number, just right of the mean bracket. At label size the
+    // string ends near x = 970, inside the 1000-wide canvas.
+    diffG.appendChild(K.txt(DIF_X + MEAN_HALF + 30, yD(M_DIF) + 7,
+      'Mean ' + M_DIF.toFixed(1).replace('-', '\u2212'),
+      { size: 'label', face: 'mono', anchor: 'start', fill: 'brick', weight: 700 }));
 
-    diffG.appendChild(K.txt(DIF_X, 414, 'after − before, per firm',
+    diffG.appendChild(K.txt(DIF_X, 414, 'Post − pre, per firm',
       { size: 'label', anchor: 'middle', fill: 'inkSoft' }));
 
     // Difference dots start life on top of their "after" dot and fly across.
@@ -168,11 +165,13 @@
              home: aft, away: dif, cap: cap };
   }
 
+  // Counted, not typed: how many of the firms' lines go down.
+  var DOWN = DIF.filter(function (d) { return d < 0; }).length;
+  // At 24px Roboto (~12px a character) a caption has room for ~75 characters.
   var CAPTIONS = {
-    0: 'two clouds that overlap almost completely — no obvious difference',
-    1: 'but these are the SAME 15 firms — every line slopes down',
-    // shortened from "the differences are tight and clearly below zero — that is the signal pairing recovers": the original overflows the canvas at 24px; claim unchanged.
-    2: 'tight and clearly below zero — that’s the signal pairing recovers'
+    0: 'Two clouds that overlap: firms differ far more than the two periods do',
+    1: 'But these are the same ' + PAIRS.length + ' firms: ' + DOWN + ' of the lines slope down',
+    2: 'Each firm minus itself: the differences sit below zero'
   };
 
   function place(s, state, instant) {
