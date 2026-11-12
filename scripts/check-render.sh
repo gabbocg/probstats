@@ -46,7 +46,8 @@ for id in s00b-me s00b-about s00-how-to-use s00-webr \
           pois-intuition expo-intuition expo-formal \
           attempts-const courier-moments uniform-dist normal-area normal-critical \
           normal-intuition galton clt-idea clt-dice normal-formula moments lln normal-build normal-pi normal-e box-normal funcrv chisq tdist dist-map pois-sim \
-          s05-estimation xbar-properties xbar-proof ciflip-intuition cieq-formula ci-intuition ci-lab; do
+          s05-estimation xbar-properties xbar-proof ciflip-intuition cieq-formula ci-intuition ci-lab \
+          s08-regression ad-scatter cor-test ls-fit ls-formula ls-accuracy fit-quality multi-reg; do
   need "id=\"$id\"" "slide #$id"
 done
 
@@ -58,20 +59,20 @@ for id in bins-intuition bins-sim dist-questions \
           clt-intuition clt-sim clt-proof moments-formal normal-full zstd-intuition \
           s06-testing pval-intuition alpha-sim power-sim \
           s07-two-populations pair-intuition pair-sim \
-          s08-regression ls-intuition ols-sim ovb-sim \
           s09-forecasting smooth-intuition smooth-sim; do
   if grep -qF "id=\"$id\"" "$OUT"; then
     echo "FAIL: slide #$id is commented out in sections/ but rendered anyway"; fail=1
   fi
 done
-echo "OK:   23 commented-out slides stayed out"
+echo "OK:   19 commented-out slides stayed out"
 
 echo "── animation stages ───────────────────────────────"
 # pois and expo dropped: #pois-intuition and #expo-intuition are {ojs}
 # slides now, not stages.
-# bins, clt, zstd, pval, pair, ls and smooth belong to slides commented
+# bins, clt, zstd, pval, pair and smooth belong to slides commented
 # out on 2026-09-23; put them back here when those return. ciflip, cieq and
-# ci came back with the estimation section on 2026-11-11.
+# ci came back with the estimation section on 2026-11-11. The regression
+# section (2026-11-12) is all {ojs}: ls-anim was dropped for #ls-fit.
 STAGES="about dicegrid mm space setops venn prior bayes bayeq monty cond binom seller laplace galton cltidea cltdice moments lln normbuild normalpi normale chisq tdist ciflip cieq ci"
 for s in $STAGES; do
   need "id=\"$s-stage\"" "stage #$s-stage"
