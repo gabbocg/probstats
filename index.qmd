@@ -18,9 +18,9 @@ date-format: "MMMM YYYY"
 {{< include sections/03-probability.qmd >}}
 {{< include sections/04-distributions.qmd >}}
 {{< include sections/05-estimation.qmd >}}
-<!-- commented out: seminars 6 to 9
-
 {{< include sections/06-testing.qmd >}}
+<!-- commented out: seminars 7 to 9
+
 {{< include sections/07-two-populations.qmd >}}
 {{< include sections/08-regression.qmd >}}
 {{< include sections/09-forecasting.qmd >}}

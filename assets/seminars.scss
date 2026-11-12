@@ -1583,3 +1583,49 @@
   display: flex; justify-content: center; gap: 40px; font-size: 19px; margin: 8px 0 0;
   .na-note { font-size: 15px; }
 }
+
+// ---- 06-testing -------------------------------------------------------------
+// #test-steps: the #xbar-properties layout with four cards instead of three.
+.reveal section#test-steps .lede-min,
+.reveal section#test-steps .slide-footer {
+  max-width: none; text-align: justify; hyphens: auto;
+  p { text-align: justify; }
+}
+.reveal section#test-steps .lede-min { font-size: 26px; margin-top: 48px !important; border-left: none; }
+.reveal section#test-steps .slide-footer { font-size: 22px; }
+.reveal section#test-steps .prop-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin: 22px 0 18px;
+}
+.reveal section#test-steps .prop-card {
+  background: var(--bg-elev); border: 1px solid var(--rule); border-top: 5px solid var(--rule);
+  border-radius: 6px; padding: 16px 14px 14px; text-align: center;
+  p { margin: 0; }
+  .prop-math { font-size: 26px; }
+  .prop-q { font-size: 18px; }
+}
+.prop-hyp  { border-top-color: #325D88 !important; .prop-name { color: #325D88; } }
+.prop-stat { border-top-color: #F47C3C !important; .prop-name { color: #F47C3C; } }
+.prop-crit { border-top-color: #B94A48 !important; .prop-name { color: #B94A48; } }
+.prop-pval { border-top-color: #93C54B !important; .prop-name { color: #93C54B; } }
+// #test-stats: display maths at 80%, as on #xbar-proof.
+.reveal section#test-stats {
+  .lede-min { margin-top: 44px; }
+  .MJXp-math.MJXp-display { font-size: 0.8em; }
+  .MathJax_Display { zoom: 0.8; }
+  .deriv-arrow { height: 40px; }
+  .slide-footer, .slide-footer p { text-align: justify; hyphens: auto; }
+}
+#pval-intuition .stage-wrap { margin-top: 28px; }
+// #reject-lab, #power-lab: the #ci-lab control rows.
+.reveal section#reject-lab .rj-dials,
+.reveal section#power-lab .rj-dials {
+  display: flex; align-items: flex-end; gap: 28px; margin: 14px 0 6px; overflow: hidden;
+  form { flex-direction: column; align-items: flex-start; gap: 2px; margin: 0; --label-width: auto; }
+  form > label { font-size: 17px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #325D88; }
+  input[type="range"] { width: 150px; }
+  input[type="number"] { width: 70px; min-width: 70px; font-size: 20px; }
+  form div label { font-size: 18px; white-space: nowrap; }
+  form div { display: flex; gap: 10px; }
+}
+.reveal section#power-lab .rj-dials { margin-top: 26px; input[type="range"] { width: 200px; } }
+#reject-lab .quiz-fb, #power-lab .quiz-fb { font-size: 19px; padding: 8px 14px; margin-top: 8px; }

@@ -1,6 +1,7 @@
 <script>
 /*
-  p-value animation — slide #pval-intuition.
+  p-value animation — slide #pval-intuition (deck Seminar 6, beamer
+  Seminar 5, Exercise 3(b): z = 2, right-tailed).
 
   Teaching point: the p-value is not a verdict, it is an AREA. We build the
   null distribution by brute force and then read the tail off the picture:
@@ -13,7 +14,8 @@
   so the histogram is pixel-identical in every run of the lecture. The number
   printed in state 3 is counted off the dots on screen, not quoted from a
   table — with this seed 5 of the 200 land beyond z = 2, so p = 0.025 (the
-  theoretical value is 0.023; the gap is the point of a simulation).
+  theoretical value is 0.023, printed under it from Phi; the gap is the
+  point of a simulation).
 
   Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
   Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
@@ -29,6 +31,13 @@
   var BASE = 356, TOP = 67;            // baseline, and the ceiling of the tail
   var SIDE = 9, STEP = 9.5;            // dot size, and stack pitch
   var DOT_OP = 0.5, SHADE_OP = 0.1, SKY = -30;   // SKY = where dots wait
+
+  // Phi by Abramowitz and Stegun 7.1.26 (good to 1.5e-7), as on #normal-area.
+  function Phi(z) {
+    var x = Math.abs(z) / Math.SQRT2, t = 1 / (1 + 0.3275911 * x);
+    var e = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+    return 0.5 * (1 + (z < 0 ? -e : e));
+  }
 
   function px(z) { return X0 + (z - ZMIN) * (X1 - X0) / (ZMAX - ZMIN); }
 
@@ -105,7 +114,7 @@
       x1: px(ZOBS), y1: TOP, x2: px(ZOBS), y2: BASE,
       stroke: BRICK, 'stroke-width': 2.5
     }));
-    obs.appendChild(K.txt(px(ZOBS), TOP - 12, 'observed z = ' + ZOBS.toFixed(1),
+    obs.appendChild(K.txt(px(ZOBS), TOP - 12, 'Observed z = ' + ZOBS.toFixed(1),
       { size: 'label', face: 'mono', fill: 'brick', weight: 700, anchor: 'middle' }));
     svg.appendChild(obs);
 
@@ -124,11 +133,13 @@
     var p = K.txt(970, 147, 'p = ' + ratio.toFixed(3),
       { size: 'readout', face: 'mono', fill: 'brick', weight: 700, anchor: 'end' });
     res.appendChild(p);
-    ['the share of the null world', 'at least this extreme'].forEach(
+    ['The share of the null world', 'at least this extreme'].forEach(
       function (line, i) {
         res.appendChild(K.txt(970, 176 + i * 20, line,
           { size: 'label', fill: 'inkSoft', anchor: 'end' }));
       });
+    res.appendChild(K.txt(970, 236, 'Table: Pr(Z > ' + ZOBS + ') = ' + (1 - Phi(ZOBS)).toFixed(4),
+      { size: 'label', face: 'mono', fill: 'ink', anchor: 'end' }));
     svg.appendChild(res);
 
     return { dots: dots, tail: tail, rest: rest, shade: shade,
@@ -136,10 +147,10 @@
   }
 
   var CAPTIONS = {
-    0: 'if H0 were true, what test statistics would we see?',
-    1: '200 samples drawn under H0 — this is the null distribution',
-    2: 'our sample produced this',
-    3: 'the p-value is that shaded share — nothing more'
+    0: 'If H₀ were true, what test statistics would we see?',
+    1: 'We draw ' + N + ' samples under H₀: this is the null distribution',
+    2: 'Our sample produced z = ' + ZOBS.toFixed(1),
+    3: 'The p-value is the shaded share, nothing more'
   };
 
   // Each layer compares the state it is going to with the state it came from,

@@ -1,94 +1,227 @@
 # Hypothesis Testing {.hero #s06-testing}
 
 ::: {.sem-mark data-sem="6"}
-Seminar 6 · p-values and error rates
+Seminar 6 · Hypothesis testing
 :::
 
-A p-value answers one question, and it is not the one you want.
+## Four Steps of a Test {.qcard-slide #test-steps}
 
-::: {.lede}
-It does not tell you the probability that $H_0$ is true. It tells you how ordinary your sample would look in a world where $H_0$ *is* true — which is a question about the world, not about your hypothesis.
+::: {.lede-min}
+A test asks whether the sample mean $\bar x$ sits too far from a claimed $\mu_0$ to blame on chance. Every exercise follows the same four steps.
 :::
 
-## Build the null world, then look {.stage-slide #pval-intuition}
+:::: {.prop-grid}
+
+::: {.prop-card .prop-hyp .fragment}
+[Hypotheses]{.prop-name}
+
+[$H_0\!: \mu = \mu_0$]{.prop-math}
+
+[The claim, tested against the alternative $H_1$ the analyst suspects.]{.prop-q}
+:::
+
+::: {.prop-card .prop-stat .fragment}
+[Statistic]{.prop-name}
+
+[$z = \dfrac{\bar x - \mu_0}{\sigma / \sqrt n}$]{.prop-math}
+
+[How many standard errors $\bar x$ lies from $\mu_0$.]{.prop-q}
+:::
+
+::: {.prop-card .prop-crit .fragment}
+[Critical Value]{.prop-name}
+
+[$z > z_\alpha$]{.prop-math}
+
+[Reject $H_0$ if the statistic lands past the cut-off.]{.prop-q}
+:::
+
+::: {.prop-card .prop-pval .fragment}
+[P-Value]{.prop-name}
+
+[$p < \alpha$]{.prop-math}
+
+[Or reject if the tail area beyond it is below $\alpha$.]{.prop-q}
+:::
+
+::::
+
+::: {.slide-footer .fragment}
+The last two always agree: the statistic is past the cut-off exactly when the area beyond it is below $\alpha$.
+:::
+
+## The z and t Test Statistics {.formula-slide #test-stats}
+
+::: {.lede-min}
+Both count the standard errors between $\bar x$ and $\mu_0$. What you know about $\sigma$ decides the table.
+:::
+
+$$\textstyle z = \frac{\bar x - \mu_0}{\color{#325D88}{\sigma} / \sqrt n} \sim N(0, 1) \;\; \color{#6E7681}{\sigma \text{ known}} \qquad\quad t = \frac{\bar x - \mu_0}{\color{#B94A48}{s} / \sqrt n} \sim t_{n-1} \;\; \color{#6E7681}{\sigma \text{ unknown}}$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [The alternative $H_1$ decides which tail holds the evidence]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle \begin{array}{lll}
+H_1\!: \mu > \mu_0 \qquad & \text{Reject if } z > z_\alpha \qquad & p = \Pr(Z > z) \\[6pt]
+H_1\!: \mu < \mu_0 & \text{Reject if } z < -z_\alpha & p = \Pr(Z < z) \\[6pt]
+H_1\!: \mu \neq \mu_0 & \text{Reject if } |z| > z_{\alpha/2} & p = 2\Pr(Z > |z|)
+\end{array}$$
+:::
+
+::: {.slide-footer .fragment}
+With $t$, use $t_\alpha$ on $n - 1$ degrees of freedom. Its cut-offs are wider, so the same statistic can pass a $z$ test and fail a $t$ test.
+:::
+
+## Build the Null World, Then Look {.stage-slide #pval-intuition}
 
 ::: {.stage-wrap .stage-wrap-std}
 <div id="pval-stage" class="stage"></div>
 :::
 
-[]{.fragment .fi-frag id="pval-frag-1"}
-[]{.fragment .fi-frag id="pval-frag-2"}
-[]{.fragment .fi-frag id="pval-frag-3"}
+[]{.fragment .fi-frag id="pval-frag-1" data-fragment-index="1"}
+[]{.fragment .fi-frag id="pval-frag-2" data-fragment-index="2"}
+[]{.fragment .fi-frag id="pval-frag-3" data-fragment-index="3"}
 
-::: {.slide-footer}
-Nothing here required a table. The p-value is a counting exercise: of all the samples $H_0$ would produce, what share are at least as extreme as ours?
+::: {.slide-footer .fragment data-fragment-index="3"}
+Of all the samples $H_0$ would produce, the p-value is the share at least as extreme as ours. With more samples the count settles on the table value.
 :::
 
-## What $\alpha$ actually buys {.sim-slide #alpha-sim}
+## Rejection Region and P-Value {.ojs-slide #reject-lab}
 
-::: {.slide-kicker}
-Seminar 6 · Type I error
-:::
-
-::: {.lede-min}
-Below, $H_0$ is **true** in every single one of the 5,000 worlds. Every rejection is therefore a false alarm — so the rejection rate should come out at $\alpha$.
-:::
-
-::: {.sim-card .sim-text}
-```{webr-r}
-alpha <- 0.05   # <-- your significance level
-reps  <- 5000
-n     <- 30
-reject <- replicate(reps, {
-  x <- rnorm(n, 100, 15)   # H0 is TRUE
-  t <- (mean(x) - 100) / (sd(x)/sqrt(n))
-  abs(t) > qt(1 - alpha/2, n - 1)
-})
-mean(reject)   # how often we cried wolf
+```{ojs}
+//| echo: false
+// Defaults are Exercise 1 of the beamer Seminar 5: z = 2.5, right-tailed, 5%.
+viewof rjIn = Inputs.form({
+  test: Inputs.radio(["Normal z", "Student's t"], {value: "Normal z", label: "Test"}),
+  df: Inputs.range([1, 60], {value: 24, step: 1, label: "Degrees of freedom"}),
+  tail: Inputs.radio(["Left", "Right", "Two-tailed"], {value: "Right", label: "Tail"}),
+  alpha: Inputs.range([0.01, 0.1], {value: 0.05, step: 0.005, label: html`Significance <i style="text-transform: none">α</i>`}),
+  stat: Inputs.range([-4, 4], {value: 2.5, step: 0.01, label: "Observed statistic"})
+}, {template: ins => html`<div class="rj-dials">${ins.test}${ins.df}${ins.tail}</div><div class="rj-dials">${ins.alpha}${ins.stat}</div>`})
 ```
-:::
 
-::: {.try-this}
-You get back roughly `alpha`. Set it to `0.01` and the false-alarm rate follows. **$\alpha$ is not a truth threshold — it is the false-alarm rate you have agreed to live with.**
-:::
-
-## "Fail to reject" is not "accept" {.sim-slide #power-sim}
-
-::: {.slide-kicker}
-Seminar 6 · the other error · H₀ false, true mean 105
-:::
-
-:::: {.claim-pair}
-
-::: {.claim-cell .claim-wrong}
-[Wrong]{.claim-tag}
-
-"We failed to reject, so the means are equal."
-
-Absence of evidence is not evidence of absence — a small sample fails to reject almost everything.
-:::
-
-::: {.claim-cell .claim-right}
-[Right]{.claim-tag}
-
-"We had too little evidence to rule equality out."
-
-Whether that is reassuring depends entirely on how much power you had.
-:::
-
-::::
-
-::: {.sim-card .sim-text}
-```{webr-r}
-n <- 10   # <-- try 10, then 50, then 200
-mean(replicate(4000, {
-  x <- rnorm(n, mean = 105, sd = 15)
-  t <- (mean(x) - 100) / (sd(x)/sqrt(n))
-  abs(t) > qt(0.975, n - 1)
-}))
+```{ojs}
+//| echo: false
+// The t density from the same log-gamma as clTcdf (section 05), so the curve,
+// the cut-off and the p-value all come from one distribution.
+rjTdens = (x, df) => Math.exp(clLgam((df + 1) / 2) - clLgam(df / 2) - 0.5 * Math.log(df * Math.PI)
+  - (df + 1) / 2 * Math.log(1 + x * x / df))
+rjDens = x => Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI)
+// Cut-off c (positive), p-value and decision for one test; cdf is its CDF.
+rjRule = (cdf, tail, a, s) => {
+  const c = clInv(cdf)(1 - (tail === "Two-tailed" ? a / 2 : a));
+  const p = tail === "Right" ? 1 - cdf(s) : tail === "Left" ? cdf(s) : 2 * (1 - cdf(Math.abs(s)));
+  const rej = tail === "Right" ? s > c : tail === "Left" ? s < -c : Math.abs(s) > c;
+  return {c, p, rej};
+}
 ```
-:::
 
-::: {.try-this}
-At `n <- 10` you detect a real effect about **16%** of the time. Failing to reject told you nothing — the test could barely see. At `n <- 200` it is near certain. **"No significant difference" is only informative once you know the power.**
-:::
+```{ojs}
+//| echo: false
+{
+  const isT = rjIn.test === "Student's t", df = rjIn.df, {tail, alpha, stat} = rjIn;
+  const cdf = isT ? (x => clTcdf(x, df)) : Phi, dens = isT ? (x => rjTdens(x, df)) : rjDens;
+  const {c, p, rej} = rjRule(cdf, tail, alpha, stat);
+  const sym = isT ? "t" : "z", lo = -4.5, hi = 4.5, s = Math.abs(stat);
+  const grid = d3.range(0, 401).map(i => lo + (hi - lo) * i / 400);
+  const reg = {Right: [[c, hi]], Left: [[lo, -c]], "Two-tailed": [[lo, -c], [c, hi]]}[tail];
+  const pv = {Right: [[stat, hi]], Left: [[lo, stat]], "Two-tailed": [[lo, -s], [s, hi]]}[tail];
+  const cuts = reg.map(([u, v]) => u === lo ? v : u);
+  const top = rjDens(0), f = (v, k = 3) => v.toFixed(k).replace("-", "−");   // a true minus sign
+  const area = (pieces, fill, op) => pieces.map(([u, v]) => Plot.areaY(grid.filter(x => x >= u && x <= v),
+    {x: d => d, y: dens, fill, fillOpacity: op}));
+  const halo = {stroke: "white", strokeWidth: 6};
+  const plot = Plot.plot({
+    width: 1000, height: 270, marginLeft: 20, marginRight: 20, marginBottom: 28, marginTop: 40,
+    style: ({fontSize: "15px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"}),
+    x: {domain: [lo, hi], label: null, tickSize: 4},
+    y: {domain: [0, top * 1.12], axis: null, insetTop: 12},
+    marks: [
+      ...area(reg, PPAL.brick, 0.3),
+      ...area(pv, PPAL.orange, 0.45),
+      Plot.line(grid, {x: d => d, y: dens, stroke: PPAL.navy, strokeWidth: 2.5}),
+      Plot.ruleX(cuts, {y1: 0, y2: top * 0.6, stroke: PPAL.brick, strokeWidth: 2, strokeDasharray: "5 4"}),
+      Plot.text(cuts, {x: d => d, y: top * 0.6, dy: -10, text: d => f(d), fill: PPAL.brick, fontSize: 16, fontWeight: 700, ...halo}),
+      Plot.ruleX([stat], {y1: 0, y2: top * 0.88, stroke: PPAL.orange, strokeWidth: 2.5}),
+      Plot.text([stat], {x: d => d, y: top * 0.88, dy: -10, text: d => `${sym} = ${f(d, 2)}`, fill: PPAL.orange, fontSize: 16, fontWeight: 700, ...halo}),
+      Plot.ruleY([0], {stroke: PPAL.dim}),
+      Plot.text([isT ? `Null distribution: t with ${df} degrees of freedom` : "Null distribution: N(0, 1)"],
+        {frameAnchor: "top-left", dy: -28, text: d => d, fill: PPAL.navy, fontWeight: 700, fontSize: 16, ...halo})
+    ]
+  });
+  // Exercise 5: on t, say what z would have decided with the same statistic.
+  const z = rjRule(Phi, tail, alpha, stat);
+  const cs = v => tail === "Two-tailed" ? `±${f(v)}` : f(tail === "Left" ? -v : v);
+  const alt = isT && z.rej !== rej
+    ? ` With z the cut-off would be ${cs(z.c)} and we would ${z.rej ? "reject" : "fail to reject"}: the heavier t tails demand more evidence.` : "";
+  const msg = `The statistic ${sym} = ${f(stat, 2)} is ${rej ? "inside" : "outside"} the rejection region (cut-off ${cs(c)}), and its p-value ${f(p, 4)} is ${p < alpha ? "below" : "above"} α = ${+alpha.toFixed(3)}: <b>${rej ? "reject" : "fail to reject"} H₀</b>.${alt}`;
+  return html`${plot}
+  <div class="ojs-eq cl-stats">
+    <span>Critical value = <span class="miss">${cs(c)}</span></span>
+    <span>P-value = <span class="rate">${f(p, 4)}</span></span>
+    <span>Decision: ${rej ? "Reject H₀" : "Fail to reject H₀"}</span>
+  </div>
+  <div class="quiz-fb">${msg}</div>`;
+}
+```
+
+## Type I and Type II Errors {.ojs-slide #power-lab}
+
+```{ojs}
+//| echo: false
+// Exercise 1 of the beamer Seminar 5: H0: mu = 1300 against mu > 1300,
+// sigma = 720, n = 36. The true mean defaults to the observed 1600.
+pwMu0 = 1300
+pwSd = 720
+viewof pwIn = Inputs.form({
+  mu: Inputs.range([1300, 1900], {value: 1600, step: 10, label: html`True mean <i style="text-transform: none">μ</i>`}),
+  n: Inputs.range([9, 144], {value: 36, step: 1, label: html`Sample size <i style="text-transform: none">n</i>`}),
+  alpha: Inputs.range([0.01, 0.1], {value: 0.05, step: 0.005, label: html`Significance <i style="text-transform: none">α</i>`})
+}, {template: ins => html`<div class="rj-dials">${Object.values(ins)}</div>`})
+```
+
+```{ojs}
+//| echo: false
+{
+  const {mu, n, alpha} = pwIn, se = pwSd / Math.sqrt(n);
+  const c = pwMu0 + clInv(Phi)(1 - alpha) * se;          // reject H0 when the sample mean exceeds c
+  const beta = Phi((c - mu) / se), power = 1 - beta;
+  const lo = pwMu0 - 4 * se, hi = Math.max(mu, pwMu0) + 4 * se;
+  const grid = d3.range(0, 401).map(i => lo + (hi - lo) * i / 400);
+  const dn = m => x => Math.exp(-0.5 * ((x - m) / se) ** 2) / (se * Math.sqrt(2 * Math.PI));
+  const d0 = dn(pwMu0), d1 = dn(mu), top = d0(pwMu0), same = mu === pwMu0;
+  const halo = {stroke: "white", strokeWidth: 6};
+  const f = (v, k = 1) => v.toFixed(k), pc = v => `${f(100 * v)}%`;
+  const plot = Plot.plot({
+    width: 1000, height: 300, marginLeft: 20, marginRight: 20, marginBottom: 28, marginTop: 40,
+    style: ({fontSize: "15px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"}),
+    x: {domain: [lo, hi], label: null, tickSize: 4},
+    y: {domain: [0, top * 1.15], axis: null, insetTop: 12},
+    marks: [
+      Plot.areaY(grid.filter(x => x <= c), {x: d => d, y: d1, fill: PPAL.orange, fillOpacity: same ? 0 : 0.4}),
+      Plot.areaY(grid.filter(x => x >= c), {x: d => d, y: d0, fill: PPAL.brick, fillOpacity: 0.45}),
+      Plot.line(grid, {x: d => d, y: d1, stroke: PPAL.olive, strokeWidth: 2.5}),
+      Plot.line(grid, {x: d => d, y: d0, stroke: PPAL.navy, strokeWidth: 2.5, strokeDasharray: same ? "6 4" : null}),
+      Plot.ruleX([c], {y1: 0, y2: top * 1.05, stroke: "#3E3F3A", strokeWidth: 1.5, strokeDasharray: "5 4"}),
+      Plot.text([c], {x: d => d, y: top * 1.05, dx: 6, textAnchor: "start", text: d => `Cut-off ${f(d)}`, fill: "#3E3F3A", fontSize: 15, ...halo}),
+      Plot.text([pwMu0], {x: d => d, y: top, dy: -10, text: d => `H₀: μ = ${d}`, fill: PPAL.navy, fontSize: 15, fontWeight: 700, ...halo}),
+      ...(same ? [] : [Plot.text([mu], {x: d => d, y: top, dy: -10, text: d => `True μ = ${d}`, fill: PPAL.olive, fontSize: 15, fontWeight: 700, ...halo})]),
+      Plot.ruleY([0], {stroke: PPAL.dim}),
+      Plot.text([`Sample means under H₀ and under the true mean, σ/√n = ${f(se)}`],
+        {frameAnchor: "top-left", dy: -28, text: d => d, fill: PPAL.navy, fontWeight: 700, fontSize: 16, ...halo})
+    ]
+  });
+  const msg = same
+    ? `The true mean is μ₀, so H₀ holds and the only possible mistake is a <b>Type I error</b>: rejecting it anyway, ${pc(alpha)} of the time.`
+    : `If the true mean is ${mu}, a sample of ${n} days lands past the cut-off with probability <b>${pc(power)}</b>, the power. It misses ${pc(beta)} of the time, a <b>Type II error</b>. A larger n shrinks β; a smaller α cuts false alarms but widens β.`;
+  return html`${plot}
+  <div class="ojs-eq cl-stats">
+    <span>Type I: <span class="miss">α = ${pc(alpha)}</span></span>
+    <span>Type II: <span class="rate">${same ? "None, H₀ is true" : `β = ${pc(beta)}`}</span></span>
+    <span>Power = <span class="hit">${same ? "n/a" : pc(power)}</span></span>
+  </div>
+  <div class="quiz-fb">${msg}</div>`;
+}
+```
