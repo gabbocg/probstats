@@ -1722,3 +1722,5 @@
   td.ct-top { background: rgba(244, 124, 60, 0.22); box-shadow: inset 0 0 0 2px #F47C3C; font-weight: 700; }
   &.rg-cor { th, td { font-size: 16px; padding: 4px 7px; } }
 }
+// #ls-fit: the slope needs four decimals in its box.
+.reveal section#ls-fit form input[type="number"] { width: 104px; min-width: 104px; }

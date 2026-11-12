@@ -139,7 +139,7 @@ rgTitle = s => Plot.text([s], {frameAnchor: "top-left", dy: -30, text: d => d, f
 ## Is the Correlation Real? {.ojs-slide #cor-test}
 
 ::: {.lede-min}
-Under $H_0\colon \rho = 0$, $t = r\sqrt{n-2}\,/\sqrt{1-r^2}$ follows Student's $t$ with $n-2$ degrees of freedom. The defaults are Exercise 1: $r = 0.33$ over 24 months.
+Under $H_0\colon \rho = 0$, $t = \frac{r\sqrt{n-2}}{\sqrt{1-r^2}}$ follows Student's $t$ with $n-2$ degrees of freedom. The defaults are Exercise 1: $r = 0.33$ over 24 months.
 :::
 
 ```{ojs}
@@ -197,7 +197,7 @@ viewof rgCin = Inputs.form({
 ## Finding the Least-Squares Line {.ojs-slide #ls-fit}
 
 ::: {.lede-min}
-Each line leaves residuals $e_i = y_i - \hat y_i$. Least squares picks the line with the smallest $\text{RSS} = \sum e_i^2$ (ISLR Figures 3.1 and 3.2). Find it with the sliders.
+Each line leaves residuals $e_i = y_i - \widehat{y}_i$. Least squares picks the line with the smallest $\text{RSS} = \sum e_i^2$ (ISLR Figures 3.1 and 3.2). Find it with the sliders.
 :::
 
 ```{ojs}
@@ -251,7 +251,7 @@ rgRSS = (b0, b1) => { const S = rgSums;
   return html`<div class="cr-row">${scatter}${contour}</div>
   <div class="ojs-eq rg-stats">
     <span>Your RSS = <span class="rate">${rgN(rss, 1)}</span></span>
-    <span>Least-squares RSS = <span class="cl-navy">${rgN(min, 1)}</span> <span class="na-note">at (${rgN(rgTV.b0)}, ${rgN(rgTV.b1)})</span></span>
+    <span>Least-squares RSS = <span class="cl-navy">${rgN(min, 1)}</span> <span class="na-note">At (${rgN(rgTV.b0)}, ${rgN(rgTV.b1)})</span></span>
   </div>
   <div class="quiz-fb ${over < 0.005 ? "quiz-ok" : ""}">${over < 0.005
     ? html`Within 0.5% of the minimum: this is the least-squares line, intercept ${rgN(rgTV.b0, 2)} and slope ${rgN(rgTV.b1)}. No other line leaves a smaller total of squared residuals.`
@@ -265,7 +265,7 @@ rgRSS = (b0, b1) => { const S = rgSums;
 Setting the derivatives of RSS to zero gives the line in closed form. Pick the data, follow the working, then predict.
 :::
 
-$$\hat\beta_1 = \frac{\sum_{i=1}^n (x_i - \bar x)(y_i - \bar y)}{\sum_{i=1}^n (x_i - \bar x)^2}, \qquad \hat\beta_0 = \bar y - \hat\beta_1 \bar x$$
+$$\widehat{\beta}_1 = \frac{\sum_{i=1}^n (x_i - \bar x)(y_i - \bar y)}{\sum_{i=1}^n (x_i - \bar x)^2}, \qquad \widehat{\beta}_0 = \bar y - \widehat{\beta}_1 \bar x$$
 
 ```{ojs}
 //| echo: false
@@ -308,7 +308,7 @@ viewof rgFx0 = Inputs.range([rgSets[rgFset].lo, rgSets[rgFset].hi], {value: rgSe
 ## How Accurate Is the Slope? {.ojs-slide #ls-accuracy}
 
 ::: {.lede-min}
-Resample the 200 markets with replacement and refit. The spread of the resampled slopes is what $\text{SE}(\hat\beta_1)$ measures (ISLR Figure 3.3, Table 3.1).
+Resample the 200 markets with replacement and refit. The spread of the resampled slopes is what $\text{SE}(\widehat{\beta}_1)$ measures (ISLR Figure 3.3, Table 3.1).
 :::
 
 ```{ojs}
@@ -386,7 +386,7 @@ Three numbers summarise the fit of sales on TV (ISLR 3.1.3). The first is in the
 :::: {.prop-grid}
 
 ::: {.prop-card .prop-rse .fragment}
-[Residual standard error]{.prop-name}
+[RSE]{.prop-name}
 
 [$\text{RSE} = \sqrt{\dfrac{\text{RSS}}{n-2}}$]{.prop-math}
 
@@ -439,7 +439,7 @@ viewof rgMx = Inputs.checkbox(["TV", "Radio", "Newspaper"], {value: ["TV", "Radi
   if (!vars.length) return html`<div class="rg-row"><div class="quiz-fb">Tick at least one medium to fit a model.</div>${corTable}</div>`;
   const m = rgOls(vars), pF = rgFp(m.F, m.k - 1, m.df);
   const coef = html`<table class="rg-table">
-    <thead><tr><th></th><th>Coefficient</th><th>Std. error</th><th>t</th><th>p-value</th></tr></thead>
+    <thead><tr><th></th><th>Coefficient</th><th>Std. error</th><th>t</th><th>P-value</th></tr></thead>
     <tbody>${m.names.map((nm, i) => html`<tr class=${nm === "Newspaper" ? "rg-news" : ""}><th>${nm}</th><td>${rgN(m.b[i])}</td><td>${rgN(m.se[i])}</td><td>${rgN(m.t[i], 2)}</td><td>${rgPfmt(rgP2(m.t[i], m.df))}</td></tr>`)}</tbody>
   </table>`;
   const ni = m.names.indexOf("Newspaper"), np = ni > 0 ? rgP2(m.t[ni], m.df) : null;
