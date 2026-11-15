@@ -199,7 +199,7 @@ When outcomes are equally likely, calculate probability as a ratio of counts. $P
 ## Unions, Intersections and Complements {.stage-slide #setops-intuition}
 
 ::: {.lede-min}
-The board shows two events. $\color{#93C54B}{A} \cup \color{#325D88}{B}$ is "either", $\color{#93C54B}{A} \cap \color{#325D88}{B}$ is "both", and $\color{#93C54B}{A}^{c}$ is everything left over.
+The board shows two events, $\color{#93C54B}{A}$ and $\color{#325D88}{B}$. Their union $\color{#93C54B}{A} \cup \color{#325D88}{B}$ is "either", their intersection $\color{#93C54B}{A} \cap \color{#325D88}{B}$ is "both", and the complement $\color{#93C54B}{A}^{c}$ is every outcome left over.
 :::
 
 ::: {.stage-wrap .stage-wrap-std}
