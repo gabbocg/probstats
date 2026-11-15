@@ -153,7 +153,7 @@
   function f3(v) { return v.toFixed(3); }
 
   var CAPTIONS = {
-    0: 'One equation, four moving parts',
+    0: 'Terms in Bayes’ theorem',
     1: 'The prior',
     2: 'The likelihood',
     3: 'The evidence',
@@ -165,8 +165,8 @@
     0: { t: 'H = the hypothesis, Steve is a librarian  ·  E = the evidence, his description', c: SOFT },
     1: { t: 'How common librarians are: ' + N_LIB + ' of ' + N_TOTAL +
            ', one per ' + Math.round(N_FARM / N_LIB) + ' farmers', c: NAVY },
-    2: { t: 'How well Steve fits one: ' + FIT_LIB + ' of those ' + N_LIB, c: ORANGE },
-    3: { t: 'P(E) is everyone who fits, either way: ' + FIT_LIB + ' + ' +
+    2: { t: 'Librarians who fit the description: ' + FIT_LIB + ' of those ' + N_LIB, c: ORANGE },
+    3: { t: 'P(E) includes both occupations: ' + FIT_LIB + ' + ' +
            FIT_FARM + ' = ' + N_FIT, c: INK },
     4: { t: 'The navy share of those ' + N_FIT, c: BRICK }
   };

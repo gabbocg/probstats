@@ -1,13 +1,364 @@
-# Estimation {.hero #s05-estimation}
+# Statistics {.hero #part-statistics}
+
+::: {.section-badge}
+Part II
+:::
+
+[Assume the sample is known;]{.known} [the distribution is unknown.]{.unknown}
+
+# Sampling and Estimation {.hero #s05-estimation}
 
 ::: {.sem-mark data-sem="5"}
-Seminar 5 · Confidence intervals
+Descriptive statistics and estimation
+:::
+
+## Choosing a display for the data {.ojs-slide .example #chart-choice}
+
+::: {.lede-min}
+Tick the display that suits each set of data. The reasoning appears underneath.
+:::
+
+```{ojs}
+//| echo: false
+// Short labels so all five fit on ONE line at 21px. The fuller names
+// (stem-and-leaf, pie) live in the reasoning underneath, where there is room.
+ccOpts = ["Bar or pie", "Histogram", "Scatter plot", "Time series", "Box plot"]
+
+// Exercise 1 of the beamer Seminar 1, answers and reasoning carried over.
+ccQ = [
+  {q: "The tax paid by a light engineering company and its annual profit, for 20 consecutive years.",
+   a: "Scatter plot",
+   hint: "Look again at how many measures there are, and at what pairs them up.",
+   why: "A scatter plot shows the relationship between the two numerical variables. Each of the twenty years supplies one pair of observations."},
+  {q: "The types of premises occupied by all the small businesses in a town: office, factory, warehouse, and so on.",
+   a: "Bar or pie",
+   hint: "Ask first whether any of this can go on a number line at all.",
+   why: "The variable is categorical. A bar chart or pie chart compares the counts in each category."},
+  {q: "The salary of a trainee accountant in the first year of training, at 30 major accountancy firms.",
+   a: "Histogram",
+   hint: "One measure, thirty values of it, and the shape is what you are after.",
+   why: "A histogram shows the distribution of one numerical variable. A stem-and-leaf plot also shows the distribution and preserves the individual values."},
+  {q: "The number of trainee accountants enrolling for professional examinations each year since 1960.",
+   a: "Time series",
+   hint: "Consider how the year relates to the recorded enrolment.",
+   why: "A time series plot shows how enrolment changes from year to year."},
+  {q: "The years of experience and the current salary of a random sample of economists at a New York bank.",
+   a: "Scatter plot",
+   hint: "Count the measures recorded for each economist.",
+   why: "Two numerical measures per person, so each economist is one point."}
+]
+```
+
+```{ojs}
+//| echo: false
+// What each display is FOR. A wrong answer is explained by naming the job the
+// chosen chart actually does, which is one line per option rather than one
+// per (question, wrong option) pair — twenty of those would say the same five
+// things over and over.
+ccJob = ({
+  "Bar or pie":   "A bar or pie chart compares counts across named categories",
+  "Histogram":    "A histogram shows the shape of one numerical measure",
+  "Scatter plot": "A scatter plot shows how two numerical measures move together",
+  "Time series":  "A time series plot follows one measure against time",
+  "Box plot":     "A box plot summarises the spread of one numerical measure"
+})
+```
+
+```{ojs}
+//| echo: false
+// Every example plot is real worksheet data, so the picture a student sees
+// here is one they meet again later in the module:
+//   R&D spend            Seminar 1, Exercise 3   (also slides 8 and 9)
+//   Executive pay        Seminar 1, Exercise 2
+//   Executive salaries   Seminar 1, Exercise 4   (the stem-and-leaf one)
+//   Y against X          Seminar 8, Exercise 2
+//   Monthly demand       Seminar 9, Exercise 1
+ccStyle = ({fontSize: "13px", fontFamily: "Roboto, sans-serif",
+            color: "#6E7681", background: "transparent"})
+
+ccRD = [6.0, 10.4, 10.5, 9.0, 7.3, 6.6, 6.9, 8.2, 7.1, 8.1,
+        7.9, 6.8, 7.4, 9.5, 8.1, 13.5, 9.9, 6.9, 11.1, 8.2,
+        8.0, 7.7, 7.4, 6.5, 9.5, 8.2, 6.9, 7.2, 8.2, 6.7]
+
+ccSalary = [846, 457, 563, 1466, 1200, 2164, 746, 1611, 824, 824, 1310,
+            1007, 1367, 575, 1252, 1354, 2479, 1238, 927, 1253, 925,
+            1284, 1279, 1660, 860]
+
+// Five of the twenty-six, all with SHORT names. The bar chart is the only
+// plot with words on its y axis, so it used to set the shared left margin at
+// 88 — which left the other four, and the box plot worst of all, with a band
+// of empty space down their left side and the drawing pushed off centre.
+// Picking short names lets every plot share a 44px margin instead.
+ccPay = [["CBS", 60.25], ["Exxon", 34.90], ["AT&T", 21.00],
+         ["Apple", 4.17], ["Tesco", 1.90]].map(([k, v]) => ({k, v}))
+
+ccPairs = [1, 2, 3, 4, 5, 6, 7].map((x, i) => ({x, y: [2, 4, 8, 16, 32, 64, 128][i]}))
+
+ccMonths = [23, 39, 36, 26, 36, 12, 26, 30, 42, 35, 36, 28]
+  .map((x, i) => ({month: i + 1, x}))
+
+// One geometry for all five: identical margins mean the axes are the same
+// length and the ticks the same size from plot to plot, so clicking between
+// displays changes the picture and nothing else. marginLeft is set by the
+// longest company name on the bar chart; the numeric plots spend that space
+// on their y-axis label.
+ccBase = ({
+  width: 400, height: 152,
+  marginTop: 10, marginRight: 16, marginBottom: 56, marginLeft: 66,
+  style: ccStyle
+})
+
+// labelOffset 38 against a 48 bottom margin: Plot's default sets the axis
+// label directly under the tick text and the two touched.
+// The two labelOffsets are not equal because they are not measured the same
+// way: Plot pushes the x label DOWN from the axis and the y label LEFT from
+// it, past tick text of different lengths. These two land both labels the
+// same distance clear of their tick numbers, which is what reads as even.
+ccAxX = (label) => ({label, labelAnchor: "center", labelOffset: 46, tickSize: 5})
+ccAxY = (label, ticks, domain) => ({label, labelAnchor: "center",
+                                    labelOffset: 55, tickSize: 5,
+                                    ticks, domain, grid: true})
+// Explicit tick values, not a count. The shared geometry leaves a 94px plot
+// area and `ticks: n` is only a HINT — d3 rounds to a nice step, so both 4
+// and 5 came back with six labels 15px apart under 13px type, all but
+// touching, while leaving it automatic dropped to two. Naming the values is
+// the only way to fix the pitch, and these datasets never change.
+
+ccDemo = ({
+  "Bar or pie": () => Plot.plot({...ccBase,
+    x: ccAxX("Executive pay ($m)"),
+    y: {label: null, tickSize: 5},
+    marks: [
+      Plot.barX(ccPay, {y: "k", x: "v", fill: "#325D88",
+        sort: {y: "x", reverse: true}}),
+      Plot.ruleX([0], {stroke: "#B0B7C0"})
+    ]}),
+  "Histogram": () => Plot.plot({...ccBase,
+    x: ccAxX("R&D spend (% of revenue)"),
+    y: ccAxY("Firms", [0, 4, 8]),
+    marks: [
+      Plot.rectY(ccRD, Plot.binX({y: "count"},
+        {x: d => d, thresholds: d3.range(6, 15), fill: "#325D88"})),
+      Plot.ruleY([0], {stroke: "#B0B7C0"})
+    ]}),
+  "Scatter plot": () => Plot.plot({...ccBase,
+    x: ccAxX("X"), y: ccAxY("Y", [0, 40, 80, 120]),
+    marks: [Plot.dot(ccPairs, {x: "x", y: "y", fill: "#325D88", r: 3.4})]}),
+  "Time series": () => Plot.plot({...ccBase,
+    x: {...ccAxX("Month"), tickFormat: "d"}, // From zero: a demand axis that starts at 15 exaggerates every dip.
+    y: ccAxY("Demand", [0, 25, 50], [0, 50]),
+    marks: [Plot.line(ccMonths, {x: "month", y: "x",
+      stroke: "#325D88", strokeWidth: 2})]}),
+  "Box plot": () => Plot.plot({...ccBase,
+    x: {...ccAxX("Executive salary (£000s)"), grid: true},
+    y: {label: null, ticks: [], tickSize: 5},
+    marks: [Plot.boxX(ccSalary, {x: d => d, fill: "#CBD9E6", stroke: "#325D88"})]})
+})
+```
+
+```{ojs}
+//| echo: false
+ccIcon = {
+  const NAVY = "#325D88";
+  const wrap = inner =>
+    `<svg width="42" height="26" viewBox="0 0 42 26" aria-hidden="true">${inner}</svg>`;
+  // Bars on a 40-wide strip sitting on a baseline at y = 22. A histogram's
+  // bars touch and a bar chart's do not, which is the one difference a
+  // student is meant to read off these thumbnails.
+  const bars = (hs, pitch, w) => hs.map((h, i) =>
+    `<rect x="${2 + i * pitch}" y="${22 - h}" width="${w}" height="${h}" fill="${NAVY}"/>`
+  ).join("");
+  const line = (x1, y1, x2, y2) =>
+    `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${NAVY}" stroke-width="1.6"/>`;
+  return ({
+    "Bar or pie": wrap(bars([16, 9, 13, 6], 10, 7)),
+    "Histogram": wrap(bars([5, 12, 18, 11, 5], 8, 8)),
+    "Scatter plot": wrap([[5,20],[11,16],[16,18],[21,13],[26,11],[32,8],[38,5]]
+      .map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.1" fill="${NAVY}"/>`).join("")),
+    "Time series": wrap(
+      `<polyline points="3,20 10,12 17,16 24,7 31,11 39,4" fill="none"
+         stroke="${NAVY}" stroke-width="2" stroke-linejoin="round"/>`),
+    "Box plot": wrap(line(3, 13, 12, 13) + line(28, 13, 39, 13) +
+      `<rect x="12" y="7" width="16" height="12" fill="none" stroke="${NAVY}" stroke-width="1.6"/>` +
+      line(21, 7, 21, 19))
+  });
+}
+```
+
+```{ojs}
+//| echo: false
+viewof ccI = Inputs.radio([1, 2, 3, 4, 5], {value: 1, label: "Question"})
+```
+
+```{ojs}
+//| echo: false
+ccPrompt = html`<div class="quiz-q">${ccQ[ccI - 1].q}</div>`
+```
+
+```{ojs}
+//| echo: false
+viewof ccPick = {
+  ccI;   // naming it here rebuilds the input when the question changes, which
+         // is the only way to clear the previous answer's ticks
+  // html([...]) rather than html`...`: the sketch is a string of markup and
+  // the tagged form would escape it into visible angle brackets.
+  // radio, not checkbox: every question has exactly one right display, so
+  // letting the room tick three of them only invites a wrong kind of answer.
+  return Inputs.radio(ccOpts, {
+    label: "Suitable display",
+    format: v => html([`<span class="quiz-opt">${ccIcon[v]}<span>${v}</span></span>`])
+  });
+}
+```
+
+```{ojs}
+//| echo: false
+ccFeedback = {
+  const want = ccQ[ccI - 1].a;
+  if (!ccPick) return html`<div class="quiz-fb quiz-idle">Pick a display to see the reasoning.</div>`;
+  const ok = ccPick === want;
+  // A wrong pick names the job the chosen chart does and points back at the
+  // data. It does NOT name the answer: handing it over ends the thinking, and
+  // the radio is still there to try again with.
+  const text = ok
+    ? html`<b>Yes.</b> ${ccQ[ccI - 1].why}`
+    : html`<b>Not quite.</b> ${ccJob[ccPick]}. ${ccQ[ccI - 1].hint}`;
+  // The plot always shows the display that was PICKED, not the right one —
+  // on a wrong answer it is the thing they asked for, which is an argument
+  // rather than a giveaway.
+  return html`<div class="quiz-answer">
+    <div class="quiz-fb ${ok ? "quiz-ok" : "quiz-no"}">${text}</div>
+    <figure class="quiz-plot">
+      <figcaption>${ccPick}</figcaption>
+      ${ccDemo[ccPick]()}
+    </figure>
+  </div>`;
+}
+```
+
+<!-- commented out: slides 8-9 (bins-intuition, bins-sim)
+
+## Bin width and the histogram {.stage-slide #bins-intuition}
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="bins-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="bins-frag-w1"}
+[]{.fragment .fi-frag id="bins-frag-w2"}
+
+::: {.slide-footer}
+The second and third views use the same observations with different bin widths. This changes whether the firm at 13.5% appears isolated or grouped with other firms.
+:::
+
+## Changing the bin width in R {.sim-slide #bins-sim}
+
+::: {.slide-kicker}
+Binning
+:::
+
+::: {.sim-card .sim-plot}
+```{webr-r}
+#| fig-width: 5.7
+#| fig-height: 4.3
+#| out-width: "100%"
+x <- c(6.0, 10.4, 10.5, 9.0, 7.3, 6.6, 6.9,
+       8.2, 7.1, 8.1, 7.9, 6.8, 7.4, 9.5, 8.1,
+       13.5, 9.9, 6.9, 11.1, 8.2, 8.0, 7.7,
+       7.4, 6.5, 9.5, 8.2, 6.9, 7.2, 8.2, 6.7)
+bw <- 1   # <-- bin width
+brk <- seq(6, 6 + ceiling(8 / bw) * bw, bw)
+hist(x, breaks = brk, col = "#CBD9E6",
+     border = "white", las = 1,
+     main = paste("bin width =", bw),
+     xlab = "R&D spend (% of revenue)")
+```
+:::
+
+::: {.try-this}
+Run it with `bw <- 1`, then `0.5`, then `2`. The worksheet asks how many of the thirty spend more than 9%. At which width can you still read the answer off the picture?
+:::
+
+-->
+
+## Thirteen Salaries at a Small Firm {.stage-slide #mm-intuition}
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="mm-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="mm-frag-1"}
+[]{.fragment .fi-frag id="mm-frag-2"}
+[]{.fragment .fi-frag id="mm-frag-3"}
+[]{.fragment .fi-frag id="mm-frag-4"}
+[]{.fragment .fi-frag id="mm-frag-5"}
+[]{.fragment .fi-frag id="mm-frag-6"}
+[]{.fragment .fi-frag id="mm-frag-7"}
+
+## The Same Thirteen Salaries, in R {.sim-slide #mm-sim}
+
+::: {.slide-kicker}
+Descriptive statistics
+:::
+
+::: {.lede-min}
+Each summary from the previous slide can be calculated with one line of R.
+:::
+
+::: {.sim-card .sim-text}
+```{webr-r}
+pay <- c(38, 42, 45, 47, 49, 50,
+         50, 50, 52, 54, 56, 59, 
+         62)
+
+# Descriptive statistics
+sort(table(pay), decreasing = TRUE)[1] # mode
+range(pay)   # 38 and 62
+median(pay)  # the 7th value once sorted
+mean(pay)    # 654 / 13
+var(pay)     # divisor is n - 1, not n
+sd(pay)
+```
+:::
+
+::: {.try-this}
+Change the last salary to `96` and run it again. The mode and median stay the same in this example. The mean and standard deviation change because they depend on the size of the last salary.
+:::
+
+## Sampling a Distribution Randomly {.formula-slide #sampling-formal}
+
+::: {.lede-min}
+In survey sampling, we draw a small random sample from a larger population. Distinguish the population quantities from the corresponding sample quantities.
+:::
+
+:::: {.two-col}
+::: {.fragment}
+[Population]{.col-head}
+[Large, size $\color{#325D88}{N}$]{.col-sub}
+
+$$\begin{gathered} \{x_1, \dots, x_{\color{#325D88}{N}}\} \\[4pt] \color{#B94A48}{\mu} = \frac{1}{\color{#325D88}{N}} \sum_{j=1}^{\color{#325D88}{N}} x_j \qquad \color{#F47C3C}{\sigma^2} = \frac{1}{\color{#325D88}{N}} \sum_{j=1}^{\color{#325D88}{N}} (x_j - \color{#B94A48}{\mu})^2 \end{gathered}$$
+
+These are fixed population quantities that we want to estimate. Equivalently $\color{#F47C3C}{\sigma^2} = \frac{1}{N}\sum x_j^2 - \color{#B94A48}{\mu}^2$.
+:::
+
+::: {.fragment}
+[Sample]{.col-head}
+[Small, size $\color{#F47C3C}{n}$]{.col-sub}
+
+$$\begin{gathered} \{X_1, \dots, X_{\color{#F47C3C}{n}}\} \\[4pt] \color{#F47C3C}{\bar X} = \frac{1}{\color{#F47C3C}{n}} \sum_{i=1}^{\color{#F47C3C}{n}} X_i \qquad \color{#F47C3C}{\widehat{\sigma}^{2}} = \frac{1}{\color{#F47C3C}{n}} \sum_{i=1}^{\color{#F47C3C}{n}} (X_i - \color{#F47C3C}{\bar X})^2 \end{gathered}$$
+
+These quantities can be calculated from the sample and vary from one sample to another. R's `var()` gives $s^2$, which divides by $n - 1$ instead and removes a small bias.
+:::
+::::
+
+::: {.note-box .fragment}
+There are $\binom{N}{n}$ possible samples of size $n$. **Simple random sampling** (without replacement) makes each one equally likely.
 :::
 
 ## Three Properties of the Sample Mean {.qcard-slide #xbar-properties}
 
 ::: {.lede-min}
-The sample mean $\bar X$ changes from sample to sample, so it is itself a random variable. Three properties make it a good guess at $\mu$.
+The sample mean $\bar X$ changes from sample to sample, so it is itself a random variable; the number you compute from your data is its value, $\bar x$. The following properties describe its use as an estimator of $\mu$.
 :::
 
 :::: {.prop-grid}
@@ -17,74 +368,177 @@ The sample mean $\bar X$ changes from sample to sample, so it is itself a random
 
 [$\operatorname{E}[\bar X] = \mu$]{.prop-math}
 
-[On average it hits the target.]{.prop-q}
+[Its expected value equals the population mean.]{.prop-q}
 :::
 
 ::: {.prop-card .prop-efficient .fragment}
 [Efficient]{.prop-name}
 
-[$\operatorname{Var}(\bar X) = \dfrac{\sigma^2}{n}$]{.prop-math}
+[$\operatorname{Var}(\bar X) = \dfrac{\sigma^2}{n} \cdot \dfrac{N - n}{N - 1}$]{.prop-math}
 
-[The smallest variance of any unbiased guess.]{.prop-q}
+[The smallest variance of any unbiased weighted average.]{.prop-q}
 :::
 
 ::: {.prop-card .prop-consistent .fragment}
 [Consistent]{.prop-name}
 
-[$\bar X \xrightarrow[n \to \infty]{p} \mu$]{.prop-math}
+[$\bar X \to \mu \;\text{ as }\; n \to N$]{.prop-math}
 
-[More data, a closer guess: $\sigma^2/n \to 0$.]{.prop-q}
+[The estimate approaches $\mu$ as $n$ increases; at $n = N$ it equals $\mu$.]{.prop-q}
 :::
 
 ::::
 
 ::: {.slide-footer .fragment}
-The next slide proves the first and the third; the simulation at the end of this section shows them at work.
+Drawn without replacement, the $X_i$ are not independent, and that shrinks the variance by $\frac{N - n}{N - 1}$, the finite population correction. When $N \gg n$ it is close to 1, so $\operatorname{Var}(\bar X) \approx \sigma^2/n$, the formula the intervals use.
 :::
 
-## Proving Unbiasedness and Consistency {.formula-slide #xbar-proof}
+## Proving Unbiasedness {.formula-slide #xbar-proof}
 
 ::: {.lede-min}
-Let $X_1, \dots, X_n$ be independent, each with mean $\mu$ and variance $\sigma^2$.
+Draw $X_1, \dots, X_n$ without replacement from $N$ units $x_1, \dots, x_N$. Each unit is equally likely to be the $i$-th draw, so $P(X_i = x_j) = 1/N$.
 :::
 
+$$\textstyle \operatorname{E}[X_i] \;=\; \sum_{j=1}^{N} x_j\, P(X_i = x_j) \;=\; \sum_{j=1}^{N} x_j \cdot \frac{1}{N} \;=\; \color{#B94A48}{\mu}$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [The same sum with $(x_j - \mu)^2$ gives $\operatorname{Var}(X_i) = \sigma^2$. Now average the $n$ draws]{.deriv-note}
+:::
+
+::: {.fragment}
 $$\textstyle \operatorname{E}[\bar X] \;=\; \frac{1}{n}\sum_{i=1}^n \operatorname{E}[X_i] \;=\; \frac{1}{n}\, n\mu \;=\; \color{#B94A48}{\mu} \qquad \color{#6E7681}{\text{unbiased}}$$
-
-::: {.deriv-arrow .fragment}
-[↓]{.deriv-glyph} [Independence lets the variances add; the $\frac{1}{n}$ comes out squared]{.deriv-note}
-:::
-
-::: {.fragment}
-$$\textstyle \operatorname{Var}(\bar X) \;=\; \frac{1}{n^2}\sum_{i=1}^n \operatorname{Var}(X_i) \;=\; \frac{1}{n^2}\, n\sigma^2 \;=\; \color{#325D88}{\frac{\sigma^2}{n}}$$
 :::
 
 ::: {.deriv-arrow .fragment}
-[↓]{.deriv-glyph} [Chebyshev (Seminar 2), $\Pr(|Y - \operatorname{E}[Y]| \ge \varepsilon) \le \operatorname{Var}(Y)/\varepsilon^2$, with $Y = \bar X$]{.deriv-note}
+[↓]{.deriv-glyph} [Why the second step needs no independence]{.deriv-note}
 :::
 
 ::: {.fragment}
-$$\textstyle \Pr\big(|\bar X - \mu| \ge \varepsilon\big) \;\le\; \frac{\sigma^2}{n\,\varepsilon^2} \;\xrightarrow[\;n \to \infty\;]{}\; 0 \qquad \color{#6E7681}{\text{consistent}}$$
+$$\textstyle \operatorname{E}[X + Y] = \sum (x + y)\, P(x, y) = \sum x\, P(x) + \sum y\, P(y) = \operatorname{E}[X] + \operatorname{E}[Y]$$
 :::
 
 ::: {.slide-footer .fragment}
-However small $\varepsilon$, the chance that $\bar X$ misses $\mu$ by more than $\varepsilon$ vanishes.
+Only each variable's own probabilities appear, never $P(x, y) = P(x)\,P(y)$, so $\operatorname{E}[\bar X] = \mu$ with or without replacement.
 :::
 
-## The Move That Builds the Interval {.stage-slide #ciflip-intuition}
+## Proving the Variance and Consistency {.formula-slide #xbar-proof-var}
 
-::: {.stage-wrap .stage-wrap-std}
-<div id="ciflip-stage" class="stage"></div>
+::: {.lede-min}
+With replacement the draws are independent: $P(X_2 = x_l \mid X_1 = x_k) = 1/N$. Without, it is $1/(N-1)$ or 0, so let $c = \operatorname{Cov}(X_i, X_j)$.
 :::
 
-[]{.fragment .fi-frag id="ciflip-frag-1" data-fragment-index="1"}
-[]{.fragment .fi-frag id="ciflip-frag-2" data-fragment-index="2"}
-[]{.fragment .fi-frag id="ciflip-frag-3" data-fragment-index="3"}
+$$\textstyle 0 \;=\; \operatorname{Var}(X_1 + \dots + X_N) \;=\; N\sigma^2 + N(N-1)\,c \;\;\Rightarrow\;\; c = -\frac{\sigma^2}{N-1}$$
 
-::: {.slide-footer .fragment data-fragment-index="3"}
-A sample mean $\bar x$ is within 5.88 of $\mu$ exactly when $\mu$ is within 5.88 of $\bar x$. So 95% of the intervals $\bar x \pm 5.88$ contain $\mu$.
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [At $n = N$ the total is fixed, which determines the covariance. The same expansion for $n$ draws]{.deriv-note}
 :::
 
-## Four Parts, One Interval {.stage-slide #cieq-formula}
+::: {.fragment}
+$$\textstyle \operatorname{Var}(\bar X) \;=\; \frac{1}{n^2}\Big[\, n\sigma^2 - n(n-1)\frac{\sigma^2}{N-1} \Big] \;=\; \color{#325D88}{\frac{\sigma^2}{n} \cdot \frac{N-n}{N-1}}$$
+:::
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Chebyshev, $P(|Y - \operatorname{E}[Y]| \ge \varepsilon) \le \operatorname{Var}(Y)/\varepsilon^2$, with $Y = \bar X$]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle P\big(|\bar X - \mu| \ge \varepsilon\big) \;\le\; \frac{\sigma^2}{n\,\varepsilon^2} \cdot \frac{N-n}{N-1} \;\to\; 0 \;\text{ as }\; n \to N \qquad \color{#6E7681}{\text{consistent}}$$
+:::
+
+::: {.slide-footer .fragment}
+The factor is 1 with replacement ($c = 0$) or at $n = 1$; close to 1 when $N \gg n$.
+:::
+
+## The Sample Variance {.formula-slide #sample-var}
+
+::: {.lede-min}
+The hat marks an estimate: $\widehat{\sigma}^{2}$ is the population formula run on the sample, so it is random. Is its expected value equal to $\sigma^2$?
+:::
+
+$$\textstyle \widehat{\sigma}^{2} \;=\; \frac{1}{n}\sum_{i=1}^n (X_i - \bar X)^2 \;=\; \frac{1}{n}\sum_{i=1}^n X_i^2 \;-\; \bar X^2$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Take expectations with $\operatorname{E}[Y^2] = \operatorname{Var}(Y) + \operatorname{E}[Y]^2$, for $Y = X_i$ and for $Y = \bar X$]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle \operatorname{E}[\widehat{\sigma}^{2}] \;=\; (\sigma^2 + \color{#B94A48}{\mu}^2) \;-\; \Big(\frac{\sigma^2}{n} \cdot \frac{N-n}{N-1} + \color{#B94A48}{\mu}^2\Big) \;=\; \sigma^2 \cdot \frac{N(n-1)}{n(N-1)}$$
+:::
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Biased, a little below $\sigma^2$. Rescale; as $N \to \infty$ this is $s^2 = \frac{1}{n-1}\sum (X_i - \bar X)^2$]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle \operatorname{E}\Big[\frac{n(N-1)}{N(n-1)}\, \widehat{\sigma}^{2}\Big] \;=\; \color{#325D88}{\sigma^2} \qquad \color{#6E7681}{\text{unbiased}}$$
+:::
+
+::: {.slide-footer .fragment}
+So the unknown $\operatorname{Var}(\bar X)$ can be estimated from the data by $\widehat{\sigma}^{2}\, \frac{N-n}{N(n-1)}$.
+:::
+
+## Normal Approximation to the Distribution of $\bar X$ {.formula-slide #xbar-normal}
+
+::: {.lede-min}
+By the CLT, for large $n$ the sample mean is close to normal, with spread the standard error $\sigma/\sqrt n$ (taking $N \gg n$).
+:::
+
+::: {.fragment}
+[The approximation]{.col-head}
+[Centre $\mu$, spread $\sigma/\sqrt n$]{.col-sub}
+
+$$\bar X \approx N\Big(\color{#B94A48}{\mu}, \frac{\sigma^2}{n}\Big) \;\;\Longrightarrow\;\; \frac{\bar X - \color{#B94A48}{\mu}}{\sigma/\sqrt n} \approx N(0, 1) \;\;\Longrightarrow\;\; P\Big(\frac{\bar X - \color{#B94A48}{\mu}}{\sigma/\sqrt n} \le a\Big) \to \Phi(a)$$
+:::
+
+::: {.fragment}
+[How close is $\bar X$ to $\mu$?]{.col-head}
+[Divide every side by $\sigma/\sqrt n$]{.col-sub}
+
+$$P(|\bar X - \color{#B94A48}{\mu}| < \varepsilon) = P\Big({-\frac{\varepsilon\sqrt n}{\sigma}} < Z < \frac{\varepsilon\sqrt n}{\sigma}\Big) = \Phi\Big(\frac{\varepsilon\sqrt n}{\sigma}\Big) - \Phi\Big({-\frac{\varepsilon\sqrt n}{\sigma}}\Big)$$
+:::
+
+::: {.fragment}
+```{=html}
+<div class="xn-figs">
+<figure><svg width="470" height="128" viewBox="0 0 470 128" aria-label="the population and the much narrower distribution of the sample mean"><path d="M10.0 96.0 L11.9 96.0 L13.8 96.0 L15.6 96.0 L17.5 96.0 L19.4 96.0 L21.3 96.0 L23.1 96.0 L25.0 96.0 L26.9 96.0 L28.7 96.0 L30.6 96.0 L32.5 96.0 L34.4 96.0 L36.2 96.0 L38.1 96.0 L40.0 96.0 L41.9 96.0 L43.8 96.0 L45.6 96.0 L47.5 96.0 L49.4 96.0 L51.2 96.0 L53.1 96.0 L55.0 96.0 L56.9 96.0 L58.7 96.0 L60.6 95.9 L62.5 95.9 L64.4 95.9 L66.2 95.9 L68.1 95.9 L70.0 95.9 L71.9 95.8 L73.7 95.8 L75.6 95.7 L77.5 95.7 L79.4 95.6 L81.2 95.6 L83.1 95.5 L85.0 95.4 L86.9 95.3 L88.8 95.2 L90.6 95.0 L92.5 94.9 L94.4 94.7 L96.2 94.5 L98.1 94.3 L100.0 94.0 L101.9 93.7 L103.7 93.4 L105.6 93.1 L107.5 92.7 L109.4 92.3 L111.2 91.8 L113.1 91.3 L115.0 90.8 L116.9 90.2 L118.8 89.6 L120.6 88.9 L122.5 88.2 L124.4 87.4 L126.3 86.7 L128.1 85.8 L130.0 85.0 L131.9 84.1 L133.8 83.2 L135.6 82.3 L137.5 81.3 L139.4 80.4 L141.2 79.4 L143.1 78.4 L145.0 77.5 L146.9 76.6 L148.8 75.7 L150.6 74.8 L152.5 74.0 L154.4 73.2 L156.2 72.5 L158.1 71.8 L160.0 71.2 L161.9 70.7 L163.8 70.3 L165.6 69.9 L167.5 69.6 L169.4 69.4 L171.2 69.3 L173.1 69.3 L175.0 69.4 L176.9 69.6 L178.8 69.8 L180.6 70.2 L182.5 70.6 L184.4 71.0 L186.2 71.6 L188.1 72.2 L190.0 72.8 L191.9 73.4 L193.7 74.1 L195.6 74.8 L197.5 75.5 L199.4 76.2 L201.2 76.8 L203.1 77.5 L205.0 78.1 L206.9 78.6 L208.8 79.1 L210.6 79.5 L212.5 79.9 L214.4 80.2 L216.3 80.4 L218.1 80.5 L220.0 80.5 L221.9 80.4 L223.8 80.3 L225.6 80.0 L227.5 79.7 L229.4 79.3 L231.2 78.9 L233.1 78.3 L235.0 77.8 L236.9 77.2 L238.8 76.5 L240.6 75.9 L242.5 75.2 L244.4 74.6 L246.2 74.0 L248.1 73.4 L250.0 72.9 L251.9 72.4 L253.7 72.0 L255.6 71.7 L257.5 71.5 L259.4 71.3 L261.2 71.3 L263.1 71.3 L265.0 71.4 L266.9 71.6 L268.8 71.9 L270.6 72.3 L272.5 72.8 L274.4 73.3 L276.2 73.9 L278.1 74.5 L280.0 75.1 L281.9 75.8 L283.8 76.4 L285.6 77.0 L287.5 77.6 L289.4 78.2 L291.2 78.6 L293.1 79.1 L295.0 79.4 L296.9 79.7 L298.8 79.9 L300.6 80.1 L302.5 80.1 L304.4 80.1 L306.2 80.0 L308.1 79.9 L310.0 79.7 L311.9 79.5 L313.7 79.2 L315.6 79.0 L317.5 78.8 L319.4 78.6 L321.2 78.4 L323.1 78.3 L325.0 78.2 L326.9 78.2 L328.8 78.3 L330.6 78.5 L332.5 78.8 L334.4 79.1 L336.3 79.6 L338.1 80.1 L340.0 80.7 L341.9 81.4 L343.8 82.1 L345.6 82.9 L347.5 83.7 L349.4 84.6 L351.2 85.4 L353.1 86.3 L355.0 87.1 L356.9 88.0 L358.8 88.8 L360.6 89.5 L362.5 90.2 L364.4 90.9 L366.2 91.5 L368.1 92.1 L370.0 92.6 L371.9 93.1 L373.7 93.5 L375.6 93.9 L377.5 94.3 L379.4 94.5 L381.2 94.8 L383.1 95.0 L385.0 95.2 L386.9 95.3 L388.8 95.5 L390.6 95.6 L392.5 95.7 L394.4 95.7 L396.2 95.8 L398.1 95.8 L400.0 95.9 L401.9 95.9 L403.8 95.9 L405.6 95.9 L407.5 96.0 L409.4 96.0 L411.2 96.0 L413.1 96.0 L415.0 96.0 L416.9 96.0 L418.7 96.0 L420.6 96.0 L422.5 96.0 L424.4 96.0 L426.2 96.0 L428.1 96.0 L430.0 96.0 L431.9 96.0 L433.8 96.0 L435.6 96.0 L437.5 96.0 L439.4 96.0 L441.3 96.0 L443.1 96.0 L445.0 96.0 L446.9 96.0 L448.8 96.0 L450.6 96.0 L452.5 96.0 L454.4 96.0 L456.2 96.0 L458.1 96.0 L460.0 96.0 L460.0 96 L10.0 96 Z" fill="#B0B7C0" fill-opacity="0.22"/><path d="M10.0 96.0 L11.9 96.0 L13.8 96.0 L15.6 96.0 L17.5 96.0 L19.4 96.0 L21.3 96.0 L23.1 96.0 L25.0 96.0 L26.9 96.0 L28.7 96.0 L30.6 96.0 L32.5 96.0 L34.4 96.0 L36.2 96.0 L38.1 96.0 L40.0 96.0 L41.9 96.0 L43.8 96.0 L45.6 96.0 L47.5 96.0 L49.4 96.0 L51.2 96.0 L53.1 96.0 L55.0 96.0 L56.9 96.0 L58.7 96.0 L60.6 95.9 L62.5 95.9 L64.4 95.9 L66.2 95.9 L68.1 95.9 L70.0 95.9 L71.9 95.8 L73.7 95.8 L75.6 95.7 L77.5 95.7 L79.4 95.6 L81.2 95.6 L83.1 95.5 L85.0 95.4 L86.9 95.3 L88.8 95.2 L90.6 95.0 L92.5 94.9 L94.4 94.7 L96.2 94.5 L98.1 94.3 L100.0 94.0 L101.9 93.7 L103.7 93.4 L105.6 93.1 L107.5 92.7 L109.4 92.3 L111.2 91.8 L113.1 91.3 L115.0 90.8 L116.9 90.2 L118.8 89.6 L120.6 88.9 L122.5 88.2 L124.4 87.4 L126.3 86.7 L128.1 85.8 L130.0 85.0 L131.9 84.1 L133.8 83.2 L135.6 82.3 L137.5 81.3 L139.4 80.4 L141.2 79.4 L143.1 78.4 L145.0 77.5 L146.9 76.6 L148.8 75.7 L150.6 74.8 L152.5 74.0 L154.4 73.2 L156.2 72.5 L158.1 71.8 L160.0 71.2 L161.9 70.7 L163.8 70.3 L165.6 69.9 L167.5 69.6 L169.4 69.4 L171.2 69.3 L173.1 69.3 L175.0 69.4 L176.9 69.6 L178.8 69.8 L180.6 70.2 L182.5 70.6 L184.4 71.0 L186.2 71.6 L188.1 72.2 L190.0 72.8 L191.9 73.4 L193.7 74.1 L195.6 74.8 L197.5 75.5 L199.4 76.2 L201.2 76.8 L203.1 77.5 L205.0 78.1 L206.9 78.6 L208.8 79.1 L210.6 79.5 L212.5 79.9 L214.4 80.2 L216.3 80.4 L218.1 80.5 L220.0 80.5 L221.9 80.4 L223.8 80.3 L225.6 80.0 L227.5 79.7 L229.4 79.3 L231.2 78.9 L233.1 78.3 L235.0 77.8 L236.9 77.2 L238.8 76.5 L240.6 75.9 L242.5 75.2 L244.4 74.6 L246.2 74.0 L248.1 73.4 L250.0 72.9 L251.9 72.4 L253.7 72.0 L255.6 71.7 L257.5 71.5 L259.4 71.3 L261.2 71.3 L263.1 71.3 L265.0 71.4 L266.9 71.6 L268.8 71.9 L270.6 72.3 L272.5 72.8 L274.4 73.3 L276.2 73.9 L278.1 74.5 L280.0 75.1 L281.9 75.8 L283.8 76.4 L285.6 77.0 L287.5 77.6 L289.4 78.2 L291.2 78.6 L293.1 79.1 L295.0 79.4 L296.9 79.7 L298.8 79.9 L300.6 80.1 L302.5 80.1 L304.4 80.1 L306.2 80.0 L308.1 79.9 L310.0 79.7 L311.9 79.5 L313.7 79.2 L315.6 79.0 L317.5 78.8 L319.4 78.6 L321.2 78.4 L323.1 78.3 L325.0 78.2 L326.9 78.2 L328.8 78.3 L330.6 78.5 L332.5 78.8 L334.4 79.1 L336.3 79.6 L338.1 80.1 L340.0 80.7 L341.9 81.4 L343.8 82.1 L345.6 82.9 L347.5 83.7 L349.4 84.6 L351.2 85.4 L353.1 86.3 L355.0 87.1 L356.9 88.0 L358.8 88.8 L360.6 89.5 L362.5 90.2 L364.4 90.9 L366.2 91.5 L368.1 92.1 L370.0 92.6 L371.9 93.1 L373.7 93.5 L375.6 93.9 L377.5 94.3 L379.4 94.5 L381.2 94.8 L383.1 95.0 L385.0 95.2 L386.9 95.3 L388.8 95.5 L390.6 95.6 L392.5 95.7 L394.4 95.7 L396.2 95.8 L398.1 95.8 L400.0 95.9 L401.9 95.9 L403.8 95.9 L405.6 95.9 L407.5 96.0 L409.4 96.0 L411.2 96.0 L413.1 96.0 L415.0 96.0 L416.9 96.0 L418.7 96.0 L420.6 96.0 L422.5 96.0 L424.4 96.0 L426.2 96.0 L428.1 96.0 L430.0 96.0 L431.9 96.0 L433.8 96.0 L435.6 96.0 L437.5 96.0 L439.4 96.0 L441.3 96.0 L443.1 96.0 L445.0 96.0 L446.9 96.0 L448.8 96.0 L450.6 96.0 L452.5 96.0 L454.4 96.0 L456.2 96.0 L458.1 96.0 L460.0 96.0" fill="none" stroke="#6E7681" stroke-width="2"/><path d="M144.1 96.0 L144.8 96.0 L145.6 96.0 L146.4 96.0 L147.1 96.0 L147.9 95.9 L148.6 95.9 L149.4 95.9 L150.2 95.9 L150.9 95.9 L151.7 95.9 L152.4 95.9 L153.2 95.9 L153.9 95.9 L154.7 95.8 L155.5 95.8 L156.2 95.8 L157.0 95.8 L157.7 95.7 L158.5 95.7 L159.2 95.7 L160.0 95.6 L160.8 95.6 L161.5 95.6 L162.3 95.5 L163.0 95.5 L163.8 95.4 L164.5 95.3 L165.3 95.3 L166.1 95.2 L166.8 95.1 L167.6 95.0 L168.3 94.9 L169.1 94.8 L169.8 94.7 L170.6 94.5 L171.4 94.4 L172.1 94.2 L172.9 94.0 L173.6 93.9 L174.4 93.7 L175.2 93.4 L175.9 93.2 L176.7 93.0 L177.4 92.7 L178.2 92.4 L178.9 92.1 L179.7 91.8 L180.5 91.4 L181.2 91.0 L182.0 90.6 L182.7 90.2 L183.5 89.7 L184.2 89.2 L185.0 88.7 L185.8 88.2 L186.5 87.6 L187.3 87.0 L188.0 86.3 L188.8 85.6 L189.5 84.9 L190.3 84.1 L191.1 83.3 L191.8 82.5 L192.6 81.6 L193.3 80.7 L194.1 79.8 L194.8 78.8 L195.6 77.7 L196.4 76.7 L197.1 75.6 L197.9 74.4 L198.6 73.2 L199.4 72.0 L200.2 70.7 L200.9 69.4 L201.7 68.0 L202.4 66.6 L203.2 65.2 L203.9 63.8 L204.7 62.3 L205.5 60.8 L206.2 59.2 L207.0 57.7 L207.7 56.1 L208.5 54.5 L209.2 52.9 L210.0 51.2 L210.8 49.6 L211.5 47.9 L212.3 46.3 L213.0 44.6 L213.8 43.0 L214.5 41.3 L215.3 39.7 L216.1 38.1 L216.8 36.5 L217.6 34.9 L218.3 33.3 L219.1 31.8 L219.8 30.3 L220.6 28.9 L221.4 27.5 L222.1 26.2 L222.9 24.9 L223.6 23.6 L224.4 22.5 L225.2 21.3 L225.9 20.3 L226.7 19.3 L227.4 18.4 L228.2 17.6 L228.9 16.9 L229.7 16.2 L230.5 15.6 L231.2 15.1 L232.0 14.7 L232.7 14.4 L233.5 14.2 L234.2 14.0 L235.0 14.0 L235.8 14.0 L236.5 14.2 L237.3 14.4 L238.0 14.7 L238.8 15.1 L239.5 15.6 L240.3 16.2 L241.1 16.9 L241.8 17.6 L242.6 18.4 L243.3 19.3 L244.1 20.3 L244.8 21.3 L245.6 22.5 L246.4 23.6 L247.1 24.9 L247.9 26.2 L248.6 27.5 L249.4 28.9 L250.2 30.3 L250.9 31.8 L251.7 33.3 L252.4 34.9 L253.2 36.5 L253.9 38.1 L254.7 39.7 L255.5 41.3 L256.2 43.0 L257.0 44.6 L257.7 46.3 L258.5 47.9 L259.2 49.6 L260.0 51.2 L260.8 52.9 L261.5 54.5 L262.3 56.1 L263.0 57.7 L263.8 59.2 L264.5 60.8 L265.3 62.3 L266.1 63.8 L266.8 65.2 L267.6 66.6 L268.3 68.0 L269.1 69.4 L269.8 70.7 L270.6 72.0 L271.4 73.2 L272.1 74.4 L272.9 75.6 L273.6 76.7 L274.4 77.7 L275.2 78.8 L275.9 79.8 L276.7 80.7 L277.4 81.6 L278.2 82.5 L278.9 83.3 L279.7 84.1 L280.5 84.9 L281.2 85.6 L282.0 86.3 L282.7 87.0 L283.5 87.6 L284.2 88.2 L285.0 88.7 L285.8 89.2 L286.5 89.7 L287.3 90.2 L288.0 90.6 L288.8 91.0 L289.5 91.4 L290.3 91.8 L291.1 92.1 L291.8 92.4 L292.6 92.7 L293.3 93.0 L294.1 93.2 L294.8 93.4 L295.6 93.7 L296.4 93.9 L297.1 94.0 L297.9 94.2 L298.6 94.4 L299.4 94.5 L300.2 94.7 L300.9 94.8 L301.7 94.9 L302.4 95.0 L303.2 95.1 L303.9 95.2 L304.7 95.3 L305.5 95.3 L306.2 95.4 L307.0 95.5 L307.7 95.5 L308.5 95.6 L309.2 95.6 L310.0 95.6 L310.8 95.7 L311.5 95.7 L312.3 95.7 L313.0 95.8 L313.8 95.8 L314.5 95.8 L315.3 95.8 L316.1 95.9 L316.8 95.9 L317.6 95.9 L318.3 95.9 L319.1 95.9 L319.8 95.9 L320.6 95.9 L321.4 95.9 L322.1 95.9 L322.9 96.0 L323.6 96.0 L324.4 96.0 L325.2 96.0 L325.9 96.0 L325.9 96 L144.1 96 Z" fill="#325D88" fill-opacity="0.14"/><path d="M144.1 96.0 L144.8 96.0 L145.6 96.0 L146.4 96.0 L147.1 96.0 L147.9 95.9 L148.6 95.9 L149.4 95.9 L150.2 95.9 L150.9 95.9 L151.7 95.9 L152.4 95.9 L153.2 95.9 L153.9 95.9 L154.7 95.8 L155.5 95.8 L156.2 95.8 L157.0 95.8 L157.7 95.7 L158.5 95.7 L159.2 95.7 L160.0 95.6 L160.8 95.6 L161.5 95.6 L162.3 95.5 L163.0 95.5 L163.8 95.4 L164.5 95.3 L165.3 95.3 L166.1 95.2 L166.8 95.1 L167.6 95.0 L168.3 94.9 L169.1 94.8 L169.8 94.7 L170.6 94.5 L171.4 94.4 L172.1 94.2 L172.9 94.0 L173.6 93.9 L174.4 93.7 L175.2 93.4 L175.9 93.2 L176.7 93.0 L177.4 92.7 L178.2 92.4 L178.9 92.1 L179.7 91.8 L180.5 91.4 L181.2 91.0 L182.0 90.6 L182.7 90.2 L183.5 89.7 L184.2 89.2 L185.0 88.7 L185.8 88.2 L186.5 87.6 L187.3 87.0 L188.0 86.3 L188.8 85.6 L189.5 84.9 L190.3 84.1 L191.1 83.3 L191.8 82.5 L192.6 81.6 L193.3 80.7 L194.1 79.8 L194.8 78.8 L195.6 77.7 L196.4 76.7 L197.1 75.6 L197.9 74.4 L198.6 73.2 L199.4 72.0 L200.2 70.7 L200.9 69.4 L201.7 68.0 L202.4 66.6 L203.2 65.2 L203.9 63.8 L204.7 62.3 L205.5 60.8 L206.2 59.2 L207.0 57.7 L207.7 56.1 L208.5 54.5 L209.2 52.9 L210.0 51.2 L210.8 49.6 L211.5 47.9 L212.3 46.3 L213.0 44.6 L213.8 43.0 L214.5 41.3 L215.3 39.7 L216.1 38.1 L216.8 36.5 L217.6 34.9 L218.3 33.3 L219.1 31.8 L219.8 30.3 L220.6 28.9 L221.4 27.5 L222.1 26.2 L222.9 24.9 L223.6 23.6 L224.4 22.5 L225.2 21.3 L225.9 20.3 L226.7 19.3 L227.4 18.4 L228.2 17.6 L228.9 16.9 L229.7 16.2 L230.5 15.6 L231.2 15.1 L232.0 14.7 L232.7 14.4 L233.5 14.2 L234.2 14.0 L235.0 14.0 L235.8 14.0 L236.5 14.2 L237.3 14.4 L238.0 14.7 L238.8 15.1 L239.5 15.6 L240.3 16.2 L241.1 16.9 L241.8 17.6 L242.6 18.4 L243.3 19.3 L244.1 20.3 L244.8 21.3 L245.6 22.5 L246.4 23.6 L247.1 24.9 L247.9 26.2 L248.6 27.5 L249.4 28.9 L250.2 30.3 L250.9 31.8 L251.7 33.3 L252.4 34.9 L253.2 36.5 L253.9 38.1 L254.7 39.7 L255.5 41.3 L256.2 43.0 L257.0 44.6 L257.7 46.3 L258.5 47.9 L259.2 49.6 L260.0 51.2 L260.8 52.9 L261.5 54.5 L262.3 56.1 L263.0 57.7 L263.8 59.2 L264.5 60.8 L265.3 62.3 L266.1 63.8 L266.8 65.2 L267.6 66.6 L268.3 68.0 L269.1 69.4 L269.8 70.7 L270.6 72.0 L271.4 73.2 L272.1 74.4 L272.9 75.6 L273.6 76.7 L274.4 77.7 L275.2 78.8 L275.9 79.8 L276.7 80.7 L277.4 81.6 L278.2 82.5 L278.9 83.3 L279.7 84.1 L280.5 84.9 L281.2 85.6 L282.0 86.3 L282.7 87.0 L283.5 87.6 L284.2 88.2 L285.0 88.7 L285.8 89.2 L286.5 89.7 L287.3 90.2 L288.0 90.6 L288.8 91.0 L289.5 91.4 L290.3 91.8 L291.1 92.1 L291.8 92.4 L292.6 92.7 L293.3 93.0 L294.1 93.2 L294.8 93.4 L295.6 93.7 L296.4 93.9 L297.1 94.0 L297.9 94.2 L298.6 94.4 L299.4 94.5 L300.2 94.7 L300.9 94.8 L301.7 94.9 L302.4 95.0 L303.2 95.1 L303.9 95.2 L304.7 95.3 L305.5 95.3 L306.2 95.4 L307.0 95.5 L307.7 95.5 L308.5 95.6 L309.2 95.6 L310.0 95.6 L310.8 95.7 L311.5 95.7 L312.3 95.7 L313.0 95.8 L313.8 95.8 L314.5 95.8 L315.3 95.8 L316.1 95.9 L316.8 95.9 L317.6 95.9 L318.3 95.9 L319.1 95.9 L319.8 95.9 L320.6 95.9 L321.4 95.9 L322.1 95.9 L322.9 96.0 L323.6 96.0 L324.4 96.0 L325.2 96.0 L325.9 96.0" fill="none" stroke="#325D88" stroke-width="2.4"/><line x1="6" y1="96" x2="464" y2="96" stroke="#B0B7C0" stroke-width="1.4"/><line x1="235.0" y1="10" x2="235.0" y2="96" stroke="#B94A48" stroke-width="1.6" stroke-dasharray="4 3"/><line x1="212.3" y1="96" x2="212.3" y2="102" stroke="#F47C3C" stroke-width="2"/><line x1="257.7" y1="96" x2="257.7" y2="102" stroke="#F47C3C" stroke-width="2"/><text x="235.0" y="117" font-size="16" text-anchor="middle" fill="#B94A48" font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">μ</text><text x="208.3" y="117" font-size="14" text-anchor="end" fill="#F47C3C" font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">−σ/√n</text><text x="261.7" y="117" font-size="14" text-anchor="start" fill="#F47C3C" font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">+σ/√n</text><text x="27.0" y="54" font-size="15" fill="#6E7681" font-family="Roboto, sans-serif">population</text><text x="272.5" y="30" font-size="15" fill="#325D88" font-family="Roboto, sans-serif">sample mean <tspan font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">X̄</tspan></text></svg><figcaption>The population is lumpy; the mean of n = 9 draws is a narrow bell, ±σ/√n.</figcaption></figure>
+<figure><svg width="470" height="128" viewBox="0 0 470 128" aria-label="the probability that the sample mean lands within epsilon of mu, as a shaded area"><path d="M159.1 63.0 L160.0 62.3 L161.0 61.5 L161.9 60.7 L162.9 60.0 L163.8 59.2 L164.8 58.4 L165.7 57.6 L166.7 56.8 L167.6 56.0 L168.6 55.2 L169.5 54.4 L170.5 53.5 L171.4 52.7 L172.4 51.9 L173.3 51.1 L174.2 50.2 L175.2 49.4 L176.1 48.6 L177.1 47.7 L178.0 46.9 L179.0 46.0 L179.9 45.2 L180.9 44.4 L181.8 43.5 L182.8 42.7 L183.7 41.9 L184.7 41.0 L185.6 40.2 L186.6 39.4 L187.5 38.6 L188.5 37.7 L189.4 36.9 L190.4 36.1 L191.3 35.3 L192.3 34.5 L193.2 33.8 L194.2 33.0 L195.1 32.2 L196.1 31.5 L197.0 30.7 L198.0 30.0 L198.9 29.2 L199.9 28.5 L200.8 27.8 L201.8 27.1 L202.7 26.4 L203.7 25.8 L204.6 25.1 L205.6 24.5 L206.5 23.9 L207.5 23.3 L208.4 22.7 L209.4 22.1 L210.3 21.5 L211.3 21.0 L212.2 20.5 L213.2 19.9 L214.1 19.5 L215.1 19.0 L216.0 18.5 L217.0 18.1 L217.9 17.7 L218.9 17.3 L219.8 16.9 L220.8 16.6 L221.7 16.3 L222.7 15.9 L223.6 15.7 L224.6 15.4 L225.5 15.2 L226.5 14.9 L227.4 14.7 L228.4 14.6 L229.3 14.4 L230.3 14.3 L231.2 14.2 L232.2 14.1 L233.1 14.0 L234.1 14.0 L235.0 14.0 L235.9 14.0 L236.9 14.0 L237.8 14.1 L238.8 14.2 L239.7 14.3 L240.7 14.4 L241.6 14.6 L242.6 14.7 L243.5 14.9 L244.5 15.2 L245.4 15.4 L246.4 15.7 L247.3 15.9 L248.3 16.3 L249.2 16.6 L250.2 16.9 L251.1 17.3 L252.1 17.7 L253.0 18.1 L254.0 18.5 L254.9 19.0 L255.9 19.5 L256.8 19.9 L257.8 20.5 L258.7 21.0 L259.7 21.5 L260.6 22.1 L261.6 22.7 L262.5 23.3 L263.5 23.9 L264.4 24.5 L265.4 25.1 L266.3 25.8 L267.3 26.4 L268.2 27.1 L269.2 27.8 L270.1 28.5 L271.1 29.2 L272.0 30.0 L273.0 30.7 L273.9 31.5 L274.9 32.2 L275.8 33.0 L276.8 33.8 L277.7 34.5 L278.7 35.3 L279.6 36.1 L280.6 36.9 L281.5 37.7 L282.5 38.6 L283.4 39.4 L284.4 40.2 L285.3 41.0 L286.3 41.9 L287.2 42.7 L288.2 43.5 L289.1 44.4 L290.1 45.2 L291.0 46.0 L292.0 46.9 L292.9 47.7 L293.9 48.6 L294.8 49.4 L295.8 50.2 L296.7 51.1 L297.6 51.9 L298.6 52.7 L299.5 53.5 L300.5 54.4 L301.4 55.2 L302.4 56.0 L303.3 56.8 L304.3 57.6 L305.2 58.4 L306.2 59.2 L307.1 60.0 L308.1 60.7 L309.0 61.5 L310.0 62.3 L310.9 63.0 L310.9 96 L159.1 96 Z" fill="#B94A48" fill-opacity="0.22"/><path d="M10.0 96.0 L12.8 96.0 L15.6 96.0 L18.4 96.0 L21.2 95.9 L24.1 95.9 L26.9 95.9 L29.7 95.9 L32.5 95.9 L35.3 95.8 L38.1 95.8 L40.9 95.8 L43.7 95.7 L46.6 95.7 L49.4 95.6 L52.2 95.6 L55.0 95.5 L57.8 95.4 L60.6 95.3 L63.4 95.2 L66.2 95.1 L69.1 94.9 L71.9 94.8 L74.7 94.6 L77.5 94.4 L80.3 94.1 L83.1 93.9 L85.9 93.6 L88.8 93.2 L91.6 92.8 L94.4 92.4 L97.2 91.9 L100.0 91.4 L102.8 90.8 L105.6 90.2 L108.4 89.5 L111.2 88.7 L114.1 87.9 L116.9 87.0 L119.7 86.0 L122.5 84.9 L125.3 83.8 L128.1 82.5 L130.9 81.2 L133.8 79.8 L136.6 78.3 L139.4 76.7 L142.2 75.0 L145.0 73.2 L147.8 71.3 L150.6 69.4 L153.4 67.3 L156.2 65.2 L159.1 63.0 L161.9 60.8 L164.7 58.5 L167.5 56.1 L170.3 53.7 L173.1 51.2 L175.9 48.7 L178.8 46.3 L181.6 43.8 L184.4 41.3 L187.2 38.9 L190.0 36.5 L192.8 34.1 L195.6 31.8 L198.4 29.6 L201.2 27.5 L204.1 25.5 L206.9 23.6 L209.7 21.9 L212.5 20.3 L215.3 18.9 L218.1 17.6 L220.9 16.5 L223.8 15.6 L226.6 14.9 L229.4 14.4 L232.2 14.1 L235.0 14.0 L237.8 14.1 L240.6 14.4 L243.4 14.9 L246.2 15.6 L249.1 16.5 L251.9 17.6 L254.7 18.9 L257.5 20.3 L260.3 21.9 L263.1 23.6 L265.9 25.5 L268.8 27.5 L271.6 29.6 L274.4 31.8 L277.2 34.1 L280.0 36.5 L282.8 38.9 L285.6 41.3 L288.4 43.8 L291.2 46.3 L294.1 48.7 L296.9 51.2 L299.7 53.7 L302.5 56.1 L305.3 58.5 L308.1 60.8 L310.9 63.0 L313.8 65.2 L316.6 67.3 L319.4 69.4 L322.2 71.3 L325.0 73.2 L327.8 75.0 L330.6 76.7 L333.4 78.3 L336.2 79.8 L339.1 81.2 L341.9 82.5 L344.7 83.8 L347.5 84.9 L350.3 86.0 L353.1 87.0 L355.9 87.9 L358.7 88.7 L361.6 89.5 L364.4 90.2 L367.2 90.8 L370.0 91.4 L372.8 91.9 L375.6 92.4 L378.4 92.8 L381.2 93.2 L384.1 93.6 L386.9 93.9 L389.7 94.1 L392.5 94.4 L395.3 94.6 L398.1 94.8 L400.9 94.9 L403.8 95.1 L406.6 95.2 L409.4 95.3 L412.2 95.4 L415.0 95.5 L417.8 95.6 L420.6 95.6 L423.4 95.7 L426.2 95.7 L429.1 95.8 L431.9 95.8 L434.7 95.8 L437.5 95.9 L440.3 95.9 L443.1 95.9 L445.9 95.9 L448.8 95.9 L451.6 96.0 L454.4 96.0 L457.2 96.0 L460.0 96.0" fill="none" stroke="#325D88" stroke-width="2.4"/><line x1="6" y1="96" x2="464" y2="96" stroke="#B0B7C0" stroke-width="1.4"/><line x1="159.1" y1="61.0" x2="159.1" y2="102" stroke="#B94A48" stroke-width="1.8"/><line x1="310.9" y1="61.0" x2="310.9" y2="102" stroke="#B94A48" stroke-width="1.8"/><text x="235.0" y="117" font-size="16" text-anchor="middle" fill="#B94A48" font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">μ</text><text x="159.1" y="117" font-size="14" text-anchor="middle" fill="#3E3F3A" font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">μ − ε</text><text x="310.9" y="117" font-size="14" text-anchor="middle" fill="#3E3F3A" font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">μ + ε</text><text x="235.0" y="68" font-size="14" text-anchor="middle" fill="#B94A48" font-family="Roboto, sans-serif">P(|<tspan font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">X̄</tspan> − <tspan font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">μ</tspan>| &lt; <tspan font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">ε</tspan>)</text><text x="358.8" y="38" font-size="14" fill="#6E7681" font-family="Roboto, sans-serif">= Φ(<tspan font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">b</tspan>) − Φ(−<tspan font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">b</tspan>),</text><text x="358.8" y="56" font-size="14" fill="#6E7681" font-family="Roboto, sans-serif"><tspan font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">b</tspan> = <tspan font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">ε</tspan>√<tspan font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">n</tspan>/<tspan font-family="MathJax_Math, 'Times New Roman', serif" font-style="italic">σ</tspan></text></svg><figcaption>The chance X̄ lands within ε of μ is the shaded area. With σ = 15, n = 25, ε = 5: Φ(1.67) − Φ(−1.67) = 0.90.</figcaption></figure>
+</div>
+```
+:::
+
+## A Confidence Interval for $\mu$ {.formula-slide #ci-derive}
+
+::: {.lede-min}
+A $(1 - \alpha)$ confidence interval for $\mu$ is a **random interval**, centred at $\bar X$, that contains $\mu$ with probability $1 - \alpha$. The derivation is below.
+:::
+
+$$\textstyle P\big(-q \le \bar X - \color{#B94A48}{\mu} \le q\big) \;=\; 1 - \alpha$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Divide by the standard error $\sigma/\sqrt n$; the cut-off becomes $z_{\alpha/2}$, with $\Phi(z_{\alpha/2}) = 1 - \alpha/2$]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle P\Big(-z_{\alpha/2} \le \frac{\bar X - \color{#B94A48}{\mu}}{\sigma/\sqrt n} \le z_{\alpha/2}\Big) \;=\; 1 - \alpha$$
+:::
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Multiply through by $\sigma/\sqrt n$ and rearrange around $\mu$]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle P\Big(\bar X - z_{\alpha/2}\,\frac{\sigma}{\sqrt n} \;\le\; \color{#B94A48}{\mu} \;\le\; \bar X + z_{\alpha/2}\,\frac{\sigma}{\sqrt n}\Big) \;=\; 1 - \alpha$$
+:::
+
+::: {.slide-footer .fragment}
+So $\bar X \pm z_{\alpha/2}\,\sigma/\sqrt n$ is the interval; for 95%, $\alpha = 0.05$ and $z_{0.025} = 1.96$.
+:::
+
+## Calculating a confidence interval {.stage-slide #cieq-formula}
+
+::: {.lede-min}
+Example: $\sigma = 15$ is known, and a sample of $n = 25$ gives $\bar x = 103.2$. Build the 95% interval.
+:::
 
 ::: {.stage-wrap .stage-wrap-std}
 <div id="cieq-stage" class="stage"></div>
@@ -96,10 +550,28 @@ A sample mean $\bar x$ is within 5.88 of $\mu$ exactly when $\mu$ is within 5.88
 []{.fragment .fi-frag id="cieq-frag-4"}
 
 ::: {.slide-footer}
-Only $\bar x$ came from your sample; $z$ you chose, $\sigma$ and $n$ you knew, so the half-width 5.88 was fixed *before you collected anything*: every interval on the next slide is exactly the same length.
+Before sampling, $\bar X \pm 5.88$ is random and contains $\mu$ with probability 0.95. Once we observe $\bar x = 103.2$, $(97.32, 109.08)$ is fixed: it contains $\mu$ or it does not. The 95% describes the method across repeated samples.
 :::
 
-## What Is Actually Random Here? {.stage-slide #ci-intuition}
+## From the sampling distribution to an interval {.stage-slide #ciflip-intuition}
+
+::: {.lede-min}
+To see why it works, use $\mu = 100$ for illustration. In practice, $\mu$ is unknown.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="ciflip-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="ciflip-frag-1" data-fragment-index="1"}
+[]{.fragment .fi-frag id="ciflip-frag-2" data-fragment-index="2"}
+[]{.fragment .fi-frag id="ciflip-frag-3" data-fragment-index="3"}
+
+::: {.slide-footer .fragment data-fragment-index="3"}
+$\bar x \pm 5.88$ contains $\mu$ exactly when $\bar x$ falls within 5.88 of $\mu$, which happens 95% of the time.
+:::
+
+## Interpreting a confidence interval {.stage-slide #ci-intuition}
 
 ::: {.stage-wrap .stage-wrap-ci}
 <div id="ci-stage" class="stage"></div>
@@ -212,15 +684,46 @@ clSim = {
   // The verdict reads the run, so it changes as the controls do.
   const pct = v => `<b>${f(100 * v, 1)}%</b>`, target = `${Math.round(100 * clIn.conf)}%`;
   const verdict = (n, c) => clIn.rule === "Unknown σ: x̄ ± z·s/√n" && c < clIn.conf - 0.02
-    ? `With s in place of σ and n = ${n}, the z cut-off is too narrow: only ${pct(c)} of the intervals contain μ, not ${target}. <b>Switch to t</b> to pay for not knowing σ.`
-    : `The mean x̄ centres on μ (<b>unbiased</b>) and its variance σ²/n shrinks as n grows (<b>consistent</b>). ${pct(c)} of the intervals contain μ, close to the ${target} you asked for.`;
+    ? `With s in place of σ and n = ${n}, the z cut-off is too narrow: only ${pct(c)} of the intervals contain μ, not ${target}. <b>Switch to t</b> to account for uncertainty in the estimate of σ.`
+    : `The mean X̄ centres on μ (<b>unbiased</b>) and its variance σ²/n shrinks as n grows (<b>consistent</b>). ${pct(c)} of the intervals contain μ, close to the specified ${target} confidence level.`;
   return html`<div class="cr-row">${dist}${ints}</div>
   <div class="ojs-eq cl-stats">
-    <span>Mean of <span class="cl-bar">x</span> = ${f(d3.mean(xbar))} <span class="na-note">(μ = ${clMu})</span></span>
-    <span>Var(<span class="cl-bar">x</span>) = <span class="cl-navy">${f(d3.variance(xbar))}</span> <span class="na-note">(σ²/n = ${f(clSd ** 2 / n)})</span></span>
+    <span>Mean of <span class="cl-bar">X</span> ≈ ${f(d3.mean(xbar))} <span class="na-note">(μ = ${clMu})</span></span>
+    <span>Var(<span class="cl-bar">X</span>) ≈ <span class="cl-navy">${f(d3.variance(xbar))}</span> <span class="na-note">(σ²/n = ${f(clSd ** 2 / n)})</span></span>
     <span>Coverage = <span class="${Math.abs(cover - clIn.conf) < 0.02 ? "hit" : "miss"}">${f(100 * cover, 1)}%</span> <span class="na-note">(cut-off ${f(crit, 3)})</span></span>
   </div>
   <div class="quiz-fb">${verdict(n, cover)}</div>`;
 }
 ```
 
+## Forty Punts {.formula-slide .example #punt-clt}
+
+::: {.lede-min}
+An NFL punter has historically averaged 41 yards a punt, with a standard deviation of 8 yards. What is the probability that their next 40 punts average at least 45 yards?
+:::
+
+:::: {.two-col}
+::: {.fragment}
+[The average of 40 punts]{.col-head}
+[Its centre and its standard error]{.col-sub}
+
+$$\begin{gathered} \bar X_{40} = \frac{1}{40}\sum_{i=1}^{40} X_i \\ \operatorname{E}[\bar X_{40}] = \color{#B94A48}{41} \qquad \operatorname{SD}(\bar X_{40}) = \frac{8}{\sqrt{40}} = 1.26 \end{gathered}$$
+
+```{=html}
+<svg width="500" height="170" viewBox="0 0 500 170" aria-label="the distribution of the average of 40 punts, with the tail above 45 shaded"><path d="M14.0 128.0 L16.1 128.0 L18.3 128.0 L20.4 127.9 L22.6 127.9 L24.7 127.9 L26.9 127.9 L29.0 127.9 L31.2 127.9 L33.3 127.9 L35.5 127.9 L37.6 127.8 L39.7 127.8 L41.9 127.8 L44.0 127.7 L46.2 127.7 L48.3 127.7 L50.5 127.6 L52.6 127.6 L54.8 127.5 L56.9 127.4 L59.1 127.4 L61.2 127.3 L63.3 127.2 L65.5 127.1 L67.6 127.0 L69.8 126.9 L71.9 126.7 L74.1 126.6 L76.2 126.4 L78.4 126.2 L80.5 126.0 L82.7 125.8 L84.8 125.6 L86.9 125.3 L89.1 125.0 L91.2 124.7 L93.4 124.3 L95.5 124.0 L97.7 123.6 L99.8 123.1 L102.0 122.6 L104.1 122.1 L106.3 121.6 L108.4 120.9 L110.5 120.3 L112.7 119.6 L114.8 118.9 L117.0 118.1 L119.1 117.2 L121.3 116.3 L123.4 115.4 L125.6 114.3 L127.7 113.2 L129.9 112.1 L132.0 110.9 L134.1 109.6 L136.3 108.3 L138.4 106.9 L140.6 105.4 L142.7 103.9 L144.9 102.3 L147.0 100.6 L149.2 98.8 L151.3 97.0 L153.5 95.1 L155.6 93.2 L157.7 91.2 L159.9 89.2 L162.0 87.1 L164.2 84.9 L166.3 82.7 L168.5 80.4 L170.6 78.1 L172.8 75.8 L174.9 73.5 L177.1 71.1 L179.2 68.7 L181.3 66.3 L183.5 63.9 L185.6 61.5 L187.8 59.1 L189.9 56.7 L192.1 54.4 L194.2 52.0 L196.4 49.8 L198.5 47.5 L200.7 45.4 L202.8 43.3 L204.9 41.2 L207.1 39.3 L209.2 37.4 L211.4 35.6 L213.5 34.0 L215.7 32.4 L217.8 31.0 L220.0 29.7 L222.1 28.5 L224.3 27.4 L226.4 26.5 L228.5 25.7 L230.7 25.1 L232.8 24.6 L235.0 24.2 L237.1 24.0 L239.3 24.0 L241.4 24.1 L243.6 24.4 L245.7 24.8 L247.9 25.4 L250.0 26.1 L252.1 26.9 L254.3 27.9 L256.4 29.0 L258.6 30.3 L260.7 31.7 L262.9 33.1 L265.0 34.8 L267.2 36.5 L269.3 38.3 L271.5 40.2 L273.6 42.2 L275.7 44.3 L277.9 46.4 L280.0 48.6 L282.2 50.8 L284.3 53.1 L286.5 55.5 L288.6 57.8 L290.8 60.2 L292.9 62.6 L295.1 65.0 L297.2 67.4 L299.3 69.8 L301.5 72.2 L303.6 74.6 L305.8 76.9 L307.9 79.2 L310.1 81.5 L312.2 83.7 L314.4 85.9 L316.5 88.1 L318.7 90.2 L320.8 92.2 L322.9 94.1 L325.1 96.0 L327.2 97.9 L329.4 99.7 L331.5 101.4 L333.7 103.0 L335.8 104.6 L338.0 106.1 L340.1 107.6 L342.3 108.9 L344.4 110.2 L346.5 111.5 L348.7 112.7 L350.8 113.8 L353.0 114.8 L355.1 115.8 L357.3 116.8 L359.4 117.6 L361.6 118.5 L363.7 119.2 L365.9 119.9 L368.0 120.6 L370.1 121.2 L372.3 121.8 L374.4 122.4 L376.6 122.9 L378.7 123.3 L380.9 123.8 L383.0 124.1 L385.2 124.5 L387.3 124.8 L389.5 125.1 L391.6 125.4 L393.7 125.7 L395.9 125.9 L398.0 126.1 L400.2 126.3 L402.3 126.5 L404.5 126.7 L406.6 126.8 L408.8 126.9 L410.9 127.0 L413.1 127.2 L415.2 127.2 L417.3 127.3 L419.5 127.4 L421.6 127.5 L423.8 127.5 L425.9 127.6 L428.1 127.6 L430.2 127.7 L432.4 127.7 L434.5 127.8 L436.7 127.8 L438.8 127.8 L440.9 127.8 L443.1 127.9 L445.2 127.9 L447.4 127.9 L449.5 127.9 L451.7 127.9 L453.8 127.9 L456.0 127.9 L458.1 127.9 L460.3 128.0 L462.4 128.0 L464.5 128.0 L466.7 128.0 L468.8 128.0 L471.0 128.0 L473.1 128.0 L475.3 128.0 L477.4 128.0 L479.6 128.0 L481.7 128.0 L483.9 128.0 L486.0 128.0 L486.0 128 L14.0 128 Z" fill="#325D88" fill-opacity="0.10"/><path d="M416.5 127.3 L416.8 127.3 L417.1 127.3 L417.4 127.3 L417.7 127.3 L418.0 127.4 L418.3 127.4 L418.7 127.4 L419.0 127.4 L419.3 127.4 L419.6 127.4 L419.9 127.4 L420.2 127.4 L420.6 127.4 L420.9 127.5 L421.2 127.5 L421.5 127.5 L421.8 127.5 L422.1 127.5 L422.5 127.5 L422.8 127.5 L423.1 127.5 L423.4 127.5 L423.7 127.5 L424.0 127.5 L424.4 127.6 L424.7 127.6 L425.0 127.6 L425.3 127.6 L425.6 127.6 L425.9 127.6 L426.3 127.6 L426.6 127.6 L426.9 127.6 L427.2 127.6 L427.5 127.6 L427.8 127.6 L428.1 127.6 L428.5 127.7 L428.8 127.7 L429.1 127.7 L429.4 127.7 L429.7 127.7 L430.0 127.7 L430.4 127.7 L430.7 127.7 L431.0 127.7 L431.3 127.7 L431.6 127.7 L431.9 127.7 L432.3 127.7 L432.6 127.7 L432.9 127.7 L433.2 127.7 L433.5 127.7 L433.8 127.7 L434.2 127.8 L434.5 127.8 L434.8 127.8 L435.1 127.8 L435.4 127.8 L435.7 127.8 L436.1 127.8 L436.4 127.8 L436.7 127.8 L437.0 127.8 L437.3 127.8 L437.6 127.8 L437.9 127.8 L438.3 127.8 L438.6 127.8 L438.9 127.8 L439.2 127.8 L439.5 127.8 L439.8 127.8 L440.2 127.8 L440.5 127.8 L440.8 127.8 L441.1 127.8 L441.4 127.8 L441.7 127.8 L442.1 127.9 L442.4 127.9 L442.7 127.9 L443.0 127.9 L443.3 127.9 L443.6 127.9 L444.0 127.9 L444.3 127.9 L444.6 127.9 L444.9 127.9 L445.2 127.9 L445.5 127.9 L445.9 127.9 L446.2 127.9 L446.5 127.9 L446.8 127.9 L447.1 127.9 L447.4 127.9 L447.7 127.9 L448.1 127.9 L448.4 127.9 L448.7 127.9 L449.0 127.9 L449.3 127.9 L449.6 127.9 L450.0 127.9 L450.3 127.9 L450.6 127.9 L450.9 127.9 L451.2 127.9 L451.5 127.9 L451.9 127.9 L452.2 127.9 L452.5 127.9 L452.8 127.9 L453.1 127.9 L453.4 127.9 L453.8 127.9 L454.1 127.9 L454.4 127.9 L454.7 127.9 L455.0 127.9 L455.3 127.9 L455.7 127.9 L456.0 127.9 L456.3 127.9 L456.6 127.9 L456.9 127.9 L457.2 127.9 L457.5 127.9 L457.9 127.9 L458.2 127.9 L458.5 128.0 L458.8 128.0 L459.1 128.0 L459.4 128.0 L459.8 128.0 L460.1 128.0 L460.4 128.0 L460.7 128.0 L461.0 128.0 L461.3 128.0 L461.7 128.0 L462.0 128.0 L462.3 128.0 L462.6 128.0 L462.9 128.0 L463.2 128.0 L463.6 128.0 L463.9 128.0 L464.2 128.0 L464.5 128.0 L464.8 128.0 L465.1 128.0 L465.5 128.0 L465.8 128.0 L466.1 128.0 L466.4 128.0 L466.7 128.0 L467.0 128.0 L467.3 128.0 L467.7 128.0 L468.0 128.0 L468.3 128.0 L468.6 128.0 L468.9 128.0 L469.2 128.0 L469.6 128.0 L469.9 128.0 L470.2 128.0 L470.5 128.0 L470.8 128.0 L471.1 128.0 L471.5 128.0 L471.8 128.0 L472.1 128.0 L472.4 128.0 L472.7 128.0 L473.0 128.0 L473.4 128.0 L473.7 128.0 L474.0 128.0 L474.3 128.0 L474.6 128.0 L474.9 128.0 L475.3 128.0 L475.6 128.0 L475.9 128.0 L476.2 128.0 L476.5 128.0 L476.8 128.0 L477.1 128.0 L477.5 128.0 L477.8 128.0 L478.1 128.0 L478.4 128.0 L478.7 128.0 L479.0 128.0 L479.4 128.0 L479.7 128.0 L480.0 128.0 L480.3 128.0 L480.6 128.0 L480.9 128.0 L481.3 128.0 L481.6 128.0 L481.9 128.0 L482.2 128.0 L482.5 128.0 L482.8 128.0 L483.2 128.0 L483.5 128.0 L483.8 128.0 L484.1 128.0 L484.4 128.0 L484.7 128.0 L485.1 128.0 L485.4 128.0 L485.7 128.0 L486.0 128.0 L486.0 128 L416.5 128 Z" fill="#B94A48" fill-opacity="0.6"/><path d="M14.0 128.0 L16.1 128.0 L18.3 128.0 L20.4 127.9 L22.6 127.9 L24.7 127.9 L26.9 127.9 L29.0 127.9 L31.2 127.9 L33.3 127.9 L35.5 127.9 L37.6 127.8 L39.7 127.8 L41.9 127.8 L44.0 127.7 L46.2 127.7 L48.3 127.7 L50.5 127.6 L52.6 127.6 L54.8 127.5 L56.9 127.4 L59.1 127.4 L61.2 127.3 L63.3 127.2 L65.5 127.1 L67.6 127.0 L69.8 126.9 L71.9 126.7 L74.1 126.6 L76.2 126.4 L78.4 126.2 L80.5 126.0 L82.7 125.8 L84.8 125.6 L86.9 125.3 L89.1 125.0 L91.2 124.7 L93.4 124.3 L95.5 124.0 L97.7 123.6 L99.8 123.1 L102.0 122.6 L104.1 122.1 L106.3 121.6 L108.4 120.9 L110.5 120.3 L112.7 119.6 L114.8 118.9 L117.0 118.1 L119.1 117.2 L121.3 116.3 L123.4 115.4 L125.6 114.3 L127.7 113.2 L129.9 112.1 L132.0 110.9 L134.1 109.6 L136.3 108.3 L138.4 106.9 L140.6 105.4 L142.7 103.9 L144.9 102.3 L147.0 100.6 L149.2 98.8 L151.3 97.0 L153.5 95.1 L155.6 93.2 L157.7 91.2 L159.9 89.2 L162.0 87.1 L164.2 84.9 L166.3 82.7 L168.5 80.4 L170.6 78.1 L172.8 75.8 L174.9 73.5 L177.1 71.1 L179.2 68.7 L181.3 66.3 L183.5 63.9 L185.6 61.5 L187.8 59.1 L189.9 56.7 L192.1 54.4 L194.2 52.0 L196.4 49.8 L198.5 47.5 L200.7 45.4 L202.8 43.3 L204.9 41.2 L207.1 39.3 L209.2 37.4 L211.4 35.6 L213.5 34.0 L215.7 32.4 L217.8 31.0 L220.0 29.7 L222.1 28.5 L224.3 27.4 L226.4 26.5 L228.5 25.7 L230.7 25.1 L232.8 24.6 L235.0 24.2 L237.1 24.0 L239.3 24.0 L241.4 24.1 L243.6 24.4 L245.7 24.8 L247.9 25.4 L250.0 26.1 L252.1 26.9 L254.3 27.9 L256.4 29.0 L258.6 30.3 L260.7 31.7 L262.9 33.1 L265.0 34.8 L267.2 36.5 L269.3 38.3 L271.5 40.2 L273.6 42.2 L275.7 44.3 L277.9 46.4 L280.0 48.6 L282.2 50.8 L284.3 53.1 L286.5 55.5 L288.6 57.8 L290.8 60.2 L292.9 62.6 L295.1 65.0 L297.2 67.4 L299.3 69.8 L301.5 72.2 L303.6 74.6 L305.8 76.9 L307.9 79.2 L310.1 81.5 L312.2 83.7 L314.4 85.9 L316.5 88.1 L318.7 90.2 L320.8 92.2 L322.9 94.1 L325.1 96.0 L327.2 97.9 L329.4 99.7 L331.5 101.4 L333.7 103.0 L335.8 104.6 L338.0 106.1 L340.1 107.6 L342.3 108.9 L344.4 110.2 L346.5 111.5 L348.7 112.7 L350.8 113.8 L353.0 114.8 L355.1 115.8 L357.3 116.8 L359.4 117.6 L361.6 118.5 L363.7 119.2 L365.9 119.9 L368.0 120.6 L370.1 121.2 L372.3 121.8 L374.4 122.4 L376.6 122.9 L378.7 123.3 L380.9 123.8 L383.0 124.1 L385.2 124.5 L387.3 124.8 L389.5 125.1 L391.6 125.4 L393.7 125.7 L395.9 125.9 L398.0 126.1 L400.2 126.3 L402.3 126.5 L404.5 126.7 L406.6 126.8 L408.8 126.9 L410.9 127.0 L413.1 127.2 L415.2 127.2 L417.3 127.3 L419.5 127.4 L421.6 127.5 L423.8 127.5 L425.9 127.6 L428.1 127.6 L430.2 127.7 L432.4 127.7 L434.5 127.8 L436.7 127.8 L438.8 127.8 L440.9 127.8 L443.1 127.9 L445.2 127.9 L447.4 127.9 L449.5 127.9 L451.7 127.9 L453.8 127.9 L456.0 127.9 L458.1 127.9 L460.3 128.0 L462.4 128.0 L464.5 128.0 L466.7 128.0 L468.8 128.0 L471.0 128.0 L473.1 128.0 L475.3 128.0 L477.4 128.0 L479.6 128.0 L481.7 128.0 L483.9 128.0 L486.0 128.0" fill="none" stroke="#325D88" stroke-width="2.4"/><line x1="6" y1="128" x2="494" y2="128" stroke="#B0B7C0" stroke-width="1.4"/><line x1="238.8" y1="20" x2="238.8" y2="133" stroke="#B94A48" stroke-width="1.6" stroke-dasharray="4 3"/><line x1="416.5" y1="88" x2="416.5" y2="133" stroke="#B94A48" stroke-width="1.8"/><text x="238.8" y="150" font-size="16" text-anchor="middle" fill="#6E7681" font-family="Roboto, sans-serif">41</text><text x="416.5" y="150" font-size="16" text-anchor="middle" fill="#B94A48" font-family="Roboto, sans-serif">45</text><text x="492" y="78" font-size="15" text-anchor="end" fill="#B94A48" font-family="Roboto, sans-serif">area ≈ 0.0008</text><text x="14" y="42" font-size="15" fill="#325D88" font-family="Roboto, sans-serif">average of</text><text x="14" y="60" font-size="15" fill="#325D88" font-family="Roboto, sans-serif">40 punts</text></svg>
+```
+:::
+
+::: {.fragment}
+[By the CLT]{.col-head}
+[Standardise, then read the table]{.col-sub}
+
+$$\begin{aligned} P(\bar X_{40} \ge 45) &= P\Big(\frac{\bar X_{40} - 41}{8/\sqrt{40}} \ge \frac{45 - 41}{8/\sqrt{40}}\Big) \\ &= P(Z \ge 3.16) = 1 - \Phi(3.16) \\ &= 7.8 \times 10^{-4} \end{aligned}$$
+
+About 1 in 1,300. Forty punts averaging 45 yards would be **3.16 standard errors** above the punter's history.
+:::
+::::
+
+::: {.slide-footer .fragment}
+Example after Dr. John Quintanilla, as told by Steve Brunton.
+:::

@@ -7,7 +7,7 @@
   draw, and the pile of balls is the binomial histogram built by gravity.
     0. one ball, slowly, its path traced peg by peg
     1. 1500 balls rain down and stack up in the bins
-    2. the curve lands on the pile: Binomial(12, ½) ≈ Normal(6, 3), in the
+    2. the curve lands on the pile: Binomial(12, ½) ≈ N(6, 3), in the
        same units as the stacks (expected count / balls per stack row)
 
   Every bounce comes from a seeded generator, so the pile is a real
@@ -34,7 +34,7 @@
   var TEXT = [
     'Every peg sends the ball left or right, 50/50.',
     'Its bin is the number of rights in 12 bounces.',
-    'So every ball is one draw from a Binomial(12,\u00a0½), and the pile is the bell.'   // \u00a0: never split the name
+    'Each ball gives a Binomial(12,\u00a0½) draw. The counts form a bell shape.'   // \u00a0: never split the name
   ];
 
   // mulberry32: small and seeded.
@@ -130,7 +130,7 @@
     var law = svg.appendChild(K.el('g', {}));
     law.appendChild(K.txt(RX, BASE - 70, 'The pile follows', { size: 'label' }));
     law.appendChild(K.txt(RX, BASE - 36, 'Binomial(12, ½)', { size: 'readout', face: 'mono', fill: 'brick', weight: 700 }));
-    law.appendChild(K.txt(RX, BASE, '≈ Normal(6, 3)', { size: 'caption', face: 'mono', fill: 'brick' }));
+    law.appendChild(K.txt(RX, BASE, '≈ N(6, 3)', { size: 'caption', face: 'mono', fill: 'brick' }));
 
     return { svg: svg, balls: balls, trace: trace, curve: curve, lines: lines, count: count, law: law,
              state: 0, tween: null };

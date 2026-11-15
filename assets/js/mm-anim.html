@@ -37,11 +37,11 @@
     'Thirteen salaries, in the order they arrived',
     'Sort them, and every summary below gets easier',
     'The mode is the salary that comes up most often',
-    'The range is the whole spread, end to end',
+    'The range is the maximum minus the minimum',
     'The median is the one in the middle once sorted',
     'The mean is what everyone would get if the payroll were shared equally',
-    'The founder takes ninety-six and the three part company',
-    'The spread measures how far people sit from that equal share'
+    'Increasing the founder salary to 96 changes the mean',
+    'Spread measures variation around the mean'
   ];
 
   var W = 1000, H = 445;
@@ -91,7 +91,7 @@
                       'Six either side, so the 7th of 13  =  ' + v[MID]];
       case 5: return ['x\u0304  =  ( \u03A3 x\u1D62 )  \u00F7  n',
                       sum(v) + '  \u00F7  ' + v.length + '  =  ' + m.toFixed(2)];
-      case 6: return ['One value moved, and only one summary followed',
+      case 6: return ['The mean changes; the median and mode are unchanged',
                       'Mean ' + m.toFixed(2) + '     Median ' + v[MID] +
                       '     Mode ' + md.value];
       case 7: return ['s\u00B2  =  \u03A3 ( x\u1D62 \u2212 x\u0304 )\u00B2  \u00F7  ( n \u2212 1 )',
@@ -133,8 +133,7 @@
     // min-to-max span, shown only on its own beat
     // A brace, not a bare rule: the ends turn down towards the two bars it
     // spans and a stem rises to the label, so it reads as "this much" rather
-    // than as another line in the chart. Flat rather than curly, like the
-    // one over the two surnames on #combinatorics.
+    // than as another line in the chart. The deck's curly brace (K.brace).
     var span = svg.appendChild(K.el('g', { opacity: 0 }));
     var spanPath = span.appendChild(K.el('path', {
       d: '', fill: 'none', stroke: K.PAL.navy, 'stroke-width': 1.8,
@@ -220,8 +219,7 @@
     var iLo = v.indexOf(Math.min.apply(null, v)), iHi = v.indexOf(Math.max.apply(null, v));
     var xa = bx(iLo) + BW / 2, xb = bx(iHi) + BW / 2, xm = (xa + xb) / 2;
     s.spanPath.setAttribute('d',
-      'M' + xa + ' ' + (SPAN_Y + 11) + 'V' + SPAN_Y + 'H' + xb + 'V' + (SPAN_Y + 11) +
-      'M' + xm + ' ' + SPAN_Y + 'V' + (SPAN_Y - 9));
+      K.brace(xa, xb, SPAN_Y + 4, 1));
     s.spanLab.setAttribute('x', xm);
     s.spanLab.textContent = 'Range ' + (Math.max.apply(null, v) - Math.min.apply(null, v));
     s.eq2.setAttribute('fill', K.PAL[ACCENT[state]]);

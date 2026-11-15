@@ -233,19 +233,34 @@
       Reveal.on('ready', function () { mount(Reveal.getCurrentSlide()); });
       // 'ready' may already have fired: landing on a #hash then mounts nothing.
       if (Reveal.isReady && Reveal.isReady()) mount(Reveal.getCurrentSlide());
-      Reveal.on('fragmentshown', function (e) {
-        var i = index[e.fragment.id];
-        if (current && i !== undefined && spec.place) spec.place(current, i + 1, false);
-      });
-      Reveal.on('fragmenthidden', function (e) {
-        var i = index[e.fragment.id];
-        if (current && i !== undefined && spec.place) spec.place(current, i, false);
-      });
+      // Count what is visible rather than trusting e.fragment: when Reveal shows
+      // or hides several fragments in one go (a jump, or keys pressed during a
+      // long tween) e.fragment is only the first of them, and the stage would
+      // land on the wrong state. For a single step the count is the same.
+      function onFrag(e) {
+        var fs = e.fragments || [e.fragment];
+        var ours = fs.some(function (f) { return f && index[f.id] !== undefined; });
+        if (current && ours && spec.place) spec.place(current, fragState(Reveal.getCurrentSlide()), false);
+      }
+      Reveal.on('fragmentshown', onFrag);
+      Reveal.on('fragmenthidden', onFrag);
     }
     init();
   }
 
+  // The deck's curly brace (the #bayeq-intuition shape): up = 1 peaks upward
+  // (an overbrace, label above), 0 peaks downward (an underbrace, label below).
+  // Ends sit 7 units from the rule; curls clamp so a narrow span stays a brace.
+  function brace(x0, x1, y, up) {
+    var t = up ? 7 : -7, xm = (x0 + x1) / 2, r = Math.min(8, (x1 - x0) / 4);
+    return 'M' + x0 + ' ' + (y + t) + 'Q' + x0 + ' ' + y + ' ' + (x0 + r) + ' ' + y +
+           'L' + (xm - r) + ' ' + y + 'Q' + xm + ' ' + y + ' ' + xm + ' ' + (y - t) +
+           'Q' + xm + ' ' + y + ' ' + (xm + r) + ' ' + y +
+           'L' + (x1 - r) + ' ' + y + 'Q' + x1 + ' ' + y + ' ' + x1 + ' ' + (y + t);
+  }
+
   window.StageKit = {
+    brace: brace,
     PAL: PAL, FONT: FONT, TYPE: TYPE, REDUCE: REDUCE, MARK: MARK,
     animeReady: animeReady, el: el, txt: txt, rich: rich, canvas: canvas,
     missSet: missSet, mark: mark, block: block,

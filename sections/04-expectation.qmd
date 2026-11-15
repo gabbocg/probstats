@@ -1,0 +1,266 @@
+# Expectation and Limit Theorems {.hero #s04-expectation}
+
+::: {.sem-mark data-sem="4"}
+Mean, variance, Chebyshev, LLN and CLT
+:::
+
+## Expected Value, Variance and Standard Deviation {.stage-slide #moments}
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="moments-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="moments-frag-1"}
+[]{.fragment .fi-frag id="moments-frag-2"}
+[]{.fragment .fi-frag id="moments-frag-3"}
+[]{.fragment .fi-frag id="moments-frag-4"}
+[]{.fragment .fi-frag id="moments-frag-5"}
+[]{.fragment .fi-frag id="moments-frag-6"}
+[]{.fragment .fi-frag id="moments-frag-7"}
+
+<!-- commented out: moments-formal (merged into #moments)
+
+## Mean and Spread in Standard Notation {.formula-slide #moments-formal}
+
+::: {.lede-min}
+These formulas describe the mean and spread shown in the three pictures.
+:::
+
+$$\operatorname{E}[X] \;=\; \sum_x \underset{\color{#6E7681}{\text{where it sits}}}{x}\;\;\underset{\color{#6E7681}{\text{its weight}}}{\color{#325D88}{p(x)}} \;=\; \color{#B94A48}{2.24}$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Replace each position by the area of its square, and average again]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\operatorname{Var}(X) \;=\; \sum_x \underset{\color{#6E7681}{\text{area of its square}}}{\color{#F47C3C}{(x - \mu)^2}}\;\;\underset{\color{#6E7681}{\text{its weight}}}{\color{#325D88}{p(x)}} \;=\; \color{#F47C3C}{1.92}$$
+:::
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Read off the side of the average square, back in the units of $X$]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\operatorname{SD}(X) \;=\; \underset{\color{#6E7681}{\text{side of the average square}}}{\sqrt{\operatorname{Var}(X)}} \;=\; \color{#325D88}{1.39}$$
+:::
+
+::: {.slide-footer .fragment}
+For a normal these are exactly its two parameters: $\operatorname{E}[X] = \color{#B94A48}{\mu}$ and $\operatorname{SD}(X) = \color{#325D88}{\sigma}$.
+:::
+
+-->
+
+## Comparing delivery times {.ojs-slide .example #courier-moments}
+
+::: {.lede-min}
+The two firms have the same four possible delivery times, with different probabilities. The red line is the mean and the orange lines sit one standard deviation either side.
+:::
+
+```{ojs}
+//| echo: false
+viewof crFirm = Inputs.radio(["Firm A", "Firm B"], {value: "Firm A", label: "Show the working for"})
+```
+
+```{ojs}
+//| echo: false
+// Exercise 7 of the beamer Seminar 3.
+crX = [0.5, 1, 1.5, 2]
+crP = ({"Firm A": [0.6, 0.1, 0.1, 0.2], "Firm B": [0.1, 0.7, 0.15, 0.05]})
+crMom = p => {
+  const mu = d3.sum(crX, (x, i) => x * p[i]);
+  const ex2 = d3.sum(crX, (x, i) => x * x * p[i]);
+  return {mu, ex2, v: ex2 - mu * mu, sd: Math.sqrt(ex2 - mu * mu)};
+}
+crPlot = firm => {
+  const p = crP[firm], m = crMom(p);
+  return Plot.plot({
+    width: 460, height: 190, marginLeft: 48, marginBottom: 30, marginTop: 26,
+    style: ({fontSize: "14px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"}),
+    x: {domain: [0, 2.5], label: null, ticks: crX, tickSize: 4, tickFormat: d => `${d} h`},
+    y: {domain: [0, 0.8], grid: true, ticks: [0, 0.4, 0.8], label: null},
+    marks: [
+      Plot.ruleX(crX, {x: d => d, y2: (d, i) => p[i], strokeWidth: 16,
+        stroke: firm === crFirm ? PPAL.navy : PPAL.dim}),
+      Plot.ruleX([m.mu - m.sd, m.mu + m.sd], {stroke: PPAL.orange, strokeWidth: 2, strokeDasharray: "5 4"}),
+      Plot.ruleX([m.mu], {stroke: PPAL.brick, strokeWidth: 2.5}),
+      Plot.text([firm], {frameAnchor: "top-right", dy: -18, text: d => d,
+        fill: firm === crFirm ? PPAL.navy : PPAL.soft, fontWeight: 700, fontSize: 16}),
+      Plot.ruleY([0], {stroke: PPAL.dim})
+    ]
+  });
+}
+```
+
+```{ojs}
+//| echo: false
+{
+  const p = crP[crFirm], m = crMom(p);
+  const f = v => +v.toFixed(4);
+  const terms = crX.map((x, i) => `${x}²×${p[i]}`).join(" + ");
+  return html`<div class="cr-row">${crPlot("Firm A")}${crPlot("Firm B")}</div>
+  <div class="ojs-eq cr-eqs">
+    <span>E[X]</span><span>= ${crX.map((x, i) => `${x}×${p[i]}`).join(" + ")} = <span class="miss">${f(m.mu)}</span></span>
+    <span>E[X²]</span><span>= ${terms} = ${f(m.ex2)}</span>
+    <span>Var(X)</span><span>= E[X²] − μ² = ${f(m.ex2)} − ${f(m.mu)}² = <span class="rate">${f(m.v)}</span></span>
+  </div>
+  <div class="quiz-fb">Firm A has a lower mean delivery time (0.95 h against 1.075 h). Firm B has a lower variance (0.107 against 0.373). The choice depends on the relative costs of late and slower deliveries.</div>`;
+}
+```
+
+## Chebyshev's inequality {.sim-slide #cheb-sim}
+
+::: {.slide-kicker}
+Chebyshev
+:::
+
+::: {.lede-min}
+Chebyshev's inequality states that at least $1 - 1/k^2$ of any distribution lies within $k$ standard deviations. It does not require normality or symmetry.
+:::
+
+::: {.sim-card .sim-text}
+```{webr-r}
+k <- 2 # <-- how many SDs
+n <- 20000
+
+# a wildly skewed population, far from normal
+x  <- rexp(n, rate = 1) ^ 2
+mu <- mean(x); s <- sd(x)
+
+actual <- mean(abs(x - mu) <= k * s)
+bound  <- 1 - (1 / k) ^ 2
+round(c(actual = actual, chebyshev = bound), 3)
+```
+:::
+
+::: {.try-this}
+The bound is loose because it applies without specifying the distribution's shape. Swap `rexp(n, 1)^2` for `rnorm(n)` and the gap widens further: for a normal, $k = 2$ captures 95%, not the 75% Chebyshev guarantees.
+:::
+
+## The Law of Large Numbers, Intuitively {.stage-slide #lln}
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="lln-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="lln-frag-1"}
+[]{.fragment .fi-frag id="lln-frag-2"}
+[]{.fragment .fi-frag id="lln-frag-3"}
+
+## The Idea Behind the Central Limit Theorem {.stage-slide #clt-idea}
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="cltidea-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="cltidea-frag-1"}
+[]{.fragment .fi-frag id="cltidea-frag-2"}
+
+## Simulating sums of dice {.stage-slide #clt-dice}
+
+::: {.lede-min}
+Throw $\color{#F47C3C}{n}$ of them and add them up, 2,500 times.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="cltdice-stage" class="stage"></div>
+:::
+
+## The Two Limit Theorems, Formally {.formula-slide #limit-formal}
+
+::: {.lede-min}
+Take $\color{#F47C3C}{n}$ independent draws from the same distribution (i.i.d.), each with mean $\color{#B94A48}{\mu}$ and variance $\sigma^2$, and average them.
+:::
+
+$$\bar X_{\color{#F47C3C}{n}} \;=\; \frac{1}{\color{#F47C3C}{n}} \sum_{i=1}^{\color{#F47C3C}{n}} X_i$$
+
+:::: {.two-col}
+::: {.fragment}
+[Law of large numbers]{.col-head}
+[Convergence of the sample mean]{.col-sub}
+
+$$\bar X_{\color{#F47C3C}{n}} \;\longrightarrow\; \color{#B94A48}{\mu} \qquad \text{as } \color{#F47C3C}{n} \to \infty$$
+
+For any margin $\varepsilon > 0$, $P(|\bar X_{\color{#F47C3C}{n}} - \color{#B94A48}{\mu}| \ge \varepsilon) \to 0$. With enough draws the mean is as close to $\color{#B94A48}{\mu}$ as you like.
+:::
+
+::: {.fragment}
+[Central limit theorem]{.col-head}
+[Distribution of the sample mean]{.col-sub}
+
+$$\bar X_{\color{#F47C3C}{n}} \;\approx\; N\Big(\color{#B94A48}{\mu},\, \frac{\sigma^2}{\color{#F47C3C}{n}}\Big) \qquad \text{SD} = \frac{\sigma}{\sqrt{\color{#F47C3C}{n}}}$$
+
+Whatever the shape of the $X_i$, for large $\color{#F47C3C}{n}$ the mean is close to normal, and its spread shrinks like $1/\sqrt{\color{#F47C3C}{n}}$.
+:::
+::::
+
+::: {.note-box .fragment}
+The LLN is the running mean settling on $\color{#B94A48}{\mu}$; the CLT describes the approximately normal distribution of the sample mean, narrowing as $\color{#F47C3C}{n}$ grows.
+:::
+
+<!-- commented out: clt-intuition
+
+## The Central Limit Theorem {.stage-slide #clt-intuition}
+
+::: {.lede-min}
+Averaging draws from any population produces the bell shape.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="clt-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="clt-frag-1"}
+[]{.fragment .fi-frag id="clt-frag-2"}
+[]{.fragment .fi-frag id="clt-frag-3"}
+
+::: {.slide-footer}
+The population distribution is unchanged. The distribution of the sample mean approaches normality, with standard deviation $\sigma/\sqrt{n}$. The plot uses a fixed axis scale.
+:::
+
+-->
+
+<!-- commented out: clt-sim
+
+## The CLT for a skewed distribution {.sim-slide #clt-sim}
+
+::: {.slide-kicker}
+The CLT for a skewed population
+:::
+
+::: {.sim-card .sim-plot}
+```{webr-r}
+#| fig-width: 5.7
+#| fig-height: 4.3
+#| out-width: "100%"
+n <- 5             # <-- draws per average
+pop <- function(k) rexp(k)^2   # no bell at all
+
+xbar <- replicate(4000, mean(pop(n)))
+hist(xbar, breaks = 40, col = "#CBD9E6",
+     border = "white", main = "",
+     xlab = paste("mean of", n, "draws"))
+
+round(c(sd_obs  = sd(xbar),
+        se_pred = sd(pop(1e5)) / sqrt(n)), 3)
+```
+:::
+
+::: {.try-this}
+At `n <- 1`, the distribution is strongly skewed. By `n <- 30`, the sample means are nearly symmetric and `sd_obs` is close to $\sigma/\sqrt{n}$. This illustrates the CLT for a skewed population.
+:::
+
+-->
+
+<!-- commented out: clt-proof
+
+## The Central Limit Theorem, Intuitively {.stage-slide #clt-proof}
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="cltproof-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="cltproof-frag-1"}
+[]{.fragment .fi-frag id="cltproof-frag-2"}
+[]{.fragment .fi-frag id="cltproof-frag-3"}
+
+-->

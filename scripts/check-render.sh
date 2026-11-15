@@ -35,21 +35,21 @@ need() {  # need <needle> <label>
 
 echo "── slides ─────────────────────────────────────────"
 for id in s00b-me s00b-about s00-how-to-use s00-webr \
-          s01-visualisation chart-choice \
-          s02-descriptives mm-intuition cheb-sim \
-          s03-probability prob-count combinatorics bayes-hook bayes-intuition bayeq-formula monty bayes-sim \
+          part-probability part-statistics s01-probability s02-discrete s03-continuous s04-expectation chart-choice \
+          mm-intuition cheb-sim \
+          prob-count combinatorics bayes-hook bayes-intuition bayeq-formula monty bayes-sim \
           space-intuition setops-intuition venn-intuition set-formal \
-          conditional-probabilities taxi-indep table-cond cond-intuition total-probability \
-          s04-distributions random-variables distribution-fn binom-intuition seller-intuition laplace-intuition \
+          conditional-probabilities choose-count taxi-indep table-cond cond-intuition total-probability \
+          random-variables distribution-fn binom-intuition seller-intuition laplace-intuition \
           pois-intuition pois-formal \
           likelihood-live binom-formal \
           pois-intuition expo-intuition expo-formal \
           attempts-const courier-moments uniform-dist normal-area normal-critical \
-          normal-intuition galton clt-idea clt-dice normal-formula moments lln normal-build normal-pi normal-e box-normal funcrv chisq tdist dist-map pois-sim \
-          s05-estimation xbar-properties xbar-proof ciflip-intuition cieq-formula ci-intuition ci-lab \
-          s06-testing test-steps test-stats pval-intuition reject-lab power-lab \
-          s07-two-populations two-mean-tests pooled-formula pair-intuition pair-lab \
-          s08-regression ad-scatter cor-test ls-fit ls-formula ls-accuracy fit-quality multi-reg; do
+          normal-intuition galton clt-idea clt-dice limit-formal normal-formula moments lln normal-build normal-pi normal-e box-normal funcrv chisq tdist dist-map pois-sim \
+          s05-estimation sampling-formal xbar-properties xbar-proof xbar-proof-var sample-var xbar-normal ci-derive punt-clt ciflip-intuition cieq-formula ci-intuition ci-lab \
+          s06-testing web-test test-steps test-stats pval-intuition reject-lab err-table power-lab \
+          two-mean-tests pooled-formula pair-intuition pair-lab \
+          s07-regression ad-scatter cor-test ls-fit ls-formula ls-accuracy fit-quality multi-reg; do
   need "id=\"$id\"" "slide #$id"
 done
 
@@ -134,7 +134,7 @@ for f in prior-frag-1 prior-frag-2 \
          laplace-frag-1 laplace-frag-2 laplace-frag-3 \
          galton-frag-1 galton-frag-2 \
          cltidea-frag-1 cltidea-frag-2 \
-         moments-frag-1 moments-frag-2 moments-frag-3 moments-frag-4 moments-frag-5 moments-frag-6 \
+         moments-frag-1 moments-frag-2 moments-frag-3 moments-frag-4 moments-frag-5 moments-frag-6 moments-frag-7 \
          lln-frag-1 lln-frag-2 lln-frag-3 \
          normbuild-frag-1 normbuild-frag-2 normbuild-frag-3 normbuild-frag-4 normbuild-frag-5 normbuild-frag-6 normbuild-frag-7 normbuild-frag-8 normbuild-frag-9 \
          normalpi-frag-1 normalpi-frag-2 normalpi-frag-3 \

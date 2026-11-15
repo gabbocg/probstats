@@ -1,7 +1,7 @@
-# Correlation and Regression {.hero #s08-regression}
+# Correlation and Regression {.hero #s07-regression}
 
-::: {.sem-mark data-sem="8"}
-Seminar 8 · Correlation and regression
+::: {.sem-mark data-sem="7"}
+Least squares, uncertainty and model fit
 :::
 
 ## Sales and Advertising {.ojs-slide #ad-scatter}
@@ -124,7 +124,7 @@ rgTitle = s => Plot.text([s], {frameAnchor: "top-left", dy: -30, text: d => d, f
   });
   const pct = v => `${(100 * v).toFixed(1)}%`;
   const say = rgSx === "Newspaper"
-    ? `Newspaper is the weakest link: r = ${rgN(fit.r, 3)}, so the line explains only <b>${pct(fit.r2)}</b> of the variation in sales. Yet its slope is positive. Does newspaper advertising sell, or does it ride along with radio? The last slide of this section settles it.`
+    ? `Newspaper has the weakest correlation with sales: r = ${rgN(fit.r, 3)}. The fitted line has a positive slope and explains <b>${pct(fit.r2)}</b> of the variation in sales. The multiple regression example examines how this relationship changes when radio is included.`
     : `${rgSx} has r = ${rgN(fit.r, 3)}, so the line explains <b>R² = r² = ${pct(fit.r2)}</b> of the variation in sales. Each extra $1,000 on ${rgSx === "TV" ? "TV" : "radio"} goes with about <b>${(1000 * fit.b1).toFixed(1)} more units</b> sold.`;
   return html`${chart}
   <div class="ojs-eq rg-stats">
@@ -136,10 +136,10 @@ rgTitle = s => Plot.text([s], {frameAnchor: "top-left", dy: -30, text: d => d, f
 }
 ```
 
-## Is the Correlation Real? {.ojs-slide #cor-test}
+## Testing the population correlation {.ojs-slide .example #cor-test}
 
 ::: {.lede-min}
-Under $H_0\colon \rho = 0$, $t = \frac{r\sqrt{n-2}}{\sqrt{1-r^2}}$ follows Student's $t$ with $n-2$ degrees of freedom. The defaults are Exercise 1: $r = 0.33$ over 24 months.
+Under $H_0\colon \rho = 0$, $t = \frac{r\sqrt{n-2}}{\sqrt{1-r^2}}$ follows Student's $t$ with $n-2$ degrees of freedom. The defaults are $r = 0.33$ over 24 months.
 :::
 
 ```{ojs}
@@ -166,7 +166,7 @@ viewof rgCin = Inputs.form({
   const cuts = alt === "ρ > 0" ? [crit] : alt === "ρ < 0" ? [-crit] : [-crit, crit];
   const tc = Math.max(-6, Math.min(6, t));
   const chart = Plot.plot({
-    width: 1000, height: 250, marginLeft: 12, marginRight: 12, marginBottom: 28, marginTop: 42, style: rgStyle,
+    width: 1000, height: 210, marginLeft: 12, marginRight: 12, marginBottom: 28, marginTop: 42, style: rgStyle,
     x: {domain: [-6, 6], label: null, tickSize: 4},
     y: {axis: null, domain: [0, 0.42], insetTop: 18},
     marks: [
@@ -197,7 +197,7 @@ viewof rgCin = Inputs.form({
 ## Finding the Least-Squares Line {.ojs-slide #ls-fit}
 
 ::: {.lede-min}
-Each line leaves residuals $e_i = y_i - \widehat{y}_i$. Least squares picks the line with the smallest $\text{RSS} = \sum e_i^2$ (ISLR Figures 3.1 and 3.2). Find it with the sliders.
+Each line gives residuals $e_i = y_i - \widehat{y}_i$. Least squares picks the line with the smallest $\text{RSS} = \sum e_i^2$ (ISLR Figures 3.1 and 3.2). Find it with the sliders.
 :::
 
 ```{ojs}
@@ -259,10 +259,10 @@ rgRSS = (b0, b1) => { const S = rgSums;
 }
 ```
 
-## The Least-Squares Estimates {.ojs-slide #ls-formula}
+## The Least-Squares Estimates {.ojs-slide .example #ls-formula}
 
 ::: {.lede-min}
-Setting the derivatives of RSS to zero gives the line in closed form. Pick the data, follow the working, then predict.
+Setting the derivatives of RSS to zero gives the line in closed form. Select a data set to calculate the estimates and a prediction.
 :::
 
 $$\widehat{\beta}_1 = \frac{\sum_{i=1}^n (x_i - \bar x)(y_i - \bar y)}{\sum_{i=1}^n (x_i - \bar x)^2}, \qquad \widehat{\beta}_0 = \bar y - \widehat{\beta}_1 \bar x$$
@@ -372,7 +372,7 @@ rgBoot = {
     <span>${rgPeq(p)}</span>
   </div>
   <div class="quiz-fb">${inside
-    ? html`The value ${c} lies inside the interval β̂₁ ± 2·SE, so the test keeps it: t = ${rgN(t, 2)}, ${rgPeq(p)}. The interval is the set of null values the test does not reject at 5%.`
+    ? html`The value ${c} lies inside the interval β̂₁ ± 2·SE, so the test does not reject it: t = ${rgN(t, 2)}, ${rgPeq(p)}. The interval is the set of null values the test does not reject at 5%.`
     : html`The value ${c} lies outside the interval β̂₁ ± 2·SE, so we <b>reject H₀</b>: t = (${rgN(f.b1, 5)} − ${c}) / ${rgN(f.se1, 5)} = ${rgN(t, 2)}, ${rgPeq(p)}.${c === 0 ? " TV advertising is related to sales, as in ISLR Table 3.1." : ""}`}</div>`;
 }
 ```
@@ -390,7 +390,7 @@ Three numbers summarise the fit of sales on TV (ISLR 3.1.3). The first is in the
 
 [$\text{RSE} = \sqrt{\dfrac{\text{RSS}}{n-2}}$]{.prop-math}
 
-[Sales miss the line by about ${rgN(rgTV.rse, 2)} thousand units, ${(100 * rgTV.rse / rgTV.my).toFixed(0)}% of average sales.]{.prop-q}
+[The residual standard error is about ${rgN(rgTV.rse, 2)} thousand units, ${(100 * rgTV.rse / rgTV.my).toFixed(0)}% of average sales.]{.prop-q}
 :::
 
 ::: {.prop-card .prop-r2 .fragment}
@@ -406,13 +406,13 @@ Three numbers summarise the fit of sales on TV (ISLR 3.1.3). The first is in the
 
 [$\bar R^2 = 1 - \dfrac{\text{RSS}/(n-k-1)}{\text{TSS}/(n-1)}$]{.prop-math}
 
-[Equal to ${rgN(rgTV.adj, 3)} here. It charges for each of the $k$ predictors, so use it to compare models.]{.prop-q}
+[Equal to ${rgN(rgTV.adj, 3)} here. It accounts for the number of predictors, $k$, when comparing models.]{.prop-q}
 :::
 
 ::::
 
 ::: {.slide-footer .fragment}
-In simple regression $R^2 = r^2$: the correlation of sales and TV is ${rgN(rgTV.r, 3)}, and ${rgN(rgTV.r, 3)}² = ${rgN(rgTV.r2, 3)}. Adding a predictor never lowers $R^2$, which is why adjusted $R^2$ is the fair comparison.
+In simple regression $R^2 = r^2$: the correlation of sales and TV is ${rgN(rgTV.r, 3)}, and ${rgN(rgTV.r, 3)}² = ${rgN(rgTV.r2, 3)}. Adding a predictor never lowers $R^2$, so adjusted $R^2$ accounts for model size when comparing fits.
 :::
 
 ## Simple Versus Multiple Regression {.ojs-slide #multi-reg}
@@ -448,7 +448,7 @@ viewof rgMx = Inputs.checkbox(["TV", "Radio", "Newspaper"], {value: ["TV", "Radi
     ? html`F = ${rgN(m.F, 1)} (${rgPeq(pF)}): at least one ticked medium is related to sales. Adding newspaper would raise R² from ${rgN(m.r2, 5)} to ${rgN(m2.r2, 5)}, but ${m2.adj < m.adj ? "lower" : "raise"} adjusted R² from ${rgN(m.adj, 5)} to ${rgN(m2.adj, 5)}.`
     : vars.includes("Radio")
       ? html`Holding radio${vars.includes("TV") ? " and TV" : ""} fixed, newspaper's coefficient is <b>${rgN(m.b[ni])}</b> (${rgPeq(np)}): no effect of its own. On its own it looked useful only because markets that spend on radio also spend on newspapers (r = ${rgN(cor("Radio", "Newspaper"), 2)}).`
-      : html`Without radio, newspaper's coefficient is <b>${rgN(m.b[ni])}</b> (${rgPeq(np)}). It picks up radio's effect, because the two budgets are correlated (r = ${rgN(cor("Radio", "Newspaper"), 2)}): this is <b>omitted variable bias</b>. Tick radio to see it vanish.`;
+      : html`Without radio, newspaper's coefficient is <b>${rgN(m.b[ni])}</b> (${rgPeq(np)}). It picks up radio's effect, because the two budgets are correlated (r = ${rgN(cor("Radio", "Newspaper"), 2)}): this is <b>omitted variable bias</b>. Include radio to compare the coefficient estimates.`;
   return html`<div class="rg-row">${coef}${corTable}</div>
   <div class="ojs-eq rg-stats">
     <span>R² = ${rgN(m.r2, 3)}</span>

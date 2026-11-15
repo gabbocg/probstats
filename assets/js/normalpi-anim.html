@@ -27,10 +27,10 @@
   var R_END = 3.5;                                // rings sweep r to 3.5, where the running area reads π to 4 dp
 
   var CAPS = [
-    'Two bells at right angles make a round hill. What is its volume?',
-    'Way 1: Cut it like bread. Every slice is the bell, scaled down',
-    'Way 2: Peel it like an onion. Every ring is 2πr round',
-    'One hill, one volume, so the two answers must agree'
+    'The product of two Gaussian curves gives a radial surface',
+    'Method 1: integrate parallel cross sections',
+    'Method 2: integrate circular shells of circumference 2πr',
+    'Equate the two expressions for volume'
   ];
 
   function hill(x, y) { return Math.exp(-(x * x + y * y)); }
@@ -125,7 +125,7 @@
     end.appendChild(K.txt(RX, 250, 'C²  =  π,  so  C  =  √π',
       { size: 'readout', face: 'mono', fill: 'brick', weight: 700 }));
     end.appendChild(K.rich(RX, 305, 'The area under e^{−x²} is √π ≈ 1.7725.', { size: 'label', fill: 'ink' }));
-    end.appendChild(K.txt(RX, 335, 'That is the number the normal divides by.', { size: 'label', fill: 'ink' }));
+    end.appendChild(K.txt(RX, 335, 'Divide by this area to normalise the density.', { size: 'label', fill: 'ink' }));
 
     return { svg: svg, cap: cap, slices: slices, lit: lit, rim: rim, litLab: litLab,
              way1: way1, way2: way2, graph: graph, area: area, sofar: sofar, end: end,

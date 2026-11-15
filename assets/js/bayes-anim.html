@@ -123,7 +123,7 @@
     1: 'The prior: the population Steve came from',
     2: 'Who fits the description?',
     3: 'Keep only the ones who fit',
-    4: 'The answer is a ratio of areas'
+    4: 'Posterior probability from the selected areas'
   };
 
   function pct(a, b) { return Math.round(100 * a / b) + '%'; }
@@ -189,7 +189,7 @@
     // Brackets rather than plain rules: the ticks tie each label to the span
     // of cells it counts, which is the one thing the row has to communicate.
     var brNavy = svg.appendChild(el('path', {
-      d: 'M' + ROW_X + ' 226 V232 H' + (ROW_X + FIT_LIB * PITCH - GAP) + ' V226',
+      d: window.StageKit.brace(ROW_X, ROW_X + FIT_LIB * PITCH - GAP, 230, 0),
       fill: 'none', stroke: NAVY, 'stroke-width': 2, opacity: 0
     }));
     var labNavy = svg.appendChild(txt({
@@ -198,7 +198,7 @@
     }, FIT_LIB + ' librarians'));
 
     var brAll = svg.appendChild(el('path', {
-      d: 'M' + ROW_X + ' 260 V266 H' + (ROW_X + ROW_W) + ' V260',
+      d: window.StageKit.brace(ROW_X, ROW_X + ROW_W, 264, 0),
       fill: 'none', stroke: RULE, 'stroke-width': 2, opacity: 0
     }));
     var labAll = svg.appendChild(txt({

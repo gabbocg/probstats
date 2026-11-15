@@ -1,13 +1,53 @@
 # Hypothesis Testing {.hero #s06-testing}
 
 ::: {.sem-mark data-sem="6"}
-Seminar 6 · Hypothesis testing
+Tests for one and two population means
+:::
+
+## Testing the effect of a marketing campaign {.formula-slide .example #web-test}
+
+::: {.lede-min}
+A website averaged $\mu = 10{,}372$ visits a day. After a marketing campaign, 30 days give a sample mean $\bar x = 10{,}628$, with sample SD 402. Did the campaign work?
+:::
+
+:::: {.two-col}
+::: {.fragment}
+[Two explanations]{.col-head}
+[Null and alternative hypotheses]{.col-sub}
+
+**A. $H_0$:** the mean has not changed, $\mu = 10{,}372$; the rise is chance.
+
+**B. $H_1$:** the mean has increased, $\mu > 10{,}372$; the rise is too large to be random.
+
+```{=html}
+<svg width="500" height="190" viewBox="0 0 500 190" aria-label="the distribution of the sample mean if nothing changed, with standard-error ticks and the observed mean 3.49 standard errors out"><rect x="289.1" y="28" width="196.9" height="100" fill="#B94A48" fill-opacity="0.07"/><line x1="289.1" y1="28" x2="289.1" y2="134" stroke="#B94A48" stroke-width="1.4" stroke-dasharray="4 3"/><text x="295.1" y="64" font-size="15" fill="#B94A48" font-family="Roboto, sans-serif">α = 0.05</text><text x="295.1" y="82" font-size="14" fill="#B94A48" font-family="Roboto, sans-serif">rejection</text><text x="295.1" y="98" font-size="14" fill="#B94A48" font-family="Roboto, sans-serif">region</text><text x="289.1" y="170" font-size="14" text-anchor="middle" fill="#B94A48" font-family="Roboto, sans-serif">z = 1.645</text><path d="M14.0 127.9 L16.0 127.8 L17.9 127.8 L19.9 127.8 L21.9 127.8 L23.8 127.7 L25.8 127.7 L27.8 127.6 L29.7 127.6 L31.7 127.5 L33.7 127.5 L35.6 127.4 L37.6 127.3 L39.6 127.2 L41.5 127.2 L43.5 127.0 L45.5 126.9 L47.4 126.8 L49.4 126.7 L51.4 126.5 L53.3 126.3 L55.3 126.2 L57.3 126.0 L59.2 125.7 L61.2 125.5 L63.2 125.2 L65.1 124.9 L67.1 124.6 L69.1 124.3 L71.0 123.9 L73.0 123.5 L75.0 123.1 L76.9 122.6 L78.9 122.1 L80.9 121.6 L82.8 121.0 L84.8 120.4 L86.8 119.7 L88.7 119.0 L90.7 118.2 L92.7 117.4 L94.6 116.6 L96.6 115.6 L98.6 114.7 L100.5 113.7 L102.5 112.6 L104.5 111.4 L106.4 110.3 L108.4 109.0 L110.4 107.7 L112.3 106.3 L114.3 104.9 L116.3 103.4 L118.2 101.8 L120.2 100.2 L122.2 98.6 L124.1 96.8 L126.1 95.1 L128.1 93.2 L130.0 91.3 L132.0 89.4 L134.0 87.4 L135.9 85.4 L137.9 83.4 L139.9 81.3 L141.8 79.2 L143.8 77.0 L145.8 74.9 L147.7 72.7 L149.7 70.5 L151.7 68.3 L153.6 66.1 L155.6 64.0 L157.6 61.8 L159.5 59.7 L161.5 57.6 L163.5 55.5 L165.4 53.5 L167.4 51.6 L169.4 49.7 L171.3 47.8 L173.3 46.0 L175.3 44.4 L177.2 42.8 L179.2 41.2 L181.2 39.8 L183.1 38.5 L185.1 37.3 L187.1 36.2 L189.0 35.3 L191.0 34.4 L193.0 33.7 L194.9 33.1 L196.9 32.6 L198.9 32.3 L200.8 32.1 L202.8 32.0 L204.8 32.1 L206.7 32.3 L208.7 32.6 L210.7 33.1 L212.6 33.7 L214.6 34.4 L216.6 35.3 L218.5 36.2 L220.5 37.3 L222.5 38.5 L224.4 39.8 L226.4 41.2 L228.4 42.8 L230.3 44.4 L232.3 46.0 L234.3 47.8 L236.2 49.7 L238.2 51.6 L240.2 53.5 L242.1 55.5 L244.1 57.6 L246.1 59.7 L248.0 61.8 L250.0 64.0 L252.0 66.1 L253.9 68.3 L255.9 70.5 L257.9 72.7 L259.8 74.9 L261.8 77.0 L263.8 79.2 L265.7 81.3 L267.7 83.4 L269.7 85.4 L271.6 87.4 L273.6 89.4 L275.6 91.3 L277.5 93.2 L279.5 95.1 L281.5 96.8 L283.4 98.6 L285.4 100.2 L287.4 101.8 L289.3 103.4 L291.3 104.9 L293.3 106.3 L295.2 107.7 L297.2 109.0 L299.2 110.3 L301.1 111.4 L303.1 112.6 L305.1 113.7 L307.0 114.7 L309.0 115.6 L311.0 116.6 L312.9 117.4 L314.9 118.2 L316.9 119.0 L318.8 119.7 L320.8 120.4 L322.8 121.0 L324.7 121.6 L326.7 122.1 L328.7 122.6 L330.6 123.1 L332.6 123.5 L334.6 123.9 L336.5 124.3 L338.5 124.6 L340.5 124.9 L342.4 125.2 L344.4 125.5 L346.4 125.7 L348.3 126.0 L350.3 126.2 L352.3 126.3 L354.2 126.5 L356.2 126.7 L358.2 126.8 L360.1 126.9 L362.1 127.0 L364.1 127.2 L366.0 127.2 L368.0 127.3 L370.0 127.4 L371.9 127.5 L373.9 127.5 L375.9 127.6 L377.8 127.6 L379.8 127.7 L381.8 127.7 L383.7 127.8 L385.7 127.8 L387.7 127.8 L389.6 127.8 L391.6 127.9 L393.6 127.9 L395.5 127.9 L397.5 127.9 L399.5 127.9 L401.4 127.9 L403.4 127.9 L405.4 127.9 L407.3 128.0 L409.3 128.0 L411.3 128.0 L413.2 128.0 L415.2 128.0 L417.2 128.0 L419.1 128.0 L421.1 128.0 L423.1 128.0 L425.0 128.0 L427.0 128.0 L429.0 128.0 L430.9 128.0 L432.9 128.0 L434.9 128.0 L436.8 128.0 L438.8 128.0 L440.8 128.0 L442.7 128.0 L444.7 128.0 L446.7 128.0 L448.6 128.0 L450.6 128.0 L452.6 128.0 L454.5 128.0 L456.5 128.0 L458.5 128.0 L460.4 128.0 L462.4 128.0 L464.4 128.0 L466.3 128.0 L468.3 128.0 L470.3 128.0 L472.2 128.0 L474.2 128.0 L476.2 128.0 L478.1 128.0 L480.1 128.0 L482.1 128.0 L484.0 128.0 L486.0 128.0 L486.0 128 L14.0 128 Z" fill="#325D88" fill-opacity="0.10"/><path d="M385.7 127.8 L386.1 127.8 L386.6 127.8 L387.0 127.8 L387.4 127.8 L387.8 127.8 L388.2 127.8 L388.7 127.8 L389.1 127.8 L389.5 127.8 L389.9 127.8 L390.3 127.8 L390.7 127.8 L391.2 127.8 L391.6 127.9 L392.0 127.9 L392.4 127.9 L392.8 127.9 L393.2 127.9 L393.7 127.9 L394.1 127.9 L394.5 127.9 L394.9 127.9 L395.3 127.9 L395.8 127.9 L396.2 127.9 L396.6 127.9 L397.0 127.9 L397.4 127.9 L397.8 127.9 L398.3 127.9 L398.7 127.9 L399.1 127.9 L399.5 127.9 L399.9 127.9 L400.3 127.9 L400.8 127.9 L401.2 127.9 L401.6 127.9 L402.0 127.9 L402.4 127.9 L402.9 127.9 L403.3 127.9 L403.7 127.9 L404.1 127.9 L404.5 127.9 L404.9 127.9 L405.4 127.9 L405.8 127.9 L406.2 127.9 L406.6 127.9 L407.0 128.0 L407.5 128.0 L407.9 128.0 L408.3 128.0 L408.7 128.0 L409.1 128.0 L409.5 128.0 L410.0 128.0 L410.4 128.0 L410.8 128.0 L411.2 128.0 L411.6 128.0 L412.0 128.0 L412.5 128.0 L412.9 128.0 L413.3 128.0 L413.7 128.0 L414.1 128.0 L414.6 128.0 L415.0 128.0 L415.4 128.0 L415.8 128.0 L416.2 128.0 L416.6 128.0 L417.1 128.0 L417.5 128.0 L417.9 128.0 L418.3 128.0 L418.7 128.0 L419.2 128.0 L419.6 128.0 L420.0 128.0 L420.4 128.0 L420.8 128.0 L421.2 128.0 L421.7 128.0 L422.1 128.0 L422.5 128.0 L422.9 128.0 L423.3 128.0 L423.7 128.0 L424.2 128.0 L424.6 128.0 L425.0 128.0 L425.4 128.0 L425.8 128.0 L426.3 128.0 L426.7 128.0 L427.1 128.0 L427.5 128.0 L427.9 128.0 L428.3 128.0 L428.8 128.0 L429.2 128.0 L429.6 128.0 L430.0 128.0 L430.4 128.0 L430.8 128.0 L431.3 128.0 L431.7 128.0 L432.1 128.0 L432.5 128.0 L432.9 128.0 L433.4 128.0 L433.8 128.0 L434.2 128.0 L434.6 128.0 L435.0 128.0 L435.4 128.0 L435.9 128.0 L436.3 128.0 L436.7 128.0 L437.1 128.0 L437.5 128.0 L438.0 128.0 L438.4 128.0 L438.8 128.0 L439.2 128.0 L439.6 128.0 L440.0 128.0 L440.5 128.0 L440.9 128.0 L441.3 128.0 L441.7 128.0 L442.1 128.0 L442.5 128.0 L443.0 128.0 L443.4 128.0 L443.8 128.0 L444.2 128.0 L444.6 128.0 L445.1 128.0 L445.5 128.0 L445.9 128.0 L446.3 128.0 L446.7 128.0 L447.1 128.0 L447.6 128.0 L448.0 128.0 L448.4 128.0 L448.8 128.0 L449.2 128.0 L449.7 128.0 L450.1 128.0 L450.5 128.0 L450.9 128.0 L451.3 128.0 L451.7 128.0 L452.2 128.0 L452.6 128.0 L453.0 128.0 L453.4 128.0 L453.8 128.0 L454.2 128.0 L454.7 128.0 L455.1 128.0 L455.5 128.0 L455.9 128.0 L456.3 128.0 L456.8 128.0 L457.2 128.0 L457.6 128.0 L458.0 128.0 L458.4 128.0 L458.8 128.0 L459.3 128.0 L459.7 128.0 L460.1 128.0 L460.5 128.0 L460.9 128.0 L461.3 128.0 L461.8 128.0 L462.2 128.0 L462.6 128.0 L463.0 128.0 L463.4 128.0 L463.9 128.0 L464.3 128.0 L464.7 128.0 L465.1 128.0 L465.5 128.0 L465.9 128.0 L466.4 128.0 L466.8 128.0 L467.2 128.0 L467.6 128.0 L468.0 128.0 L468.5 128.0 L468.9 128.0 L469.3 128.0 L469.7 128.0 L470.1 128.0 L470.5 128.0 L471.0 128.0 L471.4 128.0 L471.8 128.0 L472.2 128.0 L472.6 128.0 L473.0 128.0 L473.5 128.0 L473.9 128.0 L474.3 128.0 L474.7 128.0 L475.1 128.0 L475.6 128.0 L476.0 128.0 L476.4 128.0 L476.8 128.0 L477.2 128.0 L477.6 128.0 L478.1 128.0 L478.5 128.0 L478.9 128.0 L479.3 128.0 L479.7 128.0 L480.2 128.0 L480.6 128.0 L481.0 128.0 L481.4 128.0 L481.8 128.0 L482.2 128.0 L482.7 128.0 L483.1 128.0 L483.5 128.0 L483.9 128.0 L484.3 128.0 L484.7 128.0 L485.2 128.0 L485.6 128.0 L486.0 128.0 L486.0 128 L385.7 128 Z" fill="#B94A48" fill-opacity="0.6"/><path d="M14.0 127.9 L16.0 127.8 L17.9 127.8 L19.9 127.8 L21.9 127.8 L23.8 127.7 L25.8 127.7 L27.8 127.6 L29.7 127.6 L31.7 127.5 L33.7 127.5 L35.6 127.4 L37.6 127.3 L39.6 127.2 L41.5 127.2 L43.5 127.0 L45.5 126.9 L47.4 126.8 L49.4 126.7 L51.4 126.5 L53.3 126.3 L55.3 126.2 L57.3 126.0 L59.2 125.7 L61.2 125.5 L63.2 125.2 L65.1 124.9 L67.1 124.6 L69.1 124.3 L71.0 123.9 L73.0 123.5 L75.0 123.1 L76.9 122.6 L78.9 122.1 L80.9 121.6 L82.8 121.0 L84.8 120.4 L86.8 119.7 L88.7 119.0 L90.7 118.2 L92.7 117.4 L94.6 116.6 L96.6 115.6 L98.6 114.7 L100.5 113.7 L102.5 112.6 L104.5 111.4 L106.4 110.3 L108.4 109.0 L110.4 107.7 L112.3 106.3 L114.3 104.9 L116.3 103.4 L118.2 101.8 L120.2 100.2 L122.2 98.6 L124.1 96.8 L126.1 95.1 L128.1 93.2 L130.0 91.3 L132.0 89.4 L134.0 87.4 L135.9 85.4 L137.9 83.4 L139.9 81.3 L141.8 79.2 L143.8 77.0 L145.8 74.9 L147.7 72.7 L149.7 70.5 L151.7 68.3 L153.6 66.1 L155.6 64.0 L157.6 61.8 L159.5 59.7 L161.5 57.6 L163.5 55.5 L165.4 53.5 L167.4 51.6 L169.4 49.7 L171.3 47.8 L173.3 46.0 L175.3 44.4 L177.2 42.8 L179.2 41.2 L181.2 39.8 L183.1 38.5 L185.1 37.3 L187.1 36.2 L189.0 35.3 L191.0 34.4 L193.0 33.7 L194.9 33.1 L196.9 32.6 L198.9 32.3 L200.8 32.1 L202.8 32.0 L204.8 32.1 L206.7 32.3 L208.7 32.6 L210.7 33.1 L212.6 33.7 L214.6 34.4 L216.6 35.3 L218.5 36.2 L220.5 37.3 L222.5 38.5 L224.4 39.8 L226.4 41.2 L228.4 42.8 L230.3 44.4 L232.3 46.0 L234.3 47.8 L236.2 49.7 L238.2 51.6 L240.2 53.5 L242.1 55.5 L244.1 57.6 L246.1 59.7 L248.0 61.8 L250.0 64.0 L252.0 66.1 L253.9 68.3 L255.9 70.5 L257.9 72.7 L259.8 74.9 L261.8 77.0 L263.8 79.2 L265.7 81.3 L267.7 83.4 L269.7 85.4 L271.6 87.4 L273.6 89.4 L275.6 91.3 L277.5 93.2 L279.5 95.1 L281.5 96.8 L283.4 98.6 L285.4 100.2 L287.4 101.8 L289.3 103.4 L291.3 104.9 L293.3 106.3 L295.2 107.7 L297.2 109.0 L299.2 110.3 L301.1 111.4 L303.1 112.6 L305.1 113.7 L307.0 114.7 L309.0 115.6 L311.0 116.6 L312.9 117.4 L314.9 118.2 L316.9 119.0 L318.8 119.7 L320.8 120.4 L322.8 121.0 L324.7 121.6 L326.7 122.1 L328.7 122.6 L330.6 123.1 L332.6 123.5 L334.6 123.9 L336.5 124.3 L338.5 124.6 L340.5 124.9 L342.4 125.2 L344.4 125.5 L346.4 125.7 L348.3 126.0 L350.3 126.2 L352.3 126.3 L354.2 126.5 L356.2 126.7 L358.2 126.8 L360.1 126.9 L362.1 127.0 L364.1 127.2 L366.0 127.2 L368.0 127.3 L370.0 127.4 L371.9 127.5 L373.9 127.5 L375.9 127.6 L377.8 127.6 L379.8 127.7 L381.8 127.7 L383.7 127.8 L385.7 127.8 L387.7 127.8 L389.6 127.8 L391.6 127.9 L393.6 127.9 L395.5 127.9 L397.5 127.9 L399.5 127.9 L401.4 127.9 L403.4 127.9 L405.4 127.9 L407.3 128.0 L409.3 128.0 L411.3 128.0 L413.2 128.0 L415.2 128.0 L417.2 128.0 L419.1 128.0 L421.1 128.0 L423.1 128.0 L425.0 128.0 L427.0 128.0 L429.0 128.0 L430.9 128.0 L432.9 128.0 L434.9 128.0 L436.8 128.0 L438.8 128.0 L440.8 128.0 L442.7 128.0 L444.7 128.0 L446.7 128.0 L448.6 128.0 L450.6 128.0 L452.6 128.0 L454.5 128.0 L456.5 128.0 L458.5 128.0 L460.4 128.0 L462.4 128.0 L464.4 128.0 L466.3 128.0 L468.3 128.0 L470.3 128.0 L472.2 128.0 L474.2 128.0 L476.2 128.0 L478.1 128.0 L480.1 128.0 L482.1 128.0 L484.0 128.0 L486.0 128.0" fill="none" stroke="#325D88" stroke-width="2.4"/><line x1="6" y1="128" x2="494" y2="128" stroke="#B0B7C0" stroke-width="1.4"/><line x1="45.5" y1="128" x2="45.5" y2="134" stroke="#6E7681" stroke-width="1.4"/><text x="45.5" y="150" font-size="15" text-anchor="middle" fill="#6E7681" font-family="Roboto, sans-serif">−3</text><line x1="97.9" y1="128" x2="97.9" y2="134" stroke="#6E7681" stroke-width="1.4"/><text x="97.9" y="150" font-size="15" text-anchor="middle" fill="#6E7681" font-family="Roboto, sans-serif">−2</text><line x1="150.4" y1="128" x2="150.4" y2="134" stroke="#6E7681" stroke-width="1.4"/><text x="150.4" y="150" font-size="15" text-anchor="middle" fill="#6E7681" font-family="Roboto, sans-serif">−1</text><line x1="202.8" y1="128" x2="202.8" y2="134" stroke="#325D88" stroke-width="1.4"/><text x="202.8" y="150" font-size="15" text-anchor="middle" fill="#325D88" font-family="Roboto, sans-serif">μ₀</text><line x1="255.2" y1="128" x2="255.2" y2="134" stroke="#6E7681" stroke-width="1.4"/><text x="255.2" y="150" font-size="15" text-anchor="middle" fill="#6E7681" font-family="Roboto, sans-serif">+1</text><line x1="307.7" y1="128" x2="307.7" y2="134" stroke="#6E7681" stroke-width="1.4"/><text x="307.7" y="150" font-size="15" text-anchor="middle" fill="#6E7681" font-family="Roboto, sans-serif">+2</text><line x1="360.1" y1="128" x2="360.1" y2="134" stroke="#6E7681" stroke-width="1.4"/><text x="360.1" y="150" font-size="15" text-anchor="middle" fill="#6E7681" font-family="Roboto, sans-serif">+3</text><text x="43.5" y="170" font-size="14" fill="#6E7681" font-family="Roboto, sans-serif">standard errors from μ₀ = 10,372</text><line x1="202.8" y1="28" x2="202.8" y2="128" stroke="#325D88" stroke-width="1.6" stroke-dasharray="4 3"/><line x1="385.7" y1="58" x2="385.7" y2="134" stroke="#B94A48" stroke-width="2.4"/><text x="385.7" y="150" font-size="15" text-anchor="middle" fill="#B94A48" font-weight="700" font-family="Roboto, sans-serif">x̄</text><path d="M202.8 50 V44 H385.7 V50" fill="none" stroke="#B94A48" stroke-width="1.8"/><text x="294.3" y="36" font-size="16" text-anchor="middle" fill="#B94A48" font-weight="700" font-family="Roboto, sans-serif">3.49 SE</text><text x="395.7" y="104" font-size="15" fill="#B94A48" font-family="Roboto, sans-serif">p = 0.0002</text><text x="14" y="24" font-size="15" fill="#325D88" font-family="Roboto, sans-serif">x̄ if nothing</text><text x="14" y="42" font-size="15" fill="#325D88" font-family="Roboto, sans-serif">changed (H₀)</text></svg>
+```
+:::
+
+::: {.fragment}
+[Procedure]{.col-head}
+[Calculating the test statistic and p-value]{.col-sub}
+
+**I.** Assume $H_0$ is true: the average is still $10{,}372$.
+
+**II.** Count the standard errors between $\bar x$ and $\mu_0$:
+
+$$z = \frac{\bar x - \mu_0}{s/\sqrt n} = \frac{10{,}628 - 10{,}372}{402/\sqrt{30}} \approx 3.49$$
+
+**III.** The p-value: $p = P(Z \ge 3.49) = 0.0002$, the chance of a $z$ this large if $H_0$ were true.
+
+**IV.** Choose $\alpha = 0.05$ beforehand: reject $H_0$ when $z \ge z_{0.05} = 1.645$, the same as $p < 0.05$. Here $3.49 \ge 1.645$: **reject $H_0$**.
+:::
+::::
+
+::: {.slide-footer .fragment}
+402 is a sample SD, so strictly this is the $t$ case of the next slides: $t = 3.49$ on 29 df gives $p \approx 0.0008$. The conclusion is unchanged.
 :::
 
 ## Four Steps of a Test {.qcard-slide #test-steps}
 
 ::: {.lede-min}
-A test asks whether the sample mean $\bar x$ sits too far from a claimed $\mu_0$ to blame on chance. Every exercise follows the same four steps.
+A test compares the sample mean $\bar x$ with a hypothesised population mean $\mu_0$, allowing for sampling variation. Use the following four steps.
 :::
 
 :::: {.prop-grid}
@@ -17,7 +57,7 @@ A test asks whether the sample mean $\bar x$ sits too far from a claimed $\mu_0$
 
 [$H_0\!: \mu = \mu_0$]{.prop-math}
 
-[The claim, tested against the alternative $H_1$ the analyst suspects.]{.prop-q}
+[State the null hypothesis and the alternative $H_1$.]{.prop-q}
 :::
 
 ::: {.prop-card .prop-stat .fragment}
@@ -53,28 +93,32 @@ The last two always agree: the statistic is past the cut-off exactly when the ar
 ## The z and t Test Statistics {.formula-slide #test-stats}
 
 ::: {.lede-min}
-Both count the standard errors between $\bar x$ and $\mu_0$. What you know about $\sigma$ decides the table.
+Both count standard errors between $\bar x$ and $\mu_0$; the choice of table depends on whether $\sigma$ is known.
 :::
 
-$$\textstyle z = \frac{\bar x - \mu_0}{\color{#325D88}{\sigma} / \sqrt n} \sim N(0, 1) \;\; \color{#6E7681}{\sigma \text{ known}} \qquad\quad t = \frac{\bar x - \mu_0}{\color{#B94A48}{s} / \sqrt n} \sim t_{n-1} \;\; \color{#6E7681}{\sigma \text{ unknown}}$$
+$$\textstyle Z = \frac{\bar X - \mu_0}{\color{#325D88}{\sigma} / \sqrt n} \sim N(0, 1) \;\; \color{#6E7681}{\sigma \text{ known}} \qquad\quad T = \frac{\bar X - \mu_0}{\color{#B94A48}{S} / \sqrt n} \sim t_{n-1} \;\; \color{#6E7681}{\sigma \text{ unknown}}$$
 
 ::: {.deriv-arrow .fragment}
-[↓]{.deriv-glyph} [The alternative $H_1$ decides which tail holds the evidence]{.deriv-note}
+[↓]{.deriv-glyph} [The alternative $H_1$ decides which tail or tails to use]{.deriv-note}
 :::
 
-::: {.fragment}
-$$\textstyle \begin{array}{lll}
-H_1\!: \mu > \mu_0 \qquad & \text{Reject if } z > z_\alpha \qquad & p = \Pr(Z > z) \\[6pt]
-H_1\!: \mu < \mu_0 & \text{Reject if } z < -z_\alpha & p = \Pr(Z < z) \\[6pt]
-H_1\!: \mu \neq \mu_0 & \text{Reject if } |z| > z_{\alpha/2} & p = 2\Pr(Z > |z|)
-\end{array}$$
+::: {.h1-table .fragment}
+| Alternative $H_1$ | Reject $H_0$ if | P-value |
+|:---:|:---:|:---:|
+| $\mu > \mu_0$ | $z > z_\alpha$ | $p = P(Z > z)$ |
+| $\mu < \mu_0$ | $z < -z_\alpha$ | $p = P(Z < z)$ |
+| $\mu \neq \mu_0$ | $\lvert z \rvert > z_{\alpha/2}$ | $p = 2P(Z > \lvert z \rvert)$ |
 :::
 
 ::: {.slide-footer .fragment}
-With $t$, use $t_\alpha$ on $n - 1$ degrees of freedom. Its cut-offs are wider, so the same statistic can pass a $z$ test and fail a $t$ test.
+With $t$, use $t_\alpha$ on $n - 1$ degrees of freedom. Its critical values are larger in magnitude, so the same statistic can reject $H_0$ in a $z$ test and fail to reject it in a $t$ test.
 :::
 
-## Build the Null World, Then Look {.stage-slide #pval-intuition}
+## Comparing the sample with the null hypothesis {.stage-slide #pval-intuition}
+
+::: {.lede-min}
+Test $H_0\!: \mu = \mu_0$ against $H_1\!: \mu > \mu_0$. Our sample gave $z = 2.0$. Is that surprising if $H_0$ is true?
+:::
 
 ::: {.stage-wrap .stage-wrap-std}
 <div id="pval-stage" class="stage"></div>
@@ -84,11 +128,19 @@ With $t$, use $t_\alpha$ on $n - 1$ degrees of freedom. Its cut-offs are wider, 
 []{.fragment .fi-frag id="pval-frag-2" data-fragment-index="2"}
 []{.fragment .fi-frag id="pval-frag-3" data-fragment-index="3"}
 
-::: {.slide-footer .fragment data-fragment-index="3"}
-Of all the samples $H_0$ would produce, the p-value is the share at least as extreme as ours. With more samples the count settles on the table value.
+:::: {.pv-read .fragment data-fragment-index="4"}
+::: {}
+[Tail probability]{.pv-head}
+If $H_0$ were true, a $z$ at least as large as ours would come up less than 5% of the time. That is rare enough to reject $H_0$.
 :::
 
-## Rejection Region and P-Value {.ojs-slide #reject-lab}
+::: {}
+[Repeated experiments]{.pv-head}
+If $H_0$ is true and I repeat the experiment, chance alone produces a result at least this extreme only $p$% of the time: here about 2.3%.
+:::
+::::
+
+## Rejection Region and P-Value {.ojs-slide .example #reject-lab}
 
 ```{ojs}
 //| echo: false
@@ -134,10 +186,10 @@ rjRule = (cdf, tail, a, s) => {
     {x: d => d, y: dens, fill, fillOpacity: op}));
   const halo = {stroke: "white", strokeWidth: 6};
   const plot = Plot.plot({
-    width: 1000, height: 270, marginLeft: 20, marginRight: 20, marginBottom: 28, marginTop: 40,
+    width: 920, height: 270, marginLeft: 20, marginRight: 20, marginBottom: 28, marginTop: 34,
     style: ({fontSize: "15px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"}),
     x: {domain: [lo, hi], label: null, tickSize: 4},
-    y: {domain: [0, top * 1.12], axis: null, insetTop: 12},
+    y: {domain: [0, top * 1.02], axis: null},
     marks: [
       ...area(reg, PPAL.brick, 0.3),
       ...area(pv, PPAL.orange, 0.45),
@@ -155,7 +207,7 @@ rjRule = (cdf, tail, a, s) => {
   const z = rjRule(Phi, tail, alpha, stat);
   const cs = v => tail === "Two-tailed" ? `±${f(v)}` : f(tail === "Left" ? -v : v);
   const alt = isT && z.rej !== rej
-    ? ` With z the cut-off would be ${cs(z.c)} and we would ${z.rej ? "reject" : "fail to reject"}: the heavier t tails demand more evidence.` : "";
+    ? ` With z the cut-off would be ${cs(z.c)} and we would ${z.rej ? "reject" : "fail to reject"}: the heavier t tails give a larger critical value.` : "";
   const msg = `The statistic ${sym} = ${f(stat, 2)} is ${rej ? "inside" : "outside"} the rejection region (cut-off ${cs(c)}), and its p-value ${f(p, 4)} is ${p < alpha ? "below" : "above"} α = ${+alpha.toFixed(3)}: <b>${rej ? "reject" : "fail to reject"} H₀</b>.${alt}`;
   return html`${plot}
   <div class="ojs-eq cl-stats">
@@ -167,7 +219,37 @@ rjRule = (cdf, tail, a, s) => {
 }
 ```
 
-## Type I and Type II Errors {.ojs-slide #power-lab}
+## Four Outcomes of a Test {.formula-slide #err-table}
+
+::: {.lede-min}
+Combining the two test decisions with whether $H_0$ is true gives four possible outcomes. Two are correct decisions and two are errors.
+:::
+
+::: {.fragment}
+```{=html}
+<table class="err-table" data-quarto-disable-processing="true">
+  <colgroup><col style="width:56px"><col style="width:190px"><col style="width:290px"><col style="width:290px"></colgroup>
+  <thead>
+    <tr><th class="w-side"></th><th class="w-row"></th><th colspan="2" class="err-top w-cells">Actual truth</th></tr>
+    <tr><th></th><th></th><th>H₀ is true</th><th>H₀ is false</th></tr>
+  </thead>
+  <tbody>
+    <tr><th rowspan="2" class="err-side"><span>Decision</span></th><th>Reject H₀</th>
+        <td class="err-bad"><b>Type I error</b><br>probability <i>α</i> (5%)</td>
+        <td class="err-ok"><b>Correct</b><br>probability 1 − <i>β</i>, the <b>power</b></td></tr>
+    <tr><th>Fail to reject H₀</th>
+        <td class="err-ok"><b>Correct</b><br>probability 1 − <i>α</i></td>
+        <td class="err-bad"><b>Type II error</b><br>probability <i>β</i></td></tr>
+  </tbody>
+</table>
+```
+:::
+
+::: {.slide-footer .fragment}
+$\alpha$ is the **significance level**, chosen before looking at the data; $1 - \beta$ is the **power**, the probability of detecting a real change. The next slide shows how $n$ and $\alpha$ trade them off.
+:::
+
+## Type I and Type II Errors {.ojs-slide .example #power-lab}
 
 ```{ojs}
 //| echo: false
@@ -223,5 +305,168 @@ viewof pwIn = Inputs.form({
     <span>Power = <span class="hit">${same ? "n/a" : pc(power)}</span></span>
   </div>
   <div class="quiz-fb">${msg}</div>`;
+}
+```
+
+## Three Ways to Compare Two Means {.qcard-slide #two-mean-tests}
+
+::: {.lede-min}
+Each test divides the gap between two sample means by its standard error. How the data were collected decides which standard error to use.
+:::
+
+:::: {.prop-grid}
+
+::: {.prop-card .prop-pooled .fragment}
+[Pooled t]{.prop-name}
+
+[$t = \dfrac{\bar x_1 - \bar x_2}{\sqrt{s_p^2\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}}$]{.prop-math}
+
+[Independent samples, normal, equal variances. Compare with $t_{n_1 + n_2 - 2}$.]{.prop-q}
+:::
+
+::: {.prop-card .prop-welch .fragment}
+[Large samples]{.prop-name}
+
+[$z = \dfrac{\bar x_1 - \bar x_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}}$]{.prop-math}
+
+[Independent samples, unequal variances, large $n$. Compare with $N(0, 1)$.]{.prop-q}
+:::
+
+::: {.prop-card .prop-paired .fragment}
+[Paired t]{.prop-name}
+
+[$t = \dfrac{\bar d}{s_d / \sqrt{n}}$]{.prop-math}
+
+[The same units measured twice. Test the differences $d$ against $t_{n - 1}$.]{.prop-q}
+:::
+
+::::
+
+::: {.slide-footer .fragment}
+The next slide builds the pooled test and its interval; the two after it show why paired data must not be treated as independent.
+:::
+
+## Pooling the Two Variances {.formula-slide #pooled-formula}
+
+::: {.lede-min}
+Both samples estimate one shared variance $\sigma^2$, so we pool them, weighting each by its degrees of freedom.
+:::
+
+$$\textstyle s_p^2 \;=\; \frac{(n_1 - 1)\,s_1^2 \;+\; (n_2 - 1)\,s_2^2}{n_1 + n_2 - 2}$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Put $s_p^2$ in place of $\sigma^2$ in the standard error of $\bar x_1 - \bar x_2$]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle T \;=\; \frac{(\bar X_1 - \bar X_2) \,-\, (\mu_1 - \mu_2)}{\sqrt{S_p^2\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}} \;\sim\; \color{#325D88}{t_{\,n_1 + n_2 - 2}}$$
+:::
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Rearrange the test inequality to obtain a confidence interval]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle \mu_1 - \mu_2 \;\in\; (\bar x_1 - \bar x_2) \;\pm\; \color{#B94A48}{t_{\alpha/2,\; n_1 + n_2 - 2}}\, \sqrt{s_p^2\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}$$
+:::
+
+## Repeated measurements on the same firms {.stage-slide #pair-intuition}
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="pair-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="pair-frag-1" data-fragment-index="1"}
+[]{.fragment .fi-frag id="pair-frag-2" data-fragment-index="2"}
+
+::: {.slide-footer .fragment data-fragment-index="2"}
+Variation in cost of equity between firms can obscure the change between periods. Calculating each firm's difference removes its initial level, allowing each firm to act as its own control.
+:::
+
+## Paired and independent samples tests {.ojs-slide .example #pair-lab}
+
+```{ojs}
+//| echo: false
+viewof plIn = Inputs.form({
+  mode: Inputs.radio(["Paired", "Independent"], {value: "Paired", label: "Treat the data as"}),
+  alpha: Inputs.radio(["α = 1%", "α = 5%"], {value: "α = 1%", label: "Significance level"})
+}, {template: ins => html`<div class="cl-dials pl-dials">${ins.mode}${ins.alpha}</div>`})
+```
+
+```{ojs}
+//| echo: false
+// Table 1 of beamer Seminar 6, Exercise 3: cost of equity (%) of 15 firms.
+plPre  = [3, 5, 4, 1, 4, 8, 10, 15, 2, 9, 6, 3, 8, 11, 10]
+plPost = [1, 6, 3, 2, 7, 3, 5, 8, 4, 7, 4, 2, 5, 7, 5]
+plDif  = plPost.map((v, i) => v - plPre[i])
+// H1: the cost fell, so both tests are left-tailed. The density reuses
+// clLgam and the CDF clTcdf, both from #ci-lab.
+plTpdf = (t, df) => Math.exp(clLgam((df + 1) / 2) - clLgam(df / 2) - 0.5 * Math.log(df * Math.PI)
+  - (df + 1) / 2 * Math.log(1 + t * t / df))
+plTests = {
+  const n = plPre.length, est = d3.mean(plDif);
+  const vPre = d3.variance(plPre), vPost = d3.variance(plPost), vDif = d3.variance(plDif);
+  const sp2 = ((n - 1) * vPre + (n - 1) * vPost) / (2 * n - 2);
+  const mk = (se, df) => ({se, df, t: est / se, p: clTcdf(est / se, df)});
+  return {n, est, vPre, vPost, vDif,
+    Paired: mk(Math.sqrt(vDif / n), n - 1),
+    Independent: mk(Math.sqrt(sp2 * 2 / n), 2 * n - 2)};
+}
+```
+
+```{ojs}
+//| echo: false
+{
+  const T = plTests, paired = plIn.mode === "Paired", cur = T[plIn.mode];
+  const a = plIn.alpha === "α = 1%" ? 0.01 : 0.05, crit = -clInv(t => clTcdf(t, cur.df))(1 - a);
+  const style = ({fontSize: "14px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"});
+  const title = s => Plot.text([s], {frameAnchor: "top-left", dy: -30, text: d => d, fill: PPAL.navy, stroke: "white", strokeWidth: 6, fontWeight: 700, fontSize: 16});
+  const neg = s => s.replace("-", "−");
+  // Ties fan out sideways (0, -1, +1, -2, ...) so no dot hides another.
+  const jit = vals => { const seen = {}; return vals.map(v => { const j = seen[v] = (seen[v] || 0) + 1; return ((j - 1) % 2 ? -1 : 1) * Math.ceil((j - 1) / 2) * 0.07; }); };
+  const jPre = jit(plPre), jPost = jit(plPost), jDif = jit(plDif);
+  const idx = d3.range(T.n), XD = 2.3;
+  const names = new Map([[0, "Pre 2020"], [1, "Post 2020"], [XD, "Post − pre"]]);
+  const data = Plot.plot({
+    width: 470, height: 290, marginLeft: 34, marginBottom: 30, marginTop: 42, style,
+    x: {domain: [-0.5, XD + 0.6], ticks: [0, 1, XD], tickFormat: v => names.get(v), label: null, tickSize: 0},
+    y: {domain: [-8, 16], ticks: [-8, -4, 0, 4, 8, 12, 16], tickFormat: v => neg(String(v)), label: null, insetTop: 18},
+    marks: [
+      title(`The ${T.n} firms, pre and post 2020`),
+      Plot.ruleY([0], {x1: XD - 0.5, x2: XD + 0.5, stroke: PPAL.soft, strokeDasharray: "5 4"}),
+      paired ? Plot.link(idx, {x1: i => jPre[i], y1: i => plPre[i], x2: i => 1 + jPost[i], y2: i => plPost[i], stroke: PPAL.dim, strokeWidth: 1.2}) : null,
+      Plot.dot(idx, {x: i => jPre[i], y: i => plPre[i], r: 5, fill: PPAL.navy, fillOpacity: 0.6}),
+      Plot.dot(idx, {x: i => 1 + jPost[i], y: i => plPost[i], r: 5, fill: PPAL.olive, fillOpacity: 0.7}),
+      Plot.ruleY([d3.mean(plPre)], {x1: -0.3, x2: 0.3, stroke: PPAL.navy, strokeWidth: 3}),
+      Plot.ruleY([d3.mean(plPost)], {x1: 0.7, x2: 1.3, stroke: PPAL.olive, strokeWidth: 3}),
+      paired ? Plot.dot(idx, {x: i => XD + jDif[i], y: i => plDif[i], r: 5, fill: PPAL.orange, fillOpacity: 0.7}) : null,
+      Plot.ruleY([T.est], {x1: XD - 0.3, x2: XD + 0.3, stroke: PPAL.orange, strokeWidth: 3})
+    ]
+  });
+  const G = d3.range(-4.5, 4.501, 0.05), tail = G.filter(t => t <= crit);
+  const dist = Plot.plot({
+    width: 470, height: 290, marginLeft: 12, marginRight: 12, marginBottom: 30, marginTop: 42, style,
+    x: {domain: [-4.5, 4.5], label: null, tickSize: 4, tickFormat: v => neg(String(v))},
+    y: {domain: [0, 0.42], axis: null, insetTop: 18},
+    marks: [
+      title(`The statistic against t with ${cur.df} df`),
+      Plot.areaY(tail, {x: t => t, y: t => plTpdf(t, cur.df), fill: PPAL.brick, fillOpacity: 0.3}),
+      Plot.lineY(G, {x: t => t, y: t => plTpdf(t, cur.df), stroke: PPAL.soft, strokeWidth: 2}),
+      Plot.ruleY([0], {stroke: PPAL.dim}),
+      Plot.ruleX([crit], {y1: 0, y2: 0.3, stroke: PPAL.brick, strokeDasharray: "5 4"}),
+      Plot.ruleX([cur.t], {y1: 0, y2: 0.36, stroke: "#3E3F3A", strokeWidth: 2.5}),
+      Plot.text([cur.t], {x: t => t, y: 0.36, dy: -10, dx: -12, textAnchor: "start", text: t => `t = ${neg(t.toFixed(3))}`,
+        fill: "#3E3F3A", stroke: "white", strokeWidth: 6, fontSize: 16, fontWeight: 700})
+    ]
+  });
+  const m = v => neg(v.toFixed(3)), f4 = v => v.toFixed(4);
+  const row = k => html`<span class="${k === plIn.mode ? "pl-on" : "pl-off"}">${k}: SE = ${m(T[k].se)}, t = ${m(T[k].t)}, p = ${f4(T[k].p)}</span>`;
+  const rej = cur.p < a, cov2 = T.vPre + T.vPost - T.vDif;
+  const why = paired
+    ? `Firms that start high stay high, so the differences vary far less than the two groups put together: <b>s<sub>d</sub><sup>2</sup> = ${T.vDif.toFixed(2)}</b> against s<sub>pre</sub><sup>2</sup> + s<sub>post</sub><sup>2</sup> = ${(T.vPre + T.vPost).toFixed(2)}. Pairing removes twice the covariance, ${cov2.toFixed(2)}.`
+    : `Treated as independent, the firm-to-firm spread stays in the standard error, <b>${m(T.Independent.se)}</b> instead of ${m(T.Paired.se)}. These are the same firms measured twice, so treating them as independent omits the pairing information.`;
+  return html`<div class="cr-row pl-row">${data}${dist}</div>
+  <div class="ojs-eq cl-stats pl-stats">${row("Paired")}${row("Independent")}</div>
+  <div class="quiz-fb">The p-value ${f4(cur.p)} is ${rej ? "below" : "above"} ${plIn.alpha}, so we <b>${rej ? "reject" : "do not reject"} H<sub>0</sub></b> (cut-off ${m(crit)}). ${why}</div>`;
 }
 ```

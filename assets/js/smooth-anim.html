@@ -40,9 +40,9 @@
     // Keep these SHORT: at 24px Roboto from x = 40 they stay clear of the
     // right panel (x = 690); the orange alpha readout has moved to the right
     // edge (x = 950, right-aligned) so it no longer competes with the caption.
-    'a long memory — smooth, sluggish forecast',
+    'Older observations retain more weight',
     'half the weight on the last observation',
-    'almost no memory; it chases the last point'
+    'The latest observation receives most of the weight'
   ];
 
   function ox(i) { return LX0 + i * (LX1 - LX0) / (DATA.length - 1); }

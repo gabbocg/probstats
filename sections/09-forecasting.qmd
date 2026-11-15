@@ -7,10 +7,10 @@ Seminar 9 · Exponential smoothing
 $\alpha$ is how much you trust the latest number.
 
 ::: {.lede}
-$F_{t+1} = \alpha x_t + (1-\alpha)F_t$ looks like it only remembers one step back. Unfold it and every observation you have ever seen is in there — each one weighted a little less than the one after it.
+$F_{t+1} = \alpha x_t + (1-\alpha)F_t$ uses the latest observation and the previous forecast. Expanding the recursion shows that it includes all past observations, with decreasing weights for older values.
 :::
 
-## The memory hidden in one line {.stage-slide #smooth-intuition}
+## Weights in exponential smoothing {.stage-slide #smooth-intuition}
 
 ::: {.stage-wrap .stage-wrap-std}
 <div id="smooth-stage" class="stage"></div>
@@ -20,17 +20,17 @@ $F_{t+1} = \alpha x_t + (1-\alpha)F_t$ looks like it only remembers one step bac
 []{.fragment .fi-frag id="smooth-frag-2"}
 
 ::: {.slide-footer}
-At $\alpha = 0.8$ the forecast is barely a forecast — it is last month's number with a delay. At $\alpha = 0.2$ it is so smooth it cannot turn a corner. Choosing $\alpha$ is choosing where on that line to stand.
+At $\alpha = 0.8$, the forecast closely follows the previous month's value. At $\alpha = 0.2$, it is smoother and responds more slowly to changes. Choose $\alpha$ according to the response required.
 :::
 
-## Let the data pick $\alpha$ {.sim-slide #smooth-sim}
+## Choosing $\alpha$ using forecast errors {.sim-slide #smooth-sim}
 
 ::: {.slide-kicker}
 Seminar 9 · MSE and MAE
 :::
 
 ::: {.lede-min}
-This series **trends upward**, which breaks the no-trend assumption smoothing requires. $F_2 = 67$ is given; the error metrics will tell you the rest.
+This series trends upward, violating the assumption of no trend. Starting with $F_2 = 67$, calculate the forecast errors for each value of $\alpha$.
 :::
 
 ::: {.sim-card .sim-text}
@@ -48,5 +48,5 @@ for (a in c(0.2, 0.4, 0.6, 0.8)) {
 :::
 
 ::: {.try-this}
-Both metrics fall as $\alpha$ rises — the method is straining to keep up with a trend it was never built for. After the first month every error is *positive*: the forecast is late as soon as the trend takes hold. **Persistent one-signed errors are the diagnostic that you need a trend model, not a better $\alpha$.**
+Both error metrics decrease as $\alpha$ increases. After the first month, every error is positive because the forecast lags behind the upward trend. Persistent errors of the same sign indicate the need for a model that includes a trend.
 :::

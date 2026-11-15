@@ -108,14 +108,12 @@
                'L' + px(lo).toFixed(2) + ' ' + BASE + 'Z';
   }
 
-  // A bracket in VALUE space: centre +/- HALF, with end ticks pointing down
-  // at the label. Every lane is built by this one function, from the same
-  // HALF, which is what makes "the same width" true in pixels and not just
-  // in the caption.
+  // An underbrace in VALUE space, centre +/- HALF: ends at y, rail at
+  // y + TICK, the deck's curly brace. Every lane is built by this one
+  // function, from the same HALF, which is what makes "the same width" true
+  // in pixels and not just in the caption.
   function bracket(centre, y) {
-    var a = px(centre - HALF), b = px(centre + HALF);
-    return 'M' + a.toFixed(2) + ' ' + y + 'V' + (y + TICK) +
-           'H' + b.toFixed(2) + 'V' + y;
+    return K.brace(px(centre - HALF), px(centre + HALF), y + TICK, 0);
   }
   function mid(centre) { return (px(centre - HALF) + px(centre + HALF)) / 2; }
 

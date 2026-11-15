@@ -36,7 +36,10 @@
 .reveal section.stage-slide {
   display: block !important;
   text-align: left !important;
-  overflow: hidden;
+  // Clipped like overflow: hidden, except 20px into the left gutter, where
+  // the lede's hanging rule sits.
+  overflow: visible;
+  clip-path: inset(0 0 0 -20px);
 }
 .stage-wrap {
   position: relative;
@@ -51,12 +54,14 @@
 // The dice board stops at y = 400 of its 445-unit canvas, and both set-theory
 // slides carry a lede AND a takeaway, so the wrap hands the rest back.
 #space-intuition .stage-wrap,
-#setops-intuition .stage-wrap { height: 424px; }
+#setops-intuition .stage-wrap { height: 376px; }
+#space-intuition .stage, #setops-intuition .stage { transform: scale(0.93); }
 
 // The Venn drawing starts at y = 30 and stops at 338. The wrap follows it up
 // rather than leaving a band of nothing under the lede, and carries 34 units
 // past the ink so the takeaway is not sitting on the box.
-#venn-intuition .stage-wrap { height: 392px; }
+#venn-intuition .stage-wrap { height: 348px; }
+#venn-intuition .stage { transform: scale(0.93); }
 
 // The drawing sat 25px under the title and 87px off the slide floor; the
 // extra top margin splits the slack so the stage is centred in what the
@@ -80,6 +85,7 @@
 // hard under the title with ~120px spare below. A bit over half goes on top.
 #clt-idea .stage-wrap { margin-top: 72px; }
 #cond-intuition .stage-wrap { height: 388px; }
+#cond-intuition .slide-footer { margin-top: 30px; }
 // 362, not 366 * 1.05: the drawing only reaches y = 345 of the 366-unit
 // canvas, so the extra 1.05 of slack all piled up BELOW it — 29px of air
 // above the marks against 51px beneath them. Measured from the SVG's own
@@ -113,7 +119,7 @@
 // The deck-wide 240px label track is sized for #likelihood-live's "true
 // success rate s"; these two labels are half that, so the sliders sat with a
 // visible gutter in front of them. Scoped, not lowered globally.
-#pois-intuition .observablehq form { --label-width: 130px; }
+#pois-intuition .observablehq form { --label-width: 130px; width: auto; max-width: none; }
 #normal-intuition .observablehq form { --label-width: 160px; }  // "Success rate p"
 #expo-intuition .observablehq form { --label-width: 175px; }  // "Rate λ per minute" is 157
 
@@ -341,7 +347,8 @@
   .MJXp-math.MJXp-display { font-size: 0.64em; }
   .MathJax_Display { zoom: 0.64; }
   span.math.display { margin: 16px 0 24px; }
-  .pitfall { margin-top: 16px; }
+  > p:has(span.math.display) { margin: 30px 0 34px; }
+  .pitfall { margin-top: 30px; }
   // The four outcomes drawn, since a coin CAN be drawn and 36 dice rolls
   // cannot. Heads olive because A is olive two lines down, so "at least one
   // head" is visible in the picture before it is stated.
@@ -413,7 +420,9 @@
 
 #random-variables,
 #conditional-probabilities,
-#distribution-fn {
+#distribution-fn,
+#limit-formal,
+#sampling-formal {
   // Justified, with hyphenation on. At a 480px column three words a line
   // open real gaps without it — the same lesson as the deck-facts strip.
   .two-col p {
@@ -430,6 +439,42 @@
   .perm-row span { font-size: 16px; }
   .note-box { margin-top: 16px; }
   .two-col strong { color: var(--accent-1); }
+}
+
+// #limit-formal: the two theorems ARE the slide, so in the columns they set
+// larger than the shared 0.62 (both MathJax spellings, see #set-formal).
+// #sampling-formal shares the layout: population | sample, three rows each.
+#limit-formal, #sampling-formal {
+  .two-col .MJXp-math.MJXp-display { font-size: 1.05em; }
+  .two-col .MathJax_Display { zoom: 1.05; }
+  .two-col span.math.display { margin: 12px 0 14px; }
+}
+#limit-formal, #sampling-formal {
+  // Head, equation, prose: each column spans the same three rows (subgrid),
+  // so both explanations start on one line even though the CLT's fraction
+  // makes its equation taller. The shorter LLN equation centres in its row.
+  .two-col { grid-template-rows: auto auto auto; }
+  .two-col > div { display: grid; grid-row: span 3; grid-template-rows: subgrid; }
+  // Grid items do not collapse margins, so the equation row carries its own.
+  .two-col > div > p:nth-child(2) { display: flex; align-items: center; justify-content: center; margin: 0; }
+  .two-col > div > p:nth-child(2) span.math.display { margin: 6px 0 8px; }
+}
+// #xbar-normal: full-width rows, each chain on one line.
+.reveal section#xbar-normal {
+  .col-head { margin-top: 14px; }
+  // Sized by font-size, not zoom: MathJax measures its ex-height inside the
+  // zoomed box and scales back up on some loads, so zoom gave two sizes.
+  span.math.display { margin: 0; font-size: 0.65em; }
+  .MathJax_Display { zoom: 1 !important; }
+  // The formula-slide rules zero display-maths margins; the wrapping <p>
+  // carries the breathing room around each one-line chain instead.
+  p:has(> span.math.display) { margin: 22px 0 24px !important; }
+}
+// Two formulas side by side in each column, so they set a little smaller.
+#sampling-formal {
+  .two-col .MJXp-math.MJXp-display { font-size: 1em; }
+  .two-col .MathJax_Display { zoom: 1; }
+  .two-col > div > p:nth-child(2) span.math.display { margin: 2px 0 22px; }   // room before the prose underneath
 }
 
 // ---- Permutation chips (#combinatorics) ----
@@ -533,7 +578,7 @@
   .three-col .MJXp-math.MJXp-display,
   .three-col .MathJax_Display { margin-left: 0; }
 
-  .note-box { margin-top: 16px; }
+  .note-box { margin-top: 30px; }
   .perm-row span { font-size: 15px; letter-spacing: 0.04em; }
 }
 
@@ -546,7 +591,7 @@
 // the cells on this slide define values and render nothing — zero height, but
 // they still spend their margins, which piled ~45px of emptiness between the
 // lede and the question. Spacing is carried by the elements instead.
-#chart-choice .cell, #table-cond .cell, #taxi-indep .cell, #courier-moments .cell,
+#choose-count .cell, #chart-choice .cell, #table-cond .cell, #taxi-indep .cell, #courier-moments .cell,
 #uniform-dist .cell, #normal-area .cell, #normal-critical .cell { margin: 0; }
 // Quarto gives OJS outputs overflow:auto, so nudging the figure 6px past its
 // cell raised a scrollbar down the right of the plot.
@@ -673,9 +718,10 @@
 #table-cond form > div { gap: 2px 22px; }
 #table-cond form > div > label { font-size: 19px; }
 .ct-wrap { margin-top: 6px; }
-// #table-cond: one 18px gap from the radios to the table, the table to the
+// #table-cond: a wider gap from the "Given" radios to the table, so the
+// controls read apart from the data; then 18px from the table to the
 // fraction, and the fraction to the verdict.
-.reveal section#table-cond table.ct-table { margin-top: 12px; }
+.reveal section#table-cond table.ct-table { margin-top: 28px; }
 .reveal section#table-cond .ct-eq { margin: 18px 0; }
 #table-cond .quiz-fb { font-size: 19px; padding: 8px 14px; }
 // The theme's "quiet editorial" table (navy heads over a navy rule) is kept;
@@ -999,7 +1045,7 @@
 .qwebr-noninteractive-setup-area { display: none; }
 
 // ---- Seminar marker on hero slides ----
-// Mono numeral + rule, so the deck reads as an ordered sequence of nine.
+// Mono numeral + rule, so the deck reads as an ordered sequence of seven.
 .sem-mark {
   display: flex;
   align-items: baseline;
@@ -1051,6 +1097,15 @@
 // pairs (s02, s03, s07) still measured 702px — 0.3em closes that last 2px
 // without touching any §4.4-mandated size or color.
 .reveal section.hero .lede { color: var(--ink); margin-top: 0.3em; }
+// Part dividers: the tagline is the part's premise and must read as one line.
+.reveal section.hero:is(#part-probability, #part-statistics) > p { white-space: nowrap; max-width: none; font-size: 0.8em; }
+// Two colours in each premise, as on Brunton's board: what we assume known in
+// navy, what is left unknown in the soft ink. Same pairing on both parts, so
+// the swap between them is what stands out.
+.reveal section.hero:is(#part-probability, #part-statistics) > p {
+  .known   { color: var(--accent-1); }
+  .unknown { color: var(--ink-soft); }
+}
 
 // ---- Stepped formula, annotated back to the picture ----
 // Each row is `expression | plain-English note`, so the algebra is read as a
@@ -1274,7 +1329,7 @@
   .note {
     font-size: 28px;
     color: var(--ink);
-    max-width: 980px;
+    max-width: none;
     margin: 4px 0 2px;
     text-align: justify;
     hyphens: auto;
@@ -1413,8 +1468,9 @@
     // BETWEEN derivation steps is this slide's own (18), because the stage
     // slides have no equivalent of it.
     .lede-min { margin-bottom: 0; }     // 24px top comes from the deck rule
-    p:has(.math.display):first-of-type span.math.display { margin-top: 24px; }
-    p:has(.math.display):last-of-type  span.math.display { margin-bottom: 36px; }
+    // Steps after the first sit in click fragments, so only the first is a
+    // direct <p>; the last step's old 36px bottom margin is now the footer's.
+    > p:has(.math.display):first-of-type span.math.display { margin-top: 24px; }
 
     // Every gap on this slide is one MathJax display margin. The arrow rows
     // carry none of their own, so an arrow sits between two equal 6px
@@ -1430,7 +1486,7 @@
     .MJXp-math.MJXp-display { font-size: 0.72em; }
     .MathJax_Display { zoom: 0.72; }   // MathJax writes glyph sizes as inline px
     .deriv-arrow { height: 40px; }
-    .slide-footer { margin-top: 10px; }
+    .slide-footer { margin-top: 36px; }
   }
 
   // NB the maths is coloured in the .qmd with MathJax's \color{}{} and the
@@ -1445,7 +1501,8 @@
 // number box and track, so the column stays narrow.
 .reveal section#normal-formula {
   // the headline formula a touch smaller (both MathJax boxes, see #pois-formal)
-  > p span.math.display { font-size: 0.9em; }
+  > p .MJXp-math.MJXp-display { font-size: 0.78em; }
+  > p .MathJax_Display { zoom: 0.78; }
   // centred as one unit: neither column stretches, the row's slack goes to its sides
   // the same light rule as .two-col (slide 29) between the formula and the row
   .nf-row { display: flex; align-items: center; justify-content: center; gap: 40px; margin-top: 0;
@@ -1486,9 +1543,11 @@
 // #conditional-probabilities, #total-probability: the opening picture gets
 // the same 22px above (from the lede) and below (to the columns' rule).
 #conditional-probabilities .cond-row { margin-top: 22px; margin-bottom: 22px; }
+#conditional-probabilities .note-box { margin-top: 30px; }
 // #total-probability's picture carries empty space at its top inside the box,
 // so equal box gaps read as 49px above and 32px below: shift 8px across.
 #total-probability .cond-row { margin-top: 14px; margin-bottom: 30px; }
+#total-probability .note-box { margin-top: 30px; }
 
 // #moments has no lede: the stage gets the room above it instead
 #moments .stage-wrap { margin-top: 95px; }   // about equal air above and below
@@ -1515,7 +1574,7 @@
 .reveal section:is(#xbar-properties, #two-mean-tests, #fit-quality) .lede-min { font-size: 26px; margin-top: 48px !important; }
 .reveal section:is(#xbar-properties, #two-mean-tests, #fit-quality) .slide-footer { font-size: 22px; }
 // #ci-lab: n and confidence sliders, the rule and the button on one row.
-.reveal section#ci-lab .cl-dials, .reveal section#pair-lab .cl-dials {
+.reveal section#ci-lab .cl-dials, .reveal section#pair-lab .cl-dials, .reveal section#choose-count .cl-dials {
   display: flex; align-items: flex-end; gap: 12px; margin: 22px 0 8px; overflow: hidden;
   form { flex-direction: column; align-items: flex-start; gap: 2px; margin: 0; --label-width: auto; }
   // Labels keep the deck's small navy caps, as on #courier-moments.
@@ -1531,6 +1590,7 @@
 // #xbar-proof: three lines of working, so the arrow notes between them are
 // held to the height #moments-formal gives its own.
 .reveal section#xbar-proof .deriv-arrow { height: 40px; }
+.reveal section:is(#xbar-proof-var, #sample-var, #ci-derive) .deriv-arrow { height: 30px; }   // four lines of maths and a footer
 // #ci-lab: an overline, not a combining macron, which the mono face misplaces;
 // and air between the two plots so their axes do not read as one.
 // The bar is drawn just above the x's x-height; text-decoration: overline
@@ -1556,16 +1616,18 @@
 .prop-efficient  { border-top-color: #325D88 !important; .prop-name { color: #325D88; } }
 .prop-consistent { border-top-color: #F47C3C !important; .prop-name { color: #F47C3C; } }
 // #xbar-proof: display maths at 80%, as the other derivation slides shrink theirs.
-.reveal section#xbar-proof {
+.reveal section:is(#xbar-proof, #xbar-proof-var, #sample-var, #ci-derive) {
   .MJXp-math.MJXp-display { font-size: 0.8em; }
   .MathJax_Display { zoom: 0.8; }
 }
 // #cieq-formula: the stage is drawn 320 units tall, not 445 (see cieq-anim).
-#cieq-formula .stage-wrap { height: 336px; margin-top: 96px; }
+#cieq-formula .stage-wrap { height: 336px; margin-top: 24px; }   // the example sits above it
 #cieq-formula .slide-footer, #cieq-formula .slide-footer p { text-align: justify !important; hyphens: auto; }
-#ciflip-intuition .stage-wrap { margin-top: 28px; }
+#ciflip-intuition .stage-wrap { margin-top: 0; }
+
 #ci-intuition .stage-wrap { margin-top: 84px; }
-#xbar-proof .lede-min { margin-top: 44px; }
+#xbar-proof .lede-min { margin-top: 12px; }   // was 44px; the linearity line needs the room
+#xbar-proof .slide-footer, #xbar-proof .slide-footer p { text-align: justify !important; hyphens: auto; }
 .cl-navy { color: #325D88; }
 #ci-lab .quiz-fb { font-size: 19px; padding: 8px 14px; margin-top: 10px; }
 // #ci-lab: the interval rule on its own row, its label beside the three
@@ -1612,10 +1674,10 @@
   .lede-min { margin-top: 44px; }
   .MJXp-math.MJXp-display { font-size: 0.8em; }
   .MathJax_Display { zoom: 0.8; }
-  .deriv-arrow { height: 40px; }
+  .deriv-arrow { height: 40px; margin-top: -14px; }
   .slide-footer, .slide-footer p { text-align: justify; hyphens: auto; }
 }
-#pval-intuition .stage-wrap { margin-top: 28px; }
+#pval-intuition .stage-wrap { margin-top: 0; height: 355px; }   // the drawing ends at ~390 of its 445, shown at 0.9
 // #reject-lab, #power-lab: the #ci-lab control rows.
 .reveal section#reject-lab .rj-dials,
 .reveal section#power-lab .rj-dials {
@@ -1628,7 +1690,7 @@
   form div { display: flex; gap: 10px; }
 }
 .reveal section#power-lab .rj-dials { margin-top: 26px; input[type="range"] { width: 200px; } }
-#reject-lab .quiz-fb, #power-lab .quiz-fb { font-size: 19px; padding: 8px 14px; margin-top: 8px; }
+#reject-lab .quiz-fb, #power-lab .quiz-fb { font-size: 19px; padding: 8px 14px; margin-top: 20px; }
 // ---- 07-two-populations -----------------------------------------------------
 // #two-mean-tests: the #xbar-properties cards (selectors shared above), in
 // navy, olive and orange. The three statistics are fractions with roots, so
@@ -1724,3 +1786,152 @@
 }
 // #ls-fit: the slope needs four decimals in its box.
 .reveal section#ls-fit form input[type="number"] { width: 104px; min-width: 104px; }
+
+
+// ---- Example slides ----------------------------------------------------------
+// A worked exercise rather than new material. The tag sits on the title's
+// line, flush right, so it costs the slide no height. Raised so its top edge
+// sits a little above the title's capitals (which start ~10px down a 48.6px
+// title). In px: an em here is the tag's own 15px.
+.reveal section.example > h2 { position: relative; }
+.reveal section.example > h2::before {
+  content: "Example";
+  position: absolute;
+  top: 4px;
+  right: 0;
+  padding: 2px 10px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: #A4521F;
+  background: rgba(244, 124, 60, 0.14);   // --accent-3, as the claim tags tint theirs
+  border-radius: 3px;
+}
+
+
+// ---- Combinations (#choose-count) ----
+// The question radio and the button share #ci-lab's one-row dials. Below,
+// one chip per item: the picked ones filled olive, as events are elsewhere.
+.reveal section#choose-count .cl-dials { gap: 34px; margin: 14px 0 6px; }
+.ch-wrap { margin-top: 34px; }   // + the dials' 6px = 40px, as above and below the working
+.ch-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 12px; }
+.ch-chip {
+  display: inline-block; min-width: 54px; padding: 6px 0; text-align: center;
+  font-family: "JetBrains Mono", monospace; font-size: 18px; color: var(--ink-soft);
+  border: 1.5px solid var(--rule); border-radius: 6px; background: var(--bg-soft);
+}
+.ch-chip.on { color: var(--ink); font-weight: 700; border-color: #93C54B; background: rgba(147, 197, 75, 0.35); }
+// 40px above and below the working, the same gap as under the question row.
+// (The chip row's 12px bottom margin collapses into the 40.)
+.reveal section.ojs-slide .ojs-eq.ch-eq { font-size: 23px; margin: 40px 0 0; }
+#choose-count .quiz-fb { font-size: 19px; padding: 8px 14px; margin-top: 40px; }
+
+
+// ---- #xbar-normal: Brunton's two sketches, drawn from real densities ----
+// Static SVGs, one under each column: the lumpy population with the narrow
+// bell of X̄ over it, and the shaded P(|X̄ − μ| < ε).
+// .reveal-scoped: Reveal's own figure/figcaption rules otherwise win.
+.reveal .xn-figs { display: grid; grid-template-columns: 1fr 1fr; gap: 0 52px; margin-top: 24px; }
+.reveal .xn-figs figure { margin: 0; }
+.reveal .xn-figs svg { display: block; width: auto; height: 110px; }
+.reveal .slide .xn-figs figure > figcaption { font-size: 15px; line-height: 1.3; color: var(--ink-soft); margin-top: 0; text-align: left; }
+
+
+// ---- #punt-clt: Brunton's punter example (after Quintanilla) ----
+// Setup and bell on the left, the CLT chain on the right.
+.reveal section:is(#punt-clt, #web-test) {
+  .two-col p { margin: 6px 0; font-size: 20px; text-align: justify; hyphens: auto; }
+  .two-col .col-sub { margin-bottom: 8px; }
+  .two-col .MJXp-math.MJXp-display { font-size: 0.95em; }
+  .two-col .MathJax_Display { zoom: 0.95; }
+  .two-col span.math.display { margin: 10px 0 12px; }
+  .two-col svg { display: block; margin: 10px auto 0; }
+  .slide-footer { font-size: 16px; color: var(--ink-soft); }
+}
+// #web-test: both columns justified as on #punt-clt; the procedure column
+// spread down its height so step III ends level with the plot opposite.
+.reveal section#web-test .two-col > div:nth-child(2) {
+  display: flex; flex-direction: column;
+  p { text-align: justify; hyphens: auto; }
+  // Step I stays under the heading, level with A opposite; the free space
+  // goes above II and III only.
+  > p:nth-child(3), > p:nth-child(5), > p:nth-child(6) { margin-top: auto; }
+  // Flex margins do not collapse: drop I's top margin so it sits level with A.
+  > p:nth-child(2) { margin-top: -6px; }   // cancels the heading margin the flex column keeps
+}
+// #web-test: the t note sits a little apart from the columns above it.
+.reveal section#web-test .slide-footer { margin-top: 28px; }
+
+
+// ---- #err-table: the four outcomes of a test (Brunton's 2x2) ----
+.reveal section#err-table table.err-table {
+  margin: 26px 0 0 57px !important; border-collapse: collapse; font-size: 22px; width: 826px !important; table-layout: fixed !important; display: table !important; background: transparent;
+  tr, thead, tbody { background: transparent !important; }
+  th, td { border: none; padding: 14px 20px; text-align: center; vertical-align: middle; background: transparent; }
+  th.err-side { width: 44px; padding: 0 8px; }
+  // Fixed layout reads widths off the first row, so they live on the header cells.
+  th.w-side { width: 56px; } th.w-row { width: 190px; } th.w-cells { width: 580px; }
+  tbody th:not(.err-side) { width: 190px; }
+  thead th { color: var(--accent-1); font-weight: 700; font-size: 20px; }
+  thead .err-top { border-bottom: 2px solid var(--accent-1); letter-spacing: 0.08em; text-transform: uppercase; font-size: 17px; }
+  tbody th { color: var(--accent-1); font-weight: 700; font-size: 20px; text-align: right; }
+  .err-side { letter-spacing: 0.08em; text-transform: uppercase; font-size: 17px; border-right: 2px solid var(--accent-1); }
+  .err-side span { writing-mode: vertical-rl; transform: rotate(180deg); }
+  td { width: 290px; border: 1px solid var(--rule); line-height: 1.35; }
+  .err-bad { background: rgba(185, 74, 72, 0.10); color: var(--ink); b { color: #8A3937; } }
+  .err-ok  { background: rgba(147, 197, 75, 0.14); color: var(--ink); b { color: #4E6B33; } }
+}
+.reveal section#err-table .slide-footer { margin-top: 46px; }
+
+
+// ---- #pval-intuition: two readings of the p-value, side by side ----
+.reveal section#pval-intuition .pv-read {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; margin-top: 14px;
+  > div { background: var(--bg-soft); border-left: 3px solid var(--accent-1); padding: 6px 12px; }
+  p { margin: 0; font-size: 17px; line-height: 1.35; text-align: justify; hyphens: auto; }
+  .pv-head { display: block; font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-1); margin-bottom: 2px; }
+}
+
+// #test-stats: the three alternatives as a table.
+.reveal section#test-stats .h1-table table {
+  margin: 28px auto 30px; width: 760px; font-size: 22px; border-collapse: collapse;
+  th { color: var(--accent-1); font-size: 17px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--accent-1); padding: 6px 14px; }
+  td { padding: 8px 14px; border-bottom: 1px solid var(--rule); }
+  tr:last-child td { border-bottom: none; }
+}
+// #pval-intuition: the drawing at 0.9 so the two readings get air.
+#pval-intuition .stage { transform: scale(0.9); }
+// #reject-lab, #power-lab: room between the curve and the readout.
+#reject-lab svg[class^="plot"], #power-lab svg[class^="plot"] { display: block; margin: 0 auto 36px; }
+// Every lede runs the full text column, justified, so its right edge meets
+// the columns, tables and footers under it.
+.reveal section :is(.lede-min, .slide-footer) { max-width: none !important; text-align: justify; hyphens: auto; }
+#reject-lab svg[class^="plot"] { margin-bottom: 18px; }
+.reveal .prop-q { text-align: justify; hyphens: auto; }
+// #s00b-me is vertically centred; extra bottom padding lifts the whole slide.
+.reveal section#s00b-me { padding-bottom: 60px !important; }
+// Every "i" note box sits the same 27px of visible air under the text above
+// it as on #distribution-fn. The margins differ because the blocks above end
+// with different amounts of empty box under their last line.
+.reveal section {
+  &#combinatorics .note-box { margin-top: 29px; }
+  &#conditional-probabilities .note-box { margin-top: 19px; }
+  &#total-probability .note-box { margin-top: 25px; }
+  &#random-variables .note-box { margin-top: 19px; }
+  &#box-normal .note-box { margin-top: 27px; }
+  &#limit-formal .note-box { margin-top: 30px; }
+  &#sampling-formal .note-box { margin-top: 18px; }
+}
+// One slider size across the deck: every track 160px, every number box
+// 84px at 20px type. Slides had drifted from 92 to 200 and 84 to 104.
+.reveal section form input[type="range"] { width: 160px !important; }
+.reveal section form input[type="number"] { width: 84px !important; min-width: 84px !important; font-size: 20px !important; }
+#expo-intuition .ojs-eq { font-size: 20px; }
+// Ledes hang their rule in the gutter: the 2px line and its 14px of air sit
+// left of the column, so the lede's text starts on the same edge as the
+// rest of the slide. A lede without the rule simply loses its indent.
+.reveal section .lede-min { margin-left: -16px !important; }
+.reveal section .lede-min.no-rule,
+.reveal section:is(#test-steps, #xbar-properties, #two-mean-tests, #fit-quality) .lede-min { margin-left: 0 !important; padding-left: 0 !important; }

@@ -103,7 +103,7 @@
       for (var j = 0; j < n; j++) dice.push(K.die(g, x0 + (j % cols) * step, y0 + Math.floor(j / cols) * step, size, 1));
       dice.forEach(function (d) { if (d.g.firstChild) d.g.firstChild.setAttribute('fill', COLS[k]); });   // the die's body is its first child
       var ry = y0 + (rows - 1) * step + size / 2 + 44;
-      var read = math(g, GX + 150, ry, [['X̄', 'i'], [String(n), null, null, 'sub'], ['  =  ']], 30);
+      var read = math(g, GX + 150, ry, [['x̄', 'i'], [String(n), null, null, 'sub'], ['  =  ']], 30);   // a realised average: lowercase
       read.setAttribute('text-anchor', 'middle');
       var val = read.appendChild(K.el('tspan', { fill: COLS[k] }));
       return { g: g, dice: dice, val: val };

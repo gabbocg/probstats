@@ -1,17 +1,17 @@
-# How These Decks Work {.hero #s00-how-to-use}
+# Using the slides {.hero #s00-how-to-use}
 
 ::: {.section-badge}
-Nine seminars, one idea each
+Probability and statistics
 :::
 
-## The R Runs Here, in This Page {#s00-webr}
+## Running R code {#s00-webr}
 
 ::: {.slide-kicker}
-No install · no account · nothing to download
+Run R in your browser
 :::
 
 ::: {.lede-min}
-The grey boxes below are real R. Press **Run** and the code executes inside your browser — there is no server, and nothing you type is sent anywhere.
+The grey boxes below contain R code. Press **Run** to execute it in your browser. There is no server, and nothing you type is sent anywhere.
 :::
 
 ::: {.sim-card .sim-text}
@@ -37,9 +37,9 @@ setHook("before.plot.new", function() par(cex = 1.6, mar = c(3.6, 3.8, 1.6, 0.8)
 ```{=html}
 <div class="deck-facts">
   <div>
-    <span>Nine seminars</span>
-    One idea each, in the order we meet them. Nothing here needs the seminar
-    before it to make sense.
+    <span>Examples</span>
+    Slides tagged <b>Example</b> are worked exercises. Guess the answer
+    first, then move the controls and check.
   </div>
   <div>
     <span>Moving around</span>
@@ -55,5 +55,5 @@ setHook("before.plot.new", function() par(cex = 1.6, mar = c(3.6, 3.8, 1.6, 0.8)
 ```
 
 ::: {.slide-footer}
-First run takes a few seconds while R loads. After that it is instant.
+R takes a few seconds to load on the first run. Later runs are immediate.
 :::

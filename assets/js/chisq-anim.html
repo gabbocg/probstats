@@ -129,10 +129,10 @@
       para(g, px(x), y + 28, b, X1 - px(x) - 10);
       return g;
     }
-    var N = [note2('The Y = X² from the last slide', 'One standard normal, squared.', 5, PT + 40),
+    var N = [note2('Y = X²', 'One standard normal, squared.', 5, PT + 40),
              note('Add a second square', 5, PT + 40),
-             note('More squares: The hump leaves 0', 9, PT + 40),
-             note2('A sum of many squares', 'So the CLT makes it a bell again.', 11, PT + 40)];
+             note('Increasing k shifts the mode above 0', 9, PT + 40),
+             note2('A sum of many squares', 'The CLT gives an approximately normal shape.', 11, PT + 40)];
 
     return { svg: svg, yl: yl, ghosts: ghosts, ghostLab: ghostLab, area: area, curve: curve, norm: norm, nl: nl,
              mean: mean, ml: ml, mt: mt, F: F, rk: rk, rkv: rkv, rmom: rmom, N: N,

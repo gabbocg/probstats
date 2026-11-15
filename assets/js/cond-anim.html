@@ -8,11 +8,13 @@
     0. split by whether they would buy          (80 / 20)
     1. split each column by upgrade             (32 / 48 / 2 / 18)
     2. we learn "would upgrade" — 66% is gone
-    3. the two survivors regrow to fill the square: 32/34 = 94%
+    3. the two survivors become the whole square: 32/34 = 94%, 2/34 = 6%
 
-  Step 3 is the whole animation. Keeping the WIDTHS fixed while the two
-  orange regions stretch to full height is what makes "same evidence, new
-  denominator" visible rather than asserted.
+  Step 3 is the whole animation. The survivors stretch to full height AND
+  their widths re-split to 94/6, so area is still probability, now measured
+  against the upgraders alone. (An earlier version kept the 80/20 widths,
+  which showed 94% in a column still labelled 80%: the areas contradicted
+  the numbers.) The column headers count 80 -> 94 and 20 -> 6 with it.
 
   Built on StageKit (assets/js/stage-kit.html): palette, type roles and the
   Reveal fragment wiring live there. Canvas 1000x445, shown at scale(1.05).
@@ -32,6 +34,11 @@
   // Row split inside each column: P(upgrade | column) of that column's HEIGHT.
   var BUY_UP_H = SQ_H * 0.40;           // 120  -> 32% of the square
   var NB_UP_H  = SQ_H * 0.10;           //  30  ->  2% of the square
+
+  // State 3: the upgraders (32 + 2 = 34) are the new 100%.
+  var NEW_BUY_W = SQ_W * 32 / 34;       // ~471
+  var NEW_NB_X  = SQ_X + NEW_BUY_W;
+  var NEW_NB_W  = SQ_W - NEW_BUY_W;     // ~29
 
   var INK = K.PAL.ink, SOFT = K.PAL.inkSoft, RULE = K.PAL.rule;
   var NAVY = K.PAL.navy, ORANGE = K.PAL.orange, GREY = K.PAL.dim;
@@ -55,7 +62,7 @@
     0: '100% of managers, split by buying',
     1: 'Each column splits by upgrading',
     2: 'We observed “would upgrade”',
-    3: 'Re-normalise the denominator'
+    3: 'Upgraders are the new 100%'
   };
 
   function build(stage) {
@@ -96,11 +103,12 @@
     var nbUpOr  = orange(NB_X,  NB_W,  NB_UP_H);
 
     // --- column outlines --------------------------------------------------
-    svg.appendChild(K.el('rect', {
+    // Kept: state 3 moves the boundary between them to the 94/6 split.
+    var buyOut = svg.appendChild(K.el('rect', {
       x: SQ_X, y: SQ_Y, width: BUY_W, height: SQ_H,
       fill: 'none', stroke: NAVY, 'stroke-width': 1.5
     }));
-    svg.appendChild(K.el('rect', {
+    var nbOut = svg.appendChild(K.el('rect', {
       x: NB_X, y: SQ_Y, width: NB_W, height: SQ_H,
       fill: 'none', stroke: GREY, 'stroke-width': 1.5
     }));
@@ -164,23 +172,26 @@
       buyNo: buyNo, nbNo: nbNo,
       buyUpPale: buyUpPale, nbUpPale: nbUpPale,
       buyUpOr: buyUpOr, nbUpOr: nbUpOr,
+      buyOut: buyOut, nbOut: nbOut,
       divBuy: divBuy, divNb: divNb,
       buyLab: buyLab, nbLab: nbLab,
       lBuyUp: lBuyUp, lBuyNo: lBuyNo, lNbNo: lNbNo, lNbUp: lNbUp,
       leader: leader, result: result,
-      // Scalars for the counting labels (see render).
-      cBuy: { v: 32 }, cNb: { v: 2 }
+      // Scalars for the counting column headers (see render).
+      cBuy: { v: 80 }, cNb: { v: 20 }
     };
   }
 
   // Every animated value for a given state, as {nodes, props} groups.
   function plan(s, st) {
     var grown = st >= 3;
-    var geoBuy = { y: SQ_Y, height: grown ? SQ_H : BUY_UP_H };
-    var geoNb  = { y: SQ_Y, height: grown ? SQ_H : NB_UP_H };
+    var buyW = grown ? NEW_BUY_W : BUY_W;
+    var nbX  = grown ? NEW_NB_X : NB_X, nbW = grown ? NEW_NB_W : NB_W;
+    var geoBuy = { y: SQ_Y, height: grown ? SQ_H : BUY_UP_H, width: buyW };
+    var geoNb  = { y: SQ_Y, height: grown ? SQ_H : NB_UP_H, x: nbX, width: nbW };
     var split  = st >= 1 ? 1 : 0;          // dividers drawn?
     var rowOp  = st >= 1 ? 1 : 0;          // row labels visible?
-    var dimmed = st >= 2 ? 0.06 : 0.18;    // the discarded 66%
+    var dimmed = grown ? 0 : st >= 2 ? 0.06 : 0.18;    // the discarded 66%
     var headY  = st >= 1;
 
     return [
@@ -195,6 +206,9 @@
       { n: [s.nbUpOr],    p: merge(geoNb,  { 'fill-opacity': split ? 0.30 : 0,
                                              'stroke-opacity': split ? 0.9 : 0 }) },
 
+      { n: [s.buyOut], p: { width: buyW } },
+      { n: [s.nbOut],  p: { x: nbX, width: nbW } },
+
       // Dividers draw in at state 1 and vanish at state 3, where the upgrade
       // regions have swallowed the rows they used to separate.
       { n: [s.divBuy], p: { 'stroke-dashoffset': split ? 0 : BUY_W,
@@ -207,12 +221,14 @@
       // descender box of the title above it. No ink overlaps, but the pair
       // reads cramped as a header.
       { n: [s.buyLab.p, s.nbLab.p], p: { y: headY ? 61 : 249 }, stagger: 60 },
+      // ...and follow their column when the boundary moves.
+      { n: [s.buyLab.t, s.buyLab.p], p: { x: SQ_X + buyW / 2 } },
+      { n: [s.nbLab.t,  s.nbLab.p],  p: { x: nbX + nbW / 2 } },
 
       // Row labels: the two no-upgrade shares only exist while state === 1.
+      // In state 3 the headers carry the shares, so the inner labels go.
       { n: [s.lBuyNo, s.lNbNo], p: { opacity: st === 1 ? 1 : 0 }, stagger: 70 },
-      { n: [s.lBuyUp], p: { opacity: rowOp, y: grown ? 234 : 144 } },
-      { n: [s.lNbUp],  p: { opacity: rowOp, x: grown ? NB_X + NB_W / 2 : 788,
-                            y: grown ? 234 : 98 } },
+      { n: [s.lBuyUp, s.lNbUp], p: { opacity: grown ? 0 : rowOp } },
       { n: [s.leader], p: { opacity: (st >= 1 && st <= 2) ? 1 : 0 } },
 
       { n: [s.result], p: { opacity: grown ? 1 : 0 } }
@@ -222,9 +238,9 @@
   function render(s, st, instant) {
     s.cap.textContent = CAPTIONS[st];
 
-    // 32 -> 94 and 2 -> 6 are the same counts against a smaller denominator,
-    // so the labels count rather than cut, in step with the regions growing.
-    var toBuy = st >= 3 ? 94 : 32, toNb = st >= 3 ? 6 : 2;
+    // The headers count 80 -> 94 and 20 -> 6 in step with the boundary moving:
+    // same people, measured against the upgraders instead of everyone.
+    var toBuy = st >= 3 ? 94 : 80, toNb = st >= 3 ? 6 : 20;
     var groups = plan(s, st);
 
     // The re-normalisation is the point of the slide, so it gets a longer,
@@ -237,8 +253,8 @@
         g.n.forEach(function (n) { setAttrs(n, g.p); });
       });
       s.cBuy.v = toBuy; s.cNb.v = toNb;
-      s.lBuyUp.textContent = toBuy + '%';
-      s.lNbUp.textContent = toNb + '%';
+      s.buyLab.p.textContent = toBuy + '%';
+      s.nbLab.p.textContent = toNb + '%';
       return;
     }
 
@@ -252,11 +268,11 @@
     if (s.cBuy.v !== toBuy) {
       A.animate(s.cBuy, {
         v: toBuy, duration: dur, ease: 'outCubic',
-        onUpdate: function () { s.lBuyUp.textContent = Math.round(s.cBuy.v) + '%'; }
+        onUpdate: function () { s.buyLab.p.textContent = Math.round(s.cBuy.v) + '%'; }
       });
       A.animate(s.cNb, {
         v: toNb, duration: dur, ease: 'outCubic',
-        onUpdate: function () { s.lNbUp.textContent = Math.round(s.cNb.v) + '%'; }
+        onUpdate: function () { s.nbLab.p.textContent = Math.round(s.cNb.v) + '%'; }
       });
     }
   }

@@ -100,7 +100,7 @@
       F.push(g);
     }
     stat('Z', 'σ', PAL.olive);
-    stat('T', 's', PAL.orange); stat('T', 's', PAL.orange); stat('T', 's', PAL.orange);
+    stat('T', 'S', PAL.orange); stat('T', 'S', PAL.orange); stat('T', 'S', PAL.orange);
 
     // readouts: k top left, the tail areas top right
     var rk = svg.appendChild(K.el('g', {})), rkv = math(rk, X0, FY + 12, [['k', 1, PAL.orange], ['  =  ']], 30, 'start').appendChild(K.el('tspan', {}));
@@ -131,10 +131,10 @@
       return g;
     }
     // \u00a0 keeps each little formula on one line of the justified body
-    var N = [note('Known σ: Standardise as before', 'This is the standard normal again.', -4.8, PT + 30, 270),
-             note('Estimating σ by s: Fatter tails', 'Here n\u00a0=\u00a03, so there are k\u00a0=\u00a02 degrees of freedom. Since s² is a scaled χ², we get T\u00a0=\u00a0Z/√(V/k).', -4.8, PT + 30, 270),
-             note('As k grows, s settles on σ', 'And t closes in on N(0,\u00a01).', -4.8, PT + 30, 270),
-             note('1.96 is not enough', 'Small samples need the t\u00a0table.', 2.1, py(0.3), 250)];
+    var N = [note('Known σ: standard normal', 'Standardising gives N(0, 1).', -4.8, PT + 30, 270),
+             note('Unknown σ: heavier tails', 'Here n\u00a0=\u00a03, so there are k\u00a0=\u00a02 degrees of freedom. Since S² is a scaled χ², we get T\u00a0=\u00a0Z/√(V/k).', -4.8, PT + 30, 270),
+             note('As k grows, S settles on σ', 'And T closes in on N(0,\u00a01).', -4.8, PT + 30, 270),
+             note('A larger critical value', 'Use the t\u00a0table for small samples.', 2.1, py(0.3), 250)];
 
     return { svg: svg, tails: tails, area: area, norm: norm, curve: curve, nl: nl, cuts: cuts,
              F: F, rk: rk, rkv: rkv, rt: rt, rtv: rtv, N: N,

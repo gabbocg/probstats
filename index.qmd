@@ -13,14 +13,13 @@ date-format: "MMMM YYYY"
 
 {{< include sections/00a-about-me.qmd >}}
 {{< include sections/00-how-to-use.qmd >}}
-{{< include sections/01-visualisation.qmd >}}
-{{< include sections/02-descriptives.qmd >}}
-{{< include sections/03-probability.qmd >}}
-{{< include sections/04-distributions.qmd >}}
+{{< include sections/01-probability.qmd >}}
+{{< include sections/02-discrete.qmd >}}
+{{< include sections/03-continuous.qmd >}}
+{{< include sections/04-expectation.qmd >}}
 {{< include sections/05-estimation.qmd >}}
 {{< include sections/06-testing.qmd >}}
-{{< include sections/07-two-populations.qmd >}}
-{{< include sections/08-regression.qmd >}}
+{{< include sections/07-regression.qmd >}}
 <!-- commented out: seminar 9
 
 {{< include sections/09-forecasting.qmd >}}
@@ -30,7 +29,7 @@ date-format: "MMMM YYYY"
 # Thank You {.hero #thanks}
 
 ::: {.credits}
-Some slides are based on the videos of [3Blue1Brown](https://www.3blue1brown.com).
+Some slides are based on the videos of [3Blue1Brown](https://www.3blue1brown.com). The order of topics follows Steve Brunton's [Probability Bootcamp](https://www.youtube.com/playlist?list=PLMrJAkhIeNNR3sNYvfgiKgcStwuPSts9V) and [Introduction to Statistics and Data Analysis](https://www.youtube.com/playlist?list=PLMrJAkhIeNNT14qn1c5qdL29A1UaHamjx).
 
 Slides created with [Quarto](https://quarto.org) and **reveal.js**.
 

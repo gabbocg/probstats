@@ -1,435 +1,13 @@
-# Probability Distributions {.hero #s04-distributions}
+# Continuous Distributions {.hero #s03-continuous}
 
-::: {.sem-mark data-sem="4"}
-Seminar 4 · Binomial, Poisson, exponential, normal
-:::
-
-## Random Variables {.formula-slide #random-variables}
-
-::: {.lede-min}
-A random variable is not really a variable. It is a rule that hands every outcome in the sample space a number, which is what lets us do arithmetic with chance.
-:::
-
-$$X : \Omega \to \mathbb{R} \qquad\qquad P(X = x)$$
-
-:::: {.two-col}
-::: {.fragment}
-[Discrete]{.col-head}
-[Values you can list]{.col-sub}
-
-Roll two dice and let $\color{#93C54B}{X}$ be the total. It is the number already written in every cell of the board.
-
-```{=html}
-<div class="perm-row"><span>3 + 4</span><span>2 + 5</span><span>6 + 1</span></div>
-```
-
-Six of the thirty-six cells carry a 7, so
-
-$P(\color{#93C54B}{X} = 7) = \tfrac{6}{36}$
-:::
-
-::: {.fragment}
-[Continuous]{.col-head}
-[Values filling a range]{.col-sub}
-
-Wait at a bus stop and let $\color{#325D88}{X}$ be the minutes until the next arrival. It can be 3, or 3.1, or 3.0004.
-
-```{=html}
-<div class="perm-row"><span>3.0</span><span>3.1</span><span>3.0004</span></div>
-```
-
-No single value can carry any probability, so ask for a stretch instead
-
-$P(2 \le \color{#325D88}{X} \le 4)$
-:::
-::::
-
-::: {.note-box .fragment}
-Which kind you have decides the tool. A discrete variable gives every value its own probability and you add them up. A continuous one spreads probability along a line and you measure the area under a curve. The binomial and the Poisson ahead are discrete, the exponential and the normal are continuous.
-:::
-
-
-## A Distribution Is a Function {.formula-slide #distribution-fn}
-
-::: {.lede-min}
-Hand $P$ a value of $X$ and it hands back the probability of that value. That function is the distribution, and writing it down once replaces all the counting.
-:::
-
-$$\sum_{k} P(X = k) = 1 \qquad\qquad \int p(x)\,dx = 1$$
-
-:::: {.two-col}
-::: {.fragment}
-[Flip a coin four times]{.col-head}
-[$\Omega$ has sixteen outcomes, $\color{#93C54B}{X}$ counts the heads]{.col-sub}
-
-```{=html}
-<svg width="338" height="186" viewBox="0 0 338 186" aria-label="probability of each number of heads in four flips"><rect x="22" y="119" width="46" height="17" rx="3" fill="#93C54B"/><text x="45" y="110" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">1/16</text><text x="45" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">0</text><rect x="84" y="67" width="46" height="69" rx="3" fill="#93C54B"/><text x="107" y="58" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">4/16</text><text x="107" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">1</text><rect x="146" y="32" width="46" height="104" rx="3" fill="#93C54B"/><text x="169" y="23" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">6/16</text><text x="169" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">2</text><rect x="208" y="67" width="46" height="69" rx="3" fill="#93C54B"/><text x="231" y="58" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">4/16</text><text x="231" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">3</text><rect x="270" y="119" width="46" height="17" rx="3" fill="#93C54B"/><text x="293" y="110" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">1/16</text><text x="293" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">4</text><line x1="8" y1="136" x2="330" y2="136" stroke="#B0B7C0" stroke-width="1.4"/><text x="169" y="178" font-size="15" font-family="Roboto, sans-serif" fill="#6E7681" text-anchor="middle">number of heads</text></svg>
-```
-:::
-
-::: {.fragment}
-[Why bother]{.col-head}
-[Three things the function buys you]{.col-sub}
-
-**One summary.** Write $P(\color{#93C54B}{X})$ once and every probability is already in it, with no sample space left to count.
-
-**A model.** The distribution is a claim about the process, so data can test it and estimate the numbers inside it.
-
-**Arithmetic.** Add the bars over a range, or measure the area under the curve, and you have $P(a \le \color{#93C54B}{X} \le b)$.
-:::
-::::
-
-::: {.note-box .fragment}
-The two examples ahead already have names. Heads in $n$ flips is the **binomial**, and a height or a measurement error is the **normal**, written $\color{#93C54B}{X} \sim \text{Binomial}$ and $\color{#325D88}{X} \sim \text{Normal}$.
-:::
-
-
-## Three Attempts, One Constant {.ojs-slide #attempts-const}
-
-::: {.lede-min}
-A student passes each attempt with probability $p$ and gets three tries. Among those who **passed**, on which attempt did they do it?
-:::
-
-```{ojs}
-//| echo: false
-viewof atP = Inputs.range([0.1, 0.95], {value: 0.6, step: 0.05, label: "Pass rate per attempt"})
-```
-
-```{ojs}
-//| echo: false
-// Exercise 6 of the beamer Seminar 3, where p = 0.6 and the constant is 0.936.
-atRaw = [1, 2, 3].map(x => Math.pow(1 - atP, x - 1) * atP)   // pass first at x
-atC = d3.sum(atRaw)                                          // = 1 - (1 - p)^3
-atBars = [1, 2, 3].flatMap((x, i) => [
-  {x, kind: "before", v: atRaw[i]},
-  {x, kind: "after", v: atRaw[i] / atC}])
-Plot.plot({
-  width: 950, height: 224, marginLeft: 64, marginBottom: 28, marginTop: 22,
-  style: ({fontSize: "15px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"}),
-  fx: {label: null, padding: 0.25, tickFormat: d => `passed on attempt ${d}`},
-  x: {axis: null, domain: ["before", "after"], padding: 0.1},
-  y: {domain: [0, 1], grid: true, label: "probability", labelAnchor: "center", labelOffset: 56},
-  marks: [
-    Plot.barY(atBars, {fx: "x", x: "kind", y: "v",
-      fill: d => d.kind === "after" ? PPAL.olive : PPAL.dim}),
-    Plot.text(atBars, {fx: "x", x: "kind", y: "v", dy: -10,
-      text: d => d.v.toFixed(3), fill: PPAL.soft, fontSize: 14}),
-    Plot.ruleY([0], {stroke: PPAL.dim})
-  ]
-})
-```
-
-```{ojs}
-//| echo: false
-html`<div class="ojs-eq at-eq">${atRaw.map(v => v.toFixed(3)).join(" + ")} = <span class="rate">${atC.toFixed(3)}</span> &nbsp;→&nbsp; divide each by <span class="rate">${atC.toFixed(3)}</span> &nbsp;→&nbsp; <span class="hit">sum = 1</span></div>
-<div class="quiz-fb">The grey bars fall short of one by <b>${(1 - atC).toFixed(3)}</b>, the students who fail all three attempts and are not in the group you sampled from. Dividing by ${atC.toFixed(3)} is <b>conditioning on "passed"</b>, and it turns the green bars back into a distribution.</div>`
-```
-
-## Which Seller Do You Trust? {.stage-slide #seller-intuition}
-
-::: {.lede-min}
-Three sellers on the same marketplace, same item, same price. The only thing you have to go on is what previous buyers said about them. Which one do you buy from?
-:::
-
-::: {.stage-wrap .stage-wrap-seller}
-<div id="seller-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="seller-frag-1"}
-[]{.fragment .fi-frag id="seller-frag-2"}
-[]{.fragment .fi-frag id="seller-frag-3"}
-
-::: {.slide-footer .fragment}
-What is the rational way to think about the trade-off between the confidence gained from more data versus the lower absolute percentage?
-:::
-
-## Laplace's Rule of Succession {.stage-slide #laplace-intuition}
-
-::: {.lede-min}
-In 1774 Laplace said not to rate a seller $k/n$. Credit one imaginary good review and one bad one, then rate them $(k+1)/(n+2)$.
-:::
-
-::: {.stage-wrap .stage-wrap-seller}
-<div id="laplace-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="laplace-frag-1"}
-[]{.fragment .fi-frag id="laplace-frag-2"}
-[]{.fragment .fi-frag id="laplace-frag-3"}
-
-::: {.slide-footer .fragment}
-What assumptions are underlying this and how changing either those assumptions can change the choice you make?
-:::
-
-## Where the Binomial Comes From {.stage-slide #binom-intuition}
-
-::: {.lede-min}
-Every review is an independent draw at one constant unknown rate $S$. We cannot work back to it, only forwards. Suppose $S$ and see what it predicts.
-:::
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="binom-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="binom-frag-1"}
-[]{.fragment .fi-frag id="binom-frag-2"}
-[]{.fragment .fi-frag id="binom-frag-3"}
-
-## What If the Rate Were Different? {.ojs-slide #likelihood-live}
-
-::: {.lede-min}
-One guess at $S$ gives one number. Turn the dial and the top plot reshapes, while the bottom traces that number against every $S$ it could be.
-:::
-
-```{ojs}
-//| echo: false
-viewof s = Inputs.range([0.50, 1.00], {value: 0.95, step: 0.01, label: "True success rate s"})
-```
-
-```{ojs}
-//| echo: false
-n = 50
-k = 48
-
-// The deck's palette, so the plots match the hand-drawn stages either side.
-PAL = ({olive: "#93C54B", brick: "#B94A48", navy: "#325D88",
-        orange: "#F47C3C", soft: "#6E7681", dim: "#B0B7C0"})
-
-// Binomial pmf by recurrence: P(0) = (1-p)^n, then
-// P(j) = P(j-1) * (n-j+1)/j * p/(1-p). No factorial is ever formed, so
-// nothing overflows — the same route stage-kit.html uses.
-pmf = function (p) {
-  const q = 1 - p;
-  if (q <= 0) return Array.from({length: n + 1}, (_, i) => (i === n ? 1 : 0));
-  let v = Math.pow(q, n);
-  const out = [v];
-  for (let j = 1; j <= n; j++) { v = v * ((n - j + 1) / j) * (p / q); out.push(v); }
-  return out;
-}
-
-pk = pmf(s)
-value = pk[k]
-lik = d3.range(0, 1.0005, 0.004).map(sv => ({s: sv, p: pmf(sv)[k]}))
-
-PSTYLE = ({fontSize: "15px", fontFamily: "Roboto, sans-serif",
-           color: PAL.soft, background: "transparent"})
-```
-
-```{ojs}
-//| echo: false
-Plot.plot({
-  // marginTop 16, not 4: at 4 the 30% tick label has no room above the top
-  // gridline and reads as cut off. Height grows to match so the plotting
-  // area is unchanged.
-  width: 950, height: 154, marginLeft: 64, marginBottom: 24, marginTop: 16,
-  style: PSTYLE,
-  x: {domain: [-0.6, n + 0.6], ticks: d3.range(0, n + 1, 5), label: null, tickSize: 4},
-  // labelAnchor centre rotates the label down the axis; Plot's default puts
-  // it at the top, where it sits on the top tick.
-  // Both plots are pinned to 0-30% so the two heights read against the same
-  // scale. This one does exceed it once s passes about 0.97 — at s = 1 every
-  // draw is fifty ticks, so that bar is 100% — hence clip, which flattens it
-  // at the top of the frame instead of letting it paint over the equation.
-  y: {domain: [0, 0.30], ticks: [0.1, 0.2, 0.3], grid: true,
-      tickFormat: d => d3.format(".0%")(d), label: "P(k | s)",
-      labelAnchor: "center", labelOffset: 56},
-  marks: [
-    Plot.ruleX(d3.range(n + 1), {x: d => d, y2: d => pk[d], strokeWidth: 5,
-      stroke: d => (d === k ? PAL.olive : PAL.dim), clip: true}),
-    Plot.ruleY([0], {stroke: PAL.dim})
-  ]
-})
-```
-
-```{ojs}
-//| echo: false
-html`<div class="ojs-eq">P(<span class="hit">48&#10003;</span>, <span class="miss">2&#10007;</span> | s = <span class="rate">${s.toFixed(2)}</span>) = <b>${value.toFixed(4)}</b></div>`
-```
-
-```{ojs}
-//| echo: false
-Plot.plot({
-  // marginTop 16, not 4: at 4 the 30% tick label has no room above the top
-  // gridline and reads as cut off. Height grows to match so the plotting
-  // area is unchanged.
-  width: 950, height: 154, marginLeft: 64, marginBottom: 24, marginTop: 16,
-  style: PSTYLE,
-  x: {domain: [0, 1], ticks: [0, 0.2, 0.4, 0.6, 0.8, 1], label: null, tickSize: 4},
-  y: {domain: [0, 0.30], ticks: [0.1, 0.2, 0.3], grid: true,
-      tickFormat: d => d3.format(".0%")(d),
-      label: "P(data | s)", labelAnchor: "center", labelOffset: 56},
-  marks: [
-    Plot.line(lik, {x: "s", y: "p", stroke: PAL.navy, strokeWidth: 2.5}),
-    Plot.ruleX([s], {stroke: PAL.soft, strokeDasharray: "4 4"}),
-    Plot.dot([{s: s, p: value}], {x: "s", y: "p", fill: PAL.olive, r: 6,
-      stroke: "white", strokeWidth: 1.5}),
-    Plot.ruleY([0], {stroke: PAL.dim})
-  ]
-})
-```
-
-## The Binomial in Standard Notation {.formula-slide #binom-formal}
-
-::: {.lede-min}
-Everything so far, in the notation the worksheet uses. The rate we have been calling $S$ is written $\color{#F47C3C}{p}$; its complement is $\color{#B94A48}{q} = 1 - \color{#F47C3C}{p}$.
-:::
-
-$$P(X = \color{#93C54B}{k}) \;=\; \binom{n}{\color{#93C54B}{k}}\; \color{#F47C3C}{p}^{\,\color{#93C54B}{k}}\; \color{#B94A48}{q}^{\,\color{#B94A48}{n-k}} \qquad X \sim \operatorname{Binomial}(n, \color{#F47C3C}{p})$$
-
-::: {.fragment .note}
-One review is a **Bernoulli trial**, a single attempt with two outcomes, scored $1$ for good and $0$ for bad.
-:::
-
-::: {.fragment}
-$$P(B_i = 1) = \color{#F47C3C}{p}, \quad P(B_i = 0) = \color{#B94A48}{q}, \quad \operatorname{E}[B_i] = \color{#F47C3C}{p}, \quad \operatorname{Var}(B_i) = \color{#F47C3C}{p}\color{#B94A48}{q}$$
-:::
-
-::: {.fragment}
-$$X \;=\; B_1 + B_2 + \cdots + B_n, \qquad B_i \sim \operatorname{Bernoulli}(\color{#F47C3C}{p})$$
-:::
-
-::: {.slide-footer .fragment}
-Each of seller B's fifty reviews was one $B_i$. The binomial is nothing more than their sum, which is why only the count survives.
-:::
-
-## The Rare Event Limit of a Binomial Distribution {.ojs-slide #pois-intuition}
-
-::: {.lede-min}
-Hold the average $\color{#F47C3C}{\lambda} = n\,\color{#F47C3C}{p}$ still and push $n$ up. Each trial gets rarer, but you expect the same number of events.
-:::
-
-```{ojs}
-//| echo: false
-viewof nTrials = Inputs.range([10, 400], {value: 10, step: 1, label: "Trials n"})
-// Floor of 10, not 5: lam runs to 8, and n < lam would ask for p > 1, which
-// the recurrence below happily turns into a 1971% gap. NB a comment must NOT
-// be the first line of an {ojs} cell: it shadows the '//|' directive and
-// Quarto then emits the whole slide as plain source, with no runtime and no
-// error anywhere.
-```
-
-```{ojs}
-//| echo: false
-viewof lam = Inputs.range([1, 8], {value: 3, step: 0.5, label: "Mean λ = np"})
-```
-
-```{ojs}
-//| echo: false
-PPAL = ({olive: "#93C54B", brick: "#B94A48", navy: "#325D88",
-         orange: "#F47C3C", soft: "#6E7681", dim: "#B0B7C0"})
-
-pp = lam / nTrials                       // the success rate, shrinking as nTrials grows
-KMAX = Math.max(12, Math.ceil(lam + 4 * Math.sqrt(lam)))
-ks = d3.range(0, KMAX + 1)
-
-// Binomial(nTrials, pp) by the same recurrence used everywhere else in this deck
-binom = {
-  const q = 1 - pp;
-  if (q <= 0) return ks.map(k => (k === nTrials ? 1 : 0));
-  let v = Math.pow(q, nTrials);
-  const out = [v];
-  const top = Math.min(nTrials, KMAX);   // KMAX <= 20; no point walking to 20,000
-  for (let j = 1; j <= top; j++) { v = v * ((nTrials - j + 1) / j) * (pp / q); out.push(v); }
-  return ks.map(k => (k <= nTrials ? out[k] : 0));
-}
-
-// Poisson(lam): P(0) = e^-lam, then P(k) = P(k-1) * lam / k
-pois = {
-  const out = []; let v = Math.exp(-lam);
-  for (let k = 0; k <= KMAX; k++) { out.push(v); v = v * lam / (k + 1); }
-  return out;
-}
-
-gap = d3.max(ks, k => Math.abs(binom[k] - pois[k]))
-YMAX = Math.max(d3.max(binom), d3.max(pois)) * 1.18
-```
-
-```{ojs}
-//| echo: false
-Plot.plot({
-  width: 950, height: 205, marginLeft: 64, marginBottom: 26, marginTop: 16,
-  style: {fontSize: "15px", fontFamily: "Roboto, sans-serif",
-          color: PPAL.soft, background: "transparent"},
-  x: {domain: [-0.6, KMAX + 0.6], label: null, tickSize: 4},
-  y: {domain: [0, YMAX], grid: true, tickFormat: d => d3.format(".0%")(d),
-      label: "P(k)", labelAnchor: "center", labelOffset: 56},
-  marks: [
-    Plot.ruleX(ks, {x: d => d, y2: d => binom[d], strokeWidth: 9,
-      stroke: PPAL.dim, clip: true}),
-    // "step" is Plot's midpoint step (d3.curveStep); "step-mid" is not a
-    // curve name and throws, taking the whole plot cell with it.
-    Plot.line(ks, {x: d => d, y: d => pois[d], stroke: PPAL.brick,
-      strokeWidth: 2, curve: "step", clip: true}),
-    Plot.dot(ks, {x: d => d, y: d => pois[d], fill: PPAL.brick, r: 3.2,
-      clip: true}),
-    Plot.ruleY([0], {stroke: PPAL.dim})
-  ]
-})
-```
-
-```{ojs}
-//| echo: false
-html`<div class="ojs-eq">Binomial(${nTrials}, <span class="rate">${pp.toFixed(4)}</span>) &nbsp;→&nbsp; <span class="miss">Poisson(${lam.toFixed(1)})</span> &nbsp;·&nbsp; gap <b>${(100*gap).toFixed(2)}%</b></div>`
-```
-
-::: {.slide-footer}
-Watch what is lost. Push $n$ up and the shape stops revealing $n$ or $\color{#F47C3C}{p}$, only their product. That is why the Poisson has *one* parameter.
-:::
-
-## The Poisson in Standard Notation {.formula-slide #pois-formal}
-
-::: {.lede-min}
-Put $\color{#F47C3C}{p} = \color{#F47C3C}{\lambda}/n$ into the binomial and let $n$ run away.
-:::
-
-$$P(X = \color{#93C54B}{k}) \;=\; \binom{n}{\color{#93C54B}{k}}\big(\tfrac{\color{#F47C3C}{\lambda}}{n}\big)^{\color{#93C54B}{k}}\big(1-\tfrac{\color{#F47C3C}{\lambda}}{n}\big)^{n-\color{#93C54B}{k}}$$
-
-::: {.deriv-arrow .fragment}
-[↓]{.deriv-glyph} [Group the factors by whether they still mention $n$]{.deriv-note}
-:::
-
-$$=\;\frac{\color{#F47C3C}{\lambda}^{\,\color{#93C54B}{k}}}{\color{#93C54B}{k}!}\;\cdot\;\frac{n(n-1)\cdots(n-\color{#93C54B}{k}+1)}{n^{\color{#93C54B}{k}}}\;\cdot\;\big(1-\tfrac{\color{#F47C3C}{\lambda}}{n}\big)^{n}\;\cdot\;\big(1-\tfrac{\color{#F47C3C}{\lambda}}{n}\big)^{-\color{#93C54B}{k}}$$
-
-::: {.deriv-arrow .fragment}
-[↓]{.deriv-glyph} [As $n \to \infty$ those three go to $1$, to $e^{-\color{#F47C3C}{\lambda}}$, and to $1$]{.deriv-note}
-:::
-
-$$P(X = \color{#93C54B}{k}) \;=\; \frac{\color{#F47C3C}{\lambda}^{\,\color{#93C54B}{k}}\, e^{-\color{#F47C3C}{\lambda}}}{\color{#93C54B}{k}!} \qquad X \sim \operatorname{Poisson}(\color{#F47C3C}{\lambda})$$
-
-::: {.slide-footer .fragment}
-Only the middle factor did any real work, since $(1-\lambda/n)^{n}$ *is* the definition of $e^{-\lambda}$. One parameter now does the job of two, and $\operatorname{E}[X] = \operatorname{Var}(X) = \color{#F47C3C}{\lambda}$.
-:::
-
-## Check the Approximation {.sim-slide #pois-sim}
-
-::: {.slide-kicker}
-Seminar 4 · exact vs approximate
-:::
-
-::: {.lede-min}
-Three mistakes per 10,000 transactions; 10,000 audited. What is the chance of four or more? Compute it both ways.
-:::
-
-::: {.sim-card .sim-text}
-```{webr-r}
-n <- 10000
-p <- 0.0003   # <-- keep n * p = 3
-
-binomial <- 1 - pbinom(3, n, p)
-poisson <- 1 - ppois(3, n * p)
-
-c(binomial, poisson)
-```
-:::
-
-::: {.try-this}
-Both read `0.3527681`, so every digit R prints agrees and the approximation costs you nothing here. Now set `n <- 20; p <- 0.15` (still $np = 3$) and watch it open up. **That** is what "large $n$, small $p$" is protecting you from.
+::: {.sem-mark data-sem="3"}
+Exponential, uniform, normal, chi-square and t distributions
 :::
 
 ## Time Between Poisson Events {.ojs-slide #expo-intuition}
 
 ::: {.lede-min}
-Count arrivals, or time the wait. The bridge is the $\color{#93C54B}{k = 0}$ bar.
+The $\color{#93C54B}{k = 0}$ bar, no arrivals, links the count to the waiting time.
 :::
 
 ```{ojs}
@@ -471,7 +49,7 @@ ESTYLE = ({fontSize: "15px", fontFamily: "Roboto, sans-serif",
 ```{ojs}
 //| echo: false
 Plot.plot({
-  width: 950, height: 154, marginLeft: 64, marginBottom: 24, marginTop: 16,
+  width: 950, height: 136, marginLeft: 64, marginBottom: 24, marginTop: 16,
   style: ESTYLE,
   x: {domain: [-0.6, KMAXE + 0.6], label: null, tickSize: 4},
   y: {domain: [0, YPOIS], grid: true, tickFormat: d => d3.format(".0%")(d),
@@ -492,7 +70,7 @@ html`<div class="ojs-eq">P(<span class="hit">0 arrivals</span> in ${winT.toFixed
 ```{ojs}
 //| echo: false
 Plot.plot({
-  width: 950, height: 154, marginLeft: 64, marginBottom: 24, marginTop: 16,
+  width: 950, height: 136, marginLeft: 64, marginBottom: 24, marginTop: 16,
   style: ESTYLE,
   x: {domain: [0, TE], label: null, tickSize: 4},
   y: {domain: [0, YDENS], grid: true, tickFormat: d => d3.format(".1f")(d),
@@ -512,7 +90,7 @@ Plot.plot({
 ## The Exponential in Standard Notation {.formula-slide #expo-formal}
 
 ::: {.lede-min}
-The wait beats $t$ exactly when nothing arrives in $[0, t]$, so read the Poisson at $\color{#93C54B}{k = 0}$.
+Waiting longer than $t$ means no events in $[0, t]$: the Poisson at $\color{#93C54B}{k = 0}$.
 :::
 
 $$P(T > t) \;=\; P\big(N(t) = \color{#93C54B}{0}\big), \qquad N(t) \sim \operatorname{Poisson}(\color{#F47C3C}{\lambda} t)$$
@@ -521,24 +99,28 @@ $$P(T > t) \;=\; P\big(N(t) = \color{#93C54B}{0}\big), \qquad N(t) \sim \operato
 [↓]{.deriv-glyph} [Put $\color{#93C54B}{k = 0}$ into the Poisson formula]{.deriv-note}
 :::
 
+::: {.fragment}
 $$=\;\frac{(\color{#F47C3C}{\lambda} t)^{\color{#93C54B}{0}}\, e^{-\color{#F47C3C}{\lambda} t}}{\color{#93C54B}{0}!} \;=\; e^{-\color{#F47C3C}{\lambda} t}$$
+:::
 
 ::: {.deriv-arrow .fragment}
 [↓]{.deriv-glyph} [That is the survival curve, so the density is the slope of $1 - e^{-\color{#F47C3C}{\lambda} t}$]{.deriv-note}
 :::
 
+::: {.fragment}
 $$f(t) \;=\; \color{#F47C3C}{\lambda}\, e^{-\color{#F47C3C}{\lambda} t} \qquad T \sim \operatorname{Exponential}(\color{#F47C3C}{\lambda})$$
+:::
 
 ::: {.slide-footer .fragment}
-The same $\color{#F47C3C}{\lambda}$, read the other way round. $\operatorname{E}[T] = 1/\color{#F47C3C}{\lambda}$ is the average gap between arrivals.
+Both distributions use the same rate $\color{#F47C3C}{\lambda}$. $\operatorname{E}[T] = 1/\color{#F47C3C}{\lambda}$ is the average gap between arrivals.
 :::
 
 <!-- commented out: slide 42 (dist-questions)
 
-## Summary: Three Questions, Three Distributions {.qcard-slide #dist-questions}
+## Choosing a distribution {.qcard-slide #dist-questions}
 
 ::: {.lede-min}
-Each one answers exactly one question.
+Choose the distribution according to what is being measured.
 :::
 
 ::: {.qcard .qcard-binom .fragment}
@@ -554,12 +136,13 @@ Each one answers exactly one question.
 :::
 
 ::: {.slide-footer .fragment}
-The first two count and the third measures, so only the third has no $n$ and no $k$ in it.
+The binomial and Poisson distributions describe counts. The exponential describes a continuous waiting time, so its formula contains neither $n$ nor $k$.
 :::
 
 
 -->
-## Equally Likely Anywhere {.ojs-slide #uniform-dist}
+
+## The uniform distribution {.ojs-slide .example #uniform-dist}
 
 ::: {.lede-min}
 When every value between $a$ and $b$ is equally likely, the density is flat. A probability is then a length times the height, and the height is whatever makes the whole area one.
@@ -631,7 +214,7 @@ html`<div class="ojs-eq cr-eqs un-eqs">
 ## The Limit of a Binomial Distribution for Large n {.ojs-slide #normal-intuition}
 
 ::: {.lede-min}
-Hold $\color{#F47C3C}{p}$ still and push $n$ up, and the bars settle onto a bell.
+Keep $\color{#F47C3C}{p}$ fixed and increase $n$. The bars approach a bell shape.
 :::
 
 ```{ojs}
@@ -696,13 +279,13 @@ html`<div class="ojs-eq">Binomial(${nBig}, <span class="rate">${pBig.toFixed(2)}
 ```
 
 ::: {.slide-footer}
-Two limits come out of one distribution. Rare events with $\color{#F47C3C}{\lambda} = n\color{#F47C3C}{p}$ held still give the Poisson, plenty of events with $\color{#F47C3C}{p}$ held still give the normal.
+The binomial has two limiting distributions. Rare events with $\color{#F47C3C}{\lambda} = n\color{#F47C3C}{p}$ held fixed give the Poisson, plenty of events with $\color{#F47C3C}{p}$ held fixed give the normal.
 :::
 
 ## The Galton Board {.stage-slide #galton}
 
 ::: {.lede-min}
-Galton's 1889 machine: a coin flip at every peg, and a binomial built out of falling balls.
+In Galton's 1889 machine, each peg sends a ball left or right. The number of right turns follows a binomial distribution.
 :::
 
 ::: {.stage-wrap .stage-wrap-std}
@@ -712,83 +295,10 @@ Galton's 1889 machine: a coin flip at every peg, and a binomial built out of fal
 []{.fragment .fi-frag id="galton-frag-1"}
 []{.fragment .fi-frag id="galton-frag-2"}
 
-## The Idea Behind the Central Limit Theorem {.stage-slide #clt-idea}
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="cltidea-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="cltidea-frag-1"}
-[]{.fragment .fi-frag id="cltidea-frag-2"}
-
-## Let's Try Some Simulations {.stage-slide #clt-dice}
-
-::: {.lede-min}
-Throw $\color{#F47C3C}{n}$ of them and add them up, 2,500 times.
-:::
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="cltdice-stage" class="stage"></div>
-:::
-
-<!-- commented out: clt-intuition
-
-## The Central Limit Theorem {.stage-slide #clt-intuition}
-
-::: {.lede-min}
-Not just coin flips: average draws from *any* population and the bell appears.
-:::
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="clt-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="clt-frag-1"}
-[]{.fragment .fi-frag id="clt-frag-2"}
-[]{.fragment .fi-frag id="clt-frag-3"}
-
-::: {.slide-footer}
-The population never becomes normal; the **mean** does, narrowing at $\sigma/\sqrt{n}$ on an axis that never rescales.
-:::
-
--->
-
-<!-- commented out: clt-sim
-
-## Break the Bell on Purpose {.sim-slide #clt-sim}
-
-::: {.slide-kicker}
-Seminar 4 · the CLT, stress-tested
-:::
-
-::: {.sim-card .sim-plot}
-```{webr-r}
-#| fig-width: 5.7
-#| fig-height: 4.3
-#| out-width: "100%"
-n <- 5             # <-- draws per average
-pop <- function(k) rexp(k)^2   # no bell at all
-
-xbar <- replicate(4000, mean(pop(n)))
-hist(xbar, breaks = 40, col = "#CBD9E6",
-     border = "white", main = "",
-     xlab = paste("mean of", n, "draws"))
-
-round(c(sd_obs  = sd(xbar),
-        se_pred = sd(pop(1e5)) / sqrt(n)), 3)
-```
-:::
-
-::: {.try-this}
-`n <- 1` is the raw population, violently skewed; by `n <- 30` it is nearly symmetric and `sd_obs` tracks $\sigma/\sqrt{n}$. **The CLT is a claim about the mean, and it survives a parent this ugly.**
-:::
-
--->
-
 ## The Normal Distribution {.ojs-slide #normal-formula}
 
 ::: {.lede-min}
-That bell has a formula. $\color{#B94A48}{\mu}$ slides it, $\color{#F47C3C}{\sigma}$ stretches it, and the area under it is always 1.
+$\color{#B94A48}{\mu}$ slides the curve, $\color{#F47C3C}{\sigma}$ stretches it, and its area is always 1.
 :::
 
 $$f(x) \;=\; \frac{1}{\color{#F47C3C}{\sigma}\sqrt{2\pi}}\; e^{-\frac{1}{2}\left(\frac{x-\color{#B94A48}{\mu}}{\color{#F47C3C}{\sigma}}\right)^{2}}$$
@@ -877,7 +387,74 @@ Plot.plot({
 :::
 ::::
 
-## Areas Under the Normal {.ojs-slide #normal-area}
+## Terms in the normal density {.stage-slide #normal-build}
+
+::: {.lede-min}
+Each term controls part of the curve. The $e$ and the square make the bell, $\sigma$ sets its width, $\mu$ moves it, and the constant in front keeps the area at 1.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="normbuild-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="normbuild-frag-1"}
+[]{.fragment .fi-frag id="normbuild-frag-2"}
+[]{.fragment .fi-frag id="normbuild-frag-3"}
+[]{.fragment .fi-frag id="normbuild-frag-4"}
+[]{.fragment .fi-frag id="normbuild-frag-5"}
+[]{.fragment .fi-frag id="normbuild-frag-6"}
+[]{.fragment .fi-frag id="normbuild-frag-7"}
+[]{.fragment .fi-frag id="normbuild-frag-8"}
+[]{.fragment .fi-frag id="normbuild-frag-9"}
+
+## Where the $e$ in the Normal Comes From {.stage-slide #normal-e}
+
+::: {.lede-min}
+Suppose errors in two directions are independent and no direction is preferred. These conditions determine the bell shape.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="normale-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="normale-frag-1"}
+[]{.fragment .fi-frag id="normale-frag-2"}
+[]{.fragment .fi-frag id="normale-frag-3"}
+
+## Where the $\pi$ in the Normal Comes From {.stage-slide #normal-pi}
+
+::: {.lede-min}
+Call $C$ the area under the bell $e^{-x^2}$. Form a surface from the product of two such curves, then calculate its volume in two ways.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="normalpi-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="normalpi-frag-1"}
+[]{.fragment .fi-frag id="normalpi-frag-2"}
+[]{.fragment .fi-frag id="normalpi-frag-3"}
+
+<!-- commented out: normal-full (replaced by #normal-build)
+
+## Putting the Normal Together {.stage-slide #normal-full}
+
+::: {.lede-min}
+Starting with $e^{-x^2}$ and its area $\sqrt{\pi}$, rescale and shift the curve to obtain the normal density.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="normalfull-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="normalfull-frag-1"}
+[]{.fragment .fi-frag id="normalfull-frag-2"}
+[]{.fragment .fi-frag id="normalfull-frag-3"}
+[]{.fragment .fi-frag id="normalfull-frag-4"}
+
+-->
+
+## Areas Under the Normal {.ojs-slide .example #normal-area}
 
 ::: {.lede-min}
 A probability is an area under the bell. Standardising only relabels the axis.
@@ -959,10 +536,10 @@ viewof naKind = Inputs.radio(naKinds, {value: "a < X < b", label: "Probability"}
 }
 ```
 
-## Finding a Cut-Off {.ojs-slide #normal-critical}
+## Finding a Cut-Off {.ojs-slide .example #normal-critical}
 
 ::: {.lede-min}
-Run the table backwards. Fix the area in the middle, split what is left between the two tails, and read off where the tail begins.
+To find a critical value, specify the central probability and divide the remaining probability equally between the tails. Use the table to find the corresponding boundary.
 :::
 
 ```{ojs}
@@ -1012,199 +589,10 @@ ncA = ncSd * ncB
 }
 ```
 
-## Expected Value, Variance and Standard Deviation {.stage-slide #moments}
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="moments-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="moments-frag-1"}
-[]{.fragment .fi-frag id="moments-frag-2"}
-[]{.fragment .fi-frag id="moments-frag-3"}
-[]{.fragment .fi-frag id="moments-frag-4"}
-[]{.fragment .fi-frag id="moments-frag-5"}
-[]{.fragment .fi-frag id="moments-frag-6"}
-
-<!-- commented out: moments-formal (merged into #moments)
-
-## Mean and Spread in Standard Notation {.formula-slide #moments-formal}
-
-::: {.lede-min}
-The three pictures, written down. Each piece of a formula is a piece of the picture.
-:::
-
-$$\operatorname{E}[X] \;=\; \sum_x \underset{\color{#6E7681}{\text{where it sits}}}{x}\;\;\underset{\color{#6E7681}{\text{its weight}}}{\color{#325D88}{p(x)}} \;=\; \color{#B94A48}{2.24}$$
-
-::: {.deriv-arrow .fragment}
-[↓]{.deriv-glyph} [Replace each position by the area of its square, and average again]{.deriv-note}
-:::
-
-$$\operatorname{Var}(X) \;=\; \sum_x \underset{\color{#6E7681}{\text{area of its square}}}{\color{#F47C3C}{(x - \mu)^2}}\;\;\underset{\color{#6E7681}{\text{its weight}}}{\color{#325D88}{p(x)}} \;=\; \color{#F47C3C}{1.92}$$
-
-::: {.deriv-arrow .fragment}
-[↓]{.deriv-glyph} [Read off the side of the average square, back in the units of $X$]{.deriv-note}
-:::
-
-$$\operatorname{SD}(X) \;=\; \underset{\color{#6E7681}{\text{side of the average square}}}{\sqrt{\operatorname{Var}(X)}} \;=\; \color{#325D88}{1.39}$$
-
-::: {.slide-footer .fragment}
-For a normal these are exactly its two parameters: $\operatorname{E}[X] = \color{#B94A48}{\mu}$ and $\operatorname{SD}(X) = \color{#325D88}{\sigma}$.
-:::
-
--->
-
-## Two Couriers, One Formula {.ojs-slide #courier-moments}
-
-::: {.lede-min}
-Two firms, the same four delivery times, different probabilities. The red line is the mean and the orange lines sit one standard deviation either side.
-:::
-
-```{ojs}
-//| echo: false
-viewof crFirm = Inputs.radio(["Firm A", "Firm B"], {value: "Firm A", label: "Show the working for"})
-```
-
-```{ojs}
-//| echo: false
-// Exercise 7 of the beamer Seminar 3.
-crX = [0.5, 1, 1.5, 2]
-crP = ({"Firm A": [0.6, 0.1, 0.1, 0.2], "Firm B": [0.1, 0.7, 0.15, 0.05]})
-crMom = p => {
-  const mu = d3.sum(crX, (x, i) => x * p[i]);
-  const ex2 = d3.sum(crX, (x, i) => x * x * p[i]);
-  return {mu, ex2, v: ex2 - mu * mu, sd: Math.sqrt(ex2 - mu * mu)};
-}
-crPlot = firm => {
-  const p = crP[firm], m = crMom(p);
-  return Plot.plot({
-    width: 460, height: 190, marginLeft: 48, marginBottom: 30, marginTop: 26,
-    style: ({fontSize: "14px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"}),
-    x: {domain: [0, 2.5], label: null, ticks: crX, tickSize: 4, tickFormat: d => `${d} h`},
-    y: {domain: [0, 0.8], grid: true, ticks: [0, 0.4, 0.8], label: null},
-    marks: [
-      Plot.ruleX(crX, {x: d => d, y2: (d, i) => p[i], strokeWidth: 16,
-        stroke: firm === crFirm ? PPAL.navy : PPAL.dim}),
-      Plot.ruleX([m.mu - m.sd, m.mu + m.sd], {stroke: PPAL.orange, strokeWidth: 2, strokeDasharray: "5 4"}),
-      Plot.ruleX([m.mu], {stroke: PPAL.brick, strokeWidth: 2.5}),
-      Plot.text([firm], {frameAnchor: "top-right", dy: -18, text: d => d,
-        fill: firm === crFirm ? PPAL.navy : PPAL.soft, fontWeight: 700, fontSize: 16}),
-      Plot.ruleY([0], {stroke: PPAL.dim})
-    ]
-  });
-}
-```
-
-```{ojs}
-//| echo: false
-{
-  const p = crP[crFirm], m = crMom(p);
-  const f = v => +v.toFixed(4);
-  const terms = crX.map((x, i) => `${x}²×${p[i]}`).join(" + ");
-  return html`<div class="cr-row">${crPlot("Firm A")}${crPlot("Firm B")}</div>
-  <div class="ojs-eq cr-eqs">
-    <span>E[X]</span><span>= ${crX.map((x, i) => `${x}×${p[i]}`).join(" + ")} = <span class="miss">${f(m.mu)}</span></span>
-    <span>E[X²]</span><span>= ${terms} = ${f(m.ex2)}</span>
-    <span>Var(X)</span><span>= E[X²] − μ² = ${f(m.ex2)} − ${f(m.mu)}² = <span class="rate">${f(m.v)}</span></span>
-  </div>
-  <div class="quiz-fb">Firm A is quicker on average (0.95 h against 1.075 h), Firm B far steadier (variance 0.107 against 0.373). Which you hire depends on whether a late delivery costs more than a slower one, and these two numbers are what let you argue it.</div>`;
-}
-```
-
-## The Law of Large Numbers, Intuitively {.stage-slide #lln}
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="lln-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="lln-frag-1"}
-[]{.fragment .fi-frag id="lln-frag-2"}
-[]{.fragment .fi-frag id="lln-frag-3"}
-
-<!-- commented out: clt-proof
-
-## The Central Limit Theorem, Intuitively {.stage-slide #clt-proof}
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="cltproof-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="cltproof-frag-1"}
-[]{.fragment .fi-frag id="cltproof-frag-2"}
-[]{.fragment .fi-frag id="cltproof-frag-3"}
-
--->
-
-## Unpacking the Normal Formula {.stage-slide #normal-build}
-
-::: {.lede-min}
-Every piece of the formula has a job. The $e$ and the square make the bell, $\sigma$ sets its width, $\mu$ moves it, and the constant in front keeps the area at 1.
-:::
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="normbuild-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="normbuild-frag-1"}
-[]{.fragment .fi-frag id="normbuild-frag-2"}
-[]{.fragment .fi-frag id="normbuild-frag-3"}
-[]{.fragment .fi-frag id="normbuild-frag-4"}
-[]{.fragment .fi-frag id="normbuild-frag-5"}
-[]{.fragment .fi-frag id="normbuild-frag-6"}
-[]{.fragment .fi-frag id="normbuild-frag-7"}
-[]{.fragment .fi-frag id="normbuild-frag-8"}
-[]{.fragment .fi-frag id="normbuild-frag-9"}
-
-## Where the $e$ in the Normal Comes From {.stage-slide #normal-e}
-
-::: {.lede-min}
-Forget the binomial for a moment. Ask only that errors in two directions be independent and that no direction be special, and the bell has no choice about its shape.
-:::
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="normale-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="normale-frag-1"}
-[]{.fragment .fi-frag id="normale-frag-2"}
-[]{.fragment .fi-frag id="normale-frag-3"}
-
-## Where the $\pi$ in the Normal Comes From {.stage-slide #normal-pi}
-
-::: {.lede-min}
-Call $C$ the area under the bell $e^{-x^2}$. Build the round hill from two of them, then measure its volume in two different ways.
-:::
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="normalpi-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="normalpi-frag-1"}
-[]{.fragment .fi-frag id="normalpi-frag-2"}
-[]{.fragment .fi-frag id="normalpi-frag-3"}
-
-<!-- commented out: normal-full (replaced by #normal-build)
-
-## Putting the Normal Together {.stage-slide #normal-full}
-
-::: {.lede-min}
-The shape $e^{-x^2}$ and its area $\sqrt{\pi}$ are all the ingredients. Four moves turn them into the formula in every textbook, and each move writes one piece of it.
-:::
-
-::: {.stage-wrap .stage-wrap-std}
-<div id="normalfull-stage" class="stage"></div>
-:::
-
-[]{.fragment .fi-frag id="normalfull-frag-1"}
-[]{.fragment .fi-frag id="normalfull-frag-2"}
-[]{.fragment .fi-frag id="normalfull-frag-3"}
-[]{.fragment .fi-frag id="normalfull-frag-4"}
-
--->
-
 ## The Box Plot on a Normal Curve {.formula-slide #box-normal}
 
 ::: {.lede-min}
-A box plot is five numbers and no assumptions. Lay it over a normal curve and all five land in fixed places, which is where the $1.5 \times \text{IQR}$ rule comes from.
+A box plot summarises five values without assuming a distribution. On a normal curve, their positions show how the $1.5 \times \text{IQR}$ rule relates to the distribution.
 :::
 
 ```{=html}
@@ -1248,7 +636,7 @@ A box plot is five numbers and no assumptions. Lay it over a normal curve and al
 <circle cx="767.6" cy="78" r="3.6" fill="#B94A48"/>
 <text x="128.4" y="103" font-size="15" font-family="Roboto, sans-serif" fill="#B94A48" font-weight="700" text-anchor="middle">Outliers</text>
 <text x="751.6" y="103" font-size="15" font-family="Roboto, sans-serif" fill="#B94A48" font-weight="700" text-anchor="middle">Outliers</text>
-<path d="M370.1 28V20H509.9V28M440.0 20V13" fill="none" stroke="#325D88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M370.1 28Q370.1 21 378.1 21L432.0 21Q440.0 21 440.0 14Q440.0 21 448.0 21L501.9 21Q509.9 21 509.9 28" fill="none" stroke="#325D88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="440.0" y="9" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">IQR</text>
 <text x="370.1" y="52" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">Q1</text>
 <text x="509.9" y="52" font-size="15" font-family="Roboto, sans-serif" fill="#325D88" font-weight="700" text-anchor="middle">Q3</text>
@@ -1266,13 +654,12 @@ A box plot is five numbers and no assumptions. Lay it over a normal curve and al
 ```
 
 ::: {.note-box}
-$Q_1$ and $Q_3$ sit at $\mp 0.6745\sigma$, so the fences fall at $\mp 2.698\sigma$ and only $0.7\%$ of a normal lies beyond them. In a sample of a thousand, about seven points get flagged with nothing wrong.
+$Q_1$ and $Q_3$ sit at $\mp 0.6745\sigma$, so the fences fall at $\mp 2.698\sigma$ and only $0.7\%$ of a normal lies beyond them. In a normal sample of a thousand, the rule flags about seven points.
 :::
-
 
 <!-- commented out: zstd-intuition
 
-## One table for every normal {.stage-slide #zstd-intuition}
+## Standardising a normal variable {.stage-slide #zstd-intuition}
 
 ::: {.stage-wrap .stage-wrap-std}
 <div id="zstd-stage" class="stage"></div>
@@ -1282,7 +669,7 @@ $Q_1$ and $Q_3$ sit at $\mp 0.6745\sigma$, so the fences fall at $\mp 2.698\sigm
 []{.fragment .fi-frag id="zstd-frag-2"}
 
 ::: {.slide-footer}
-Subtracting $\mu$ moves the curve; dividing by $\sigma$ squeezes it, so it grows *taller* — area is always 1. The shaded probability never moves: standardising changes the ruler, not the answer.
+Subtracting $\mu$ centres the curve at zero. Dividing by $\sigma$ rescales its width and height while preserving total area 1. The shaded probability is unchanged.
 :::
 
 -->
@@ -1290,7 +677,7 @@ Subtracting $\mu$ moves the curve; dividing by $\sigma$ squeezes it, so it grows
 ## Functions of a Random Variable {.formula-slide #funcrv}
 
 ::: {.lede-min}
-For $\color{#93C54B}{Y} = g(X)$, work through the *CDF* and never the density. Ask which values of $X$ make $\color{#93C54B}{Y}$ small enough.
+For $\color{#93C54B}{Y} = g(X)$, use the CDF to find which values of $X$ satisfy $\color{#93C54B}{Y} \le y$.
 :::
 
 $$F_{\color{#93C54B}{Y}}(y) \;=\; P(a X + b \le y) \;=\; P\big(X \le \tfrac{y-b}{a}\big)$$
@@ -1299,13 +686,17 @@ $$F_{\color{#93C54B}{Y}}(y) \;=\; P(a X + b \le y) \;=\; P\big(X \le \tfrac{y-b}
 [↓]{.deriv-glyph} [The right-hand side is just $X$'s own CDF, read at a shifted point]{.deriv-note}
 :::
 
+::: {.fragment}
 $$F_{\color{#93C54B}{Y}}(y) \;=\; F_X\big(\tfrac{y-b}{a}\big)$$
+:::
 
 ::: {.deriv-arrow .fragment}
 [↓]{.deriv-glyph} [Differentiate in $y$; the chain rule brings down the $1/a$]{.deriv-note}
 :::
 
+::: {.fragment}
 $$f_{\color{#93C54B}{Y}}(y) \;=\; \tfrac{1}{|a|}\, f_X\big(\tfrac{y-b}{a}\big) \qquad\Longrightarrow\qquad \color{#93C54B}{Y} \sim \operatorname{N}\big(a\mu + b,\; a^{2}\sigma^{2}\big)$$
+:::
 
 ::: {.slide-footer .fragment}
 Standardising is this with $a = 1/\sigma$ and $b = -\mu/\sigma$, which is why one table serves every normal. A *non-linear* $g$ leaves the family, so $X \sim \operatorname{N}(0,1)$ makes $\color{#93C54B}{Y} = X^{2}$ chi-squared.
@@ -1314,7 +705,7 @@ Standardising is this with $a = 1/\sigma$ and $b = -\mu/\sigma$, which is why on
 ## The Chi-Square Distribution {.stage-slide #chisq}
 
 ::: {.lede-min}
-Square $k$ independent standard normals and add them up. The total is never negative, and it is the yardstick for sample variances, since $(n-1)s^2/\sigma^2 \sim \chi^2_{n-1}$.
+Square $k$ independent standard normals and add them up. The total is never negative, and it describes the distribution of scaled sample variances, since $(n-1)s^2/\sigma^2 \sim \chi^2_{n-1}$.
 :::
 
 ::: {.stage-wrap .stage-wrap-std}
@@ -1328,7 +719,7 @@ Square $k$ independent standard normals and add them up. The total is never nega
 ## The Student's $t$ Distribution {.stage-slide #tdist}
 
 ::: {.lede-min}
-Swap the unknown $\sigma$ for the sample's $s$ and the bell gets fatter tails. Formally $T = Z/\sqrt{V/k}$ with $V \sim \chi^2_k$, which is why the chi-square came first.
+Replacing the unknown $\sigma$ with the sample standard deviation $S$ gives a distribution with heavier tails. Formally $T = Z/\sqrt{V/k}$ with $V \sim \chi^2_k$, which is why the chi-square came first.
 :::
 
 ::: {.stage-wrap .stage-wrap-std}

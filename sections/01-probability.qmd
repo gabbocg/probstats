@@ -1,19 +1,27 @@
-# Basic Concepts {.hero #s03-probability}
+# Probability {.hero #part-probability}
 
-::: {.sem-mark data-sem="3"}
-Seminar 3 · Conditional probability and Bayes
+::: {.section-badge}
+Part I
+:::
+
+[Assume the distribution is known;]{.known} [the sample is unknown.]{.unknown}
+
+# Basic Concepts {.hero #s01-probability}
+
+::: {.sem-mark data-sem="1"}
+Counting, sets, conditioning and Bayes
 :::
 
 ## Probability of an Event {.formula-slide #prob-count}
 
 ::: {.lede-min}
-Count how many ways the event can happen, then how many things can happen at all. The probability is the ratio of the two.
+Divide the number of outcomes in the event by the total number of possible outcomes.
 :::
 
 $$P(\color{#93C54B}{A}) = \frac{\#\ \text{ways } \color{#93C54B}{A} \text{ can happen}}{\#\ \text{of things that can happen}} = \frac{|\color{#93C54B}{A}|}{|\Omega|}$$
 
 :::: {.two-col}
-::: {}
+::: {.fragment}
 [Flip a coin twice]{.col-head}
 
 $\Omega = \{hh,\ ht,\ th,\ tt\} \quad \color{#6E7681}{\text{4 in all}}$
@@ -44,7 +52,7 @@ $\color{#93C54B}{A} = \{hh,\ ht,\ th\} \qquad P(\color{#93C54B}{A}) = \tfrac{3}{
 $\color{#325D88}{B} = \{tt\} \qquad P(\color{#325D88}{B}) = \tfrac{1}{4} = 25\%$
 :::
 
-::: {}
+::: {.fragment}
 [Roll two dice]{.col-head}
 
 ::: {.dice-grid}
@@ -65,14 +73,115 @@ $P(\color{#93C54B}{A}) = \tfrac{1}{6} + \tfrac{5}{6} \times \tfrac{1}{6} = \tfra
 :::
 ::::
 
-::: {.pitfall}
-A tempting answer is 6 + 6 = 12, six rolls with a five on the first die and six with a five on the second. Five and five is in both lists, so twelve counts it twice. The split on the right avoids that, because its second case needs the first die not to be a five.
+::: {.pitfall .fragment}
+Adding 6 + 6 = 12 counts the outcome (5, 5) twice. In the calculation on the right, the second case excludes a five on the first die, so the cases do not overlap.
 :::
+
+## Combinatorics and the Factorial {.formula-slide #combinatorics}
+
+::: {.lede-min}
+There are $n$ choices and you are taking $r$ of them. The formula depends on whether you sample with replacement and whether order matters.
+:::
+
+$$n! = n \times (n-1) \times \cdots \times 2 \times 1 \qquad 0! = 1$$
+
+::::: {.three-col}
+::: {.fragment}
+[With replacement]{.col-head}
+[Order matters]{.col-sub}
+
+$$n^{\,r}$$
+
+[Ten coin flips in a row]{.col-lab}
+
+$2^{10} = 1{,}024$
+:::
+
+::: {.fragment}
+[Without replacement]{.col-head}
+[Order matters]{.col-sub}
+[Permutation · $^{n}P_{r}$]{.col-term}
+
+$$\dfrac{n!}{(n-r)!}$$
+
+[Five cards off the top of the deck]{.col-lab}
+
+$\begin{array}{@{}r@{\;}c@{\;}l@{}}
+\dfrac{52!}{47!} & = & 52 \times 51 \times 50 \times 49 \times 48 \\[3pt]
+ & = & 311{,}875{,}200
+\end{array}$
+:::
+
+::: {.fragment}
+[Without replacement]{.col-head}
+[Order does not matter]{.col-sub}
+[Combination · $^{n}C_{r}$]{.col-term}
+
+$$\dfrac{n!}{(n-r)!\,r!} = \dbinom{n}{r}$$
+
+[Different orders of the same hand]{.col-lab}
+
+::: {.stack}
+```{=html}
+<div class="perm-row"><span>K Q 2 3 7</span><span>K 2 Q 7 3</span></div>
+```
+
+$\dbinom{52}{5} = 2{,}598{,}960$
+:::
+:::
+:::::
+
+::: {.note-box .fragment}
+The last two formulas differ by $r!$, the number of possible orders of the $r$ selected items. There are 311,875,200 ordered deals and 2,598,960 hands, because each hand can be dealt in $5! = 120$ ways.
+:::
+
+## Choosing Without Order {.ojs-slide .example #choose-count}
+
+::: {.lede-min}
+How many selections are possible? Order does not matter in these four examples, so each uses combinations of $r$ items from $n$.
+:::
+
+```{ojs}
+//| echo: false
+// Exercise 5 of the 2026-27 sheet (Seminar 4 in the 2025-26 beamer):
+// 6C3 = 20, 10C3 = 120, 8C4 = 70, 5C2 x 3C2 = 30.
+chCases = [
+  {q: "6 shirts, pack 3", groups: [{tag: "T", n: 6, r: 3}], what: "T-shirts"},
+  {q: "10 people, call 3", groups: [{tag: "P", n: 10, r: 3}], what: "people to call"},
+  {q: "8 friends, invite 4", groups: [{tag: "F", n: 8, r: 4}], what: "friends"},
+  {q: "2 men + 2 women", groups: [{tag: "M", n: 5, r: 2}, {tag: "W", n: 3, r: 2}], what: "guests"}
+]
+viewof chIn = Inputs.form({
+  q: Inputs.radio(chCases.map(d => d.q), {value: chCases[0].q, label: "Question"}),
+  again: Inputs.button("Another pick")
+}, {template: ins => html`<div class="cl-dials">${ins.q}${ins.again}</div>`})
+```
+
+```{ojs}
+//| echo: false
+chCase = chCases.find(d => d.q === chIn.q)
+chC = (n, r) => { let c = 1; for (let k = 1; k <= r; k++) c = c * (n - r + k) / k; return c; }
+chPick = { chIn.again;   // a fresh random pick on every press
+  return chCase.groups.map(g => new Set(d3.shuffle(d3.range(g.n)).slice(0, g.r))); }
+chFact = (n, r) => d3.range(n, n - r, -1).join(" × ")
+chTotal = chCase.groups.reduce((t, g) => t * chC(g.n, g.r), 1)
+{
+  const rows = chCase.groups.map((g, gi) => html`<div class="ch-row">${d3.range(g.n).map(i =>
+    html`<span class="ch-chip ${chPick[gi].has(i) ? "on" : ""}">${g.tag}${i + 1}</span>`)}</div>`);
+  const one = g => html`<sup>${g.n}</sup>C<sub>${g.r}</sub> = ${g.n}! / (${g.r}! · ${g.n - g.r}!) = (${chFact(g.n, g.r)}) / (${chFact(g.r, g.r)}) = <b>${chC(g.n, g.r)}</b>`;
+  const eq = chCase.groups.length === 1 ? one(chCase.groups[0])
+    : html`<sup>5</sup>C<sub>2</sub> × <sup>3</sup>C<sub>2</sub> = ${chC(5, 2)} × ${chC(3, 2)} = <b>${chTotal}</b>`;
+  const fb = chCase.groups.length === 1
+    ? html`The selection shown is <b>one of ${chTotal}</b>. Press <b>Another pick</b> to choose different ${chCase.what}. Dividing by ${chCase.groups[0].r}! accounts for the possible orders of each selection.`
+    : html`Choose the men and the women <b>separately, then multiply</b>: each of the ${chC(5, 2)} pairs of men can go with each of the ${chC(3, 2)} pairs of women, so ${chC(5, 2)} × ${chC(3, 2)} = ${chTotal}.`;
+  return html`<div class="ch-wrap">${rows}<div class="ojs-eq ch-eq">${eq}</div><div class="quiz-fb">${fb}</div></div>`;
+}
+```
 
 ## Sample Spaces and Events {.stage-slide #space-intuition}
 
 ::: {.lede-min}
-Roll two dice and every possible result is on the board. The sample space $\Omega$ is that whole board, and an **event** is any part of it you can point at.
+The board shows all possible outcomes of rolling two dice. Together they form the sample space $\Omega$. An event is a subset of these outcomes.
 :::
 
 ::: {.stage-wrap .stage-wrap-std}
@@ -84,13 +193,13 @@ Roll two dice and every possible result is on the board. The sample space $\Omeg
 []{.fragment .fi-frag id="space-frag-3"}
 
 ::: {.slide-footer}
-When every outcome is equally likely, a probability is a count. $P(\color{#93C54B}{A})$ is the cells in $\color{#93C54B}{A}$ over the cells in $\Omega$. Two fair dice earn that assumption, and most real problems do not.
+When outcomes are equally likely, calculate probability as a ratio of counts. $P(\color{#93C54B}{A})$ is the cells in $\color{#93C54B}{A}$ over the cells in $\Omega$. That assumption holds for two fair dice, but often fails in real problems.
 :::
 
 ## Unions, Intersections and Complements {.stage-slide #setops-intuition}
 
 ::: {.lede-min}
-Two events on the same board. $\color{#93C54B}{A} \cup \color{#325D88}{B}$ is "either", $\color{#93C54B}{A} \cap \color{#325D88}{B}$ is "both", and $\color{#93C54B}{A}^{c}$ is everything left over.
+The board shows two events. $\color{#93C54B}{A} \cup \color{#325D88}{B}$ is "either", $\color{#93C54B}{A} \cap \color{#325D88}{B}$ is "both", and $\color{#93C54B}{A}^{c}$ is everything left over.
 :::
 
 ::: {.stage-wrap .stage-wrap-std}
@@ -102,13 +211,13 @@ Two events on the same board. $\color{#93C54B}{A} \cup \color{#325D88}{B}$ is "e
 []{.fragment .fi-frag id="setops-frag-3"}
 
 ::: {.slide-footer}
-Add 6 and 18 and you get 24, which is three too many. The cells that belong to both events were counted twice, so they have to come back off.
+Add 6 and 18 and you get 24, which is three too many. The cells in both events were counted twice, so subtract them once.
 :::
 
-## The Same Picture, Drawn as Circles {.stage-slide #venn-intuition}
+## Venn diagrams {.stage-slide #venn-intuition}
 
 ::: {.lede-min}
-A **Venn diagram** is the board with the grid rubbed out. The four counts are the ones you just read off it, and they still add to 36.
+A Venn diagram shows the same events as regions inside circles. The four regions contain the same counts as the board, totalling 36.
 :::
 
 ::: {.stage-wrap .stage-wrap-std}
@@ -120,13 +229,13 @@ A **Venn diagram** is the board with the grid rubbed out. The four counts are th
 []{.fragment .fi-frag id="venn-frag-3"}
 
 ::: {.slide-footer}
-These circles are drawn to scale, so $\color{#325D88}{B}$ really does cover three times the area of $\color{#93C54B}{A}$. Most are not, which is why the counts written on them matter more than the picture.
+These circles are drawn to scale, so $\color{#325D88}{B}$ covers three times the area of $\color{#93C54B}{A}$. Most are not, which is why the counts written on them matter more than the picture.
 :::
 
 ## Set Notation for Probability {.formula-slide #set-formal}
 
 ::: {.lede-min}
-Counting gives $P(\color{#93C54B}{A}) = |\color{#93C54B}{A}|/|\Omega|$ and $P(\color{#93C54B}{A}^{c}) = 1 - P(\color{#93C54B}{A})$. Two rules do the rest.
+Counting gives $P(\color{#93C54B}{A}) = |\color{#93C54B}{A}|/|\Omega|$ and $P(\color{#93C54B}{A}^{c}) = 1 - P(\color{#93C54B}{A})$. For unions and intersections, use the following rules.
 :::
 
 :::: {.fragment}
@@ -152,13 +261,13 @@ P(\color{#93C54B}{A} \cap \color{#325D88}{B}) & = & P(\color{#93C54B}{A}) \times
 ::::
 
 ::: {.slide-footer .fragment}
-Mutually exclusive means $\color{#93C54B}{A} \cap \color{#325D88}{B} = \varnothing$, so there is nothing to subtract. Independent means learning $\color{#93C54B}{A}$ tells you nothing about $\color{#325D88}{B}$, which the next slide makes precise.
+Mutually exclusive means $\color{#93C54B}{A} \cap \color{#325D88}{B} = \varnothing$, so there is nothing to subtract. Independent means learning $\color{#93C54B}{A}$ tells you nothing about $\color{#325D88}{B}$, as the conditional probability formula shows.
 :::
 
 ## Conditional Probabilities {.formula-slide #conditional-probabilities}
 
 ::: {.lede-min}
-Being told that $\color{#325D88}{B}$ happened throws away every outcome outside it. What is left is a smaller sample space, and the question is how much of that is $\color{#93C54B}{A}$.
+Given that $\color{#325D88}{B}$ occurred, restrict the sample space to its outcomes. The conditional probability is the proportion of those outcomes that also belong to $\color{#93C54B}{A}$.
 :::
 
 ::: {.cond-row}
@@ -195,100 +304,54 @@ $$P(\color{#93C54B}{A} \mid \color{#325D88}{B}) = \frac{P(\color{#93C54B}{A} \ca
 
 :::: {.two-col}
 ::: {.fragment}
-[Knowing it changes nothing]{.col-head}
+[Independent events]{.col-head}
 [$\color{#325D88}{B}$ is "the second die is a five"]{.col-sub}
 
 ```{=html}
 <div class="die-grid"><svg width="97" height="96" viewBox="0 0 97.0 96.0" aria-label="the six rolls where the second die is a five, one of which has a three first"><text x="21.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">1</text><text x="35.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">2</text><text x="49.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">3</text><text x="63.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">4</text><text x="77.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">5</text><text x="91.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">6</text><text x="11" y="23.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">1</text><text x="11" y="37.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">2</text><text x="11" y="51.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">3</text><text x="11" y="65.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">4</text><text x="11" y="79.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">5</text><text x="11" y="93.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">6</text><rect x="15.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="14.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="85.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="28.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="85.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#F47C3C"/><rect x="85.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="56.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="85.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="70.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="85.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="84.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="85.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/></svg></div>
 ```
 
-Six rolls survive and one of them starts with a three, so $P(\color{#93C54B}{A} \mid \color{#325D88}{B}) = \tfrac{1}{6}$, which is $P(\color{#93C54B}{A})$ over again. The dice are **independent**.
+Six outcomes remain, and one has a three on the first die, so $P(\color{#93C54B}{A} \mid \color{#325D88}{B}) = \tfrac{1}{6}$, equal to $P(\color{#93C54B}{A})$. The dice are **independent**.
 :::
 
 ::: {.fragment}
-[Knowing it changes everything]{.col-head}
+[Dependent events]{.col-head}
 [$\color{#325D88}{C}$ is "the total is six"]{.col-sub}
 
 ```{=html}
 <div class="die-grid"><svg width="97" height="96" viewBox="0 0 97.0 96.0" aria-label="the five rolls totalling six, one of which has a three first"><text x="21.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">1</text><text x="35.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">2</text><text x="49.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">3</text><text x="63.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">4</text><text x="77.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">5</text><text x="91.0" y="10" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="middle">6</text><text x="11" y="23.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">1</text><text x="11" y="37.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">2</text><text x="11" y="51.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">3</text><text x="11" y="65.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">4</text><text x="11" y="79.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">5</text><text x="11" y="93.4" font-size="9.5" font-family="JetBrains Mono, monospace" fill="#8A9099" text-anchor="end">6</text><rect x="15.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="14.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="85.0" y="14.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="28.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="71.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="85.0" y="28.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#F47C3C"/><rect x="57.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="85.0" y="42.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="56.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="43.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="85.0" y="56.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="70.0" width="12.0" height="12.0" rx="2" fill="rgba(50,93,136,0.30)"/><rect x="29.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="85.0" y="70.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="15.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="29.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="43.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="57.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="71.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/><rect x="85.0" y="84.0" width="12.0" height="12.0" rx="2" fill="#EDEFF2"/></svg></div>
 ```
 
-Now only five rolls survive and one of them starts with a three, so $P(\color{#93C54B}{A} \mid \color{#325D88}{C}) = \tfrac{1}{5}$. The total tells you something about the first die.
+Five outcomes remain, and one has a three on the first die, so $P(\color{#93C54B}{A} \mid \color{#325D88}{C}) = \tfrac{1}{5}$. The total tells you something about the first die.
 :::
 ::::
 
 ::: {.note-box .fragment}
-Here $\color{#93C54B}{A}$ is "the first die is a three". Reversing the bar asks something else, and that is what Bayes is for.
+Here $\color{#93C54B}{A}$ is "the first die is a three". Reversing the conditioning gives a different question, which Bayes' theorem answers.
 :::
 
-
-## Four Taxis, Four Coins {.ojs-slide #taxi-indep}
+## Conditioning Narrows the Sample Space {.stage-slide #cond-intuition}
 
 ::: {.lede-min}
-Each taxi breaks down on its own coin, so the chance of a particular combination is the product of its pieces. Set the rates, then put the two old taxis in the same garage.
+Eight in ten office managers would buy the software ($\color{#325D88}{A}$), and four in ten of those would also upgrade ($\color{#F47C3C}{B}$). Of the rest, one in ten would. Given $\color{#F47C3C}{B}$, how likely is $\color{#325D88}{A}$?
 :::
 
-```{ojs}
-//| echo: false
-viewof txOld = Inputs.range([0.01, 0.5], {value: 0.10, step: 0.01, format: v => v.toFixed(2), label: "Old taxi breaks down"})
-```
+::: {.stage-wrap .stage-wrap-std}
+<div id="cond-stage" class="stage"></div>
+:::
 
-```{ojs}
-//| echo: false
-viewof txNew = Inputs.range([0.01, 0.5], {value: 0.05, step: 0.01, format: v => v.toFixed(2), label: "New taxi breaks down"})
-```
+[]{.fragment .fi-frag id="cond-frag-1"}
+[]{.fragment .fi-frag id="cond-frag-2"}
+[]{.fragment .fi-frag id="cond-frag-3"}
 
-```{ojs}
-//| echo: false
-viewof txShared = Inputs.toggle({label: "Old pair share a garage", value: false})
-```
+::: {.slide-footer .fragment}
+Conditioning on $\color{#F47C3C}{B}$ excludes the other 66%, so $P(\color{#325D88}{A} \mid \color{#F47C3C}{B}) = P(\color{#325D88}{A} \cap \color{#F47C3C}{B})/P(\color{#F47C3C}{B})$.
+:::
 
-```{ojs}
-//| echo: false
-// Exercise 3 of the beamer Seminar 3. A million simulated days, redrawn on
-// every change. With the garage shared, the second old taxi breaks down
-// exactly when the first does, which is the simplest dependence there is.
-txDays = 1000000
-txSim = {
-  let all4 = 0, newOnly = 0;
-  for (let d = 0; d < txDays; d++) {
-    const o1 = Math.random() < txOld;
-    const o2 = txShared ? o1 : Math.random() < txOld;
-    const n1 = Math.random() < txNew, n2 = Math.random() < txNew;
-    if (o1 && o2 && n1 && n2) all4++;
-    if (!o1 && !o2 && n1 && n2) newOnly++;
-  }
-  return {all4: all4 / txDays, newOnly: newOnly / txDays};
-}
-txRule = ({all4: txOld * txOld * txNew * txNew,
-           newOnly: (1 - txOld) * (1 - txOld) * txNew * txNew})
-```
-
-```{ojs}
-//| echo: false
-{
-  const g = v => v.toFixed(6);   // one width for every cell, 0.000025 needs six
-  const o = txOld.toFixed(2), n = txNew.toFixed(2), q = (1 - txOld).toFixed(2);
-  const verdict = txShared
-    ? html`The rule still multiplies four coins, but now there are only three: the second old taxi copies the first. The simulation runs about <b>${(1 / txOld).toFixed(0)} times</b> above the rule for all four, so the product rule is only allowed once you have <b>assumed independence</b>. That is why the worksheet asks you to state it.`
-    : html`Rule and simulation agree, to the noise of a million days. Multiplying works because no taxi's breakdown tells you anything about another's.`;
-  return html`<div class="ct-wrap">
-    <table class="ct-table">
-      <thead><tr><th></th><th>Product rule</th><th>${d3.format(",")(txDays)} days simulated</th></tr></thead>
-      <tbody>
-        <tr><th>All four break down</th><td>${o} × ${o} × ${n} × ${n} = ${g(txRule.all4)}</td><td class=${txShared ? "ct-top" : ""}>${g(txSim.all4)}</td></tr>
-        <tr><th>Only the new ones break down</th><td>${q} × ${q} × ${n} × ${n} = ${g(txRule.newOnly)}</td><td class=${txShared ? "ct-top" : ""}>${g(txSim.newOnly)}</td></tr>
-      </tbody>
-    </table>
-    <div class="quiz-fb ${txShared ? "quiz-no" : "quiz-ok"}">${verdict}</div>
-  </div>`;
-}
-```
-
-## Reading a Two-Way Table {.ojs-slide #table-cond}
+## Reading a Two-Way Table {.ojs-slide .example #table-cond}
 
 ::: {.lede-min}
-Every probability in the table is one count over another. Pick the event and what you are told, and see which cells go on top and which you divide by.
+Choose an event and a condition. The table marks the cells used in the numerator and denominator of the probability.
 :::
 
 ```{ojs}
@@ -367,28 +430,73 @@ ctView = {
 }
 ```
 
-## Conditioning Narrows the Sample Space {.stage-slide #cond-intuition}
+## Independence of taxi breakdowns {.ojs-slide .example #taxi-indep}
 
 ::: {.lede-min}
-Eight in ten office managers would buy the software ($\color{#93C54B}{A}$), and four in ten of those would also upgrade ($\color{#325D88}{B}$). Of the rest, one in ten would. Given $\color{#325D88}{B}$, how likely is $\color{#93C54B}{A}$?
+Each taxi has an independent chance of breaking down, so multiply the individual probabilities to find the probability of a particular combination. Set the rates, then put the two old taxis in the same garage.
 :::
 
-::: {.stage-wrap .stage-wrap-std}
-<div id="cond-stage" class="stage"></div>
-:::
+```{ojs}
+//| echo: false
+viewof txOld = Inputs.range([0.01, 0.5], {value: 0.10, step: 0.01, format: v => v.toFixed(2), label: "Old taxi breaks down"})
+```
 
-[]{.fragment .fi-frag id="cond-frag-1"}
-[]{.fragment .fi-frag id="cond-frag-2"}
-[]{.fragment .fi-frag id="cond-frag-3"}
+```{ojs}
+//| echo: false
+viewof txNew = Inputs.range([0.01, 0.5], {value: 0.05, step: 0.01, format: v => v.toFixed(2), label: "New taxi breaks down"})
+```
 
-::: {.slide-footer}
-Learning $\color{#325D88}{B}$ throws the other 66% away, so $P(\color{#93C54B}{A} \mid \color{#325D88}{B}) = P(\color{#93C54B}{A} \cap \color{#325D88}{B})/P(\color{#325D88}{B})$.
-:::
+```{ojs}
+//| echo: false
+viewof txShared = Inputs.toggle({label: "Old pair share a garage", value: false})
+```
+
+```{ojs}
+//| echo: false
+// Exercise 3 of the beamer Seminar 3. A million simulated days, redrawn on
+// every change. With the garage shared, the second old taxi breaks down
+// exactly when the first does, which is the simplest dependence there is.
+txDays = 1000000
+txSim = {
+  let all4 = 0, newOnly = 0;
+  for (let d = 0; d < txDays; d++) {
+    const o1 = Math.random() < txOld;
+    const o2 = txShared ? o1 : Math.random() < txOld;
+    const n1 = Math.random() < txNew, n2 = Math.random() < txNew;
+    if (o1 && o2 && n1 && n2) all4++;
+    if (!o1 && !o2 && n1 && n2) newOnly++;
+  }
+  return {all4: all4 / txDays, newOnly: newOnly / txDays};
+}
+txRule = ({all4: txOld * txOld * txNew * txNew,
+           newOnly: (1 - txOld) * (1 - txOld) * txNew * txNew})
+```
+
+```{ojs}
+//| echo: false
+{
+  const g = v => v.toFixed(6);   // one width for every cell, 0.000025 needs six
+  const o = txOld.toFixed(2), n = txNew.toFixed(2), q = (1 - txOld).toFixed(2);
+  const verdict = txShared
+    ? html`The second old taxi now has the same breakdown outcome as the first. The simulated probability is about <b>${(1 / txOld).toFixed(0)} times</b> the product of the four individual probabilities. Multiplying those probabilities requires <b>independence</b>, which is why the worksheet asks you to state this assumption.`
+    : html`The product and simulation agree within sampling variation over a million days. The breakdowns are independent, so their individual probabilities can be multiplied.`;
+  return html`<div class="ct-wrap">
+    <table class="ct-table">
+      <thead><tr><th></th><th>Product rule</th><th>${d3.format(",")(txDays)} days simulated</th></tr></thead>
+      <tbody>
+        <tr><th>All four break down</th><td>${o} × ${o} × ${n} × ${n} = ${g(txRule.all4)}</td><td class=${txShared ? "ct-top" : ""}>${g(txSim.all4)}</td></tr>
+        <tr><th>Only the new ones break down</th><td>${q} × ${q} × ${n} × ${n} = ${g(txRule.newOnly)}</td><td class=${txShared ? "ct-top" : ""}>${g(txSim.newOnly)}</td></tr>
+      </tbody>
+    </table>
+    <div class="quiz-fb ${txShared ? "quiz-no" : "quiz-ok"}">${verdict}</div>
+  </div>`;
+}
+```
 
 ## The Law of Total Probability {.formula-slide #total-probability}
 
 ::: {.lede-min}
-Cut $\Omega$ into pieces that do not overlap and leave nothing out. Every outcome in $\color{#93C54B}{A}$ then lies in exactly one piece, so the probability of $\color{#93C54B}{A}$ is its slices added back up.
+Partition $\Omega$ into events that do not overlap and cover the sample space. Calculate the probability of $\color{#93C54B}{A}$ within each part, then add the results.
 :::
 
 ::: {.cond-row}
@@ -446,9 +554,8 @@ $$0.20 \times 0.07 = 0.014$$
 ::::
 
 ::: {.note-box .fragment}
-Adding the three routes gives $P(\text{faulty}) = 0.036$. Ask instead which supplier sent the faulty part in your hand, and you are asking for Bayes.
+Adding the three routes gives $P(\text{faulty}) = 0.036$. To find the probability that a faulty part came from a particular supplier, use Bayes' theorem.
 :::
-
 
 ## Librarian or Farmer? {.stage-slide #bayes-hook}
 
@@ -464,7 +571,7 @@ Steve is very shy and withdrawn, invariably helpful but with very little interes
 []{.fragment .fi-frag id="prior-frag-2"}
 
 ::: {.slide-footer}
-The description never changes; the answer does — because of a number that is not in it. That number is the base rate, and the next slide goes and counts it.
+The answer depends on the base rate, which the description does not give. The next slide includes the number of people in each occupation.
 :::
 
 ## Twenty Farmers for Every Librarian {.stage-slide #bayes-intuition}
@@ -479,10 +586,10 @@ The description never changes; the answer does — because of a number that is n
 []{.fragment .fi-frag id="bayes-frag-4"}
 
 ::: {.slide-footer}
-The base rate is how common each job is, before you read a word about Steve. His description fits librarians four times better. But there are twenty times more farmers, so he is still five times more likely to be one.
+The base rate gives the relative frequency of each occupation before considering Steve's description. The description is four times as likely for a librarian, while farmers are twenty times as common. Steve is therefore five times as likely to be a farmer.
 :::
 
-## The Formula Is Just That Picture {.stage-slide #bayeq-formula}
+## Bayes' theorem {.stage-slide #bayeq-formula}
 
 ::: {.stage-wrap .stage-wrap-std}
 <div id="bayeq-stage" class="stage"></div>
@@ -493,10 +600,10 @@ The base rate is how common each job is, before you read a word about Steve. His
 []{.fragment .fi-frag id="bayeq-frag-3"}
 []{.fragment .fi-frag id="bayeq-frag-4"}
 
-## Move the Prior, Watch the Answer Move {.sim-slide #bayes-sim}
+## Changing the prior probability {.sim-slide #bayes-sim}
 
 ::: {.slide-kicker}
-Seminar 3 · the base rate does the work
+Effect of the prior probability
 :::
 
 ::: {.sim-card .sim-text}
@@ -514,7 +621,7 @@ c("P(H)" = prior, "P(H|E)" = mean(lib[fits]))
 :::
 
 ::: {.try-this}
-The evidence is identical every time — only the prior changes. `1/21` is the real ratio, one librarian for every twenty farmers; at `0.50` you get 0.80. **The description never had an opinion about how common librarians are, so the base rate has to supply it.**
+The evidence stays the same as you change the prior. `1/21` corresponds to one librarian for every twenty farmers; at `0.50` you get 0.80. The base rate supplies the relative frequency of the two occupations.
 :::
 
 ## Monty Hall Problem {.stage-slide #monty}
@@ -533,61 +640,3 @@ A car sits behind one of three doors and a goat behind each of the others. You p
 []{.fragment .fi-frag id="monty-frag-4"}
 []{.fragment .fi-frag id="monty-frag-5"}
 []{.fragment .fi-frag id="monty-frag-6"}
-
-## Combinatorics and the Factorial {.formula-slide #combinatorics}
-
-::: {.lede-min}
-There are $n$ choices and you are taking $r$ of them. Two questions settle which formula you need, whether you sample with replacement and whether the order matters.
-:::
-
-$$n! = n \times (n-1) \times \cdots \times 2 \times 1 \qquad 0! = 1$$
-
-::::: {.three-col}
-::: {.fragment}
-[With replacement]{.col-head}
-[Order matters]{.col-sub}
-
-$$n^{\,r}$$
-
-[Ten coin flips in a row]{.col-lab}
-
-$2^{10} = 1{,}024$
-:::
-
-::: {.fragment}
-[Without replacement]{.col-head}
-[Order matters]{.col-sub}
-[Permutation · $^{n}P_{r}$]{.col-term}
-
-$$\dfrac{n!}{(n-r)!}$$
-
-[Five cards off the top of the deck]{.col-lab}
-
-$\begin{array}{@{}r@{\;}c@{\;}l@{}}
-\dfrac{52!}{47!} & = & 52 \times 51 \times 50 \times 49 \times 48 \\[3pt]
- & = & 311{,}875{,}200
-\end{array}$
-:::
-
-::: {.fragment}
-[Without replacement]{.col-head}
-[Order does not matter]{.col-sub}
-[Combination · $^{n}C_{r}$]{.col-term}
-
-$$\dfrac{n!}{(n-r)!\,r!} = \dbinom{n}{r}$$
-
-[One hand, dealt either way]{.col-lab}
-
-::: {.stack}
-```{=html}
-<div class="perm-row"><span>K Q 2 3 7</span><span>K 2 Q 7 3</span></div>
-```
-
-$\dbinom{52}{5} = 2{,}598{,}960$
-:::
-:::
-:::::
-
-::: {.note-box .fragment}
-The last two differ by $r!$, the orders the $r$ you picked could have come in. Those 311,875,200 runs collapse to 2,598,960 hands because one hand can be dealt $5! = 120$ ways.
-:::

@@ -21,7 +21,7 @@
              level it settled at read off the axis
     frag 3   and the closed form that produces that same number without
              sampling anything:
-               P(48 ✓, 2 ✗ | s = 0.95) = C(50,48) (0.95)^48 (1-0.95)^2
+               P(48 ✓, 2 ✗ | S = 0.95) = C(50,48) (0.95)^48 (1-0.95)^2
              the coefficient braced and named, because at n = 50 it can only
              be written, never enumerated — there are 1,225 orders
 
@@ -200,7 +200,7 @@
     return [
       ['t', 'P(', INK], ['t', String(KHIT), HIT], ['m', false],
       ['t', ',' + NB, INK], ['t', '2', MISSC], ['m', true],
-      ['t', NB + '|' + NB, INK], ['t', 's = ' + S, RATE],
+      ['t', NB + '|' + NB, INK], ['t', 'S = ' + S, RATE],
       ['t', ')' + NB + '=' + NB, INK],
       ['c'],
       ['t', '(', INK], ['t', String(S), RATE], ['t', ')', INK],
@@ -305,13 +305,13 @@
       { size: 18, anchor: 'middle', fill: SOFT, cls: 'binom-olabel' }));
   }
 
-  // Line 1, the worked case, split at its equals sign. Note the "s = 0.95"
+  // Line 1, the worked case, split at its equals sign. Note the "S = 0.95"
   // inside the condition also contains an "="; the split is the outer one.
   function caseLhs() {
     return [
       { t: 'P(' }, { t: String(KHIT), f: HIT }, { m: false },
       { t: ',' + NB }, { t: '2', f: MISSC }, { m: true },
-      { t: NB + '|' + NB }, { t: 's = ' + S, f: RATE }, { t: ')' + NB }
+      { t: NB + '|' + NB }, { t: 'S = ' + S, f: RATE }, { t: ')' + NB }
     ];
   }
   function caseRhs() {
@@ -365,7 +365,7 @@
     marks.forEach(function (m) { m.setAttribute('opacity', 1); });
 
     // --- the supposed rate, the sample counter, the current count ---
-    svg.appendChild(K.txt(40, INFO_Y, 's = ' + S,
+    svg.appendChild(K.txt(40, INFO_Y, 'S = ' + S,
       { size: 22, face: 'mono', fill: RATE }));
     var total = svg.appendChild(K.txt(500, INFO_Y, '',
       { size: 22, anchor: 'middle', fill: SOFT }));

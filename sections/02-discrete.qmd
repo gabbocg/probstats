@@ -1,0 +1,431 @@
+# Discrete Distributions {.hero #s02-discrete}
+
+::: {.sem-mark data-sem="2"}
+Random variables, binomial and Poisson
+:::
+
+## Random Variables {.formula-slide #random-variables}
+
+::: {.lede-min}
+A random variable assigns a number to each outcome in the sample space. We can then calculate with these numerical outcomes.
+:::
+
+$$X : \Omega \to \mathbb{R} \qquad\qquad P(X = x)$$
+
+:::: {.two-col}
+::: {.fragment}
+[Discrete]{.col-head}
+[Values you can list]{.col-sub}
+
+Roll two dice and let $\color{#93C54B}{X}$ be the total. It is the number already written in every cell of the board.
+
+```{=html}
+<div class="perm-row"><span>3 + 4</span><span>2 + 5</span><span>6 + 1</span></div>
+```
+
+Six of the thirty-six cells carry a 7, so
+
+$P(\color{#93C54B}{X} = 7) = \tfrac{6}{36}$
+:::
+
+::: {.fragment}
+[Continuous]{.col-head}
+[Values filling a range]{.col-sub}
+
+Wait at a bus stop and let $\color{#325D88}{X}$ be the minutes until the next arrival. It can be 3, or 3.1, or 3.0004.
+
+```{=html}
+<div class="perm-row"><span>3.0</span><span>3.1</span><span>3.0004</span></div>
+```
+
+Each individual value has probability zero. Calculate the probability of an interval:
+
+$P(2 \le \color{#325D88}{X} \le 4)$
+:::
+::::
+
+::: {.note-box .fragment}
+The calculation depends on the type of variable. A discrete variable gives every value its own probability and you add them up. A continuous one spreads probability along a line and you measure the area under a curve. The binomial and the Poisson ahead are discrete, the exponential and the normal are continuous.
+:::
+
+## A Distribution Is a Function {.formula-slide #distribution-fn}
+
+::: {.lede-min}
+For each value of $X$, $P$ gives the probability of that value. Writing this function gives the distribution without having to repeat the counting.
+:::
+
+$$\sum_{k} P(X = k) = 1 \qquad\qquad \int p(x)\,dx = 1$$
+
+:::: {.two-col}
+::: {.fragment}
+[Flip a coin four times]{.col-head}
+[$\Omega$ has sixteen outcomes, $\color{#93C54B}{X}$ counts the heads]{.col-sub}
+
+```{=html}
+<svg width="338" height="186" viewBox="0 0 338 186" aria-label="probability of each number of heads in four flips"><rect x="22" y="119" width="46" height="17" rx="3" fill="#93C54B"/><text x="45" y="110" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">1/16</text><text x="45" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">0</text><rect x="84" y="67" width="46" height="69" rx="3" fill="#93C54B"/><text x="107" y="58" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">4/16</text><text x="107" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">1</text><rect x="146" y="32" width="46" height="104" rx="3" fill="#93C54B"/><text x="169" y="23" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">6/16</text><text x="169" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">2</text><rect x="208" y="67" width="46" height="69" rx="3" fill="#93C54B"/><text x="231" y="58" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">4/16</text><text x="231" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">3</text><rect x="270" y="119" width="46" height="17" rx="3" fill="#93C54B"/><text x="293" y="110" font-size="15" font-family="JetBrains Mono, monospace" fill="#6E7681" text-anchor="middle">1/16</text><text x="293" y="159" font-size="16" font-family="JetBrains Mono, monospace" fill="#3E3F3A" text-anchor="middle">4</text><line x1="8" y1="136" x2="330" y2="136" stroke="#B0B7C0" stroke-width="1.4"/><text x="169" y="178" font-size="15" font-family="Roboto, sans-serif" fill="#6E7681" text-anchor="middle">number of heads</text></svg>
+```
+:::
+
+::: {.fragment}
+[Using a distribution]{.col-head}
+[Probabilities, modelling and interval calculations]{.col-sub}
+
+The function $P(\color{#93C54B}{X})$ gives the probabilities without requiring a separate count for each value.
+
+A distribution models the process. Data can be used to test the model and estimate its parameters.
+
+Add the bars over a range, or measure the area under the curve, and you have $P(a \le \color{#93C54B}{X} \le b)$.
+:::
+::::
+
+::: {.note-box .fragment}
+Two examples are the binomial and normal distributions. Heads in $n$ flips is the **binomial**, and a height or a measurement error is the **normal**, written $\color{#93C54B}{X} \sim \text{Binomial}$ and $\color{#325D88}{X} \sim \text{Normal}$.
+:::
+
+## Passing within three attempts {.ojs-slide .example #attempts-const}
+
+::: {.lede-min}
+A student passes each attempt with probability $p$ and gets three tries. Among those who **passed**, on which attempt did they do it?
+:::
+
+```{ojs}
+//| echo: false
+viewof atP = Inputs.range([0.1, 0.95], {value: 0.6, step: 0.05, label: "Pass rate per attempt"})
+```
+
+```{ojs}
+//| echo: false
+// Exercise 6 of the beamer Seminar 3, where p = 0.6 and the constant is 0.936.
+atRaw = [1, 2, 3].map(x => Math.pow(1 - atP, x - 1) * atP)   // pass first at x
+atC = d3.sum(atRaw)                                          // = 1 - (1 - p)^3
+atBars = [1, 2, 3].flatMap((x, i) => [
+  {x, kind: "before", v: atRaw[i]},
+  {x, kind: "after", v: atRaw[i] / atC}])
+Plot.plot({
+  width: 950, height: 250, marginLeft: 64, marginBottom: 54, marginTop: 22,
+  style: ({fontSize: "15px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"}),
+  // The x ticks are the key: grey is every student, green only those who passed.
+  fx: {label: null, padding: 0.25, tickFormat: d => `Passed on attempt ${d}`, axis: "bottom", tickPadding: 32},
+  x: {label: null, domain: ["before", "after"], padding: 0.1, tickSize: 0,
+      tickFormat: d => d === "before" ? "Everyone" : "Given passed"},
+  y: {domain: [0, 1], grid: true, label: "probability", labelAnchor: "center", labelOffset: 56},
+  marks: [
+    Plot.barY(atBars, {fx: "x", x: "kind", y: "v",
+      fill: d => d.kind === "after" ? PPAL.olive : PPAL.dim}),
+    Plot.text(atBars, {fx: "x", x: "kind", y: "v", dy: -10,
+      text: d => d.v.toFixed(3), fill: PPAL.soft, fontSize: 14}),
+    Plot.ruleY([0], {stroke: PPAL.dim})
+  ]
+})
+```
+
+```{ojs}
+//| echo: false
+html`<div class="ojs-eq at-eq">${atRaw.map(v => v.toFixed(3)).join(" + ")} = <span class="rate">${atC.toFixed(3)}</span> &nbsp;→&nbsp; divide each by <span class="rate">${atC.toFixed(3)}</span> &nbsp;→&nbsp; <span class="hit">sum = 1</span></div>
+<div class="quiz-fb">The grey bars sum to less than one. The remaining probability is <b>${(1 - atC).toFixed(3)}</b>, the students who fail all three attempts and are not in the group you sampled from. Dividing by ${atC.toFixed(3)} is <b>conditioning on "passed"</b>, and gives green bars whose probabilities sum to one.</div>`
+```
+
+## Which Seller Do You Trust? {.stage-slide #seller-intuition}
+
+::: {.lede-min}
+Three sellers offer the same item at the same price on a marketplace. Choose a seller using their customer reviews.
+:::
+
+::: {.stage-wrap .stage-wrap-seller}
+<div id="seller-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="seller-frag-1"}
+[]{.fragment .fi-frag id="seller-frag-2"}
+[]{.fragment .fi-frag id="seller-frag-3"}
+
+::: {.slide-footer .fragment}
+How would you weigh the greater confidence from more reviews against a lower percentage of positive reviews?
+:::
+
+## Laplace's Rule of Succession {.stage-slide #laplace-intuition}
+
+::: {.lede-min}
+Laplace's 1774 rule adds one hypothetical positive review and one negative review to the observed reviews. This gives $(k+1)/(n+2)$ in place of $k/n$.
+:::
+
+::: {.stage-wrap .stage-wrap-seller}
+<div id="laplace-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="laplace-frag-1"}
+[]{.fragment .fi-frag id="laplace-frag-2"}
+[]{.fragment .fi-frag id="laplace-frag-3"}
+
+::: {.slide-footer .fragment}
+What assumptions does this rule use? How would changing them affect your choice?
+:::
+
+## Where the Binomial Comes From {.stage-slide #binom-intuition}
+
+::: {.lede-min}
+Every review is an independent draw at one constant unknown rate $S$. Start with a proposed value of $S$ and calculate what it predicts.
+:::
+
+::: {.stage-wrap .stage-wrap-std}
+<div id="binom-stage" class="stage"></div>
+:::
+
+[]{.fragment .fi-frag id="binom-frag-1"}
+[]{.fragment .fi-frag id="binom-frag-2"}
+[]{.fragment .fi-frag id="binom-frag-3"}
+
+## What If the Rate Were Different? {.ojs-slide #likelihood-live}
+
+::: {.lede-min}
+Choose a value of $S$. The top plot shows the resulting distribution; the bottom plot shows the probability of the observed count as a function of $S$.
+:::
+
+```{ojs}
+//| echo: false
+viewof s = Inputs.range([0.50, 1.00], {value: 0.95, step: 0.01, label: "True success rate S"})
+```
+
+```{ojs}
+//| echo: false
+n = 50
+k = 48
+
+// The deck's palette, so the plots match the hand-drawn stages either side.
+PAL = ({olive: "#93C54B", brick: "#B94A48", navy: "#325D88",
+        orange: "#F47C3C", soft: "#6E7681", dim: "#B0B7C0"})
+
+// Binomial pmf by recurrence: P(0) = (1-p)^n, then
+// P(j) = P(j-1) * (n-j+1)/j * p/(1-p). No factorial is ever formed, so
+// nothing overflows — the same route stage-kit.html uses.
+pmf = function (p) {
+  const q = 1 - p;
+  if (q <= 0) return Array.from({length: n + 1}, (_, i) => (i === n ? 1 : 0));
+  let v = Math.pow(q, n);
+  const out = [v];
+  for (let j = 1; j <= n; j++) { v = v * ((n - j + 1) / j) * (p / q); out.push(v); }
+  return out;
+}
+
+pk = pmf(s)
+value = pk[k]
+lik = d3.range(0, 1.0005, 0.004).map(sv => ({s: sv, p: pmf(sv)[k]}))
+
+PSTYLE = ({fontSize: "15px", fontFamily: "Roboto, sans-serif",
+           color: PAL.soft, background: "transparent"})
+```
+
+```{ojs}
+//| echo: false
+Plot.plot({
+  // marginTop 16, not 4: at 4 the 30% tick label has no room above the top
+  // gridline and reads as cut off. Height grows to match so the plotting
+  // area is unchanged.
+  width: 950, height: 154, marginLeft: 64, marginBottom: 24, marginTop: 16,
+  style: PSTYLE,
+  x: {domain: [-0.6, n + 0.6], ticks: d3.range(0, n + 1, 5), label: null, tickSize: 4},
+  // labelAnchor centre rotates the label down the axis; Plot's default puts
+  // it at the top, where it sits on the top tick.
+  // Both plots are pinned to 0-30% so the two heights read against the same
+  // scale. This one does exceed it once s passes about 0.97 — at s = 1 every
+  // draw is fifty ticks, so that bar is 100% — hence clip, which flattens it
+  // at the top of the frame instead of letting it paint over the equation.
+  y: {domain: [0, 0.30], ticks: [0.1, 0.2, 0.3], grid: true,
+      tickFormat: d => d3.format(".0%")(d), label: "P(k | S)",
+      labelAnchor: "center", labelOffset: 56},
+  marks: [
+    Plot.ruleX(d3.range(n + 1), {x: d => d, y2: d => pk[d], strokeWidth: 5,
+      stroke: d => (d === k ? PAL.olive : PAL.dim), clip: true}),
+    Plot.ruleY([0], {stroke: PAL.dim})
+  ]
+})
+```
+
+```{ojs}
+//| echo: false
+html`<div class="ojs-eq">P(<span class="hit">48&#10003;</span>, <span class="miss">2&#10007;</span> | S = <span class="rate">${s.toFixed(2)}</span>) = <b>${value.toFixed(4)}</b></div>`
+```
+
+```{ojs}
+//| echo: false
+Plot.plot({
+  // marginTop 16, not 4: at 4 the 30% tick label has no room above the top
+  // gridline and reads as cut off. Height grows to match so the plotting
+  // area is unchanged.
+  width: 950, height: 154, marginLeft: 64, marginBottom: 24, marginTop: 16,
+  style: PSTYLE,
+  x: {domain: [0, 1], ticks: [0, 0.2, 0.4, 0.6, 0.8, 1], label: null, tickSize: 4},
+  y: {domain: [0, 0.30], ticks: [0.1, 0.2, 0.3], grid: true,
+      tickFormat: d => d3.format(".0%")(d),
+      label: "P(data | S)", labelAnchor: "center", labelOffset: 56},
+  marks: [
+    Plot.line(lik, {x: "s", y: "p", stroke: PAL.navy, strokeWidth: 2.5}),
+    Plot.ruleX([s], {stroke: PAL.soft, strokeDasharray: "4 4"}),
+    Plot.dot([{s: s, p: value}], {x: "s", y: "p", fill: PAL.olive, r: 6,
+      stroke: "white", strokeWidth: 1.5}),
+    Plot.ruleY([0], {stroke: PAL.dim})
+  ]
+})
+```
+
+## The Binomial in Standard Notation {.formula-slide #binom-formal}
+
+::: {.lede-min}
+We now write the binomial distribution in standard notation. The rate we have been calling $S$ is written $\color{#F47C3C}{p}$; its complement is $\color{#B94A48}{q} = 1 - \color{#F47C3C}{p}$.
+:::
+
+$$P(X = \color{#93C54B}{k}) \;=\; \binom{n}{\color{#93C54B}{k}}\; \color{#F47C3C}{p}^{\,\color{#93C54B}{k}}\; \color{#B94A48}{q}^{\,\color{#B94A48}{n-k}} \qquad X \sim \operatorname{Binomial}(n, \color{#F47C3C}{p})$$
+
+::: {.fragment .note}
+One review is a **Bernoulli trial**, a single attempt with two outcomes, scored $1$ for good and $0$ for bad.
+:::
+
+::: {.fragment}
+$$P(B_i = 1) = \color{#F47C3C}{p}, \quad P(B_i = 0) = \color{#B94A48}{q}, \quad \operatorname{E}[B_i] = \color{#F47C3C}{p}, \quad \operatorname{Var}(B_i) = \color{#F47C3C}{p}\color{#B94A48}{q}$$
+:::
+
+::: {.fragment}
+$$X \;=\; B_1 + B_2 + \cdots + B_n, \qquad B_i \sim \operatorname{Bernoulli}(\color{#F47C3C}{p})$$
+:::
+
+::: {.slide-footer .fragment}
+Each of seller B's fifty reviews was one $B_i$. Their sum has a binomial distribution, which records the total count.
+:::
+
+## The Rare Event Limit of a Binomial Distribution {.ojs-slide #pois-intuition}
+
+::: {.lede-min}
+Keep the average $\color{#F47C3C}{\lambda} = n\,\color{#F47C3C}{p}$ fixed and increase $n$. Each trial gets rarer, but you expect the same number of events.
+:::
+
+```{ojs}
+//| echo: false
+viewof nTrials = Inputs.range([10, 400], {value: 10, step: 1, label: "Trials n"})
+// Floor of 10, not 5: lam runs to 8, and n < lam would ask for p > 1, which
+// the recurrence below happily turns into a 1971% gap. NB a comment must NOT
+// be the first line of an {ojs} cell: it shadows the '//|' directive and
+// Quarto then emits the whole slide as plain source, with no runtime and no
+// error anywhere.
+```
+
+```{ojs}
+//| echo: false
+viewof lam = Inputs.range([1, 8], {value: 3, step: 0.5, label: "Mean λ = np"})
+```
+
+```{ojs}
+//| echo: false
+PPAL = ({olive: "#93C54B", brick: "#B94A48", navy: "#325D88",
+         orange: "#F47C3C", soft: "#6E7681", dim: "#B0B7C0"})
+
+pp = lam / nTrials                       // the success rate, shrinking as nTrials grows
+KMAX = Math.max(12, Math.ceil(lam + 4 * Math.sqrt(lam)))
+ks = d3.range(0, KMAX + 1)
+
+// Binomial(nTrials, pp) by the same recurrence used everywhere else in this deck
+binom = {
+  const q = 1 - pp;
+  if (q <= 0) return ks.map(k => (k === nTrials ? 1 : 0));
+  let v = Math.pow(q, nTrials);
+  const out = [v];
+  const top = Math.min(nTrials, KMAX);   // KMAX <= 20; no point walking to 20,000
+  for (let j = 1; j <= top; j++) { v = v * ((nTrials - j + 1) / j) * (pp / q); out.push(v); }
+  return ks.map(k => (k <= nTrials ? out[k] : 0));
+}
+
+// Poisson(lam): P(0) = e^-lam, then P(k) = P(k-1) * lam / k
+pois = {
+  const out = []; let v = Math.exp(-lam);
+  for (let k = 0; k <= KMAX; k++) { out.push(v); v = v * lam / (k + 1); }
+  return out;
+}
+
+gap = d3.max(ks, k => Math.abs(binom[k] - pois[k]))
+YMAX = Math.max(d3.max(binom), d3.max(pois)) * 1.18
+```
+
+```{ojs}
+//| echo: false
+Plot.plot({
+  width: 950, height: 205, marginLeft: 64, marginBottom: 26, marginTop: 16,
+  style: {fontSize: "15px", fontFamily: "Roboto, sans-serif",
+          color: PPAL.soft, background: "transparent"},
+  x: {domain: [-0.6, KMAX + 0.6], label: null, tickSize: 4},
+  y: {domain: [0, YMAX], grid: true, tickFormat: d => d3.format(".0%")(d),
+      label: "P(k)", labelAnchor: "center", labelOffset: 56},
+  marks: [
+    Plot.ruleX(ks, {x: d => d, y2: d => binom[d], strokeWidth: 9,
+      stroke: PPAL.dim, clip: true}),
+    // "step" is Plot's midpoint step (d3.curveStep); "step-mid" is not a
+    // curve name and throws, taking the whole plot cell with it.
+    Plot.line(ks, {x: d => d, y: d => pois[d], stroke: PPAL.brick,
+      strokeWidth: 2, curve: "step", clip: true}),
+    Plot.dot(ks, {x: d => d, y: d => pois[d], fill: PPAL.brick, r: 3.2,
+      clip: true}),
+    Plot.ruleY([0], {stroke: PPAL.dim})
+  ]
+})
+```
+
+```{ojs}
+//| echo: false
+html`<div class="ojs-eq">Binomial(${nTrials}, <span class="rate">${pp.toFixed(4)}</span>) &nbsp;→&nbsp; <span class="miss">Poisson(${lam.toFixed(1)})</span> &nbsp;·&nbsp; gap <b>${(100*gap).toFixed(2)}%</b></div>`
+```
+
+::: {.slide-footer}
+As $n$ increases, the shape depends on the product of $n$ and $\color{#F47C3C}{p}$ rather than their separate values. The Poisson therefore has one parameter.
+:::
+
+## The Poisson in Standard Notation {.formula-slide #pois-formal}
+
+::: {.lede-min}
+Put $\color{#F47C3C}{p} = \color{#F47C3C}{\lambda}/n$ into the binomial and let $n$ tend to infinity.
+:::
+
+$$P(X = \color{#93C54B}{k}) \;=\; \binom{n}{\color{#93C54B}{k}}\big(\tfrac{\color{#F47C3C}{\lambda}}{n}\big)^{\color{#93C54B}{k}}\big(1-\tfrac{\color{#F47C3C}{\lambda}}{n}\big)^{n-\color{#93C54B}{k}}$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Group the factors by whether they still mention $n$]{.deriv-note}
+:::
+
+::: {.fragment}
+$$=\;\frac{\color{#F47C3C}{\lambda}^{\,\color{#93C54B}{k}}}{\color{#93C54B}{k}!}\;\cdot\;\frac{n(n-1)\cdots(n-\color{#93C54B}{k}+1)}{n^{\color{#93C54B}{k}}}\;\cdot\;\big(1-\tfrac{\color{#F47C3C}{\lambda}}{n}\big)^{n}\;\cdot\;\big(1-\tfrac{\color{#F47C3C}{\lambda}}{n}\big)^{-\color{#93C54B}{k}}$$
+:::
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [As $n \to \infty$ those three go to $1$, to $e^{-\color{#F47C3C}{\lambda}}$, and to $1$]{.deriv-note}
+:::
+
+::: {.fragment}
+$$P(X = \color{#93C54B}{k}) \;=\; \frac{\color{#F47C3C}{\lambda}^{\,\color{#93C54B}{k}}\, e^{-\color{#F47C3C}{\lambda}}}{\color{#93C54B}{k}!} \qquad X \sim \operatorname{Poisson}(\color{#F47C3C}{\lambda})$$
+:::
+
+::: {.slide-footer .fragment}
+The middle factor gives the exponential term, since $(1-\lambda/n)^{n}$ *is* the definition of $e^{-\lambda}$. The result has one parameter, and $\operatorname{E}[X] = \operatorname{Var}(X) = \color{#F47C3C}{\lambda}$.
+:::
+
+## Check the Approximation {.sim-slide #pois-sim}
+
+::: {.slide-kicker}
+Exact vs approximate
+:::
+
+::: {.lede-min}
+An audit covers 10,000 transactions, with a rate of three mistakes per 10,000. Calculate the probability of four or more mistakes using the binomial and Poisson distributions.
+:::
+
+::: {.sim-card .sim-text}
+```{webr-r}
+n <- 10000
+p <- 0.0003   # <-- keep n * p = 3
+
+binomial <- 1 - pbinom(3, n, p)
+poisson <- 1 - ppois(3, n * p)
+
+c(binomial, poisson)
+```
+:::
+
+::: {.try-this}
+Both read `0.3527681`, so they agree to every digit R prints. Now set `n <- 20; p <- 0.15` (still $np = 3$) and compare the results. The approximation is less accurate when $n$ is smaller and $p$ is larger.
+:::

@@ -31,6 +31,9 @@
   var BASE = 356, TOP = 67;            // baseline, and the ceiling of the tail
   var SIDE = 9, STEP = 9.5;            // dot size, and stack pitch
   var DOT_OP = 0.5, SHADE_OP = 0.1, SKY = -30;   // SKY = where dots wait
+  // Each draw is a brick as wide as its bin (less a 4px gap), so the stacks
+  // read as histogram bars rather than thin spikes.
+  var BRICKW = BINW * (X1 - X0) / (ZMAX - ZMIN) - 4;
 
   // Phi by Abramowitz and Stegun 7.1.26 (good to 1.5e-7), as on #normal-area.
   function Phi(z) {
@@ -67,7 +70,7 @@
       var j = counts[b] || 0;
       counts[b] = j + 1;
       var centre = ZMIN + b * BINW + BINW / 2;
-      return { x: px(centre) - SIDE / 2, y: BASE - SIDE - j * STEP };
+      return { x: px(centre) - BRICKW / 2, y: BASE - SIDE - j * STEP };
     });
   }
 
@@ -101,7 +104,7 @@
     var dots = DRAWS.map(function (v, i) {
       rest.push(pts[i].y);
       var d = svg.appendChild(K.el('rect', {
-        x: pts[i].x, y: SKY, width: SIDE, height: SIDE, rx: 1.5,
+        x: pts[i].x, y: SKY, width: BRICKW, height: SIDE, rx: 1.5,
         fill: NAVY, opacity: 0, class: 'pval-dot'
       }));
       if (v > ZOBS) tail.push(d);
@@ -115,7 +118,7 @@
       stroke: BRICK, 'stroke-width': 2.5
     }));
     obs.appendChild(K.txt(px(ZOBS), TOP - 12, 'Observed z = ' + ZOBS.toFixed(1),
-      { size: 'label', face: 'mono', fill: 'brick', weight: 700, anchor: 'middle' }));
+      { size: 'label', fill: 'brick', weight: 700, anchor: 'middle' }));
     svg.appendChild(obs);
 
     // --- the verdict, right-aligned over the shaded tail so it clears both
@@ -125,33 +128,67 @@
     //     is split into two lines. Right-anchored at 960 still left the
     //     caption line's left edge only ~10 units clear of the observed-z
     //     line at 725, so the block is anchored at 970 instead. ---
+    // Left-aligned on one edge, 20 units right of the observed-z line.
+    var RX = px(ZOBS) + 20;
     var res = K.el('g', { class: 'pval-res', opacity: 0 });
     var ratio = tail.length / N;
-    var count = K.txt(970, 111, tail.length + ' / ' + N,
-      { size: 'readout', face: 'mono', fill: 'brick', weight: 700, anchor: 'end' });
+    // One family for the whole readout (the deck's sans): the result in bold
+    // brick, the explanation and the table value in grey under it.
+    var count = K.txt(RX, 108, tail.length + ' of ' + N,
+      { size: 24, fill: 'brick', weight: 700, anchor: 'start' });
     res.appendChild(count);
-    var p = K.txt(970, 147, 'p = ' + ratio.toFixed(3),
-      { size: 'readout', face: 'mono', fill: 'brick', weight: 700, anchor: 'end' });
+    var p = K.txt(RX, 138, 'p = ' + ratio.toFixed(3),
+      { size: 24, fill: 'brick', weight: 700, anchor: 'start' });
     res.appendChild(p);
-    ['The share of the null world', 'at least this extreme'].forEach(
-      function (line, i) {
-        res.appendChild(K.txt(970, 176 + i * 20, line,
-          { size: 'label', fill: 'inkSoft', anchor: 'end' }));
+    // The explanation, justified to the shaded tail's width (less a 20-unit
+    // margin each side). SVG cannot justify, so each word is measured and the
+    // slack on every line but the last is shared between its gaps. Worded with
+    // short words: at three a line, long ones open gaps wider than the words.
+    var JW = X1 - RX - 20, JY = 184, JLH = 22, words = 'The tail probability: the share of the null world this extreme'.split(' ');
+    var nodes = words.map(function (w) {
+      return res.appendChild(K.txt(RX, -100, w, { size: 'label', fill: 'inkSoft', anchor: 'start' }));
+    });
+    // getComputedTextLength needs the node in the live DOM; res is attached
+    // below, so measure once svg holds it (see the deferred call after build).
+    res._justify = function () {
+      var wide = nodes.map(function (t) { return t.getComputedTextLength() || 9 * t.textContent.length; });
+      var sp = 5.5, lines = [], cur = [], used = 0;
+      wide.forEach(function (w, k) {
+        if (cur.length && used + sp + w > JW) { lines.push(cur); cur = []; used = 0; }
+        used += (cur.length ? sp : 0) + w; cur.push(k);
       });
-    res.appendChild(K.txt(970, 236, // Short, so it stays right of the observed-z rule.
-      'Table: ' + (1 - Phi(ZOBS)).toFixed(4),
-      { size: 'label', face: 'mono', fill: 'ink', anchor: 'end' }));
+      lines.push(cur);
+      lines.forEach(function (ln, row) {
+        var sum = ln.reduce(function (a, k) { return a + wide[k]; }, 0);
+        var gap = row < lines.length - 1 && ln.length > 1 ? (JW - sum) / (ln.length - 1) : sp, x = RX;
+        ln.forEach(function (k) { nodes[k].setAttribute('x', x.toFixed(1)); nodes[k].setAttribute('y', JY + row * JLH); x += wide[k] + gap; });
+      });
+    };
+    res.appendChild(K.txt(RX, 268, // Short, so it stays right of the observed-z rule.
+      'N(0, 1) table: ' + (1 - Phi(ZOBS)).toFixed(4),
+      { size: 'label', fill: 'inkSoft', anchor: 'start' }));
+    // The N(0, 1) curve the bricks are piling towards, in the same units
+    // (expected count per bin, stacked at STEP px a count), so the table value
+    // has a visible source: the area under it right of z = 2.
+    var cd = '';
+    for (var k = 0; k <= 160; k++) {
+      var zz = ZMIN + k * (ZMAX - ZMIN) / 160;
+      var y = BASE - N * BINW * Math.exp(-zz * zz / 2) / Math.sqrt(2 * Math.PI) * STEP;
+      cd += (k ? 'L' : 'M') + px(zz).toFixed(1) + ' ' + y.toFixed(1);
+    }
+    res.appendChild(K.el('path', { d: cd, fill: 'none', stroke: K.PAL.ink, 'stroke-width': 2, 'stroke-dasharray': '6 5', opacity: 0.7 }));
     svg.appendChild(res);
+    res._justify();
 
     return { dots: dots, tail: tail, rest: rest, shade: shade,
              obs: obs, res: res, cap: cap, state: 0 };
   }
 
   var CAPTIONS = {
-    0: 'If H₀ were true, what test statistics would we see?',
-    1: 'We draw ' + N + ' samples under H₀: this is the null distribution',
-    2: 'Our sample produced z = ' + ZOBS.toFixed(1),
-    3: 'The p-value is the shaded share, nothing more'
+    0: 'If H₀ were true, what values of z would we see?',
+    1: 'Each block represents a simulated z under H₀: ' + N + ' of them',
+    2: 'Our sample gave z = ' + ZOBS.toFixed(1),
+    3: 'p-value: probability of z at least this large under H₀'
   };
 
   // Each layer compares the state it is going to with the state it came from,

@@ -144,11 +144,9 @@
 
     // The bracket over the last two columns is the whole point of the slide:
     // in English the last word is THE surname, here the last two are one unit
-    // and the one that carries is the first of them. A flat bracket rather
-    // than a curly brace — the deck draws in straight lines everywhere else.
+    // and the one that carries is the first of them. The deck's curly brace.
     nameG.appendChild(K.el('path', {
-      d: 'M' + cx[2] + ' 150V140H' + cx[3] + 'V150M' +
-         ((cx[2] + cx[3]) / 2) + ' 140V130',
+      d: K.brace(cx[2], cx[3], 143, 1),
       fill: 'none', stroke: K.PAL.olive, 'stroke-width': 1.8,
       'stroke-linecap': 'round', 'stroke-linejoin': 'round'
     }));

@@ -57,10 +57,10 @@
     // land well clear of the panel divide at x = 490; the orange n = ...
     // readout has moved to the right edge (x = 950, right-aligned) so it no
     // longer competes with the caption band.
-    { n: 1,  cap: 'n = 1 — the mean IS one observation' },
-    { n: 2,  cap: 'n = 2 — already less skewed' },
-    { n: 5,  cap: 'n = 5 — nearly symmetric' },
-    { n: 30, cap: 'n = 30 — normal, and much narrower' }
+    { n: 1,  cap: 'n = 1: one observation per mean' },
+    { n: 2,  cap: 'n = 2: reduced skewness' },
+    { n: 5,  cap: 'n = 5: nearly symmetric' },
+    { n: 30, cap: 'n = 30: approximately normal with smaller spread' }
   ];
 
   // --- population weights, and the two numbers that drive everything else ---
@@ -240,7 +240,7 @@
     svg.appendChild(read);
 
     // --- panel titles ---
-    var ltitle = K.txt(LX0, 116, 'the population — never changes',
+    var ltitle = K.txt(LX0, 116, 'Population distribution',
       { size: 'label', fill: 'inkSoft' });
     svg.appendChild(ltitle);
 

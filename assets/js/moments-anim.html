@@ -12,9 +12,12 @@
        nμ ± σ√n; the formulas give way to the rule nμ, nσ², σ√n
     4. the rows slide sideways until their centres line up; σ√n labels and
        inward arrows show the spread still growing
-    5. each row is squeezed by 1/√n: the ±σ√n lines all coincide and the
-       shapes close in on one curve
-    6. the staircase slides left and, on the right, the curve it is closing in
+    5. divide each sum by n: every row becomes an average X̄ₙ, centred on μ,
+       and the rows NARROW, ±σ/√n, the mean's spread shrinking as the sum's grew
+    6. standardise, Zₙ = (X̄ₙ − μ)/(σ/√n): each average row is stretched by √n
+       until its ±σ/√n lines land on X̄₁'s, so every row has the same spread
+       (marked ±1) and the shapes close in on one curve
+    7. the staircase slides left and, on the right, the curve it is closing in
        on: the standard normal on −5..5, its formula boxed, a promise to
        unpack it
   The shrink is a real affine map of the bars onto row one, so the bars you
@@ -83,6 +86,36 @@
     }
     return out;
   }
+  // X̄ₙ written out: X̄₁ = X₁, X̄₂ = (X₁ + X₂)/2, … , X̄₇ = (X₁ + ⋯ + X₇)/7
+  function sumRuns(n) {
+    var r = [], idx = n <= 3 ? [1, 2, 3].slice(0, n) : [1, 0, n];
+    idx.forEach(function (k, j) {
+      if (j) r.push(['  +  ']);
+      if (k === 0) { r.push(['⋯']); return; }
+      r.push(['X', 'i']); r.push([String(k), null, null, 'sub']);
+    });
+    return r;
+  }
+  function meanLabel(n) {
+    var head = [['X̄', 'i'], [String(n), null, null, 'sub'], ['  =  ']];
+    return n === 1 ? head.concat([['X', 'i'], ['1', null, null, 'sub']])
+                   : head.concat([['(']], sumRuns(n), [[')/' + n]]);
+  }
+  // Zₙ written out: Z₂ = (X̄₂ − μ)/(σ/√2)
+  function zLabel(n) {
+    return [['Z', 'i'], [String(n), null, null, 'sub'], ['  =  ('], ['X̄', 'i'], [String(n), null, null, 'sub'], ['  −  '],
+            ['μ', 'i', PAL.brick]].concat(n === 1 ? [[')/'], ['σ', 'i', PAL.orange]]
+                                              : [[')/('], ['σ', 'i', PAL.orange], ['/√' + n, null, PAL.orange], [')']]);
+  }
+  // The faces actually drawn for the sum of n throws. Bars under MINH px are
+  // not drawn (they read as nothing), and the baseline spans the drawn bars
+  // plus PADB px, so the line always matches the shape you can see.
+  var MINH = 1, PADB = 12;
+  function drawnRange(n) {
+    var q = pmf(n), tq = Math.max.apply(null, q), lo = 6 * n, hi = n;
+    for (var v = n; v <= 6 * n; v++) if (q[v] / tq * BH >= MINH) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+    return [lo, hi];
+  }
   function label(n) {
     var r = [], idx = n <= 5 ? [1, 2, 3, 4, 5].slice(0, n) : [1, 2, 0, n - 1, n];
     idx.forEach(function (k, j) {
@@ -146,11 +179,12 @@
     for (var n = 1; n <= N; n++) {
       var q = pmf(n), tq = Math.max.apply(null, q), base = R0 + (n - 1) * RH, g = svg.appendChild(K.el('g', {}));
       var m = n * MU, s = SD * Math.sqrt(n), end = sx(6 * n + 0.5);
-      g.appendChild(K.el('line', { x1: sx(0.5), y1: base, x2: end, y2: base, stroke: PAL.dim, 'stroke-width': 1.2 }));
+      var dr = drawnRange(n);
+      g.appendChild(K.el('line', { x1: sx(dr[0] - 0.5) - PADB, y1: base, x2: sx(dr[1] + 0.5) + PADB, y2: base, stroke: PAL.dim, 'stroke-width': 1.2 }));
       if (n > 1) {                                   // row one's bars are the carried bars themselves
         for (v = n; v <= 6 * n; v++) {
           var h = q[v] / tq * BH;
-          if (h < 0.3) continue;
+          if (h < MINH) continue;
           g.appendChild(K.el('rect', { x: sx(v - 0.5) + 0.4, y: base - h, width: UX - 0.8, height: h, fill: PAL.navy, 'fill-opacity': 0.82 }));
         }
       }
@@ -158,7 +192,7 @@
       [l, r].forEach(function (x) { g.appendChild(K.el('line', { x1: x, y1: base - BH - 4, x2: x, y2: base, stroke: PAL.orange, 'stroke-width': 2.5 })); });
       arrows(g, sx(m), l, r, base - BH * 0.55, 2.2);
       g.appendChild(K.el('line', { x1: sx(m), y1: base - BH - 4, x2: sx(m), y2: base, stroke: PAL.brick, 'stroke-width': 2.5 }));
-      math(g, end + 14, base - 12, label(n), 22);
+      math(g, sx(dr[1] + 0.5) + 30, base - 12, label(n), 22);   // just past the end of the baseline
       rows.push(g);
     }
     var rule = svg.appendChild(K.el('g', {}));
@@ -183,32 +217,55 @@
       T('The'), T('standard'), T('deviation'), T('grows'), T('only'), [['√'], ['n', 'm']], T('times,'), T('to'),
       [['σ√n', 'm', PAL.orange], ['.']], T('So'), T('the'), T('centre'), T('moves'), M('n'), T('times'), T('as'), T('far,'),
       T('but'), T('the'), T('spread'), T('only'), [['√'], ['n', 'm'], ['.']]];
-    var probe = rule.appendChild(word([['a a']], 0, -200)), probe2 = rule.appendChild(word([['aa']], 0, -200));
-    var space = (probe.getComputedTextLength() - probe2.getComputedTextLength()) || 5.5;
-    rule.removeChild(probe); rule.removeChild(probe2);
-    var nodes = words.map(function (w) { return rule.appendChild(word(w, 0, -200)); });
-    var wide = nodes.map(function (t) { return t.getComputedTextLength() || 10 * t.textContent.length; });
-    var lines = [], cur = [], used = 0;
-    wide.forEach(function (w, k) {
-      if (cur.length && used + space + w > PW) { lines.push(cur); cur = []; used = 0; }
-      used += (cur.length ? space : 0) + w; cur.push(k);
-    });
-    lines.push(cur);
-    lines.forEach(function (ln, row) {
-      var sum = ln.reduce(function (a, k) { return a + wide[k]; }, 0);
-      var gap = row < lines.length - 1 && ln.length > 1 ? (PW - sum) / (ln.length - 1) : space, x = PX;
-      ln.forEach(function (k) {
-        nodes[k].setAttribute('x', x.toFixed(1)); nodes[k].setAttribute('y', 30 + row * LH);
-        x += wide[k] + gap;
+    // Set a list of words as one justified paragraph in group g, at (px, y0), width pw.
+    function setPara(g, ws, px, pw, y0, ragged) {
+      var probe = g.appendChild(word([['a a']], 0, -200)), probe2 = g.appendChild(word([['aa']], 0, -200));
+      var space = (probe.getComputedTextLength() - probe2.getComputedTextLength()) || 5.5;
+      g.removeChild(probe); g.removeChild(probe2);
+      var nodes = ws.map(function (w) { return g.appendChild(word(w, 0, -200)); });
+      var wide = nodes.map(function (t) { return t.getComputedTextLength() || 10 * t.textContent.length; });
+      var lines = [], cur = [], used = 0;
+      wide.forEach(function (w, k) {
+        if (cur.length && used + space + w > pw) { lines.push(cur); cur = []; used = 0; }
+        used += (cur.length ? space : 0) + w; cur.push(k);
       });
-    });
+      lines.push(cur);
+      lines.forEach(function (ln, row) {
+        var sum = ln.reduce(function (a, k) { return a + wide[k]; }, 0);
+        var gap = !ragged && row < lines.length - 1 && ln.length > 1 ? (pw - sum) / (ln.length - 1) : space, x = px;
+        ln.forEach(function (k) {
+          nodes[k].setAttribute('x', x.toFixed(1)); nodes[k].setAttribute('y', y0 + row * LH);
+          x += wide[k] + gap;
+        });
+      });
+    }
+    setPara(rule, words, PX, PW, 30);
+
+    // Steps 4–6 get the same kind of paragraph, in the space right of the rows,
+    // so each step says in words what the rows just did.
+    var QX = 745, QW = 245, B = function (t) { return [[t, null, PAL.navy]]; };   // clear of the longest label (X₁ + ⋯ + X₅)
+    var MU_ = function (tail) { return [['μ', 'm', PAL.brick], [tail || '']]; };
+    var p4 = svg.appendChild(K.el('g', {})), pM = svg.appendChild(K.el('g', {})), p6 = svg.appendChild(K.el('g', {}));
+    setPara(p4, [B('Line'), B('up'), B('the'), B('centres.'), T('Each'), T('sum'), T('is'), T('centred'), T('on'),
+      [['n', 'm'], ['μ', 'm', PAL.brick], [',']], T('and'), T('its'), T('spread'), T('grows'), T('like'), [['σ√n', 'm', PAL.orange], [':']],
+      T('more'), T('throws,'), T('a'), T('wider'), T('sum.')], QX, QW, 30);
+    setPara(pM, [B('Divide'), B('by'), [['n', 'm', PAL.navy], ['.', null, PAL.navy]], T('Each'), T('average'),
+      [['X̄', 'm'], ['ₙ']], T('is'), T('centred'), T('on'), MU_(','), T('and'), T('its'), T('spread'), T('is'),
+      [['σ/√n', 'm', PAL.orange], [',']], T('the'), B('standard'), B('error:'), T('the'), T('typical'), T('distance'),
+      T('between'), [['X̄', 'm'], ['ₙ']], T('and'), MU_('.'), T('Four'), T('times'), T('the'), T('throws,'), T('half'),
+      T('the'), T('distance.')], QX, QW, 30);
+    // The formula goes last: it cannot break, and the last line is not justified.
+    setPara(p6, [B('Standardise:'), T('measure'), T('that'), T('distance'), T('in'), T('standard'), T('errors.'),
+      T('Every'), T('row'), T('then'), T('has'), T('spread'), [['1', null, PAL.orange]], T('and'), T('the'), T('shapes'),
+      T('close'), T('in'), T('on'), T('one'), T('curve:'),
+      [['Z', 'm'], ['ₙ = ('], ['X̄', 'm'], ['ₙ − '], ['μ', 'm', PAL.brick], [')/('], ['σ/√n', 'm', PAL.orange], [').']]], QX, QW, 30, true);   // ragged: the unbreakable formula would stretch the line above it
 
     // ---------- phase three: line the rows up, then rescale them ----------
     // One group redrawn per frame from two fractions: a (centres slide onto
     // one line at XC) and b (each row squeezed by 1/√n about its centre, so
     // every ±σ√n lands on the same pair of lines). At a = b = 0 it is the
     // staircase exactly, so the swap at the start of step 4 is invisible.
-    var XC = 300, LBX = 600;
+    var XC = 210, LBX = 500;   // rows left, labels clear of them; steps 4–6 explain on the right
     var clip = svg.appendChild(K.el('clipPath', { id: 'moments-clip' }));
     clip.appendChild(K.el('rect', { x: 20, y: 0, width: 560, height: H }));
     var aligned = svg.appendChild(K.el('g', {}));
@@ -270,12 +327,11 @@
     nrm.appendChild(K.txt(cx, CT + 136, 'We’ll unpack this in a moment', { size: 15, anchor: 'middle' }));
 
     // a one-line note per step, bottom right (steps 4 and 5)
-    var note4 = svg.appendChild(K.txt(LBX, 432, 'Line up the centres: the spread still grows like σ√n.', { size: 18, fill: 'ink' }));
-    var note5 = svg.appendChild(K.txt(LBX, 432, 'Divide by the spread: one shape emerges.', { size: 18, fill: 'ink' }));
+    var note4 = p4, noteM = pM, note5 = p6;
 
     return { one: one, axes: axes, labs: labs, bars: bars, muG: muG, spG: spG, fM: fM, fV: fV, rows: rows, rule: rule,
              aligned: aligned, alignedRows: alignedRows, alignedLabels: alignedLabels, PM: PM, anno: anno, nrm: nrm,
-             note4: note4, note5: note5, XC: XC, LBX: LBX, state: 0, tween: null, timers: [] };
+             note4: note4, noteM: noteM, note5: note5, XC: XC, LBX: LBX, state: 0, tween: null, timers: [] };
   }
 
   // bars at fraction t of the way to row one
@@ -284,32 +340,50 @@
     s.bars.setAttribute('transform', 'matrix(' + a + ' 0 0 ' + d + ' ' + e + ' ' + f + ')');
   }
 
-  // the lined-up staircase at fractions a (centres aligned) and b (rescaled)
-  function lineup(s, a, b, sh) {
-    sh = sh || 0;                                    // step 6: slide the whole staircase left
-    var XC = s.XC - 190 * sh, LBX = s.LBX - 300 * sh;
+  // the lined-up staircase at fractions a (centres aligned), c (each sum divided
+  // by n, so the rows become averages) and b (rescaled to a common spread)
+  var MAG = 3;                                       // the averages are drawn 3x wider so ±σ/√n is legible
+  function lineup(s, a, b, sh, c) {
+    sh = sh || 0;                                    // step 7: slide the whole staircase left
+    c = c || 0;
+    var XC = s.XC - 60 * sh, LBX = s.LBX - 150 * sh, SQ = 1 - 0.32 * sh;   // step 7: narrow the rows, keep their left tails inside the clip, labels beside them
     var R = s.alignedRows, L = s.alignedLabels, A2 = s.anno;
     while (R.firstChild) R.removeChild(R.firstChild);
     while (L.firstChild) L.removeChild(L.firstChild);
     while (A2.firstChild) A2.removeChild(A2.firstChild);
     for (var n = 1; n <= N; n++) {
       var q = s.PM[n - 1], tq = Math.max.apply(null, q), base = R0 + (n - 1) * RH;
-      var m = n * MU, sd = SD * Math.sqrt(n), C = sx(m) + a * (XC - sx(m)), sc = UX * (1 + b * (1 / Math.sqrt(n) - 1));
+      var m = n * MU, sd = SD * Math.sqrt(n), C = sx(m) + a * (XC - sx(m));
+      // c runs 0 -> 1 in two phases so the motion reads: first divide by n
+      // (row one stays, every other row shrinks towards μ), then a uniform
+      // ×MAG zoom so the narrow averages are legible. One-way at each phase.
+      var cDiv = Math.min(1, c / 0.6), cZoom = Math.max(0, (c - 0.6) / 0.4);
+      var scM = UX * (1 + cDiv * (1 / n - 1)) * (1 + cZoom * (MAG - 1));
+      var sc = (scM + b * (MAG * UX / Math.sqrt(n) - scM)) * SQ;   // -> standardised: every row as wide as X̄₁
       var X = function (v) { return C + (v - m) * sc; };
-      R.appendChild(K.el('line', { x1: X(n - 0.5), y1: base, x2: X(6 * n + 0.5), y2: base, stroke: PAL.dim, 'stroke-width': 1.2 }));
+      var dr = drawnRange(n);
+      var lx = (sx(dr[1] + 0.5) + 30) * (1 - a) + LBX * a;   // label x; the baseline stops short of it
+      R.appendChild(K.el('line', { x1: X(dr[0] - 0.5) - PADB, y1: base, x2: Math.min(X(dr[1] + 0.5) + PADB, lx - 28), y2: base, stroke: PAL.dim, 'stroke-width': 1.2 }));
       for (var v = n; v <= 6 * n; v++) {
         var h = q[v] / tq * BH;
-        if (h < 0.3) continue;
+        if (h < MINH) continue;
         R.appendChild(K.el('rect', { x: X(v - 0.5) + 0.4, y: base - h, width: Math.max(sc - 0.8, 0.6), height: h, fill: PAL.navy, 'fill-opacity': 0.82 }));
       }
       [X(m - sd), X(m + sd)].forEach(function (x) { R.appendChild(K.el('line', { x1: x, y1: base - BH - 4, x2: x, y2: base, stroke: PAL.orange, 'stroke-width': 2.5 })); });
       R.appendChild(K.el('line', { x1: C, y1: base - BH - 4, x2: C, y2: base, stroke: PAL.brick, 'stroke-width': 2.5 }));
-      var lx = (sx(6 * n + 0.5) + 14) * (1 - a) + LBX * a;
-      math(L, lx, base - 12, label(n), 22);
-      // σ√n labels with inward arrows, while the rows are lined up but not rescaled
-      if (a > 0.99 && b < 0.01) {
+      // Cross-fade the three label sets in step with the motion rather than
+      // swapping them at the halfway point: sums fade as the rows divide by n,
+      // averages fade as they standardise.
+      var wSum = 1 - cDiv, wMean = cDiv * (1 - b), wZ = b;
+      [[label(n), 22, wSum], [meanLabel(n), 20, wMean], [zLabel(n), 20, wZ]].forEach(function (L3) {
+        if (L3[2] < 0.01) return;
+        math(L, lx, base - 12, L3[0], L3[1]).setAttribute('opacity', L3[2].toFixed(3));
+      });
+      // σ√n (sums) or σ/√n (averages) labels with inward arrows, before the rescale
+      if (a > 0.99 && (b > 0.99 || (b < 0.01 && (c < 0.01 || c > 0.99)))) {
         // labels near the top of the orange lines, clear of the bars
-        var lo = X(m - sd), hi = X(m + sd), ay = base - BH * 0.66, tag = n === 1 ? [['σ', 'i', PAL.orange]] : [['σ', 'i', PAL.orange], ['√' + n, null, PAL.orange]];
+        var lo = X(m - sd), hi = X(m + sd), ay = base - BH * 0.66, tag = b > 0.99 ? [['1', null, PAL.orange]]
+              : n === 1 ? [['σ', 'i', PAL.orange]] : [['σ', 'i', PAL.orange], [(c > 0.5 ? '/√' : '√') + n, null, PAL.orange]];
         [[lo, -1], [hi, 1]].forEach(function (e) {
           var x0 = e[0] + e[1] * 34, x1 = e[0] + e[1] * 5;
           A2.appendChild(K.el('line', { x1: x0, y1: ay, x2: x1 + e[1] * 6, y2: ay, stroke: PAL.orange, 'stroke-width': 2 }));
@@ -321,6 +395,8 @@
     }
   }
 
+  function ease(u) { return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; }   // inOutCubic, per phase
+
   function stop(s) {
     if (s.tween) s.tween.pause();
     s.timers.forEach(clearTimeout);
@@ -329,13 +405,14 @@
 
   function place(s, i, instant) {
     stop(s);
-    // phases three and four (steps 4–6) own the stage once they start
+    // phases three and four (steps 4–7) own the stage once they start
     var late = i >= 4;
     show(s.aligned, late, instant);
-    show(s.anno, i === 4, instant);
+    show(s.anno, i >= 4 && i <= 6, instant);
     show(s.note4, i === 4, instant);
-    show(s.note5, i === 5, instant);
-    show(s.nrm, i === 6, instant);
+    show(s.noteM, i === 5, instant);
+    show(s.note5, i === 6, instant);
+    show(s.nrm, i === 7, instant);
     s.aligned.style.transition = instant ? 'none' : 'opacity 450ms ease';
     if (late) {
       s.rows.forEach(function (g) { show(g, false, true); });
@@ -353,14 +430,22 @@
           onUpdate: function () { lineup(s, p4.t, 0); },
           onComplete: function () { lineup(s, 1, 0); show(s.anno, true, false); } });
       } else if (i === 5) {
-        if (!go4) { lineup(s, 1, 1); return; }
+        if (!go4) { lineup(s, 1, 0, 0, 1); return; }
+        s.anno.style.opacity = 0;
+        s.tween = window.anime.animate(p4, { t: 1, duration: 2400, ease: 'linear',
+          onUpdate: function () { var u = p4.t; lineup(s, 1, 0, 0, u < 0.6 ? 0.6 * ease(u / 0.6) : 0.6 + 0.4 * ease((u - 0.6) / 0.4)); },
+          onComplete: function () { lineup(s, 1, 0, 0, 1); show(s.anno, true, false); } });
+      } else if (i === 6) {
+        if (!go4) { lineup(s, 1, 1, 0, 1); return; }
+        s.anno.style.opacity = 0;
         s.tween = window.anime.animate(p4, { t: 1, duration: 1400, ease: 'inOutCubic',
-          onUpdate: function () { lineup(s, 1, p4.t); } });
+          onUpdate: function () { lineup(s, 1, p4.t, 0, 1); },
+          onComplete: function () { lineup(s, 1, 1, 0, 1); show(s.anno, true, false); } });
       } else {
-        if (!go4) { lineup(s, 1, 1, 1); return; }
+        if (!go4) { lineup(s, 1, 1, 1, 1); return; }
         s.nrm.style.opacity = 0;
         s.tween = window.anime.animate(p4, { t: 1, duration: 1200, ease: 'inOutCubic',
-          onUpdate: function () { lineup(s, 1, 1, p4.t); },
+          onUpdate: function () { lineup(s, 1, 1, p4.t, 1); },
           onComplete: function () { show(s.nrm, true, false, 700); } });
       }
       return;
@@ -404,7 +489,7 @@
 
   K.register({
     stage: 'moments-stage',
-    frags: ['moments-frag-1', 'moments-frag-2', 'moments-frag-3', 'moments-frag-4', 'moments-frag-5', 'moments-frag-6'],
+    frags: ['moments-frag-1', 'moments-frag-2', 'moments-frag-3', 'moments-frag-4', 'moments-frag-5', 'moments-frag-6', 'moments-frag-7'],
     build: build,
     place: place,
     stop: stop
