@@ -96,7 +96,7 @@
     code span.vs { color: #7a8b4d; } /* VerbatimString */
     code span.wa { color: #b5762a; font-weight: bold; font-style: italic; } /* Warning */
   </style>
-  <link rel="stylesheet" href="index_files/libs/revealjs/dist/theme/quarto-df3de84db8ef4e8cfbc7aa8370318f2d.css">
+  <link rel="stylesheet" href="index_files/libs/revealjs/dist/theme/quarto-d91cb38392639593cc7b6ff7f270d22c.css">
   <link href="index_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="index_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="index_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -242,8 +242,13 @@
     // overshooting bar over every square root), so the maths looked different
     // on machines with and without STIX.
     MathJax.Hub.Config({
-      "HTML-CSS": { availableFonts: [], preferredFont: null, webFont: "TeX" }
+      "HTML-CSS": { availableFonts: [], preferredFont: null, webFont: "TeX" },
+      SVG: { font: "TeX" }
     });
+    // SVG output: HTML-CSS builds a tall square root from a glyph plus a
+    // separate bar, and at the fractional sizes Reveal's scaling produces the
+    // two drift apart. SVG draws each root as one connected path.
+    MathJax.Hub.Register.StartupHook("End Jax", function () { return MathJax.Hub.setRenderer("SVG"); });
   </script>
     <!-- LOCAL, not the CDN: see assets/vendor/monaco/README.md -->
     <link rel="stylesheet" href="assets/vendor/monaco/vs/editor/editor.main.css">
@@ -4795,7 +4800,7 @@ The CLT for a skewed population
 :::
 
 ::: {.sim-card .sim-plot}
-```azsiihqj
+```wtgsvtgj
 #| fig-width: 5.7
 #| fig-height: 4.3
 #| out-width: "100%"
@@ -5180,7 +5185,7 @@ Binning
 :::
 
 ::: {.sim-card .sim-plot}
-```azsiihqj
+```wtgsvtgj
 #| fig-width: 5.7
 #| fig-height: 4.3
 #| out-width: "100%"
@@ -7030,7 +7035,7 @@ This series trends upward, violating the assumption of no trend. Starting with $
 :::
 
 ::: {.sim-card .sim-text}
-```azsiihqj
+```wtgsvtgj
 x <- c(45, 62, 73, 87, 86, 95)   # <-- trending
 err <- function(a) {
   f <- 67
@@ -7685,7 +7690,7 @@ eyJjb250ZW50cyI6WyAgeyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0IiwiaW5saW5lIjoidHJ1ZSIsInNv
     */
     (function () {
       var NS = 'http://www.w3.org/2000/svg', ctx = document.createElement('canvas').getContext('2d');
-      var SKIP = '.MathJax, .MathJax_Display, .MathJax_Preview, [class*="MJXp"], script, style, code, pre, textarea';
+      var SKIP = '.MathJax, .MathJax_Display, .MathJax_SVG, .MathJax_SVG_Display, .MathJax_Preview, [class*="MJXp"], script, style, code, pre, textarea';
       var cache = {};
       function metrics(cs) {
         var font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
@@ -7822,7 +7827,7 @@ eyJjb250ZW50cyI6WyAgeyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0IiwiaW5saW5lIjoidHJ1ZSIsInNv
     (function () {
       function fix(slide) {
         if (!slide || slide.dataset.mjFixed || !window.MathJax || !MathJax.Hub) return;
-        if (!slide.querySelector('.MathJax, .MathJax_Display, script[type^="math/tex"]')) return;
+        if (!slide.querySelector('.MathJax, .MathJax_SVG, script[type^="math/tex"]')) return;
         slide.dataset.mjFixed = '1';
         MathJax.Hub.Queue(['Rerender', MathJax.Hub, slide]);
       }
