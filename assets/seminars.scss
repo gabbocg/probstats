@@ -460,14 +460,14 @@
   // Sized by font-size, not zoom: MathJax measures its ex-height inside the
   // zoomed box and scales back up on some loads, so zoom gave two sizes.
   span.math.display { margin: 0; font-size: 0.65em; }
-  .MathJax_Display { zoom: 1 !important; }
+  :is(.MathJax_Display, .MathJax_SVG_Display) { zoom: 1 !important; }
   // The formula-slide rules zero display-maths margins; the wrapping <p>
   // carries the breathing room around each one-line chain instead.
   p:has(> span.math.display) { margin: 22px 0 24px !important; }
 }
 // Two formulas side by side in each column, so they set a little smaller.
 #sampling-formal {
-  .two-col .MathJax_Display { zoom: 1; }
+  .two-col :is(.MathJax_Display, .MathJax_SVG_Display) { zoom: 1; }
   .two-col > div > p:nth-child(2) span.math.display { margin: 2px 0 22px; }   // room before the prose underneath
 }
 
@@ -565,10 +565,10 @@
   .three-col span.math.display { font-size: 0.95em; }
   .three-col span.math.display { margin: 0; }
   .three-col .MJXp-math.MJXp-display,
-  .three-col .MathJax_Display,
-  .three-col .MathJax_Display > .MathJax { text-align: left !important; }
+  .three-col :is(.MathJax_Display, .MathJax_SVG_Display),
+  .three-col :is(.MathJax_Display > .MathJax, .MathJax_SVG_Display > .MathJax_SVG) { text-align: left !important; }
   .three-col .MJXp-math.MJXp-display,
-  .three-col .MathJax_Display { margin-left: 0; }
+  .three-col :is(.MathJax_Display, .MathJax_SVG_Display) { margin-left: 0; }
 
   .note-box { margin-top: 30px; }
   .perm-row span { font-size: 15px; letter-spacing: 0.04em; }
@@ -1350,7 +1350,7 @@
 
   // MathJax gives every display 1em top and bottom; three equations and two
   // arrow rows on one slide cannot afford six of those.
-  .MathJax_Display { margin: 4px 0; }
+  :is(.MathJax_Display, .MathJax_SVG_Display) { margin: 4px 0; }
   // A literal glyph, not $\downarrow$: MathJax's inline box for it is 42px
   // tall and dragged the whole row to 78.
   .deriv-glyph { color: var(--navy); font-size: 32px; line-height: 1; }
@@ -1363,10 +1363,10 @@
   // Spacing lives on span.math.display — Quarto's wrapper — NOT on either of
   // MathJax's own boxes. Which of those two actually lays a slide out flips
   // between loads (its fast PREVIEW, .MJXp-math, until MathJax typesets that
-  // slide; .MathJax_Display after), so a margin set on one of them silently
+  // slide; :is(.MathJax_Display, .MathJax_SVG_Display) after), so a margin set on one of them silently
   // vanishes half the time. Both are zeroed; the wrapper carries the space.
   .MJXp-math.MJXp-display,
-  .MathJax_Display { margin: 0; }
+  :is(.MathJax_Display, .MathJax_SVG_Display) { margin: 0; }
   span.math.display { display: block; margin: 36px 0; }
 
   // #binom-formal: the lede sat 36px off its equation, which reads as one
@@ -1416,7 +1416,7 @@
     // reads as a heading over its pair rather than as another line of the
     // rule. 40 + the array's own 4px sliver of padding lands them at 44.
     // !important is not laziness here. MathJax 2.7 writes text-align:center
-    // as an INLINE style on .MathJax_Display, which no amount of selector
+    // as an INLINE style on :is(.MathJax_Display, .MathJax_SVG_Display), which no amount of selector
     // specificity can beat. Without it the two arrays stayed centred, and
     // since they are different widths (668 and 587 units) they started at
     // different x — which is invisible in the MJXp preview, where the rule
@@ -1425,10 +1425,10 @@
     // MathJax centres the .MathJax span inside it, which is the same bug
     // one node down.
     .MJXp-math.MJXp-display,
-    .MathJax_Display,
-    .MathJax_Display > .MathJax { text-align: left !important; }
+    :is(.MathJax_Display, .MathJax_SVG_Display),
+    :is(.MathJax_Display > .MathJax, .MathJax_SVG_Display > .MathJax_SVG) { text-align: left !important; }
     .MJXp-math.MJXp-display,
-    .MathJax_Display { margin-left: 40px; }
+    :is(.MathJax_Display, .MathJax_SVG_Display) { margin-left: 40px; }
     .slide-footer { margin-top: 36px; }   // was 11px off the last equation
 
   }
@@ -1467,10 +1467,10 @@
     // carry none of their own, so an arrow sits between two equal 6px
     // margins and the three equations step down evenly by construction —
     // the one way to keep them even when each equation is a different height.
-    // Style .MJXp-display, NOT .MathJax_Display. In this deck MathJax's real
+    // Style .MJXp-display, NOT :is(.MathJax_Display, .MathJax_SVG_Display). In this deck MathJax's real
     // output ends up 0-height and what actually lays out (and what you see)
     // is its fast PREVIEW — which ships `margin: 36px 0`. Every rule aimed at
-    // .MathJax_Display here was a silent no-op. Corollary: a height measured
+    // :is(.MathJax_Display, .MathJax_SVG_Display) here was a silent no-op. Corollary: a height measured
     // while `.MathJax_Processing` is still on the node is fiction.
     p:has(.math.display) { margin: 0; line-height: 1; }
     span.math.display { margin: 18px 0; }
@@ -1683,15 +1683,6 @@
 // navy, olive and orange. The three statistics are fractions with roots, so
 // they set smaller than the 30px of the one-line properties.
 #two-mean-tests .prop-math { font-size: 24px; min-height: 96px; }
-// MathJax's HTML-CSS renderer tiles STIX overline glyphs for a radical bar.
-// Draw a continuous rule in the same bar box to avoid gaps at slide scale.
-#two-mean-tests .MathJax .msqrt > span > span:nth-child(2) > span:first-child {
-  &::after {
-    content: ""; position: absolute; left: 0; top: -0.8em;
-    width: 100%; border-top: 1.5px solid currentColor;
-  }
-  > span { visibility: hidden; }
-}
 
 #two-mean-tests .prop-q { text-align: center; hyphens: none; }   // as the #xbar-properties cards
 .prop-pooled { border-top-color: #325D88 !important; .prop-name { color: #325D88; } }
@@ -1987,3 +1978,7 @@
 .reveal section .quiz-fb { margin-top: 22px !important; }
 .reveal section#ls-formula .slide-footer { margin-top: 56px; }   // a little more air after the working
 .reveal section.formula-slide#ls-formula span.math.display { margin-bottom: 30px; }   // more air under each step, before its arrow
+// MathJax's SVG output sits on the text baseline through vertical-align on an
+// inline <svg>; the deck's `svg { display: block }` rules would cancel it and
+// lift every inline formula above its line.
+.reveal .MathJax_SVG svg, .reveal .MathJax_SVG_Display svg { display: inline !important; margin: 0 !important; }

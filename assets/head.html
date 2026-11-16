@@ -47,6 +47,11 @@
   // overshooting bar over every square root), so the maths looked different
   // on machines with and without STIX.
   MathJax.Hub.Config({
-    "HTML-CSS": { availableFonts: [], preferredFont: null, webFont: "TeX" }
+    "HTML-CSS": { availableFonts: [], preferredFont: null, webFont: "TeX" },
+    SVG: { font: "TeX" }
   });
+  // SVG output: HTML-CSS builds a tall square root from a glyph plus a
+  // separate bar, and at the fractional sizes Reveal's scaling produces the
+  // two drift apart. SVG draws each root as one connected path.
+  MathJax.Hub.Register.StartupHook("End Jax", function () { return MathJax.Hub.setRenderer("SVG"); });
 </script>

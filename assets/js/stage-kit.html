@@ -281,7 +281,7 @@
 */
 (function () {
   var NS = 'http://www.w3.org/2000/svg', ctx = document.createElement('canvas').getContext('2d');
-  var SKIP = '.MathJax, .MathJax_Display, .MathJax_Preview, [class*="MJXp"], script, style, code, pre, textarea';
+  var SKIP = '.MathJax, .MathJax_Display, .MathJax_SVG, .MathJax_SVG_Display, .MathJax_Preview, [class*="MJXp"], script, style, code, pre, textarea';
   var cache = {};
   function metrics(cs) {
     var font = cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
@@ -418,7 +418,7 @@
 (function () {
   function fix(slide) {
     if (!slide || slide.dataset.mjFixed || !window.MathJax || !MathJax.Hub) return;
-    if (!slide.querySelector('.MathJax, .MathJax_Display, script[type^="math/tex"]')) return;
+    if (!slide.querySelector('.MathJax, .MathJax_SVG, script[type^="math/tex"]')) return;
     slide.dataset.mjFixed = '1';
     MathJax.Hub.Queue(['Rerender', MathJax.Hub, slide]);
   }
