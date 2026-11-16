@@ -49,7 +49,7 @@ for id in s00b-me s00b-about s00-how-to-use s00-webr \
           s05-estimation sampling-formal xbar-properties xbar-proof xbar-proof-var sample-var xbar-normal ci-derive punt-clt ciflip-intuition cieq-formula ci-intuition ci-lab \
           s06-testing web-test test-steps test-stats pval-intuition reject-lab err-table power-lab \
           two-mean-tests pooled-formula pair-intuition pair-lab \
-          s07-regression ad-scatter cor-test ls-fit ls-formula ls-accuracy fit-quality multi-reg; do
+          s07-regression ad-scatter cor-intuition cor-test ls-model ls-se ls-formula ls-fit ls-surface ls-accuracy ls-table fit-quality multi-reg; do
   need "id=\"$id\"" "slide #$id"
 done
 

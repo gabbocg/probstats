@@ -7,12 +7,15 @@ Least squares, uncertainty and model fit
 ## Sales and Advertising {.ojs-slide #ad-scatter}
 
 ::: {.lede-min}
-Sales in 200 markets against the TV, radio or newspaper budget (ISLR Figure 2.1), with the least-squares line in navy.
+Each dot is one of 200 markets: its advertising budget and the sales that followed. Does spending more go with selling more?
 :::
 
 ```{ojs}
 //| echo: false
-viewof rgSx = Inputs.radio(["TV", "Radio", "Newspaper"], {value: "TV", label: "Budget on the x axis"})
+viewof rgSx = Inputs.form({
+  x: Inputs.radio(["TV", "Radio", "Newspaper"], {value: "TV", label: "Budget on the x axis"}),
+  show: Inputs.checkbox(["The line", "Distances to the line"], {value: [], label: "Show"})
+}, {template: ins => html`<div class="rg-dials">${ins.x}${ins.show}</div>`})
 ```
 
 ```{ojs}
@@ -111,93 +114,65 @@ rgTitle = s => Plot.text([s], {frameAnchor: "top-left", dy: -30, text: d => d, f
 ```{ojs}
 //| echo: false
 {
-  const fit = rgSimple(rgCol(rgSx), rgCol("Sales")), hi = d3.max(rgCol(rgSx));
+  const X = rgSx.x, line = rgSx.show.includes("The line"), dist = line && rgSx.show.includes("Distances to the line");
+  const fit = rgSimple(rgCol(X), rgCol("Sales")), hi = d3.max(rgCol(X));
   const chart = Plot.plot({
-    width: 1000, height: 280, marginLeft: 40, marginBottom: 28, marginTop: 42, style: rgStyle,
+    width: 1000, height: 250, marginLeft: 40, marginBottom: 28, marginTop: 42, style: rgStyle,
     x: {domain: [0, hi * 1.02], label: null, tickSize: 4},
     y: {domain: [0, 28], label: null, ticks: [0, 5, 10, 15, 20, 25], tickSize: 4},
     marks: [
-      Plot.dot(rgAd, {x: rgSx, y: "Sales", r: 3.5, fill: PPAL.soft, fillOpacity: 0.5}),
-      Plot.line([0, hi], {x: d => d, y: d => fit.b0 + fit.b1 * d, stroke: PPAL.navy, strokeWidth: 3}),
-      rgTitle(`Sales (1000s of units) against the ${rgSx} budget ($1000s)`)
+      dist ? Plot.link(rgAd, {x1: X, x2: X, y1: "Sales", y2: d => fit.b0 + fit.b1 * d[X], stroke: PPAL.brick, strokeOpacity: 0.5, strokeWidth: 1.2}) : null,
+      Plot.dot(rgAd, {x: X, y: "Sales", r: 3.5, fill: PPAL.soft, fillOpacity: 0.55}),
+      line ? Plot.line([0, hi], {x: d => d, y: d => fit.b0 + fit.b1 * d, stroke: PPAL.navy, strokeWidth: 3}) : null,
+      rgTitle(`Sales (1000s of units) against the ${X} budget ($1000s)`)
     ]
   });
-  const pct = v => `${(100 * v).toFixed(1)}%`;
-  const say = rgSx === "Newspaper"
-    ? `Newspaper has the weakest correlation with sales: r = ${rgN(fit.r, 3)}. The fitted line has a positive slope and explains <b>${pct(fit.r2)}</b> of the variation in sales. The multiple regression example examines how this relationship changes when radio is included.`
-    : `${rgSx} has r = ${rgN(fit.r, 3)}, so the line explains <b>R² = r² = ${pct(fit.r2)}</b> of the variation in sales. Each extra $1,000 on ${rgSx === "TV" ? "TV" : "radio"} goes with about <b>${(1000 * fit.b1).toFixed(1)} more units</b> sold.`;
+  const per = (1000 * fit.b1).toFixed(1);
+  const say = !line
+    ? `Markets that spend more on ${X === "Newspaper" ? "newspapers" : X} tend to sell more, but with a lot of scatter. Tick <b>The line</b> to summarise the trend with one straight line.`
+    : !dist
+      ? `The line starts at β₀ = ${rgN(fit.b0, 2)} (sales with no ${X} budget) and rises by β₁ = ${rgN(fit.b1, 4)} per $1,000: about <b>${per} more units</b>. Tick <b>Distances to the line</b> to see how far each market sits from it.`
+      : `Each red segment is the gap between a market's actual sales and the line's prediction. The best line keeps these gaps small overall: the next slides measure them and find that line.`;
   return html`${chart}
   <div class="ojs-eq rg-stats">
-    <span>Sales = ${rgN(fit.b0)} + ${rgN(fit.b1)} × ${rgSx}</span>
-    <span>r = <span class="cl-navy">${rgN(fit.r, 3)}</span></span>
-    <span>R² = ${rgN(fit.r2, 3)}</span>
+    <span>${line ? html`Sales = ${rgN(fit.b0, 2)} + ${rgN(fit.b1, 4)} × ${X}` : html`Sales = β₀ + β₁ × ${X}`}</span>
   </div>
   <div class="quiz-fb">${say}</div>`;
 }
 ```
 
-## Testing the population correlation {.ojs-slide .example #cor-test}
+## The Least-Squares Estimates {.formula-slide #ls-formula}
 
 ::: {.lede-min}
-Under $H_0\colon \rho = 0$, $t = \frac{r\sqrt{n-2}}{\sqrt{1-r^2}}$ follows Student's $t$ with $n-2$ degrees of freedom. The defaults are $r = 0.33$ over 24 months.
+Square each gap $e_i = y_i - \widehat y_i$ and add them up: that is RSS. Least squares picks the $\beta_0, \beta_1$ that make it smallest, where both partial derivatives are zero.
 :::
 
-```{ojs}
-//| echo: false
-viewof rgCin = Inputs.form({
-  r: Inputs.range([-0.95, 0.95], {value: 0.33, step: 0.01, label: html`Correlation <i style="text-transform: none">r</i>`}),
-  n: Inputs.range([5, 200], {value: 24, step: 1, label: html`Sample size <i style="text-transform: none">n</i>`}),
-  alt: Inputs.radio(["ρ > 0", "ρ < 0", "ρ ≠ 0"], {value: "ρ > 0", label: "Alternative"}),
-  alpha: Inputs.radio(["10%", "5%", "1%"], {value: "5%", label: html`Level <i style="text-transform: none">α</i>`})
-}, {template: ins => html`<div class="rg-dials">${ins.r}${ins.n}</div><div class="rg-dials rg-dials-2">${ins.alt}${ins.alpha}</div>`})
-```
+$$\textstyle \text{RSS}(\beta_0, \beta_1) \;=\; \sum_{i=1}^n \big(y_i - \beta_0 - \beta_1 x_i\big)^2$$
 
-```{ojs}
-//| echo: false
-{
-  const {r, n, alt} = rgCin, df = n - 2, a = parseFloat(rgCin.alpha) / 100;
-  const t = r * Math.sqrt(df) / Math.sqrt(1 - r * r);
-  const crit = clInv(x => clTcdf(x, df))(alt === "ρ ≠ 0" ? 1 - a / 2 : 1 - a);
-  const p = alt === "ρ > 0" ? 1 - clTcdf(t, df) : alt === "ρ < 0" ? clTcdf(t, df) : rgP2(t, df);
-  const inR = x => alt === "ρ > 0" ? x >= crit : alt === "ρ < 0" ? x <= -crit : Math.abs(x) >= crit;
-  const reject = inR(t);
-  const dens = x => Math.exp(clLgam((df + 1) / 2) - clLgam(df / 2) - 0.5 * Math.log(df * Math.PI) - (df + 1) / 2 * Math.log(1 + x * x / df));
-  const xs = d3.range(-6, 6.001, 0.02).map(x => ({x, y: dens(x)}));
-  const cuts = alt === "ρ > 0" ? [crit] : alt === "ρ < 0" ? [-crit] : [-crit, crit];
-  const tc = Math.max(-6, Math.min(6, t));
-  const chart = Plot.plot({
-    width: 1000, height: 210, marginLeft: 12, marginRight: 12, marginBottom: 28, marginTop: 42, style: rgStyle,
-    x: {domain: [-6, 6], label: null, tickSize: 4},
-    y: {axis: null, domain: [0, 0.42], insetTop: 18},
-    marks: [
-      Plot.areaY(xs, {x: "x", y: "y", fill: PPAL.dim, fillOpacity: 0.3}),
-      Plot.areaY(xs, {x: "x", y: d => inR(d.x) ? d.y : NaN, fill: PPAL.brick, fillOpacity: 0.45}),
-      Plot.line(xs, {x: "x", y: "y", stroke: PPAL.soft, strokeWidth: 2}),
-      Plot.ruleX(cuts, {stroke: PPAL.brick, strokeWidth: 1.5, strokeDasharray: "5 4"}),
-      Plot.ruleX([tc], {stroke: PPAL.orange, strokeWidth: 3}),
-      Plot.text([tc], {x: d => d, y: 0.36, text: () => `t = ${rgN(t, 2)}${Math.abs(t) > 6 ? " (off the axis)" : ""}`, dx: tc > 3 ? -8 : 8,
-        textAnchor: tc > 3 ? "end" : "start", fill: PPAL.orange, fontWeight: 700, fontSize: 16, stroke: "white", strokeWidth: 6}),
-      Plot.ruleY([0], {stroke: PPAL.dim}),
-      rgTitle(`Student's t with ${df} degrees of freedom; the red tail is the rejection region`)
-    ]
-  });
-  const word = {"ρ > 0": "greater than zero", "ρ < 0": "less than zero", "ρ ≠ 0": "different from zero"}[alt];
-  return html`${chart}
-  <div class="ojs-eq rg-stats">
-    <span>t = <span class="rate">${rgN(t, 4)}</span></span>
-    <span>Critical value ${alt === "ρ ≠ 0" ? "±" : alt === "ρ < 0" ? "−" : ""}${rgN(crit, 4)}</span>
-    <span>${rgPeq(p)}</span>
-  </div>
-  <div class="quiz-fb">${reject
-    ? html`The statistic t = ${rgN(t, 2)} falls in the rejection region, so we <b>reject H₀</b> at the ${rgCin.alpha} level: the correlation is ${word} (${rgPeq(p)}).`
-    : html`The statistic t = ${rgN(t, 2)} is not in the rejection region, so we <b>fail to reject H₀</b> at the ${rgCin.alpha} level (${rgPeq(p)}). A correlation of ${rgN(r, 2)} from only ${n} pairs could be chance.`}</div>`;
-}
-```
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Set $\partial\,\text{RSS}/\partial\beta_0 = 0$: the residuals sum to zero]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle -2\sum_{i=1}^n \big(y_i - \widehat\beta_0 - \widehat\beta_1 x_i\big) = 0 \;\;\Rightarrow\;\; \widehat\beta_0 = \bar y - \widehat\beta_1 \bar x$$
+:::
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Set $\partial\,\text{RSS}/\partial\beta_1 = 0$ and substitute $\widehat\beta_0$]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle -2\sum_{i=1}^n x_i\big[(y_i - \bar y) - \widehat\beta_1 (x_i - \bar x)\big] = 0 \;\;\Rightarrow\;\; \widehat\beta_1 = \frac{\sum_{i=1}^n (x_i - \bar x)(y_i - \bar y)}{\sum_{i=1}^n (x_i - \bar x)^2} = r\,\frac{s_y}{s_x}$$
+:::
+
+::: {.slide-footer .fragment}
+$x_i$ can be replaced by $x_i - \bar x$ because $\sum (y_i - \bar y) = 0$. For sales on TV, $\widehat\beta_1 = 0.0475$ and $\widehat\beta_0 = 7.03$: an extra \$1,000 on TV goes with about 47.5 more units. The line always passes through $(\bar x, \bar y)$.
+:::
 
 ## Finding the Least-Squares Line {.ojs-slide #ls-fit}
 
 ::: {.lede-min}
-Each line gives residuals $e_i = y_i - \widehat{y}_i$. Least squares picks the line with the smallest $\text{RSS} = \sum e_i^2$ (ISLR Figures 3.1 and 3.2). Find it with the sliders.
+Search for that line by hand: each slider setting is a line, and its RSS is the orange dot on the contours.
 :::
 
 ```{ojs}
@@ -259,56 +234,197 @@ rgRSS = (b0, b1) => { const S = rgSums;
 }
 ```
 
-## The Least-Squares Estimates {.ojs-slide .example #ls-formula}
+## The RSS Surface {.ojs-slide #ls-surface}
 
 ::: {.lede-min}
-Setting the derivatives of RSS to zero gives the line in closed form. Select a data set to calculate the estimates and a prediction.
+RSS for every intercept and slope, as contours and as a surface. The red dot is the least-squares pair $(\widehat\beta_0, \widehat\beta_1) = (7.03, 0.0475)$, the lowest point of the bowl. Drag the surface to turn it.
 :::
 
-$$\widehat{\beta}_1 = \frac{\sum_{i=1}^n (x_i - \bar x)(y_i - \bar y)}{\sum_{i=1}^n (x_i - \bar x)^2}, \qquad \widehat{\beta}_0 = \bar y - \widehat{\beta}_1 \bar x$$
-
 ```{ojs}
 //| echo: false
-// Exercises 2 and 3 of the beamer Seminar 7, beside ISLR's sales on TV.
-rgSets = ({
-  "Advertising: sales on TV": {x: rgCol("TV"), y: rgCol("Sales"), lo: 0, hi: 400, x0: 100, step: 1,
-    say: b1 => `Each extra $1,000 of TV budget goes with ${(1000 * b1).toFixed(1)} more units sold.`},
-  "Exercise 2: Y on X": {x: [1, 2, 3, 4, 5, 6, 7], y: [2, 4, 8, 16, 32, 64, 128], lo: 0, hi: 10, x0: 5, step: 0.5,
-    say: b1 => `A one-unit increase in X goes with an increase of ${rgN(b1, 2)} in Y.`},
-  "Exercise 3: cost of debt on sales": {x: [15, 4, 12, 17, 13, 3, 5, 1, 14, 1, 6, 9, 8, 2, 2],
-    y: [2, 6, 3, 2, 4, 7, 9, 14, 3, 7, 4, 6, 7, 12, 11], lo: 0, hi: 25, x0: 10, step: 0.5,
-    say: b1 => `Each extra £1 million of sales goes with a ${rgN(-b1, 2)} percentage-point lower cost of debt.`}
-})
-viewof rgFset = Inputs.radio(Object.keys(rgSets), {value: "Advertising: sales on TV", label: "Data"})
-```
-
-```{ojs}
-//| echo: false
-viewof rgFx0 = Inputs.range([rgSets[rgFset].lo, rgSets[rgFset].hi], {value: rgSets[rgFset].x0, step: rgSets[rgFset].step, label: html`Predict at <i style="text-transform: none">x</i>`})
+// Where each level ring crosses the valley's long axis, on the right-hand side.
+// RSS = min + d'Hd with H = [[n, sum x], [sum x, sum x^2]]; in plot units
+// (each axis scaled to its window) the long axis is H's softer eigenvector.
+rgValley = (levels, best) => {
+  const S = rgSums, wx = 4, wy = 0.035;
+  const a = S.n * wx * wx, b = S.sx * wx * wy, c = S.sxx * wy * wy;           // H in window units
+  const lam = (a + c) / 2 - Math.sqrt(((a - c) / 2) ** 2 + b * b);
+  let ux = b, uy = lam - a; const m = Math.hypot(ux, uy); ux /= m; uy /= m;
+  if (ux < 0) { ux = -ux; uy = -uy; }
+  const lam2 = a + c - lam, inside = d => d.b0 > 5.15 && d.b0 < 8.85 && d.b1 > 0.0315 && d.b1 < 0.0635;
+  // Along the long axis while the ring crosses it inside the window, else up
+  // the short axis.
+  return levels.map(L => {
+    const t = Math.sqrt((L - best.z) * 1000 / lam), d = {L, b0: best.b0 + t * ux * wx, b1: best.b1 + t * uy * wy};
+    if (inside(d)) return d;
+    const t2 = Math.sqrt((L - best.z) * 1000 / lam2);
+    return {L, b0: best.b0 - t2 * uy * wx, b1: best.b1 + t2 * ux * wy};
+  }).filter(inside);
+}
 ```
 
 ```{ojs}
 //| echo: false
 {
-  const D = rgSets[rgFset], f = rgSimple(D.x, D.y), yhat = f.b0 + f.b1 * rgFx0;
-  const lo = d3.min(D.x), hi = d3.max(D.x), inside = rgFx0 >= lo && rgFx0 <= hi;
-  const bar = v => html`<span class="cl-bar">${v}</span>`, hat = v => html`<span class="rg-hat">${v}</span>`;
-  return html`<div class="ojs-eq cr-eqs rg-eqs">
-    <span>${bar("x")}, ${bar("y")}</span><span>= ${rgN(f.mx)}, ${rgN(f.my)}</span>
-    <span>${hat("β")}₁</span><span>= ${rgN(f.sxy, 2)} / ${rgN(f.sxx, 2)} = <span class="cl-navy">${rgN(f.b1)}</span></span>
-    <span>${hat("β")}₀</span><span>= ${rgN(f.my)} − ${rgNp(f.b1)} × ${rgN(f.mx)} = <span class="cl-navy">${rgN(f.b0)}</span></span>
-    <span>${hat("y")}</span><span>= ${rgN(f.b0)} + ${rgNp(f.b1)} × ${rgFx0} = <span class="${inside ? "rate" : "miss"}">${rgN(yhat)}</span></span>
-  </div>
-  <div class="quiz-fb ${inside ? "" : "quiz-no"}">${D.say(f.b1)} ${inside
-    ? html`At x = ${rgFx0}, inside the data's range ${lo} to ${hi}, the line predicts <b>${rgN(yhat, 2)}</b>.`
-    : html`But x = ${rgFx0} lies outside the data's range ${lo} to ${hi}: predicting there is <b>extrapolation</b>, and nothing in the data says the line still holds.`}</div>`;
+  const best = {b0: rgTV.b0, b1: rgTV.b1, z: rgTV.rss / 1000};
+  const levels = [2.11, 2.15, 2.2, 2.3, 2.5, 3];
+  const contour = Plot.plot({
+    width: 470, height: 340, marginLeft: 64, marginBottom: 44, marginTop: 42, style: rgStyle,
+    x: {domain: [5, 9], label: "β₀", labelAnchor: "center", labelArrow: "none", tickSize: 4},
+    y: {domain: [0.03, 0.065], label: "β₁", labelAnchor: "center", labelArrow: "none", tickSize: 4, ticks: 4},
+    marks: [
+      Plot.contour({x1: 5, x2: 9, y1: 0.03, y2: 0.065, value: (u, v) => rgRSS(u, v) / 1000, pixelSize: 2,
+        thresholds: levels, stroke: PPAL.navy, strokeOpacity: 0.55, fill: "none"}),
+      // Each level's value written on its ring where the valley's long axis
+      // crosses it, so the labels spread out instead of piling at the minimum.
+      Plot.text(rgValley(levels, best), {x: "b0", y: "b1", text: "L", fill: PPAL.navy, fontSize: 12, stroke: "white", strokeWidth: 4}),
+      Plot.dot([best], {x: "b0", y: "b1", r: 6, fill: PPAL.brick, stroke: "white", strokeWidth: 1.5}),
+      rgTitle("Contours of RSS (thousands)")
+    ]
+  });
+
+  // The surface, drawn in SVG like the deck's animations so it scales with the
+  // slide. Window zoomed on the valley (RSS 2.10 to 3.96 thousand). Each grid
+  // cell is a quad; quads are painted back to front for the current view.
+  const W = 470, H = 340, NX = 26, NY = 26, X0 = 5.5, X1 = 8.5, Y0 = 0.038, Y1 = 0.057, Z0 = 2, Z1 = 4;
+  const P = (b0, b1, z) => [2 * (b0 - X0) / (X1 - X0) - 1, 2 * (b1 - Y0) / (Y1 - Y0) - 1, 1.1 * (z - Z0) / (Z1 - Z0) - 0.55];
+  const grid = d3.range(NY + 1).map(j => d3.range(NX + 1).map(i => {
+    const b0 = X0 + (X1 - X0) * i / NX, b1 = Y0 + (Y1 - Y0) * j / NY; return P(b0, b1, rgRSS(b0, b1) / 1000); }));
+  const quads = [];
+  for (let j = 0; j < NY; j++) for (let i = 0; i < NX; i++)
+    quads.push([grid[j][i], grid[j][i + 1], grid[j + 1][i + 1], grid[j + 1][i]]);
+  const shade = d3.scaleLinear([-0.55, 0.55], ["#E4ECF4", "#325D88"]).clamp(true);
+  const HOME = {az: -0.75, el: 0.5};
+  const view = {...HOME};
+  const k = 118, cx = W / 2 + 6, cy = H / 2 + 22;
+  const proj = ([u, v, w]) => {
+    const ca = Math.cos(view.az), sa = Math.sin(view.az), ce = Math.cos(view.el), se = Math.sin(view.el);
+    const x = u * ca - v * sa, y = u * sa + v * ca;
+    return {X: cx + k * x, Y: cy - k * (w * ce + y * se), d: y * ce - w * se};
+  };
+  const svg = d3.create("svg").attr("width", W).attr("height", H).attr("viewBox", `0 0 ${W} ${H}`)
+    .style("cursor", "grab").style("touch-action", "none").style("user-select", "none");
+  const gBox = svg.append("g"), gSurf = svg.append("g"), gTop = svg.append("g");
+  const lab = (g, p, t, o = {}) => g.append("text").attr("x", p.X).attr("y", p.Y).text(t)
+    .attr("font-family", "Roboto, sans-serif").attr("font-size", o.size || 12).attr("fill", o.fill || "#6E7681")
+    .attr("font-weight", o.bold ? 700 : 400).attr("text-anchor", o.anchor || "middle").attr("dominant-baseline", "middle");
+  const draw = () => {
+    gBox.selectAll("*").remove(); gSurf.selectAll("*").remove(); gTop.selectAll("*").remove();
+    // Floor and the back vertical edge, so the bowl has a frame to sit in.
+    const fl = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => proj([u, v, -0.55]));
+    gBox.append("path").attr("d", "M" + fl.map(p => `${p.X},${p.Y}`).join("L") + "Z").attr("fill", "#F6F8FA").attr("stroke", "#D5DBE1");
+    const back = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => ({u, v, d: proj([u, v, -0.55]).d})).sort((a, b) => b.d - a.d)[0];
+    const vb = proj([back.u, back.v, -0.55]), vt = proj([back.u, back.v, 0.55]);
+    gBox.append("line").attr("x1", vb.X).attr("y1", vb.Y).attr("x2", vt.X).attr("y2", vt.Y).attr("stroke", "#D5DBE1");
+    [2, 3, 4].forEach(z => lab(gBox, {...proj([back.u, back.v, P(7, 0.05, z)[2]]), X: proj([back.u, back.v, P(7, 0.05, z)[2]]).X - 14}, z));
+    lab(gBox, {X: vt.X - 14, Y: vt.Y - 18}, "RSS", {size: 14, fill: "#3E3F3A"});
+    // Axis names at the middle of the two front floor edges.
+    const front = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => ({u, v, d: proj([u, v, -0.55]).d})).sort((a, b) => a.d - b.d)[0];
+    const eb0 = proj([0, front.v, -0.55]), eb1 = proj([front.u, 0, -0.55]);
+    lab(gTop, {X: eb0.X, Y: eb0.Y + 18}, "β₀", {size: 15, fill: "#3E3F3A"});
+    lab(gTop, {X: eb1.X, Y: eb1.Y + 18}, "β₁", {size: 15, fill: "#3E3F3A"});
+    quads.map(q => ({q, p: q.map(proj), w: d3.mean(q, c => c[2])}))
+      .map(o => ({...o, d: d3.mean(o.p, p => p.d)})).sort((a, b) => b.d - a.d)
+      .forEach(o => gSurf.append("path").attr("d", "M" + o.p.map(p => `${p.X.toFixed(1)},${p.Y.toFixed(1)}`).join("L") + "Z")
+        .attr("fill", shade(o.w)).attr("stroke", "white").attr("stroke-width", 0.4).attr("stroke-opacity", 0.7));
+    const m = proj(P(best.b0, best.b1, best.z));
+    gTop.append("circle").attr("cx", m.X).attr("cy", m.Y).attr("r", 6).attr("fill", PPAL.brick).attr("stroke", "white").attr("stroke-width", 1.5);
+  };
+  // Drag turns the bowl about its vertical axis and tilts it; the tilt is held
+  // between side-on and top-down so it can never flip over or drift away.
+  let drag = null;
+  svg.on("pointerdown", e => { drag = {x: e.clientX, y: e.clientY, az: view.az, el: view.el}; svg.style("cursor", "grabbing"); e.target.setPointerCapture?.(e.pointerId); e.stopPropagation(); })
+     .on("pointermove", e => { if (!drag) return;
+       view.az = drag.az + (e.clientX - drag.x) * 0.012;
+       view.el = Math.max(0.05, Math.min(1.5, drag.el + (e.clientY - drag.y) * 0.012)); draw(); })
+     .on("pointerup pointercancel", () => { drag = null; svg.style("cursor", "grab"); });
+  draw();
+  const reset = html`<form class="rg-reset"><button type="button">Reset view</button></form>`;
+  reset.querySelector("button").onclick = () => { Object.assign(view, HOME); draw(); };
+  const right = html`<div class="rg-surf-wrap">${svg.node()}${reset}</div>`;
+  return html`<div class="cr-row rg-surf-row">${contour}${right}</div>
+  <div class="quiz-fb">Every other line sits higher on the bowl. The long, narrow valley is the trade-off seen on the sliders: a steeper slope can be offset by a lower intercept.</div>`;
 }
 ```
 
-## How Accurate Is the Slope? {.ojs-slide #ls-accuracy}
+## The Model Behind the Line {.ojs-slide #ls-model}
 
 ::: {.lede-min}
-Resample the 200 markets with replacement and refit. The spread of the resampled slopes is what $\text{SE}(\widehat{\beta}_1)$ measures (ISLR Figure 3.3, Table 3.1).
+The red population line is fixed but unknown; each sample scatters around it by the noise $\varepsilon$. Least squares estimates it, as $\bar x$ estimates $\mu$.
+:::
+
+$$Y = \color{#B94A48}{\beta_0 + \beta_1 X} + \varepsilon \qquad\qquad \widehat y = \color{#325D88}{\widehat\beta_0 + \widehat\beta_1 x}$$
+
+```{ojs}
+//| echo: false
+viewof rgMs = Inputs.button("New samples")
+```
+
+```{ojs}
+//| echo: false
+// Y = 2 + 3X + e, X ~ U(-2, 2), e ~ N(0, 5), n = 100: ISLR's line, with
+// enough noise that ten samples give visibly different lines.
+// Ten samples for the right panel and 1,000 for the average slope; the first
+// of the ten is the one on the left. Seeded from the button.
+rgSim = {
+  const rnd = d3.randomLcg(((rgMs + 1) * 0.7548776662) % 1), U = d3.randomUniform.source(rnd)(-2, 2), E = d3.randomNormal.source(rnd)(0, 5);
+  const draw = () => { const x = Array.from({length: 100}, U), y = x.map(v => 2 + 3 * v + E()); return {x, y, f: rgSimple(x, y)}; };
+  const ten = Array.from({length: 10}, draw);
+  const many = Array.from({length: 1000}, () => draw().f.b1);
+  return {ten, avg: d3.mean(many)};
+}
+```
+
+```{ojs}
+//| echo: false
+{
+  const S = rgSim, one = S.ten[0], f = one.f, xs = [-2, 2];
+  const base = {height: 205, marginLeft: 36, marginBottom: 28, marginTop: 42, style: rgStyle,
+    x: {domain: [-2, 2], label: null, tickSize: 4}, y: {domain: [-14, 18], label: null, ticks: [-10, 0, 10], tickSize: 4}};
+  const truth = Plot.line(xs, {x: d => d, y: d => 2 + 3 * d, stroke: PPAL.brick, strokeWidth: 3});
+  const left = Plot.plot({...base, width: 490, marks: [
+    Plot.dot(one.x.map((v, i) => ({x: v, y: one.y[i]})), {x: "x", y: "y", r: 3, fill: PPAL.soft, fillOpacity: 0.5}),
+    truth,
+    Plot.line(xs, {x: d => d, y: d => f.b0 + f.b1 * d, stroke: PPAL.navy, strokeWidth: 3, strokeDasharray: "7 5"}),
+    rgTitle("One sample: the true line and its estimate")]});
+  // Zoomed in on the lines, so ten estimates a few tenths apart separate.
+  const right = Plot.plot({...base, width: 490, y: {domain: [-5, 9], label: null, ticks: [-4, 0, 4, 8], tickSize: 4}, marks: [
+    ...S.ten.map(s => Plot.line(xs, {x: d => d, y: d => s.f.b0 + s.f.b1 * d, stroke: "#9FB6CC", strokeWidth: 1.5})),
+    truth,
+    rgTitle("Ten samples, ten least-squares lines")]});
+  return html`<div class="cr-row">${left}${right}</div>
+  <div class="ojs-eq rg-stats">
+    <span>This sample: <span class="cl-navy">β̂₀ = ${rgN(f.b0, 2)}, β̂₁ = ${rgN(f.b1, 2)}</span></span>
+    <span>Mean β̂₁ over 1,000 samples = <b>${rgN(S.avg, 3)}</b></span>
+  </div>
+  <div class="quiz-fb">Each sample's line misses the population line Y = 2 + 3X a little, in a different direction each time. On average they hit it: β̂₁ is unbiased for β₁ = 3.</div>`;
+}
+```
+
+## Standard Errors and Intervals {.formula-slide #ls-se}
+
+::: {.lede-min}
+As $\sigma/\sqrt n$ measures how far $\bar y$ misses $\mu$, these measure how far $\widehat\beta_0$ and $\widehat\beta_1$ miss $\beta_0$ and $\beta_1$. The RSE estimates $\sigma^2 = \text{Var}(\varepsilon)$.
+:::
+
+$$\textstyle \text{SE}(\widehat\beta_0)^2 = \sigma^2\left[\frac{1}{n} + \frac{\bar x^2}{\sum_{i=1}^n (x_i - \bar x)^2}\right] \qquad\quad \text{SE}(\widehat\beta_1)^2 = \frac{\sigma^2}{\sum_{i=1}^n (x_i - \bar x)^2}$$
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [An approximate 95% confidence interval is $\widehat\beta \pm 2\cdot\text{SE}(\widehat\beta)$. For sales on TV:]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle \beta_0 \in [6.130,\; 7.935] \qquad\qquad \beta_1 \in [0.042,\; 0.053]$$
+:::
+
+::: {.slide-footer .fragment}
+With no TV advertising, sales average 6,130 to 7,935 units; each extra \$1,000 on TV adds 42 to 53 units. More spread in the $x_i$ shrinks $\text{SE}(\widehat\beta_1)$: more leverage on the slope.
+:::
+
+## Is There a Relationship? {.ojs-slide #ls-accuracy}
+
+::: {.lede-min}
+No relationship means $H_0\colon \beta_1 = 0$. The test uses $t = (\widehat\beta_1 - 0)/\text{SE}(\widehat\beta_1)$ on $n - 2$ degrees of freedom; refitting 200 resampled markets shows the spread SE measures.
 :::
 
 ```{ojs}
@@ -341,7 +457,7 @@ rgBoot = {
   const f = rgTV, c = rgBin.c, lo = f.b1 - 2 * f.se1, hi = f.b1 + 2 * f.se1;
   const t = (f.b1 - c) / f.se1, p = rgP2(t, f.n - 2), inside = c >= lo && c <= hi;
   const lines = Plot.plot({
-    width: 490, height: 250, marginLeft: 36, marginBottom: 28, marginTop: 42, style: rgStyle,
+    width: 490, height: 228, marginLeft: 36, marginBottom: 28, marginTop: 42, style: rgStyle,
     x: {domain: [0, 300], label: null, tickSize: 4},
     y: {domain: [0, 28], label: null, ticks: [0, 10, 20], tickSize: 4},
     marks: [
@@ -352,7 +468,7 @@ rgBoot = {
     ]
   });
   const hist = Plot.plot({
-    width: 490, height: 250, marginLeft: 12, marginBottom: 28, marginTop: 42, style: rgStyle,
+    width: 490, height: 228, marginLeft: 12, marginBottom: 28, marginTop: 42, style: rgStyle,
     x: {domain: [-0.002, 0.062], label: null, tickSize: 4, ticks: [0, 0.02, 0.04, 0.06]},
     y: {axis: null, insetTop: 18},
     marks: [
@@ -373,14 +489,42 @@ rgBoot = {
   </div>
   <div class="quiz-fb">${inside
     ? html`The value ${c} lies inside the interval β̂₁ ± 2·SE, so the test does not reject it: t = ${rgN(t, 2)}, ${rgPeq(p)}. The interval is the set of null values the test does not reject at 5%.`
-    : html`The value ${c} lies outside the interval β̂₁ ± 2·SE, so we <b>reject H₀</b>: t = (${rgN(f.b1, 5)} − ${c}) / ${rgN(f.se1, 5)} = ${rgN(t, 2)}, ${rgPeq(p)}.${c === 0 ? " TV advertising is related to sales, as in ISLR Table 3.1." : ""}`}</div>`;
+    : html`The value ${c} lies outside the interval β̂₁ ± 2·SE, so we <b>reject H₀</b>: t = (${rgN(f.b1, 5)} − ${c}) / ${rgN(f.se1, 5)} = ${rgN(t, 2)}, ${rgPeq(p)}.${c === 0 ? " TV advertising is related to sales." : ""}`}</div>`;
 }
 ```
+
+## The Coefficient Table {.formula-slide #ls-table}
+
+::: {.lede-min}
+Software reports the estimates, standard errors, $t$-statistics and p-values together. For sales on TV:
+:::
+
+```{=html}
+<table class="se-table" data-quarto-disable-processing="true">
+  <thead><tr><th></th><th>Coefficient</th><th>Std. error</th><th>t-statistic</th><th>p-value</th></tr></thead>
+  <tbody>
+    <tr><th>Intercept</th><td>7.0325</td><td>0.4578</td><td>15.36</td><td>&lt; 0.0001</td></tr>
+    <tr><th>TV</th><td>0.0475</td><td>0.0027</td><td>17.67</td><td>&lt; 0.0001</td></tr>
+  </tbody>
+</table>
+```
+
+::: {.deriv-arrow .fragment}
+[↓]{.deriv-glyph} [Each $t$ is the coefficient over its standard error, read against $t$ with 198 degrees of freedom]{.deriv-note}
+:::
+
+::: {.fragment}
+$$\textstyle t \;=\; \frac{\widehat\beta_1}{\text{SE}(\widehat\beta_1)} \;=\; \frac{0.0475}{0.0027} \;=\; 17.67 \qquad\quad p \;=\; P\big(|T_{198}| \ge 17.67\big) \;<\; 0.0001$$
+:::
+
+::: {.slide-footer .fragment}
+At 5% the cut-off is $\pm 1.97$, and both estimates are far beyond it, so both p-values are virtually zero. Rejecting $\beta_1 = 0$ says TV is related to sales; rejecting $\beta_0 = 0$ says that with no TV advertising, sales are not zero.
+:::
 
 ## How Well Does the Line Fit? {.qcard-slide #fit-quality}
 
 ::: {.lede-min}
-Three numbers summarise the fit of sales on TV (ISLR 3.1.3). The first is in the units of $y$; the other two are shares of the variation in $y$.
+The total variation $\text{TSS} = \sum (y_i - \bar y)^2$ splits into the part the line explains and the $\text{RSS}$ it leaves. RSE is in units of $y$; $R^2$ is the explained share.
 :::
 
 :::: {.prop-grid}
@@ -390,7 +534,7 @@ Three numbers summarise the fit of sales on TV (ISLR 3.1.3). The first is in the
 
 [$\text{RSE} = \sqrt{\dfrac{\text{RSS}}{n-2}}$]{.prop-math}
 
-[The residual standard error is about ${rgN(rgTV.rse, 2)} thousand units, ${(100 * rgTV.rse / rgTV.my).toFixed(0)}% of average sales.]{.prop-q}
+[Even with the true line, a prediction would miss by about ${rgN(rgTV.rse, 2)} thousand units, ${(100 * rgTV.rse / rgTV.my).toFixed(0)}% of average sales.]{.prop-q}
 :::
 
 ::: {.prop-card .prop-r2 .fragment}
@@ -401,24 +545,121 @@ Three numbers summarise the fit of sales on TV (ISLR 3.1.3). The first is in the
 [TV explains ${(100 * rgTV.r2).toFixed(1)}% of the variation in sales.]{.prop-q}
 :::
 
-::: {.prop-card .prop-adj .fragment}
-[Adjusted R²]{.prop-name}
-
-[$\bar R^2 = 1 - \dfrac{\text{RSS}/(n-k-1)}{\text{TSS}/(n-1)}$]{.prop-math}
-
-[Equal to ${rgN(rgTV.adj, 3)} here. It accounts for the number of predictors, $k$, when comparing models.]{.prop-q}
-:::
-
 ::::
 
 ::: {.slide-footer .fragment}
-In simple regression $R^2 = r^2$: the correlation of sales and TV is ${rgN(rgTV.r, 3)}, and ${rgN(rgTV.r, 3)}² = ${rgN(rgTV.r2, 3)}. Adding a predictor never lowers $R^2$, so adjusted $R^2$ accounts for model size when comparing fits.
+What counts as a good $R^2$ depends on the field: close to 1 for a physical law, often well below 0.1 in marketing, biology or psychology, where many unmeasured factors drive $y$.
 :::
+
+## What the Correlation Measures {.ojs-slide #cor-intuition}
+
+::: {.lede-min}
+Standardise both variables and average their product. Markets above average on both, or below on both, push $r$ up; the other two quadrants pull it down.
+:::
+
+$$r \;=\; \frac{1}{n-1}\sum_{i=1}^{n} \frac{x_i - \bar x}{s_x}\cdot\frac{y_i - \bar y}{s_y}$$
+
+```{ojs}
+//| echo: false
+viewof rgRx = Inputs.radio(["TV", "Radio", "Newspaper"], {value: "TV"})
+```
+
+```{ojs}
+//| echo: false
+{
+  const x = rgCol(rgRx), y = rgCol("Sales"), n = x.length;
+  const mx = rgMean(x), my = rgMean(y), sx = d3.deviation(x), sy = d3.deviation(y);
+  const pts = x.map((v, i) => ({zx: (v - mx) / sx, zy: (y[i] - my) / sy}));
+  pts.forEach(p => p.prod = p.zx * p.zy);
+  const r = d3.sum(pts, p => p.prod) / (n - 1), pos = pts.filter(p => p.prod > 0).length;
+  const L = 3.2, quad = [{x1: 0, x2: L, y1: 0, y2: L, s: 1}, {x1: -L, x2: 0, y1: -L, y2: 0, s: 1},
+    {x1: -L, x2: 0, y1: 0, y2: L, s: -1}, {x1: 0, x2: L, y1: -L, y2: 0, s: -1}];
+  const chart = Plot.plot({
+    width: 1000, height: 190, marginLeft: 40, marginBottom: 28, marginTop: 42, style: rgStyle,
+    x: {domain: [-L, L], label: null, tickSize: 4, ticks: [-3, -2, -1, 0, 1, 2, 3]},
+    y: {domain: [-L, L], label: null, tickSize: 4, ticks: [-2, 0, 2]},
+    marks: [
+      Plot.rect(quad, {x1: "x1", x2: "x2", y1: "y1", y2: "y2", fill: d => d.s > 0 ? PPAL.olive : PPAL.brick, fillOpacity: 0.08}),
+      Plot.ruleX([0], {stroke: PPAL.dim}), Plot.ruleY([0], {stroke: PPAL.dim}),
+      Plot.dot(pts, {x: "zx", y: "zy", r: 3.5, fill: d => d.prod > 0 ? PPAL.olive : PPAL.brick, fillOpacity: 0.7}),
+      Plot.text(["+", "+", "−", "−"], {x: [2.9, -2.9, -2.9, 2.9], y: [2.7, -2.7, 2.7, -2.7], text: d => d, fontSize: 26, fontWeight: 700,
+        fill: (d, i) => i < 2 ? PPAL.olive : PPAL.brick}),
+      rgTitle(`Standardised sales against the standardised ${rgRx} budget`)
+    ]
+  });
+  return html`${chart}
+  <div class="ojs-eq rg-stats">
+    <span><span class="hit">${pos}</span> of ${n} products positive</span>
+    <span>r = <span class="cl-navy">${rgN(r, 3)}</span></span>
+  </div>
+  <div class="quiz-fb">${r > 0.5
+    ? `Most markets sit in the olive quadrants, so the products are mostly positive: r = ${rgN(r, 3)} is strong.`
+    : `The points spread over all four quadrants, so the products nearly cancel: r = ${rgN(r, 3)} is weak.`} In simple regression R² = r² = ${rgN(r * r, 3)}.</div>`;
+}
+```
+
+## Testing the population correlation {.ojs-slide .example #cor-test}
+
+::: {.lede-min}
+Under $H_0\colon \rho = 0$, $t = \frac{r\sqrt{n-2}}{\sqrt{1-r^2}}$ follows Student's $t$ with $n-2$ degrees of freedom. The defaults are $r = 0.33$ over 24 months.
+:::
+
+```{ojs}
+//| echo: false
+viewof rgCin = Inputs.form({
+  r: Inputs.range([-0.95, 0.95], {value: 0.33, step: 0.01, label: html`Correlation <i style="text-transform: none">r</i>`}),
+  n: Inputs.range([5, 200], {value: 24, step: 1, label: html`Sample size <i style="text-transform: none">n</i>`}),
+  alt: Inputs.radio(["ρ > 0", "ρ < 0", "ρ ≠ 0"], {value: "ρ > 0", label: "Alternative"}),
+  alpha: Inputs.radio(["10%", "5%", "1%"], {value: "5%", label: html`Level <i style="text-transform: none">α</i>`})
+}, {template: ins => html`<div class="rg-dials">${ins.r}${ins.n}</div><div class="rg-dials rg-dials-2">${ins.alt}${ins.alpha}</div>`})
+```
+
+```{ojs}
+//| echo: false
+{
+  const {r, n, alt} = rgCin, df = n - 2, a = parseFloat(rgCin.alpha) / 100;
+  const t = r * Math.sqrt(df) / Math.sqrt(1 - r * r);
+  const crit = clInv(x => clTcdf(x, df))(alt === "ρ ≠ 0" ? 1 - a / 2 : 1 - a);
+  const p = alt === "ρ > 0" ? 1 - clTcdf(t, df) : alt === "ρ < 0" ? clTcdf(t, df) : rgP2(t, df);
+  const inR = x => alt === "ρ > 0" ? x >= crit : alt === "ρ < 0" ? x <= -crit : Math.abs(x) >= crit;
+  const reject = inR(t);
+  const dens = x => Math.exp(clLgam((df + 1) / 2) - clLgam(df / 2) - 0.5 * Math.log(df * Math.PI) - (df + 1) / 2 * Math.log(1 + x * x / df));
+  const xs = d3.range(-6, 6.001, 0.02).map(x => ({x, y: dens(x)}));
+  const cuts = alt === "ρ > 0" ? [crit] : alt === "ρ < 0" ? [-crit] : [-crit, crit];
+  const tc = Math.max(-6, Math.min(6, t));
+  const chart = Plot.plot({
+    width: 1000, height: 210, marginLeft: 12, marginRight: 12, marginBottom: 28, marginTop: 42, style: rgStyle,
+    x: {domain: [-6, 6], label: null, tickSize: 4},
+    y: {axis: null, domain: [0, 0.42], insetTop: 18},
+    marks: [
+      Plot.areaY(xs, {x: "x", y: "y", fill: PPAL.dim, fillOpacity: 0.3}),
+      Plot.areaY(xs, {x: "x", y: d => inR(d.x) ? d.y : NaN, fill: PPAL.brick, fillOpacity: 0.45}),
+      Plot.line(xs, {x: "x", y: "y", stroke: PPAL.soft, strokeWidth: 2}),
+      Plot.ruleX(cuts, {stroke: PPAL.brick, strokeWidth: 1.5, strokeDasharray: "5 4"}),
+      Plot.ruleX([tc], {stroke: PPAL.orange, strokeWidth: 3}),
+      Plot.text([tc], {x: d => d, y: 0.36, text: () => `t = ${rgN(t, 2)}${Math.abs(t) > 6 ? " (off the axis)" : ""}`, dx: tc > 3 ? -8 : 8,
+        textAnchor: tc > 3 ? "end" : "start", fill: PPAL.orange, fontWeight: 700, fontSize: 16, stroke: "white", strokeWidth: 6}),
+      Plot.ruleY([0], {stroke: PPAL.dim}),
+      rgTitle(`Student's t with ${df} degrees of freedom; the red tail is the rejection region`)
+    ]
+  });
+  const word = {"ρ > 0": "greater than zero", "ρ < 0": "less than zero", "ρ ≠ 0": "different from zero"}[alt];
+  return html`${chart}
+  <div class="ojs-eq rg-stats">
+    <span>t = <span class="rate">${rgN(t, 4)}</span></span>
+    <span>Critical value ${alt === "ρ ≠ 0" ? "±" : alt === "ρ < 0" ? "−" : ""}${rgN(crit, 4)}</span>
+    <span>${rgPeq(p)}</span>
+  </div>
+  <div class="quiz-fb">${reject
+    ? html`The statistic t = ${rgN(t, 2)} falls in the rejection region, so we <b>reject H₀</b> at the ${rgCin.alpha} level: the correlation is ${word} (${rgPeq(p)}).`
+    : html`The statistic t = ${rgN(t, 2)} is not in the rejection region, so we <b>fail to reject H₀</b> at the ${rgCin.alpha} level (${rgPeq(p)}). A correlation of ${rgN(r, 2)} from only ${n} pairs could be chance.`}</div>`;
+}
+```
 
 ## Simple Versus Multiple Regression {.ojs-slide #multi-reg}
 
 ::: {.lede-min}
-Tick the media to include. Each coefficient is the change in sales per $1,000 on that medium, holding the other ticked media fixed (ISLR 3.2).
+Tick the media to include. Each coefficient is the change in sales per $1,000 on that medium, holding the other ticked media fixed.
 :::
 
 ```{ojs}
@@ -436,7 +677,8 @@ viewof rgMx = Inputs.checkbox(["TV", "Radio", "Newspaper"], {value: ["TV", "Radi
     <thead><tr><th></th>${cols.map(c => html`<th>${c}</th>`)}</tr></thead>
     <tbody>${cols.map(a => html`<tr><th>${a}</th>${cols.map(b => html`<td class=${(a === "Radio" && b === "Newspaper") || (a === "Newspaper" && b === "Radio") ? "ct-top" : ""}>${rgN(cor(a, b), 2)}</td>`)}</tr>`)}</tbody>
   </table>`;
-  if (!vars.length) return html`<div class="rg-row"><div class="quiz-fb">Tick at least one medium to fit a model.</div>${corTable}</div>`;
+  const titled = (t, tab) => html`<div class="rg-tab"><div class="rg-tab-title">${t}</div>${tab}</div>`;
+  if (!vars.length) return html`<div class="rg-row">${titled("Coefficients", html`<div class="quiz-fb">Tick at least one medium to fit a model.</div>`)}${titled("Correlations", corTable)}</div>`;
   const m = rgOls(vars), pF = rgFp(m.F, m.k - 1, m.df);
   const coef = html`<table class="rg-table">
     <thead><tr><th></th><th>Coefficient</th><th>Std. error</th><th>t</th><th>P-value</th></tr></thead>
@@ -449,7 +691,7 @@ viewof rgMx = Inputs.checkbox(["TV", "Radio", "Newspaper"], {value: ["TV", "Radi
     : vars.includes("Radio")
       ? html`Holding radio${vars.includes("TV") ? " and TV" : ""} fixed, newspaper's coefficient is <b>${rgN(m.b[ni])}</b> (${rgPeq(np)}): no effect of its own. On its own it looked useful only because markets that spend on radio also spend on newspapers (r = ${rgN(cor("Radio", "Newspaper"), 2)}).`
       : html`Without radio, newspaper's coefficient is <b>${rgN(m.b[ni])}</b> (${rgPeq(np)}). It picks up radio's effect, because the two budgets are correlated (r = ${rgN(cor("Radio", "Newspaper"), 2)}): this is <b>omitted variable bias</b>. Include radio to compare the coefficient estimates.`;
-  return html`<div class="rg-row">${coef}${corTable}</div>
+  return html`<div class="rg-row">${titled("Coefficients", coef)}${titled("Correlations", corTable)}</div>
   <div class="ojs-eq rg-stats">
     <span>R² = ${rgN(m.r2, 3)}</span>
     <span>Adjusted R² = ${rgN(m.adj, 3)}</span>
@@ -459,3 +701,4 @@ viewof rgMx = Inputs.checkbox(["TV", "Radio", "Newspaper"], {value: ["TV", "Radi
   <div class="quiz-fb">${say}</div>`;
 }
 ```
+

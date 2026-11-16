@@ -344,8 +344,7 @@
   // equation is centred rather than flush left: it is a definition standing
   // over two columns of worked examples, not a line of working that has to
   // align with a left edge the way #set-formal's arrays do.
-  .MJXp-math.MJXp-display { font-size: 0.64em; }
-  .MathJax_Display { zoom: 0.64; }
+  span.math.display { font-size: 0.64em; }
   span.math.display { margin: 16px 0 24px; }
   > p:has(span.math.display) { margin: 30px 0 34px; }
   .pitfall { margin-top: 30px; }
@@ -398,8 +397,7 @@
   // taller than the figure beside it, and the three products were the
   // loudest thing on the slide. WHICH MathJax box lays the slide out flips
   // between loads, so both spellings are set and the wrapper carries the gaps.
-  .cond-row .MJXp-math.MJXp-display { font-size: 0.56em; }
-  .cond-row .MathJax_Display { zoom: 0.56; }
+  .cond-row span.math.display { font-size: 0.56em; }
   .cond-row span.math.display { margin: 0; }
 
   // Grid items do not collapse margins, so row spacing is row-gap and every
@@ -412,8 +410,7 @@
   .three-col p { margin: 0; font-size: 19px; text-align: center; }
   // em here resolves against the COLUMN's 19px, not the slide's base size, so
   // a factor under 1 lands at nine pixels. #combinatorics sits at 0.95.
-  .three-col .MJXp-math.MJXp-display { font-size: 1.1em; }
-  .three-col .MathJax_Display { zoom: 1.1; }
+  .three-col span.math.display { font-size: 1.1em; }
   .three-col span.math.display { margin: 8px 0 0; }
   .note-box { margin-top: 16px; }
 }
@@ -432,8 +429,7 @@
     hyphens: auto;
   }
   .two-col .col-sub { margin-bottom: 8px; }
-  .MJXp-math.MJXp-display { font-size: 0.62em; }
-  .MathJax_Display { zoom: 0.62; }
+  span.math.display { font-size: 0.62em; }
   span.math.display { margin: 14px 0 18px; }
   .perm-row { margin: 8px 0 10px; }
   .perm-row span { font-size: 16px; }
@@ -445,8 +441,7 @@
 // larger than the shared 0.62 (both MathJax spellings, see #set-formal).
 // #sampling-formal shares the layout: population | sample, three rows each.
 #limit-formal, #sampling-formal {
-  .two-col .MJXp-math.MJXp-display { font-size: 1.05em; }
-  .two-col .MathJax_Display { zoom: 1.05; }
+  .two-col span.math.display { font-size: 1.05em; }
   .two-col span.math.display { margin: 12px 0 14px; }
 }
 #limit-formal, #sampling-formal {
@@ -472,7 +467,6 @@
 }
 // Two formulas side by side in each column, so they set a little smaller.
 #sampling-formal {
-  .two-col .MJXp-math.MJXp-display { font-size: 1em; }
   .two-col .MathJax_Display { zoom: 1; }
   .two-col > div > p:nth-child(2) span.math.display { margin: 2px 0 22px; }   // room before the prose underneath
 }
@@ -559,8 +553,7 @@
   // they stand on their own line instead of hanging off a blackboard "#",
   // which typeset in a serif face reads as a stray glyph rather than "the
   // number of".
-  > p .MJXp-math.MJXp-display { font-size: 0.60em; }
-  > p .MathJax_Display { zoom: 0.60; }
+  > p span.math.display { font-size: 0.60em; }
   > p span.math.display { margin: 20px 0 20px; }   // even air above and below
   // em inside a column resolves against .three-col p's 19px, not the slide's
   // 36px — an earlier 0.78 here came out half the size of the definition it
@@ -569,8 +562,7 @@
   // Flush left, on the column's own edge. Centring the formula inside a
   // left-aligned column was tried and it reads as a misplaced element
   // rather than a centred one — there is no axis for it to be centred on.
-  .three-col .MJXp-math.MJXp-display { font-size: 0.95em; }
-  .three-col .MathJax_Display { zoom: 0.95; }
+  .three-col span.math.display { font-size: 0.95em; }
   .three-col span.math.display { margin: 0; }
   .three-col .MJXp-math.MJXp-display,
   .three-col .MathJax_Display,
@@ -1390,8 +1382,7 @@
   // in the middle of all of it. The 16px matches the .lede-min's rule plus
   // its padding, so the first P lines up with the first word above it.
   &#set-formal {
-    .MJXp-math.MJXp-display { font-size: 0.84em; }
-    .MathJax_Display { zoom: 0.84; }
+    span.math.display { font-size: 0.84em; }
     // The two lines of a rule are one statement, so they sit close; the gap
     // that separates the rules lives on the label above each pair instead.
     span.math.display { margin: 6px 0; }
@@ -1447,8 +1438,7 @@
     // slide carries three displays now, and at full size they dominated the
     // prose that explains them. BOTH spellings — whichever of MathJax's two
     // boxes lays the slide out, the size has to follow.
-    .MJXp-math.MJXp-display { font-size: 0.82em; }
-    .MathJax_Display { zoom: 0.82; }
+    span.math.display { font-size: 0.82em; }
     span.math.display { margin: 30px 0; }
   }
 
@@ -1461,7 +1451,8 @@
   &#pois-formal,
   &#expo-formal,
   &#moments-formal,
-  &#funcrv {
+  &#funcrv,
+  &#ls-formula {
     // The three gaps the animation slides define — 24 under the title, 13
     // from the lede to the content, 12 from the content to the takeaway —
     // so this slide sits in the 17-23 sequence like the rest. Only the gap
@@ -1483,8 +1474,7 @@
     // while `.MathJax_Processing` is still on the node is fiction.
     p:has(.math.display) { margin: 0; line-height: 1; }
     span.math.display { margin: 18px 0; }
-    .MJXp-math.MJXp-display { font-size: 0.72em; }
-    .MathJax_Display { zoom: 0.72; }   // MathJax writes glyph sizes as inline px
+    span.math.display { font-size: 0.72em; }   // MathJax writes glyph sizes as inline px
     .deriv-arrow { height: 40px; }
     .slide-footer { margin-top: 36px; }
   }
@@ -1501,8 +1491,7 @@
 // number box and track, so the column stays narrow.
 .reveal section#normal-formula {
   // the headline formula a touch smaller (both MathJax boxes, see #pois-formal)
-  > p .MJXp-math.MJXp-display { font-size: 0.78em; }
-  > p .MathJax_Display { zoom: 0.78; }
+  > p span.math.display { font-size: 0.78em; }
   // centred as one unit: neither column stretches, the row's slack goes to its sides
   // the same light rule as .two-col (slide 29) between the formula and the row
   .nf-row { display: flex; align-items: center; justify-content: center; gap: 40px; margin-top: 0;
@@ -1617,8 +1606,7 @@
 .prop-consistent { border-top-color: #F47C3C !important; .prop-name { color: #F47C3C; } }
 // #xbar-proof: display maths at 80%, as the other derivation slides shrink theirs.
 .reveal section:is(#xbar-proof, #xbar-proof-var, #sample-var, #ci-derive) {
-  .MJXp-math.MJXp-display { font-size: 0.8em; }
-  .MathJax_Display { zoom: 0.8; }
+  span.math.display { font-size: 0.8em; }
 }
 // #cieq-formula: the stage is drawn 320 units tall, not 445 (see cieq-anim).
 #cieq-formula .stage-wrap { height: 336px; margin-top: 24px; }   // the example sits above it
@@ -1672,8 +1660,7 @@
 // #test-stats: display maths at 80%, as on #xbar-proof.
 .reveal section#test-stats {
   .lede-min { margin-top: 44px; }
-  .MJXp-math.MJXp-display { font-size: 0.8em; }
-  .MathJax_Display { zoom: 0.8; }
+  span.math.display { font-size: 0.8em; }
   .deriv-arrow { height: 40px; margin-top: -14px; }
   .slide-footer, .slide-footer p { text-align: justify; hyphens: auto; }
 }
@@ -1712,17 +1699,17 @@
 .prop-paired { border-top-color: #F47C3C !important; .prop-name { color: #F47C3C; } }
 // #pooled-formula: three lines of working at 80%, as on #xbar-proof.
 .reveal section#pooled-formula {
-  .MJXp-math.MJXp-display { font-size: 0.8em; }
-  .MathJax_Display { zoom: 0.8; }
+  span.math.display { font-size: 0.8em; }
   .lede-min { margin-top: 44px; }
   .deriv-arrow { height: 40px; }
 }
 #pooled-formula .slide-footer, #pooled-formula .slide-footer p,
 #pair-intuition .slide-footer, #pair-intuition .slide-footer p { text-align: justify; hyphens: auto; }
-#pair-intuition .stage-wrap { margin-top: 28px; }
+#pair-intuition .stage-wrap { margin-top: 4px; height: 430px; }
+#pair-intuition .stage { transform: scale(0.97); }
 // #pair-lab: the two radio groups side by side, label beside the options.
 .reveal section#pair-lab .pl-dials {
-  gap: 60px; margin: 22px 0 18px;
+  gap: 60px; margin: 14px 0 0;
   form { flex-direction: row; align-items: center; gap: 16px; }
   form div { gap: 22px; }
   form div label { font-size: 21px; }
@@ -1735,16 +1722,16 @@
 // ---- 08-regression ----------------------------------------------------------
 // The value-only cells render nothing but would still spend Quarto's 14.4px
 // margins; spacing is carried by the elements instead.
-.reveal section:is(#ad-scatter, #cor-test, #ls-fit, #ls-formula, #ls-accuracy, #multi-reg) {
+.reveal section:is(#ad-scatter, #cor-intuition, #cor-test, #ls-model, #ls-surface, #ls-fit, #ls-formula, #ls-accuracy, #multi-reg) {
   .cell { margin: 0; }
   .cell-output-display { overflow: visible; }
   .quiz-fb { font-size: 19px; padding: 8px 14px; margin-top: 10px; }
 }
 // One row of controls, label over input, as on #ci-lab.
-.reveal section:is(#ad-scatter, #cor-test, #ls-fit, #ls-formula, #ls-accuracy, #multi-reg) .rg-dials {
+.reveal section:is(#ad-scatter, #cor-intuition, #cor-test, #ls-model, #ls-surface, #ls-fit, #ls-formula, #ls-accuracy, #multi-reg) .rg-dials {
   display: flex; align-items: flex-end; gap: 30px; margin: 18px 0 8px;
 }
-.reveal section:is(#ad-scatter, #cor-test, #ls-fit, #ls-formula, #ls-accuracy, #multi-reg) form {
+.reveal section:is(#ad-scatter, #cor-intuition, #cor-test, #ls-model, #ls-surface, #ls-fit, #ls-formula, #ls-accuracy, #multi-reg) form {
   flex-direction: column; align-items: flex-start; gap: 2px; margin: 0; --label-width: auto; max-width: none;
   // The deck's small navy caps (#ci-lab); a maths letter keeps its case.
   > label { font-size: 17px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #325D88; width: auto; }
@@ -1756,21 +1743,19 @@
 .reveal section#cor-test .rg-dials { gap: 60px; margin: 12px 0 4px; }
 .reveal section#cor-test .rg-dials-2 { margin: 6px 0 4px; }
 // A standalone input (not inside .rg-dials) gets the dials' top gap itself.
-.reveal section:is(#ad-scatter, #ls-formula, #multi-reg) .lede-min + .cell form { margin-top: 16px; }
+.reveal section:is(#ad-scatter, #cor-intuition, #ls-formula, #multi-reg) .lede-min + .cell form { margin-top: 16px; }
 #ls-formula .cell + .cell form { margin-top: 10px; }
 // The readouts under a plot, on one line.
 .reveal section.ojs-slide .ojs-eq.rg-stats {
   display: flex; justify-content: center; gap: 36px; font-size: 19px; margin: 8px 0 0;
   .na-note { font-size: 15px; }
 }
-#ls-fit .cr-row, #ls-accuracy .cr-row { gap: 40px; }
+#ls-fit .cr-row, #ls-accuracy .cr-row, #ls-model .cr-row { gap: 40px; }
+// #cor-intuition, #ls-model: the one display between the lede and the controls.
+.reveal section:is(#cor-intuition, #ls-model) span.math.display { display: block; margin: 10px 0 0; font-size: 0.75em; }
 // #ls-formula: the two estimates in one display, a touch smaller; the working
 // aligned on its "=" like #courier-moments.
-.reveal section#ls-formula {
-  span.math.display { display: block; margin: 14px 0 0; }
-  .MJXp-math.MJXp-display { font-size: 0.85em; }
-  .MathJax_Display { zoom: 0.85; margin: 0; }
-}
+// #ls-formula: spaced by the shared derivation rules (#pois-formal group).
 .reveal section.ojs-slide .ojs-eq.rg-eqs { font-size: 21px; row-gap: 6px; margin: 16px 0 4px; }
 // A hat drawn over the letter: a combining circumflex is misplaced in the mono face.
 .rg-hat { position: relative; }
@@ -1792,7 +1777,14 @@
   td { font-family: "JetBrains Mono", monospace; color: var(--ink); text-align: right; padding: 5px 10px; font-size: 18px; }
   tr.rg-news td, tr.rg-news th { background: rgba(244, 124, 60, 0.12); }
   td.ct-top { background: rgba(244, 124, 60, 0.22); box-shadow: inset 0 0 0 2px #F47C3C; font-weight: 700; }
-  &.rg-cor { th, td { font-size: 16px; padding: 4px 7px; } }
+}
+// #multi-reg: the two tables side by side at one size, each under a title.
+.reveal section#multi-reg {
+  .rg-row { gap: 40px; align-items: stretch; }
+  .rg-tab { flex: 1 1 0; min-width: 0; }
+  .rg-tab-title { font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-1); margin: 0 0 6px; }
+  table.rg-table { width: 100%; }
+  table.rg-table th, table.rg-table td { font-size: 17px; padding: 5px 8px; }
 }
 // #ls-fit: the slope needs four decimals in its box.
 .reveal section#ls-fit form input[type="number"] { width: 104px; min-width: 104px; }
@@ -1854,8 +1846,7 @@
 .reveal section:is(#punt-clt, #web-test) {
   .two-col p { margin: 6px 0; font-size: 20px; text-align: justify; hyphens: auto; }
   .two-col .col-sub { margin-bottom: 8px; }
-  .two-col .MJXp-math.MJXp-display { font-size: 0.95em; }
-  .two-col .MathJax_Display { zoom: 0.95; }
+  .two-col span.math.display { font-size: 0.95em; }
   .two-col span.math.display { margin: 10px 0 12px; }
   .two-col svg { display: block; margin: 10px auto 0; }
   .slide-footer { font-size: 16px; color: var(--ink-soft); }
@@ -1945,3 +1936,54 @@
 .reveal section .lede-min { margin-left: -16px !important; }
 .reveal section .lede-min.no-rule,
 .reveal section:is(#test-steps, #xbar-properties, #two-mean-tests, #fit-quality) .lede-min { margin-left: 0 !important; padding-left: 0 !important; }
+// Every "new sample" button (Inputs.button): a small outlined navy pill with a
+// redraw mark, filled on hover, instead of the browser's grey default. Its
+// height matches the number boxes so it sits level with the controls.
+.reveal section form button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  height: 32px; padding: 0 12px 0 10px; margin: 0;
+  font-family: Roboto, sans-serif !important; font-size: 14px !important; font-weight: 700; line-height: 1;
+  letter-spacing: 0.03em; color: var(--accent-1); background: #fff;
+  border: 1.5px solid var(--accent-1); border-radius: 999px; cursor: pointer; box-shadow: none;
+  transition: background 0.15s, color 0.15s;
+  &::before { content: "\21BB"; font-size: 15px; font-weight: 400; }
+  &:hover { background: var(--accent-1); color: #fff; }
+  &:active { transform: translateY(1px); }
+}
+// #ls-se: two SE formulas, one arrow, the coefficient table (ISLR Table 3.1
+// with the intervals added), as on the other derivation slides.
+.reveal section:is(#ls-se, #ls-table) {
+  span.math.display { font-size: 0.8em; margin: 30px 0 22px; }
+  .deriv-arrow { height: 40px; }
+  table.se-table {
+    margin: 22px auto 0 !important; border-collapse: collapse; font-size: 21px; display: table !important; width: auto !important;
+    th, td { border: none; padding: 8px 18px; text-align: right; background: transparent; }
+    thead th { color: var(--accent-1); font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--accent-1); }
+    tbody th { text-align: left; color: var(--accent-1); }
+    tbody tr + tr td, tbody tr + tr th { border-top: 1px solid var(--rule); }
+    td { font-family: "JetBrains Mono", monospace; font-size: 19px; }
+  }
+  .slide-footer { margin-top: 40px; }
+}
+
+// #fit-quality: RSE and R² only (ISLR 3.1.3), so two wider cards.
+.reveal section#fit-quality .prop-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+#ls-table table.se-table { margin: 26px auto 22px !important; font-size: 24px; td { font-size: 22px; } }
+// The arrow note sizes to its line; the working sits at the deck's derivation size.
+.reveal section#ls-table .deriv-arrow { height: auto; margin: 0 0 4px; }
+.reveal section#ls-table span.math.display { margin: 10px 0 0; font-size: 0.72em; }
+
+// #ls-surface: the contour and the draggable 3D surface side by side.
+#ls-surface .rg-surf-row { gap: 24px; align-items: center; margin-top: 10px; }
+#ls-surface .rg-surface { cursor: grab; }
+// Four-decimal inputs (a slope of 0.0350) need more than the deck's 84px box.
+.reveal section:is(#ls-fit, #ls-accuracy) form input[type="number"] { width: 104px !important; min-width: 104px !important; }
+#ls-surface .rg-surf-wrap { position: relative; }
+#ls-surface .rg-reset { position: absolute; top: 0; right: 0; margin: 0; }
+// #multi-reg: air between the two tables, the readout and the box below.
+.reveal section#multi-reg .ojs-eq.rg-stats { margin-top: 24px; }
+.reveal section#multi-reg .quiz-fb { margin-top: 22px; }
+// Every explanation box sits the same 22px under what comes before it (as on #multi-reg).
+.reveal section .quiz-fb { margin-top: 22px !important; }
+.reveal section#ls-formula .slide-footer { margin-top: 56px; }   // a little more air after the working
+.reveal section.formula-slide#ls-formula span.math.display { margin-bottom: 30px; }   // more air under each step, before its arrow

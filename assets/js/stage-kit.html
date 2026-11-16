@@ -408,3 +408,27 @@
   });
 })();
 </script>
+<script>
+/*
+  MathJax lays out the whole deck at load, while every slide but the first is
+  hidden, and some of those measurements come out wrong: display maths shifted
+  off-centre, inline maths overprinting its sentence. Each slide's maths is
+  re-rendered once, the first time the slide is shown, when it can be measured.
+*/
+(function () {
+  function fix(slide) {
+    if (!slide || slide.dataset.mjFixed || !window.MathJax || !MathJax.Hub) return;
+    if (!slide.querySelector('.MathJax, .MathJax_Display, script[type^="math/tex"]')) return;
+    slide.dataset.mjFixed = '1';
+    MathJax.Hub.Queue(['Rerender', MathJax.Hub, slide]);
+  }
+  window.addEventListener('load', function () {
+    if (!window.Reveal) return;
+    var go = function () {
+      fix(Reveal.getCurrentSlide());
+      Reveal.on('slidechanged', function (e) { fix(e.currentSlide); });
+    };
+    if (Reveal.isReady()) go(); else Reveal.on('ready', go);
+  });
+})();
+</script>

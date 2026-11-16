@@ -25,11 +25,12 @@
 
   // Stage geometry — fixed 1000x445 space, scaled to the slide via CSS.
   var W = 1000, H = 445, TOP = 67, BOT = 378;
-  var BEF_X = 210, AFT_X = 400, DIF_X = 800;      // strip centres
-  var L_AXIS = 140, R_AXIS = 720;                 // the two y-axes
+  // Two panels of equal width: levels on the left, differences on the right.
+  var BEF_X = 250, AFT_X = 470, DIF_X = 820;      // strip centres
+  var L_AXIS = 150, R_AXIS = 690;                 // the two y-axes
   var LMIN = 0, LMAX = 16;                        // level scale (left)
   var DMIN = -8, DMAX = 4;                        // difference scale (right)
-  var DOT_R = 9, MEAN_HALF = 30, DODGE = 16;
+  var DOT_R = 9, MEAN_HALF = 30, DODGE = 2 * DOT_R + 2;   // tied dots sit side by side, never overlapping
 
   var INK_SOFT = K.PAL.inkSoft, RULE = K.PAL.rule, GREY = K.PAL.dim;
   var NAVY = K.PAL.navy, OLIVE = K.PAL.olive, ORANGE = K.PAL.orange, BRICK = K.PAL.brick;
@@ -43,15 +44,18 @@
   // Ties would draw one circle exactly on top of another (five of the "after"
   // values repeat), so equal values fan out sideways: 0, -1, +1, -2, +2, ...
   // Deterministic, so the picture is identical in every run of the lecture.
-  function dodge(j) {
-    return (j % 2 ? -1 : 1) * Math.ceil(j / 2) * DODGE;
+  // side = 0 fans both ways (the difference strip); -1 / +1 fans only
+  // outwards, away from the joining lines, so every line runs between the
+  // same two edges like a slope graph instead of starting inside a dot.
+  function dodge(j, side) {
+    return side ? side * j * DODGE : (j % 2 ? -1 : 1) * Math.ceil(j / 2) * DODGE;
   }
-  function lay(vals, cx, ymap) {
+  function lay(vals, cx, ymap, side) {
     var seen = {};
     return vals.map(function (v) {
       var j = seen[v] || 0;
       seen[v] = j + 1;
-      return { x: cx + dodge(j), y: ymap(v) };
+      return { x: cx + dodge(j, side), y: ymap(v) };
     });
   }
 
@@ -73,6 +77,12 @@
     });
   }
 
+  // The unit, written up the axis.
+  function axisTitle(svg, x, s) {
+    var t = svg.appendChild(K.txt(0, 0, s, { size: 'label', anchor: 'middle', fill: 'inkSoft' }));
+    t.setAttribute('transform', 'translate(' + (x - 48) + ' ' + ((TOP + BOT) / 2) + ') rotate(-90)');
+  }
+
   function stripLabel(svg, x, s) {
     svg.appendChild(K.txt(x, 414, s,
       { size: 'label', anchor: 'middle', fill: 'inkSoft' }));
@@ -81,19 +91,20 @@
   function build(stage) {
     var svg = K.canvas(stage, W, H);
 
-    var bef = lay(BEF, BEF_X, yL);
-    var aft = lay(AFT, AFT_X, yL);
-    var dif = lay(DIF, DIF_X, yD);
+    var bef = lay(BEF, BEF_X, yL, -1);
+    var aft = lay(AFT, AFT_X, yL, +1);
+    var dif = lay(DIF, DIF_X, yD, 0);
 
     // --- left region: the unpaired view -------------------------------------
     axis(svg, L_AXIS, [0, 4, 8, 12, 16], yL);
+    axisTitle(svg, L_AXIS, 'Cost of equity, %');
     stripLabel(svg, BEF_X, 'Pre 2020');
     stripLabel(svg, AFT_X, 'Post 2020');
 
     // Connecting lines go in first so the dots sit on top of them.
     var links = PAIRS.map(function (p, i) {
       return svg.appendChild(K.el('line', {
-        x1: bef[i].x, y1: bef[i].y, x2: aft[i].x, y2: aft[i].y,
+        x1: BEF_X + DOT_R + 3, y1: bef[i].y, x2: AFT_X - DOT_R - 3, y2: aft[i].y,
         stroke: INK_SOFT, 'stroke-width': 1.2, opacity: 0.7, class: 'pair-link'
       }));
     });
@@ -118,6 +129,11 @@
       x1: AFT_X - MEAN_HALF, y1: yL(M_AFT), x2: AFT_X + MEAN_HALF, y2: yL(M_AFT),
       stroke: OLIVE, 'stroke-width': 2.5, 'stroke-linecap': 'round'
     }));
+    // Mean values beside their bars, outside the strips, so no dot covers them.
+    svg.appendChild(K.txt(BEF_X - MEAN_HALF - 8, yL(M_BEF) + 5, M_BEF.toFixed(1),
+      { size: 'tick', face: 'mono', anchor: 'end', fill: 'navy', weight: 700 }));
+    svg.appendChild(K.txt(AFT_X + 2 * DODGE + DOT_R + 8, yL(M_AFT) + 5, M_AFT.toFixed(1),
+      { size: 'tick', face: 'mono', anchor: 'start', fill: 'olive', weight: 700 }));
 
     // --- right region: the paired view --------------------------------------
     var diffG = K.el('g', { class: 'pair-diff' });
@@ -125,22 +141,23 @@
     svg.appendChild(diffG);
 
     axis(diffG, R_AXIS, [-8, -4, 0, 4], yD);
+    axisTitle(diffG, R_AXIS, 'Change, % points');
     diffG.appendChild(K.el('line', {
-      x1: R_AXIS + 10, y1: yD(0), x2: DIF_X + 120, y2: yD(0),
+      x1: R_AXIS + 10, y1: yD(0), x2: DIF_X + 100, y2: yD(0),
       stroke: GREY, 'stroke-width': 1.5, 'stroke-dasharray': '6 5'
     }));
     diffG.appendChild(K.el('line', {
-      x1: DIF_X - MEAN_HALF - 20, y1: yD(M_DIF), x2: DIF_X + MEAN_HALF + 20,
+      x1: DIF_X - MEAN_HALF - 30, y1: yD(M_DIF), x2: DIF_X + MEAN_HALF + 30,
       y2: yD(M_DIF), stroke: BRICK, 'stroke-width': 2.5, 'stroke-linecap': 'round'
     }));
 
     // The headline number, just right of the mean bracket. At label size the
     // string ends near x = 970, inside the 1000-wide canvas.
-    diffG.appendChild(K.txt(DIF_X + MEAN_HALF + 30, yD(M_DIF) + 7,
-      'Mean ' + M_DIF.toFixed(1).replace('-', '\u2212'),
+    diffG.appendChild(K.txt(DIF_X + MEAN_HALF + 40, yD(M_DIF) + 7,
+      M_DIF.toFixed(1).replace('-', '\u2212'),
       { size: 'label', face: 'mono', anchor: 'start', fill: 'brick', weight: 700 }));
 
-    diffG.appendChild(K.txt(DIF_X, 414, 'Post − pre, per firm',
+    diffG.appendChild(K.txt(DIF_X, 414, 'Post − pre',
       { size: 'label', anchor: 'middle', fill: 'inkSoft' }));
 
     // Difference dots start life on top of their "after" dot and fly across.
@@ -169,9 +186,9 @@
   var DOWN = DIF.filter(function (d) { return d < 0; }).length;
   // At 24px Roboto (~12px a character) a caption has room for ~75 characters.
   var CAPTIONS = {
-    0: 'Between-firm variation exceeds the difference between periods',
-    1: 'But these are the same ' + PAIRS.length + ' firms: ' + DOWN + ' of the lines slope down',
-    2: 'Within-firm differences are mostly below zero'
+    0: 'As two groups: the means differ by 2, but the spread is far wider',
+    1: 'Joined firm by firm: ' + DOWN + ' of the ' + PAIRS.length + ' lines slope down',
+    2: 'One change per firm: most sit below zero'
   };
 
   function place(s, state, instant) {

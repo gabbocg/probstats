@@ -319,7 +319,7 @@ Each test divides the gap between two sample means by its standard error. How th
 ::: {.prop-card .prop-pooled .fragment}
 [Pooled t]{.prop-name}
 
-[$t = \dfrac{\bar x_1 - \bar x_2}{\sqrt{s_p^2\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}}$]{.prop-math}
+[$t = \dfrac{\bar x_1 - \bar x_2}{\sqrt{s_p^2\big(\tfrac{1}{n_1} + \tfrac{1}{n_2}\big)}}$]{.prop-math}
 
 [Independent samples, normal, equal variances. Compare with $t_{n_1 + n_2 - 2}$.]{.prop-q}
 :::
@@ -349,7 +349,7 @@ The next slide builds the pooled test and its interval; the two after it show wh
 ## Pooling the Two Variances {.formula-slide #pooled-formula}
 
 ::: {.lede-min}
-Both samples estimate one shared variance $\sigma^2$, so we pool them, weighting each by its degrees of freedom.
+Both samples estimate one shared $\sigma^2$, so we pool them, weighted by degrees of freedom.
 :::
 
 $$\textstyle s_p^2 \;=\; \frac{(n_1 - 1)\,s_1^2 \;+\; (n_2 - 1)\,s_2^2}{n_1 + n_2 - 2}$$
@@ -359,7 +359,7 @@ $$\textstyle s_p^2 \;=\; \frac{(n_1 - 1)\,s_1^2 \;+\; (n_2 - 1)\,s_2^2}{n_1 + n_
 :::
 
 ::: {.fragment}
-$$\textstyle T \;=\; \frac{(\bar X_1 - \bar X_2) \,-\, (\mu_1 - \mu_2)}{\sqrt{S_p^2\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}} \;\sim\; \color{#325D88}{t_{\,n_1 + n_2 - 2}}$$
+$$\textstyle T \;=\; \frac{(\bar X_1 - \bar X_2) \,-\, (\mu_1 - \mu_2)}{\sqrt{S_p^2\big(\tfrac{1}{n_1} + \tfrac{1}{n_2}\big)}} \;\sim\; \color{#325D88}{t_{\,n_1 + n_2 - 2}}$$
 :::
 
 ::: {.deriv-arrow .fragment}
@@ -367,10 +367,14 @@ $$\textstyle T \;=\; \frac{(\bar X_1 - \bar X_2) \,-\, (\mu_1 - \mu_2)}{\sqrt{S_
 :::
 
 ::: {.fragment}
-$$\textstyle \mu_1 - \mu_2 \;\in\; (\bar x_1 - \bar x_2) \;\pm\; \color{#B94A48}{t_{\alpha/2,\; n_1 + n_2 - 2}}\, \sqrt{s_p^2\left(\frac{1}{n_1} + \frac{1}{n_2}\right)}$$
+$$\textstyle \mu_1 - \mu_2 \;\in\; (\bar x_1 - \bar x_2) \;\pm\; \color{#B94A48}{t_{\alpha/2,\; n_1 + n_2 - 2}}\, \sqrt{s_p^2\big(\tfrac{1}{n_1} + \tfrac{1}{n_2}\big)}$$
 :::
 
 ## Repeated measurements on the same firms {.stage-slide #pair-intuition}
+
+::: {.lede-min}
+The cost of equity (%) of the same 15 firms, before and after 2020. Did it fall?
+:::
 
 ::: {.stage-wrap .stage-wrap-std}
 <div id="pair-stage" class="stage"></div>
@@ -384,6 +388,10 @@ Variation in cost of equity between firms can obscure the change between periods
 :::
 
 ## Paired and independent samples tests {.ojs-slide .example #pair-lab}
+
+::: {.lede-min}
+$H_0$: the mean change is 0. $H_1$: the cost of equity fell (left-tailed). Same data, two tests.
+:::
 
 ```{ojs}
 //| echo: false
@@ -422,9 +430,11 @@ plTests = {
   const style = ({fontSize: "14px", fontFamily: "Roboto, sans-serif", color: PPAL.soft, background: "transparent"});
   const title = s => Plot.text([s], {frameAnchor: "top-left", dy: -30, text: d => d, fill: PPAL.navy, stroke: "white", strokeWidth: 6, fontWeight: 700, fontSize: 16});
   const neg = s => s.replace("-", "−");
-  // Ties fan out sideways (0, -1, +1, -2, ...) so no dot hides another.
-  const jit = vals => { const seen = {}; return vals.map(v => { const j = seen[v] = (seen[v] || 0) + 1; return ((j - 1) % 2 ? -1 : 1) * Math.ceil((j - 1) / 2) * 0.07; }); };
-  const jPre = jit(plPre), jPost = jit(plPost), jDif = jit(plDif);
+  // Ties fan out sideways so no dot hides another: pre to the left and post to
+  // the right, away from the joining lines, which all run edge to edge.
+  const jit = (vals, side) => { const seen = {}; return vals.map(v => { const j = (seen[v] = (seen[v] || 0) + 1) - 1;
+    return (side ? side * j : (j % 2 ? -1 : 1) * Math.ceil(j / 2)) * 0.09; }); };
+  const jPre = jit(plPre, -1), jPost = jit(plPost, 1), jDif = jit(plDif, 0);
   const idx = d3.range(T.n), XD = 2.3;
   const names = new Map([[0, "Pre 2020"], [1, "Post 2020"], [XD, "Post − pre"]]);
   const data = Plot.plot({
@@ -434,7 +444,7 @@ plTests = {
     marks: [
       title(`The ${T.n} firms, pre and post 2020`),
       Plot.ruleY([0], {x1: XD - 0.5, x2: XD + 0.5, stroke: PPAL.soft, strokeDasharray: "5 4"}),
-      paired ? Plot.link(idx, {x1: i => jPre[i], y1: i => plPre[i], x2: i => 1 + jPost[i], y2: i => plPost[i], stroke: PPAL.dim, strokeWidth: 1.2}) : null,
+      paired ? Plot.link(idx, {x1: 0.06, y1: i => plPre[i], x2: 0.94, y2: i => plPost[i], stroke: PPAL.dim, strokeWidth: 1.2}) : null,
       Plot.dot(idx, {x: i => jPre[i], y: i => plPre[i], r: 5, fill: PPAL.navy, fillOpacity: 0.6}),
       Plot.dot(idx, {x: i => 1 + jPost[i], y: i => plPost[i], r: 5, fill: PPAL.olive, fillOpacity: 0.7}),
       Plot.ruleY([d3.mean(plPre)], {x1: -0.3, x2: 0.3, stroke: PPAL.navy, strokeWidth: 3}),
@@ -461,12 +471,12 @@ plTests = {
   });
   const m = v => neg(v.toFixed(3)), f4 = v => v.toFixed(4);
   const row = k => html`<span class="${k === plIn.mode ? "pl-on" : "pl-off"}">${k}: SE = ${m(T[k].se)}, t = ${m(T[k].t)}, p = ${f4(T[k].p)}</span>`;
-  const rej = cur.p < a, cov2 = T.vPre + T.vPost - T.vDif;
+  const rej = cur.p < a;
   const why = paired
-    ? `Firms that start high stay high, so the differences vary far less than the two groups put together: <b>s<sub>d</sub><sup>2</sup> = ${T.vDif.toFixed(2)}</b> against s<sub>pre</sub><sup>2</sup> + s<sub>post</sub><sup>2</sup> = ${(T.vPre + T.vPost).toFixed(2)}. Pairing removes twice the covariance, ${cov2.toFixed(2)}.`
-    : `Treated as independent, the firm-to-firm spread stays in the standard error, <b>${m(T.Independent.se)}</b> instead of ${m(T.Paired.se)}. These are the same firms measured twice, so treating them as independent omits the pairing information.`;
+    ? `Firms that start high stay high, so the differences vary far less than the two groups together: variance <b>${T.vDif.toFixed(2)}</b> against ${(T.vPre + T.vPost).toFixed(2)}.`
+    : `Treated as independent, the firm-to-firm spread stays in the standard error: <b>${m(T.Independent.se)}</b> instead of ${m(T.Paired.se)}.`;
   return html`<div class="cr-row pl-row">${data}${dist}</div>
   <div class="ojs-eq cl-stats pl-stats">${row("Paired")}${row("Independent")}</div>
-  <div class="quiz-fb">The p-value ${f4(cur.p)} is ${rej ? "below" : "above"} ${plIn.alpha}, so we <b>${rej ? "reject" : "do not reject"} H<sub>0</sub></b> (cut-off ${m(crit)}). ${why}</div>`;
+  <div class="quiz-fb">p = ${f4(cur.p)} is ${rej ? "below" : "above"} ${plIn.alpha.replace("α = ", "")}, so we <b>${rej ? "reject" : "do not reject"} H<sub>0</sub></b>. ${why}</div>`;
 }
 ```
