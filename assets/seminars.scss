@@ -1696,6 +1696,16 @@
 // navy, olive and orange. The three statistics are fractions with roots, so
 // they set smaller than the 30px of the one-line properties.
 #two-mean-tests .prop-math { font-size: 24px; min-height: 96px; }
+// MathJax's HTML-CSS renderer tiles STIX overline glyphs for a radical bar.
+// Draw a continuous rule in the same bar box to avoid gaps at slide scale.
+#two-mean-tests .MathJax .msqrt > span > span:nth-child(2) > span:first-child {
+  &::after {
+    content: ""; position: absolute; left: 0; top: -0.8em;
+    width: 100%; border-top: 1.5px solid currentColor;
+  }
+  > span { visibility: hidden; }
+}
+
 #two-mean-tests .prop-q { text-align: center; hyphens: none; }   // as the #xbar-properties cards
 .prop-pooled { border-top-color: #325D88 !important; .prop-name { color: #325D88; } }
 .prop-welch  { border-top-color: #93C54B !important; .prop-name { color: #93C54B; } }

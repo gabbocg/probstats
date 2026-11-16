@@ -140,30 +140,13 @@
     var p = K.txt(RX, 138, 'p = ' + ratio.toFixed(3),
       { size: 24, fill: 'brick', weight: 700, anchor: 'start' });
     res.appendChild(p);
-    // The explanation, justified to the shaded tail's width (less a 20-unit
-    // margin each side). SVG cannot justify, so each word is measured and the
-    // slack on every line but the last is shared between its gaps. Worded with
-    // short words: at three a line, long ones open gaps wider than the words.
-    var JW = X1 - RX - 20, JY = 184, JLH = 22, words = 'The tail probability: the share of the null world this extreme'.split(' ');
-    var nodes = words.map(function (w) {
-      return res.appendChild(K.txt(RX, -100, w, { size: 'label', fill: 'inkSoft', anchor: 'start' }));
-    });
-    // getComputedTextLength needs the node in the live DOM; res is attached
-    // below, so measure once svg holds it (see the deferred call after build).
-    res._justify = function () {
-      var wide = nodes.map(function (t) { return t.getComputedTextLength() || 9 * t.textContent.length; });
-      var sp = 5.5, lines = [], cur = [], used = 0;
-      wide.forEach(function (w, k) {
-        if (cur.length && used + sp + w > JW) { lines.push(cur); cur = []; used = 0; }
-        used += (cur.length ? sp : 0) + w; cur.push(k);
-      });
-      lines.push(cur);
-      lines.forEach(function (ln, row) {
-        var sum = ln.reduce(function (a, k) { return a + wide[k]; }, 0);
-        var gap = row < lines.length - 1 && ln.length > 1 ? (JW - sum) / (ln.length - 1) : sp, x = RX;
-        ln.forEach(function (k) { nodes[k].setAttribute('x', x.toFixed(1)); nodes[k].setAttribute('y', JY + row * JLH); x += wide[k] + gap; });
-      });
-    };
+    // Let the browser wrap and justify the annotation within the tail column.
+    var explanation = K.el('foreignObject', { x: RX, y: 160, width: X1 - RX - 20, height: 88 });
+    var paragraph = document.createElementNS('http://www.w3.org/1999/xhtml', 'p');
+    paragraph.setAttribute('style', 'margin: 0; padding: 0; font: 18px/24px Roboto, sans-serif; color: ' + K.PAL.inkSoft + '; text-align: justify; text-align-last: left;');
+    paragraph.textContent = 'Under H₀, the chance of seeing a z at least this large.';
+    explanation.appendChild(paragraph);
+    res.appendChild(explanation);
     res.appendChild(K.txt(RX, 268, // Short, so it stays right of the observed-z rule.
       'N(0, 1) table: ' + (1 - Phi(ZOBS)).toFixed(4),
       { size: 'label', fill: 'inkSoft', anchor: 'start' }));
@@ -178,7 +161,6 @@
     }
     res.appendChild(K.el('path', { d: cd, fill: 'none', stroke: K.PAL.ink, 'stroke-width': 2, 'stroke-dasharray': '6 5', opacity: 0.7 }));
     svg.appendChild(res);
-    res._justify();
 
     return { dots: dots, tail: tail, rest: rest, shade: shade,
              obs: obs, res: res, cap: cap, state: 0 };

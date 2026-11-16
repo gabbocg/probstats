@@ -41,3 +41,12 @@
     boot(0);
   })();
 </script>
+<script type="text/x-mathjax-config">
+  // Always MathJax's own TeX web fonts. With "Auto" it picks up a locally
+  // installed STIX, whose radical glyph and vinculum do not join (a doubled,
+  // overshooting bar over every square root), so the maths looked different
+  // on machines with and without STIX.
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: [], preferredFont: null, webFont: "TeX" }
+  });
+</script>
